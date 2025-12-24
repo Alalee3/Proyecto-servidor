@@ -74,14 +74,16 @@
 
                 @if (session()->has('message'))
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4
-                                             dark:bg-green-700 dark:border-green-800 dark:text-green-100" role="alert">
+                                                             dark:bg-green-700 dark:border-green-800 dark:text-green-100"
+                        role="alert">
                         <span class="block sm:inline">{{ session('message') }}</span>
                     </div>
                 @endif
 
                 @if (session()->has('error'))
                     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4
-                                             dark:bg-red-700 dark:border-red-800 dark:text-red-100" role="alert">
+                                                             dark:bg-red-700 dark:border-red-800 dark:text-red-100"
+                        role="alert">
                         <span class="block sm:inline">{{ session('error') }}</span>
                     </div>
                 @endif
@@ -101,36 +103,27 @@
                     </div>
                 @endif
 
-                {{-- Selección de Sección y Unidad Curricular --}}
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    {{-- Selección de Asignación (Materia y Sección) --}}
                     <div class="min-w-0">
-                        <x-select label="Sección" :options="$secciones" valueField="seccion_id" textField="seccion"
-                            wire:model.live="seccion_id" placeholder="Seleccione una sección" />
-                        @error('seccion_id')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-                    <div class="min-w-0">
-                        <x-select label="Unidad Curricular" :options="$unidadesCurriculares" valueField="codigo"
-                            textField="nombre" wire:model.live="unidad_codigo"
-                            placeholder="Seleccione una unidad curricular" />
-                        @error('unidad_codigo')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-                </div>
+                        <x-select label="Asignación (Materia y Sección)" :options="$asignaciones"
+                            valueField="id_detalle_profesor_asignado" textField="descripcion_completa"
+                            wire:model.live="id_profesor_asignado" placeholder="Seleccione una asignación" />
 
-                {{-- Campo para el Propósito de la Unidad Curricular --}}
-                <div class="mb-6">
-                    <label for="proposito" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Propósito de la unidad curricular
-                    </label>
-                    <textarea id="proposito" wire:model.defer="proposito" rows="4"
-                        class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        placeholder="El propósito se cargará automáticamente al seleccionar una unidad, pero puedes editarlo aquí..."></textarea>
-                    @error('proposito')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+                    </div>
+
+                    {{-- Campo para el Propósito de la Unidad Curricular --}}
+                    <div class="min-w-0">
+                        <label for="proposito" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Propósito de la unidad curricular
+                        </label>
+                        <textarea id="proposito" wire:model.defer="proposito" rows="3"
+                            class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                            placeholder="El propósito se cargará automáticamente al seleccionar una unidad, pero puedes editarlo aquí..."></textarea>
+                        @error('proposito')
+                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
 
                 <!-- Sección de Cortes -->
@@ -188,8 +181,8 @@
                                                         </button>
                                                     @endif
                                                 </div>
-                                                <x-select :options="$contenidosUnidad" valueField="contenido_id"
-                                                    textField="titulo"
+                                                <x-select :options="$contenidosUnidad" valueField="id_contenido"
+                                                    textField="titulo_contenido"
                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.contenidos.{{ $contenidoIndex }}.contenido_id"
                                                     placeholder="Seleccione un contenido" class="text-sm w-full" />
                                                 @error("cortes.$index.contenidos.$contenidoIndex.contenido_id")
@@ -220,8 +213,8 @@
                                                 @forelse ($contenido['indicadores_logros'] as $indicadorIndex => $indicador)
                                                     <div class="flex flex-col sm:flex-row gap-2 mb-2 items-start">
                                                         <div class="flex-grow min-w-0">
-                                                            <x-select :options="$indicadores" valueField="indicador_id"
-                                                                textField="indicador"
+                                                            <x-select :options="$indicadores" valueField="id_indicador_logro"
+                                                                textField="nombre_indicador_logro"
                                                                 wire:model.live.debounce.250ms="cortes.{{ $index }}.contenidos.{{ $contenidoIndex }}.indicadores_logros.{{ $indicadorIndex }}.indicador_id"
                                                                 placeholder="Seleccione un indicador" class="text-sm w-full" />
                                                         </div>
@@ -269,8 +262,8 @@
                                     @foreach ($corte['recursos'] as $recursoIndex => $recurso)
                                         <div class="flex flex-col sm:flex-row gap-2 mb-2">
                                             <div class="flex-grow min-w-0">
-                                                <x-select :options="$recursosMaestros" valueField="recurso_id"
-                                                    textField="recurso"
+                                                <x-select :options="$recursosMaestros" valueField="id_recurso"
+                                                    textField="nombre_recurso"
                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.recursos.{{ $recursoIndex }}.recurso_id"
                                                     placeholder="Seleccione un recurso" class="text-sm w-full" />
                                             </div>
@@ -308,8 +301,8 @@
                                     @foreach ($corte['estrategias'] as $estrategiaIndex => $estrategia)
                                         <div class="flex flex-col sm:flex-row gap-2 mb-2">
                                             <div class="flex-grow min-w-0">
-                                                <x-select :options="$estrategiasMaestras" valueField="estrategia_id"
-                                                    textField="estrategia"
+                                                <x-select :options="$estrategiasMaestras" valueField="id_estrategia_pedagogica"
+                                                    textField="nombre_estrategia_pedagogica"
                                                     name="cortes.{{ $index }}.estrategias.{{ $estrategiaIndex }}.estrategia_id"
                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.estrategias.{{ $estrategiaIndex }}.estrategia_id"
                                                     placeholder="Seleccione una estrategia" class="text-sm w-full" />
@@ -369,12 +362,13 @@
                                                     name="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.fecha_evaluacion"
                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.fecha_evaluacion"
                                                     class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline
-                                                                           dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 dark:focus:ring-blue-500 dark:focus:border-blue-500
-                                                                           date-input-dark" style="color-scheme: light;">
+                                                                                                           dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 dark:focus:ring-blue-500 dark:focus:border-blue-500
+                                                                                                           date-input-dark"
+                                                    style="color-scheme: light;">
                                             </div>
                                             <div class="min-w-0">
-                                                <x-select label="Evaluacion" :options="$evaluaciones" valueField="evaluacion_id"
-                                                    textField="evaluacion"
+                                                <x-select label="Evaluacion" :options="$evaluaciones" valueField="id_evaluacion"
+                                                    textField="nombre_evaluacion"
                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.evaluacion_id" />
                                                 @error("cortes.$index.evaluaciones.$evaluacionIndex.evaluacion_id")
                                                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -390,8 +384,8 @@
                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.ponderacion" />
                                             </div>
                                             <div class="min-w-0">
-                                                <x-select label="Técnica" :options="$tecnicas" valueField="tecnica_id"
-                                                    textField="tecnica"
+                                                <x-select label="Técnica" :options="$tecnicas" valueField="id_tecnica"
+                                                    textField="nombre_tecnica"
                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.tecnica_id" />
                                                 @error("cortes.$index.evaluaciones.$evaluacionIndex.tecnica_id")
                                                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -461,7 +455,7 @@
                             <div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
                                 <div class="flex-grow min-w-0">
                                     <x-select label="Seleccionar Bibliografía" :options="$bibliografiasMaestras"
-                                        valueField="bibliografia_id" textField="bibliografia"
+                                        valueField="id_bibliografia" textField="nombre_bibliografia"
                                         wire:model.live.debounce.250ms="bibliografias.{{ $biblioIndex }}.bibliografia_id" />
                                     @error("bibliografias.$biblioIndex.bibliografia_id")
                                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>

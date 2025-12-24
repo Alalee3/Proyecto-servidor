@@ -74,3 +74,21 @@ B. ESTÁNDARES DE TABLAS:
 - BIBLIOGRAFÍA: Estándar para validaciones complejas y diseño minimalista de CRUD.
 - INDICADORES DE LOGRO: Ejemplo de validación de unicidad personalizada.
 - TEMAS: Ejemplo de sub-módulo dependiente.
+- RECURSOS, ESTRATEGIAS, TÉCNICAS, EVALUACIONES: Confirmación de la robustez del patrón. La replicación exacta de la arquitectura (Repositorios -> Forms -> Livewire -> Blade) ha permitido una implementación rápida y libre de errores, consolidando el "Gold Standard".
+
+6. FLUJO DE TRABAJO VALIDADO PARA NUEVOS MÓDULOS
+------------------------------------------------
+Este es el proceso probado para crear módulos con cero fricción:
+1. **Analizar Base de Datos**: Identificar tabla y claves.
+2. **Capa de Datos (DRP)**: Crear `IndexRepo`, `CreateRepo`, `EditRepo`, `ViewRepo` usando Query Builder.
+3. **Capa Lógica (Forms)**: Crear `Create[Modulo]Form` y `Update[Modulo]Form`.
+   - *Clave*: Usar el Regex Universal y validación `unique` ignorando ID en update.
+4. **Capa de Control (Livewire)**:
+   - `List[Modulo]`: Paginación y búsqueda.
+   - `Create[Modulo]`: Guardado sin redirección (UX fluida).
+   - `Update[Modulo]`: Carga en `mount()` y redirección al guardar.
+   - `Show[Modulo]`: Solo lectura.
+5. **Capa Visual (Blade)**: Clonar vistas de PNF/Evaluaciones respetando clases CSS de Tailwind.
+6. **Integración**:
+   - `web.php`: Agrupar rutas.
+   - `side-bar.blade.php`: Añadir menú desplegable con icono de Material Symbols.

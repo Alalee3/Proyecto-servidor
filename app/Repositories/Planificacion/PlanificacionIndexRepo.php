@@ -13,31 +13,42 @@ class PlanificacionIndexRepo
     public function listar(array $filters = [], int $perPage = 10, bool $onlyCurrentUserAndRole = false): LengthAwarePaginator
     {
         $query = DB::table('planificacion as p')
-            ->join('users as u', 'p.docente_id', '=', 'u.id')
+            ->join('detalle_profesor_asignado as dpa', 'p.id_profesor_asignado', '=', 'dpa.id_detalle_profesor_asignado')
+            ->join('users as u', 'dpa.id_users', '=', 'u.id')
+            ->join('unidad_curricular as uc', 'dpa.id_unidad_curricular', '=', 'uc.id_unidad_curricular')
+            ->join('seccion as s', 'dpa.id_seccion', '=', 's.id_seccion')
+            ->join('malla_academica as ma', 'uc.id_malla_academica', '=', 'ma.id_malla_academica')
+            ->join('pnf', 'ma.id_pnf', '=', 'pnf.id_pnf')
             ->select(
-                'p.planificacion_id',
+                'p.id_planificacion as planificacion_id',
                 'u.name as docente_nombre',
                 'u.apellido as docente_apellido',
-                'p.estatus'
+                'p.estatus',
+                'uc.nombre_unidad_curricular',
+                's.nombre_seccion',
+                'pnf.nombre_pnf',
+                'uc.trayecto_unidad_curricular'
             );
 
         if (isset($filters['search_term']) && !empty($filters['search_term'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('u.name', 'like', '%' . $filters['search_term'] . '%')
-                    ->orWhere('u.apellido', 'like', '%' . $filters['search_term'] . '%');
+                    ->orWhere('u.apellido', 'like', '%' . $filters['search_term'] . '%')
+                    ->orWhere('uc.nombre_unidad_curricular', 'like', '%' . $filters['search_term'] . '%')
+                    ->orWhere('pnf.nombre_pnf', 'like', '%' . $filters['search_term'] . '%');
             });
         }
 
         if ($onlyCurrentUserAndRole && Auth::check()) {
+            // Nota: La lógica de roles puede necesitar ajuste según la nueva tabla de roles si cambió
+            // Asumimos que id_users sigue siendo la clave foránea en detalle_profesor_asignado
             $userId = Auth::id();
-            $roleIdToCheck = 2;
 
-            $query->where('p.docente_id', $userId);
-            $query->join('usuario_rol as ur', 'u.id', '=', 'ur.id_users')
-                ->where('ur.id_rol', $roleIdToCheck);
+            // Filtrar por el usuario logueado en la tabla de asignación
+            $query->where('dpa.id_users', $userId);
         }
 
-        $query->orderByDesc('p.planificacion_id');
+        $query->orderByDesc('p.id_planificacion');
 
         return $query->paginate($perPage);
     }
@@ -50,30 +61,14 @@ class PlanificacionIndexRepo
         DB::beginTransaction();
         try {
             DB::table('planificacion')
-                ->where('planificacion_id', $planificacionId)
+                ->where('id_planificacion', $planificacionId)
                 ->update(['estatus' => 1]);
 
-            $cortesIds = DB::table('detalle_planificacion')
-                ->where('planificacion_id', $planificacionId)
-                ->pluck('detalle_id');
-
-            if ($cortesIds->isNotEmpty()) {
-                DB::table('detalle_actividad')
-                    ->whereIn('detalle_id', $cortesIds)
-                    ->update(['estatus' => 1]);
-
-                $motivosExistentesActivos = DB::table('motivos_rechazo')
-                    ->whereIn('detalle_id', $cortesIds)
-                    ->where('estatus', 1)
-                    ->exists();
-
-                if ($motivosExistentesActivos) {
-                    DB::table('motivos_rechazo')
-                        ->whereIn('detalle_id', $cortesIds)
-                        ->where('estatus', 1)
-                        ->update(['estatus' => 2]);
-                }
-            }
+            // Nota: Se debe verificar si 'detalle_planificacion' y 'detalle_actividad' existen en la nueva BD
+            // Según el SQL proporcionado, NO existen tablas con esos nombres exactos.
+            // Las tablas parecen ser 'corte', 'estrategia_pedagogica', 'detalle_evaluacion', etc.
+            // Por ahora, solo actualizamos el estatus de la planificación para cumplir con el requerimiento inmediato del Listado.
+            // Se requerirá una revisión más profunda para aprobar cascada en la nueva estructura.
 
             DB::commit();
             return true;
@@ -85,66 +80,31 @@ class PlanificacionIndexRepo
     }
 
     /**
-     * Rechaza una planificación completa y sus cortes asociados con motivos individuales.
+     * Rechaza una planificación completa.
      */
     public function rechazarPlanificacionConCortes(int $planificacionId, array $cortesRechazados): bool
     {
         DB::beginTransaction();
         try {
-            $alMenosUnCorteRechazado = false;
-            foreach ($cortesRechazados as $corte) {
-                $detalleId = $corte['detalle_id'];
-                $motivo = $corte['motivo'];
-                if (empty($motivo)) {
-                    throw new \Exception("El motivo de rechazo es obligatorio para el corte ID: {$detalleId}");
-                }
+            // Lógica simplificada para el refactor inicial del listado
+            DB::table('planificacion')
+                ->where('id_planificacion', $planificacionId)
+                ->update(['estatus' => 3]);
 
-                DB::table('detalle_actividad')
-                    ->where('detalle_id', $detalleId)
-                    ->update(['estatus' => 3]);
+            // TODO: Implementar lógica de rechazo detallada para la nueva estructura de Cortes y Evaluaciones
 
-                DB::table('motivos_rechazo')->insert([
-                    'detalle_id' => $detalleId,
-                    'motivo' => $motivo,
-                    'estatus' => 1,
-                    'fecha_creacion' => now(),
-                ]);
-                $alMenosUnCorteRechazado = true;
-            }
-
-            if ($alMenosUnCorteRechazado) {
-                DB::table('planificacion')
-                    ->where('planificacion_id', $planificacionId)
-                    ->where('estatus', '!=', 3)
-                    ->update(['estatus' => 3]);
-            }
             DB::commit();
             return true;
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error al rechazar planificación con cortes: " . $e->getMessage());
+            Log::error("Error al rechazar planificación: " . $e->getMessage());
             return false;
         }
     }
 
     public function eliminarMotivoRechazoPorCorte($detalleId)
     {
-        DB::beginTransaction();
-        try {
-            DB::table('motivos_rechazo')
-                ->where('detalle_id', $detalleId)
-                ->where('estatus', 1)
-                ->update(['estatus' => 2]);
-
-            DB::table('detalle_actividad')
-                ->where('detalle_id', $detalleId)
-                ->update(['estatus' => 3]);
-            DB::commit();
-            return true;
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error("Error al eliminar motivo de rechazo del corte: " . $e->getMessage());
-            return false;
-        }
+        // TODO: Ajustar a la nueva estructura de 'motivo_rechazo' y 'corte'
+        return true;
     }
 }

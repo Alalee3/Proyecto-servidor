@@ -34,12 +34,11 @@
             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                        <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Docente
-                        </th>
-                        <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">
-                            Estatus</th>
-                        <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">
-                            Acciones</th>
+                        <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">PNF / Trayecto</th>
+                        <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">U. Curricular / Sección</th>
+                        <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Docente</th>
+                        <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">Estatus</th>
+                        <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -47,6 +46,16 @@
                         @foreach ($planificaciones as $planificacion)
                             <tr wire:key="{{ $planificacion->planificacion_id }}"
                                 class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                <!-- PNF / Trayecto -->
+                                <td class="px-4 py-4 text-gray-900 dark:text-white">
+                                    <div class="font-semibold">{{ $planificacion->nombre_pnf }}</div>
+                                    <div class="text-xs text-gray-500">Trayecto {{ $planificacion->trayecto_unidad_curricular }}</div>
+                                </td>
+                                <!-- U. Curricular / Sección -->
+                                <td class="px-4 py-4 text-gray-900 dark:text-white">
+                                    <div class="font-semibold">{{ $planificacion->nombre_unidad_curricular }}</div>
+                                    <div class="text-xs text-gray-500">Sección: {{ $planificacion->nombre_seccion }}</div>
+                                </td>
                                 <!-- Docente -->
                                 <td class="px-4 py-4 text-gray-900 dark:text-white">
                                     {{ $planificacion->docente_nombre }} {{ $planificacion->docente_apellido }}
@@ -54,17 +63,13 @@
                                 <!-- Estatus -->
                                 <td class="px-4 py-4 text-right">
                                     @if ($planificacion->estatus == 1)
-                                        <span
-                                            class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Aprobada</span>
+                                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Aprobada</span>
                                     @elseif($planificacion->estatus == 2)
-                                        <span
-                                            class="bg-blue-100 text-blue-600 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-200">Pendiente</span>
+                                        <span class="bg-blue-100 text-blue-600 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-200">Pendiente</span>
                                     @elseif($planificacion->estatus == 3)
-                                        <span
-                                            class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Rechazada</span>
+                                        <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Rechazada</span>
                                     @else
-                                        <span
-                                            class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-900 dark:text-gray-300">Desconocido</span>
+                                        <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-900 dark:text-gray-300">Desconocido</span>
                                     @endif
                                 </td>
                                 <!-- Acciones -->
@@ -74,20 +79,16 @@
                                         <button x-data
                                             x-on:click="$dispatch('openModal', { component: 'planificacion.show-planificacion', arguments: { planificacionId: '{{ $planificacion->planificacion_id }}' } })"
                                             class="flex items-center gap-1 bg-blue-50 text-blue-600 text-xs font-medium px-2.5 py-0.5 rounded hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
-                                                class="w-4 h-4">
-                                                <path
-                                                    d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
+                                                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
                                             </svg>
                                             Ver
                                         </button>
                                         <!-- Editar -->
                                         <a href="{{ route('planificaciones.update', $planificacion->planificacion_id) }}"
                                             class="flex items-center gap-1 bg-yellow-600 text-white text-xs font-medium px-2.5 py-0.5 rounded hover:bg-yellow-700 dark:bg-yellow-600 dark:text-white dark:hover:bg-yellow-700">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
-                                                class="w-4 h-4">
-                                                <path
-                                                    d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
+                                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
                                             </svg>
                                             Editar
                                         </a>
@@ -97,7 +98,7 @@
                         @endforeach
                     @else
                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                            <td colspan="6" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                            <td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                 No hay planificaciones registradas.
                             </td>
                         </tr>
@@ -112,43 +113,54 @@
                 @foreach ($planificaciones as $planificacion)
                     <div wire:key="{{ $planificacion->planificacion_id }}"
                         class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 py-4 px-3 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        
+                        <div class="mb-2">
+                            <span class="font-semibold text-gray-700 dark:text-gray-300">PNF / Trayecto:</span>
+                            <div class="text-gray-900 dark:text-white">
+                                {{ $planificacion->nombre_pnf }} - Trayecto {{ $planificacion->trayecto_unidad_curricular }}
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <span class="font-semibold text-gray-700 dark:text-gray-300">U.C. / Sección:</span>
+                            <div class="text-gray-900 dark:text-white">
+                                {{ $planificacion->nombre_unidad_curricular }} ({{ $planificacion->nombre_seccion }})
+                            </div>
+                        </div>
+
                         <div class="mb-2">
                             <span class="font-semibold text-gray-700 dark:text-gray-300">Docente:</span>
                             <span class="text-gray-900 dark:text-white">
                                 {{ $planificacion->docente_nombre }} {{ $planificacion->docente_apellido }}
                             </span>
                         </div>
+
                         <div class="mb-2">
                             <span class="font-semibold text-gray-700 dark:text-gray-300">Estatus:</span>
                             @if ($planificacion->estatus == 1)
-                                <span
-                                    class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Aprobada</span>
+                                <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Aprobada</span>
                             @elseif($planificacion->estatus == 2)
-                                <span
-                                    class="bg-blue-100 text-blue-600 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-200">Pendiente</span>
+                                <span class="bg-blue-100 text-blue-600 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-200">Pendiente</span>
                             @elseif($planificacion->estatus == 3)
-                                <span
-                                    class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Rechazada</span>
+                                <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Rechazada</span>
                             @else
-                                <span
-                                    class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-900 dark:text-gray-300">Desconocido</span>
+                                <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-900 dark:text-gray-300">Desconocido</span>
                             @endif
                         </div>
-                        <div class="flex justify-end space-x-4">
+
+                        <div class="flex justify-end space-x-4 mt-3">
                             <button x-data
                                 x-on:click="$dispatch('openModal', { component: 'planificacion.show-planificacion', arguments: { planificacionId: '{{ $planificacion->planificacion_id }}' } })"
                                 class="flex items-center gap-1 bg-blue-50 text-blue-600 text-xs font-medium px-2.5 py-0.5 rounded hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
-                                    <path
-                                        d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
                                 </svg>
                                 Ver
                             </button>
                             <a href="{{ route('planificaciones.update', $planificacion->planificacion_id) }}"
                                 class="flex items-center gap-1 bg-yellow-600 text-white text-xs font-medium px-2.5 py-0.5 rounded hover:bg-yellow-700 dark:bg-yellow-600 dark:text-white dark:hover:bg-yellow-700">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
-                                    <path
-                                        d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
                                 </svg>
                                 Editar
                             </a>
@@ -156,8 +168,7 @@
                     </div>
                 @endforeach
             @else
-                <div
-                    class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 py-4 px-3 text-center text-gray-500 dark:text-gray-400">
+                <div class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 py-4 px-3 text-center text-gray-500 dark:text-gray-400">
                     No hay planificaciones registradas.
                 </div>
             @endif
