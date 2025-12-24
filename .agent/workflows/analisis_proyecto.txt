@@ -1,0 +1,76 @@
+ESTADISTICAS Y ANALISIS DEL PROYECTO - SAUPA
+============================================
+
+1. VERSIONES EXACTAS DE LIBRERIAS (Extraídas de archivos Lock)
+------------------------------------------------------------
+
+BACKEND (Laravel & PHP)
+- Laravel Framework: v12.13.0
+- Livewire: v3.6.3
+- Laravel Fortify: v1.27.0
+- Laravel DomPDF: v3.1.1
+- Livewire Volt: v1.7.1
+- Wire-Elements Modal: 3.0.1
+
+FRONTEND (JS & CSS)
+- Vite: 6.3.5
+- Tailwind CSS: 3.4.17
+- @tailwindcss/vite: 4.0.9
+- Axios: 1.8.2
+- Laravel Vite Plugin: 1.2.0
+
+2. ARQUITECTURA GENERAL Y ESTÁNDARES ("Gold Standard": PNF y Bibliografía)
+--------------------------------------------------------------------------
+
+A. ARQUITECTURA DE DATOS (REPOSITORIOS):
+- Ubicación: 'app/Repositories/[Modulo]/'
+- Estructura Desacoplada: Dividir en archivos especializados (Index, Create, Edit, View).
+- Implementación: Uso de 'DB::table' (Query Builder) para mayor rendimiento.
+- Consistencia: Mapear datos a nombres genéricos (ej: 'nombre_pnf' as 'nombre') en el RepoIndex para uniformidad en las vistas.
+
+B. LÓGICA DE COMPONENTES (LIVEWIRE):
+- Formularios: Uso obligatorio de 'Livewire Forms' en 'app/Livewire/Forms/[Modulo]/'.
+- Métodos Estandarizados:
+  - Creación: 'guardar()' -> Resetea campos y muestra éxito sin redirigir (UX fluida).
+  - Edición: 'actualizar()' -> Acción de guardado. 'cancelar()' -> Redirige al listado.
+  - Detalle: 'cerrar()' -> Redirige al listado.
+- Feedback: Validación en tiempo real con 'updated()' y 'validateOnly()'.
+
+C. DISEÑO VISUAL (BLADE / UI):
+- Listado (List):
+  - No incluir botón de "Nuevo" si el acceso ya está en la barra lateral (Sidebar).
+  - Uso de '<x-table.search-input />' y modales de confirmación '<x-table.delete-modal />'.
+- Registro (Create):
+  - Cabecera: Centrada, mayúsculas, color gris ('text-gray-500').
+  - Contenedor: Blanco con sombra y bordes redondeados.
+- Edición (Update):
+  - Botón Volver: Usar '<x-danger-button>' con icono 'arrow_back' de Material Symbols.
+- Visualización (Show):
+  - Cabecera Dinámica: Título en rojo si el registro está inactivo.
+  - Datos: Usar 'text-2xl font-semibold' para resaltar los valores.
+  - Botón Volver: '<x-danger-button>' con icono 'arrow_back'.
+
+3. ESTRUCTURA DE BASE DE DATOS (sogac_v_2 (2).sql)
+--------------------------------------------------
+
+A. RELACIONES Y FLUJO:
+- Jerarquía: PNF -> Malla Académica -> Unidad Curricular -> Contenido -> Temas.
+- Integridad: Foreign Keys obligatorias para todas las relaciones.
+
+B. ESTÁNDARES DE TABLAS:
+- Estatus: 'enum('1','2','3')' universal (1:Activo, 2:Inactivo, 3:Eliminado).
+- Timestamps: 'fecha_creacion' y 'fecha_actualizacion' en todas las tablas.
+
+4. PATRONES DE SEGURIDAD Y VALIDACIÓN
+-------------------------------------
+- IDs Protegidos: Atributo '#[Locked]' para evitar manipulación de claves primarias.
+- Regex Universal: '/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\d\s\.,\-\(\)\"\':\/]+$/u'
+  - Permite letras, números, espacios y caracteres especiales de puntuación (indispensable para Bibliografía).
+- Mensajes: No usar genéricos. Definir 'messages()' en cada Form para una mejor experiencia de usuario.
+
+5. HISTORIAL DE MÓDULOS RECIENTES (REFERENCIAS)
+-----------------------------------------------
+- PNF: Estándar original de diseño y flujo.
+- BIBLIOGRAFÍA: Estándar para validaciones complejas y diseño minimalista de CRUD.
+- INDICADORES DE LOGRO: Ejemplo de validación de unicidad personalizada.
+- TEMAS: Ejemplo de sub-módulo dependiente.

@@ -1,0 +1,418 @@
+/* selector universal */
+* {
+    margin: 0;
+    /* margen */
+    padding: 0;
+    /* espacio interno */
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+html,
+body {
+    padding: 0;
+    /* Esto es para posicionar el contenido debajo del nav, todo lo que esté dentro del body  */
+    margin: 0;
+    width: 100%;
+    height: auto;
+    /* Esto asegura que ocupe todo el alto de la pantalla */
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+nav {
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #ffffff;
+    height: 78px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    /*esto controla que cosa está por encima de otra*/
+    box-sizing: border-box;
+    box-shadow: 0 4px 6px -4px rgba(0, 0, 0, 0.623);
+    /* sombra*/
+}
+
+/* esto es para determinar los valores de la imagen que aparece a la izquierda,dentro del nav*/
+.logo img {
+    height: 75px;
+    width: auto;
+    margin-top: 5px;
+    object-fit: contain;
+}
+
+nav ul {
+    display: flex;
+    gap: 23px;
+    /* espaciado entre los hipervinculos */
+    align-items: center;
+}
+
+nav ul li {
+    list-style-type: none;
+    /* para eliminar las viñetas o números de las listas*/
+}
+
+nav ul li a {
+    color: #000000;
+    font-size: 22.5px;
+    text-decoration: none;
+}
+
+/* permite que la barra lateral solo aparezca cuando se está usando otro dispositivo. Y los textos del menu solo los podamos ver al darle click a la barra*/
+.menu-icon {
+    display: none;
+}
+
+/* valores de la barra lateral*/
+.menu-icon i {
+    color: #000000;
+    /*cambia el color de la barra al valor que se coloque*/
+    font-size: 30px;
+    padding: 8px;
+}
+
+.seccionpagina1 {
+    min-height: calc(110vh - 90px);
+    /*para que ocupe todo el espacio*/
+    padding-top: 110px;
+    padding-bottom: 60px;
+    color: rgb(255, 255, 255);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(to bottom, rgba(66, 78, 92, 0.8) 0%, rgba(66, 87, 92, 0.8) 100%), url("../assets/UPTP.png");
+    /* Asegúrate de que la ruta a UPTP.png sea correcta aquí */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    width: 100%;
+}
+
+.contenido-centro-a {
+    text-align: center;
+    max-width: 800px;
+}
+
+.contenido-centro-a hr,
+.contenido-centro-b hr {
+    color: rgb(255, 255, 255);
+    /* Nota: 'color' no aplica a hr directamente para el color de la línea, se usa 'border-color' */
+    width: 60px;
+    margin: 20px auto;
+}
+
+.contenido-centro-a img {
+    /* Esta regla no se usará si no hay img en contenido-centro-a */
+    max-width: 300px;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+.contenido-centro-a h2,
+.contenido-centro-b h2 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.contenido-centro-a p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.contenido-centro-a a {
+    margin-top: 20px;
+    display: inline-block;
+    font-size: 18px;
+    padding: 13px;
+    background-color: #d83434;
+    border-radius: 16px;
+    border-color: transparent;
+    color: white;
+    text-decoration: none;
+}
+
+/* color al pasar encima el raton */
+.botonprimario:hover {
+    background-color: #c93232;
+}
+
+.seccionpagina2 {
+    background-color: #d83434;
+    color: white;
+    justify-content: center;
+    align-items: center;
+    padding-top: 50px;
+    padding-bottom: 60px;
+}
+
+.contenido-centro-b {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.contenido-centro-b img {
+    width: 150px;
+    display: block;
+    /* Añadido para centrar */
+    margin: 0 auto;
+    /* Añadido para centrar */
+}
+
+.lista-en-grid,
+.lista-ofertas {
+    padding-left: 40px;
+    list-style-type: disc;
+    list-style-position: outside;
+    margin: 0 auto;
+    max-width: 600px;
+    text-align: left;
+}
+
+.lista-en-grid li,
+.lista-ofertas li {
+    margin-bottom: 10px;
+    padding-left: 0;
+}
+
+.servicios-lista ul li,
+.ofertas ul li {
+    font-size: 1.2rem;
+    margin-top: 40px;
+    margin-bottom: 20px;
+    padding-left: 10px;
+    text-align: left;
+}
+
+#Servicios {
+    scroll-margin-top: 79px;
+}
+
+.seccionpagina3 {
+    margin-bottom: 100px;
+}
+
+.contenido-centro-c hr {
+    border: 1px solid #000000;
+    width: 60px;
+    margin: 20px auto;
+}
+
+.h2-centrado {
+    text-align: center;
+    margin-top: 80px;
+    font-size: 2.0rem;
+}
+
+.fila-contenido-c {
+    display: flex;
+    justify-content: center;
+    /* Centra horizontalmente */
+    align-items: stretch;
+    /* Centra verticalmente si hay altura */
+    flex-wrap: wrap;
+    /* Para que en pantallas pequeñas se acomode */
+    gap: 90px;
+    /* Espacio entre columnas */
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.columna-clase-c {
+    width: 300px;
+    padding: 10px;
+    text-align: center;
+    /* Esto centrará h3, ul y las imágenes dentro */
+    min-height: 400px;
+}
+
+.columna-clase-c h3 {
+    font-size: 23px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.columna-clase-c ul {
+    list-style-type: none;
+    /* ¡Añadido! Elimina las viñetas*/
+    padding-left: 0;
+    /* ¡Modificado! Quita el padding para centrar mejor el texto*/
+}
+
+.columna-clase-c ul li {
+    margin-bottom: 12px;
+    /* espacio entre cada <li> */
+}
+
+.columna-clase-c img {
+    display: block;
+    /* Añadido para centrar */
+    margin: 0 auto;
+    /* Añadido para centrar */
+    max-width: 200px;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+#Acerca {
+    scroll-margin-top: 140px;
+}
+
+.seccionpagina4 {
+    width: 100%;
+    padding-top: 0px;
+    padding-bottom: 30px;
+    color: white;
+    /* Cambiado a blanco para que contraste con la imagen de fondo */
+    display: flex;
+    align-items: flex-start;
+    /* alinea arriba */
+    justify-content: center;
+    /* Asegúrate de que esta URL apunte a tu nueva imagen del edificio */
+    background: linear-gradient(to bottom, rgba(66, 78, 92, 0.8) 0%, rgba(66, 87, 92, 0.8) 100%), url("../css/UPTP2.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.contenido-centro-d {
+    color: white;
+    text-align: center;
+    max-width: 800px;
+    padding: 20px;
+}
+
+.contenido-centro-d h2 {
+    font-size: 40px;
+}
+
+.contenido-centro-d p {
+    font-size: 1.2rem;
+    margin-top: 20px;
+}
+
+.ofertas {
+    margin-top: 40px;
+    height: auto;
+    /* Que crezca según su contenido */
+    overflow: visible;
+    /* Mostrar todo el contenido */
+}
+
+.ofertas h2 {
+    font-size: 20px;
+    margin-left: 0;
+    margin-bottom: 20px;
+    padding-left: 20px;
+    text-align: left;
+    max-width: 100%;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+#Sobre {
+    scroll-margin-top: 69px;
+}
+
+footer {
+    background: #d83434;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 15px;
+    gap: 1px;
+}
+
+footer img {
+    width: 40px;
+    margin-bottom: 2px;
+    /* Espacio debajo del ícono */
+}
+
+footer div {
+    padding: 16px 10px;
+}
+
+footer div p {
+    font-size: 18.4px;
+    text-align: center;
+}
+
+/* esto es para definir como se ve en diversos dispositivos*/
+@media (max-width:600px) {
+    body {
+        overflow-x: hidden;
+    }
+
+    nav {
+        width: 100%;
+        /* Ocupa todo el ancho */
+        padding: 30px;
+        box-sizing: border-box;
+        /* Asegura que el padding no aumente el ancho */
+    }
+
+    .contenido-centro-a img {
+        max-width: 100%;
+        /* Ajusta imágenes a ancho móvil */
+        height: auto;
+    }
+
+    nav ul {
+        position: absolute;
+        top: 77px;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        text-align: left;
+        background: #ffffff;
+        gap: 0;
+        overflow: hidden;
+        padding-left: 0;
+        /* elimina posible padding extra */
+        margin-left: 0;
+        box-shadow: 0 4px 6px -4px rgba(0, 0, 0, 0.623);
+    }
+
+    nav ul li {
+        padding: 20px;
+        padding-top: 0;
+    }
+
+    nav ul li a {
+        font-size: 21px;
+    }
+
+    .menu-icon {
+        display: block;
+    }
+
+    #menuList {
+        transition: all 0.5s;
+    }
+
+    .ofertas h2 {
+        font-size: 18px;
+    }
+
+    .lista-ofertas {
+        padding-left: 40px;
+        /* agrega espacio a la izquierda */
+        padding-right: 20px;
+        /* espacio a la derecha también */
+        margin: 0 auto;
+        max-width: 100%;
+        /* para que tome todo el ancho disponible */
+        text-align: left;
+        /* mejor para listas */
+        font-size: 18px;
+    }
+}

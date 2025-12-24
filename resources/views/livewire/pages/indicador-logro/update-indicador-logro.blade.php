@@ -1,0 +1,37 @@
+<div>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-500 dark:text-gray-500 leading-tight uppercase text-center">
+            {{ __('Editar Indicador de Logro') }}
+        </h2>
+    </x-slot>
+
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <x-table.alert-message type="success" :message="session('message')" />
+            <x-table.alert-message type="error" :message="session('error')" />
+
+            <div class="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
+                <form wire:submit.prevent="actualizar" class="w-full space-y-6" novalidate>
+                    <div class="flex flex-col gap-4 w-full md:flex-row">
+                        <!-- Nombre -->
+                        <div class="w-full">
+                            <x-input-label for="nombre" :value="__('Nombre del Indicador')" />
+                            <x-text-input id="nombre" wire:model.live="form.nombre_indicador_logro" class="w-full mt-1"
+                                type="text" placeholder="Ej: Demuestra dominio de los conceptos básicos..." />
+                            <x-input-error :messages="$errors->first('form.nombre_indicador_logro')" class="mt-2" />
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-4">
+                        <x-danger-button type="button" wire:click="cancelar">
+                            {{ __('Cancelar') }}
+                        </x-danger-button>
+                        <x-primary-button type="submit" wire:loading.attr="disabled">
+                            {{ __('Actualizar Indicador') }}
+                        </x-primary-button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
