@@ -58,7 +58,7 @@ class ListPlanificacion extends Component
         ];
         $planificaciones = $this->planificacionRepository->listar($filters, $this->perPage);
 
-        return view('livewire.planificacion.list-planificacion', [
+        return view('livewire.pages.planificacion.list-planificacion', [
             'planificaciones' => $planificaciones,
         ]);
     }

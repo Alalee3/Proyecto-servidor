@@ -11,18 +11,28 @@ class PlanificacionViewRepo
      */
     public function getDetallesPlanificacion(int $planificacionId): ?array
     {
+        // 1. Obtener datos principales de la planificación + Docente + Sección + Unidad + Lapso
         $planificacion = DB::table('planificacion as p')
+            ->join('detalle_profesor_asignado as dpa', 'p.id_profesor_asignado', '=', 'dpa.id_detalle_profesor_asignado')
+            ->join('users as u', 'dpa.id_users', '=', 'u.id')
+            ->join('unidad_curricular as uc', 'dpa.id_unidad_curricular', '=', 'uc.id_unidad_curricular')
+            ->join('seccion as s', 'dpa.id_seccion', '=', 's.id_seccion')
+            ->join('lapso_academico as la', 's.id_lapso_academico', '=', 'la.id_lapso_academico')
             ->select(
-                'p.planificacion_id',
+                'p.id_planificacion as planificacion_id',
                 'p.estatus',
                 'u.id as docente_id',
                 'u.name as docente_nombre',
                 'u.apellido as docente_apellido',
                 'u.cedula',
-                'u.telefono'
+                'u.telefono',
+                'uc.nombre_unidad_curricular',
+                's.nombre_seccion',
+                'la.nombre_lapso_academico as nombre_lapso',
+                'la.fecha_inicio_lapso_academico as lapso_fecha_inicio',
+                'la.fecha_fin_lapso_academico as lapso_fecha_fin'
             )
-            ->join('users as u', 'p.docente_id', '=', 'u.id')
-            ->where('p.planificacion_id', $planificacionId)
+            ->where('p.id_planificacion', $planificacionId)
             ->first();
 
         if (!$planificacion) {
@@ -31,86 +41,107 @@ class PlanificacionViewRepo
 
         $resultado = (array) $planificacion;
 
+        // 2. Bibliografías
         $resultado['bibliografias'] = DB::table('detalle_bibliografia as db')
-            ->join('bibliografias as b', 'db.bibliografia_id', '=', 'b.bibliografia_id')
-            ->where('db.planificacion_id', $planificacionId)
-            ->where('db.estatus', 1)
-            ->select('b.bibliografia_id', 'b.bibliografia')
+            ->join('bibliografia as b', 'db.id_bibliografia', '=', 'b.id_bibliografia')
+            ->where('db.id_planificacion', $planificacionId)
+            ->where('db.estatus', '1')
+            ->select('b.id_bibliografia as bibliografia_id', 'b.nombre_bibliografia as bibliografia')
             ->get()
             ->map(fn($item) => (array) $item)
             ->toArray();
 
-        $resultado['cortes'] = DB::table('detalle_actividad as da')
-            ->join('detalle_planificacion as dp', 'da.detalle_id', '=', 'dp.detalle_id')
-            ->where('dp.planificacion_id', $planificacionId)
-            ->select('da.detalle_id', 'da.corte', 'da.estatus')
-            ->orderBy('da.corte')
+        // 3. Cortes
+        $resultado['cortes'] = DB::table('corte as c')
+            ->where('c.id_planificacion', $planificacionId)
+            ->where('c.estatus', '!=', '3') // Excluir eliminados si aplica, o mostrar todos
+            ->select('c.id_corte as detalle_id', 'c.numero_corte as corte', 'c.estatus')
+            ->orderBy('c.numero_corte')
             ->get()
             ->map(function ($corte) {
                 $corteArray = (array) $corte;
 
-                $ultimoMotivoRechazo = DB::table('motivos_rechazo')
-                    ->where('motivos_rechazo.detalle_id', $corte->detalle_id)
-                    ->orderBy('motivos_rechazo.fecha_creacion', 'desc')
-                    ->select('motivos_rechazo.motivo')
-                    ->where('motivos_rechazo.estatus', 1)
+                // 3.1 Motivo Rechazo (Último)
+                $ultimoMotivoRechazo = DB::table('motivo_rechazo')
+                    ->where('id_corte', $corte->detalle_id)
+                    ->orderBy('fecha_creacion', 'desc')
+                    ->select('descripcion_motivo_rechazo as motivo')
+                    ->where('estatus', '1')
                     ->first();
 
                 $corteArray['ultimo_motivo_rechazo'] = $ultimoMotivoRechazo ? $ultimoMotivoRechazo->motivo : null;
 
-                $corteArray['recursos'] = DB::table('detalle_recursos as dr')
-                    ->join('recursos as r', 'dr.recurso_id', '=', 'r.recurso_id')
-                    ->where('dr.detalle_id', $corte->detalle_id)
-                    ->where('dr.estatus', 1)
-                    ->select('r.recurso_id', 'r.recurso')
+                // 3.2 Recursos
+                $corteArray['recursos'] = DB::table('detalle_recurso as dr')
+                    ->join('recurso as r', 'dr.id_recurso', '=', 'r.id_recurso')
+                    ->where('dr.id_corte', $corte->detalle_id)
+                    ->where('dr.estatus', '1')
+                    ->select('r.id_recurso as recurso_id', 'r.nombre_recurso as recurso')
                     ->get()
                     ->map(fn($item) => (array) $item)
                     ->toArray();
 
-                $corteArray['estrategias'] = DB::table('detalle_estrategias as de')
-                    ->join('estrategias_pedagogicas as e', 'de.estrategia_id', '=', 'e.estrategia_id')
-                    ->where('de.detalle_id', $corte->detalle_id)
-                    ->where('de.estatus', 1)
-                    ->select('e.estrategia_id', 'e.estrategia')
+                // 3.3 Estrategias
+                $corteArray['estrategias'] = DB::table('detalle_estrategia_pedagogica as de')
+                    ->join('estrategia_pedagogica as e', 'de.id_estrategia_pedagogica', '=', 'e.id_estrategia_pedagogica')
+                    ->where('de.id_corte', $corte->detalle_id)
+                    ->where('de.estatus', '1')
+                    ->select('e.id_estrategia_pedagogica as estrategia_id', 'e.nombre_estrategia_pedagogica as estrategia')
                     ->get()
                     ->map(fn($item) => (array) $item)
                     ->toArray();
 
-                $corteArray['contenidos'] = DB::table('detalle_contenidos as dc')
-                    ->join('contenidos as c', 'dc.contenido_id', '=', 'c.contenido_id')
-                    ->where('dc.detalle_id', $corte->detalle_id)
-                    ->where('dc.estatus', 1)
-                    ->select('c.contenido_id', 'dc.detalle_contenido_id', 'c.titulo as titulo_contenido', 'c.descripcion as descripcion_contenido')
+                // 3.4 Contenidos (Temas -> Indicadores)
+                // OJO: En Create usamos detalle_tema, donde tema se vincula a contenido. 
+                // Pero en Show, queremos ver que temas se seleccionaron. 
+                // La estructura del array de salida espera 'contenidos' y dentro 'indicadores_logros'.
+                // Adaptamos para que 'titulo_contenido' sea el titulo del tema.
+    
+                $corteArray['contenidos'] = DB::table('detalle_tema as dt')
+                    ->join('tema as t', 'dt.id_tema', '=', 't.id_tema')
+                    // Si queremos el contenido padre: ->join('contenido as c', 't.id_contenido', '=', 'c.id_contenido')
+                    ->where('dt.id_corte', $corte->detalle_id)
+                    ->where('dt.estatus', '1')
+                    ->select(
+                        't.id_tema as contenido_id',
+                        'dt.id_detalle_tema as detalle_contenido_id',
+                        't.titulo_tema as titulo_contenido',
+                        't.descripcion_tema as descripcion_contenido'
+                    )
                     ->get()
-                    ->map(function ($contenido) {
-                        $contenidoArray = (array) $contenido;
-                        $indicadores = DB::table('contenido_indicadores as ci')
-                            ->join('indicadores_logros as il', 'ci.indicador_id', '=', 'il.indicador_id')
-                            ->where('ci.detalle_contenido_id', $contenido->detalle_contenido_id)
-                            ->where('ci.estatus', 1)
-                            ->select('il.indicador_id', 'il.indicador as descripcion_indicador')
+                    ->map(function ($tema) {
+                        $temaArray = (array) $tema;
+
+                        // 3.4.1 Indicadores (vinculados a detalle_tema)
+                        $indicadores = DB::table('detalle_indicador as di')
+                            ->join('indicador_logro as il', 'di.id_indicador_logro', '=', 'il.id_indicador_logro')
+                            ->where('di.id_detalle_tema', $tema->detalle_contenido_id) // detalle_contenido_id es id_detalle_tema
+                            ->where('di.estatus', '1')
+                            ->select('il.id_indicador_logro as indicador_id', 'il.nombre_indicador_logro as descripcion_indicador')
                             ->get()
                             ->map(fn($item) => (array) $item)
                             ->toArray();
 
-                        $contenidoArray['indicadores_logros'] = array_values(array_unique($indicadores, SORT_REGULAR));
-                        return $contenidoArray;
+                        $temaArray['indicadores_logros'] = array_values(array_unique($indicadores, SORT_REGULAR));
+                        return $temaArray;
                     })
                     ->toArray();
 
+                // 3.5 Evaluaciones
                 $corteArray['evaluaciones'] = DB::table('detalle_evaluacion as dev')
-                    ->leftJoin('evaluaciones as eva', 'dev.evaluacion_id', '=', 'eva.evaluacion_id')
-                    ->leftJoin('tecnicas as tec', 'dev.tecnica_id', '=', 'tec.tecnica_id')
-                    ->where('dev.detalle_id', $corte->detalle_id)
-                    ->where('dev.estatus', 1)
+                    ->leftJoin('evaluacion as eva', 'dev.id_evaluacion', '=', 'eva.id_evaluacion')
+                    ->leftJoin('tecnica as tec', 'dev.id_tecnica', '=', 'tec.id_tecnica')
+                    ->where('dev.id_corte', $corte->detalle_id)
+                    ->where('dev.estatus', '!=', '3')
                     ->select(
-                        'dev.evaluacion_id',
-                        'eva.evaluacion',
-                        'dev.tecnica_id',
-                        'tec.tecnica',
-                        'dev.ponderacion',
-                        'dev.fecha_evaluacion',
-                        'dev.forma_participacion'
+                        'dev.id_detalle_evaluacion as detalle_evaluacion_id',
+                        'dev.id_evaluacion as evaluacion_id',
+                        'dev.id_tecnica as tecnica_id',
+                        'eva.nombre_evaluacion as evaluacion',
+                        'tec.nombre_tecnica as tecnica',
+                        'dev.ponderacion_detalle_evaluacion as ponderacion',
+                        'dev.fecha_evaluacion_detalle_evaluacion as fecha_evaluacion',
+                        'dev.forma_participacion_detalle_evaluacion as forma_participacion'
                     )
                     ->get()
                     ->map(fn($item) => (array) $item)
@@ -120,9 +151,11 @@ class PlanificacionViewRepo
             })
             ->toArray();
 
+        // 4. Coordinador (Datos ficticios o reales dependiendo de permisos, 
+        // lo dejamos igual pero ajustando nombres de tablas si fuera necesario)
         $coordinador = DB::table('users as u')
             ->join('usuario_rol as ur', 'u.id', '=', 'ur.id_users')
-            ->where('ur.id_rol', 1)
+            ->where('ur.id_rol', 1) // 1 = Coordinador
             ->select('u.name', 'u.apellido', 'u.cedula')
             ->first();
 

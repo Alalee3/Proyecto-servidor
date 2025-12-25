@@ -522,6 +522,6 @@ class UpdatePlanificacion extends Component
 
     public function render()
     {
-        return view('livewire.planificacion.update-planificacion');
+        return view('livewire.pages.planificacion.update-planificacion');
     }
 }

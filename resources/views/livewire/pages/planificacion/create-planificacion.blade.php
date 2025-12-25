@@ -74,7 +74,7 @@
 
                 @if (session()->has('message'))
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4
-                                                             dark:bg-green-700 dark:border-green-800 dark:text-green-100"
+                                                                     dark:bg-green-700 dark:border-green-800 dark:text-green-100"
                         role="alert">
                         <span class="block sm:inline">{{ session('message') }}</span>
                     </div>
@@ -82,7 +82,7 @@
 
                 @if (session()->has('error'))
                     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4
-                                                             dark:bg-red-700 dark:border-red-800 dark:text-red-100"
+                                                                     dark:bg-red-700 dark:border-red-800 dark:text-red-100"
                         role="alert">
                         <span class="block sm:inline">{{ session('error') }}</span>
                     </div>
@@ -117,7 +117,7 @@
                         <label for="proposito" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Propósito de la unidad curricular
                         </label>
-                        <textarea id="proposito" wire:model.defer="proposito" rows="3"
+                        <textarea id="proposito" wire:model.live.debounce.250ms="proposito" rows="3"
                             class="block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                             placeholder="El propósito se cargará automáticamente al seleccionar una unidad, pero puedes editarlo aquí..."></textarea>
                         @error('proposito')
@@ -202,11 +202,7 @@
                                                             class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">
                                                             + AÑADIR INDICADOR
                                                         </button>
-                                                        <button type="button" x-data
-                                                            x-on:click="$dispatch('openModal', { component: 'planificacion.create-input', arguments: { type: 'indicador' } })"
-                                                            class="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
-                                                            + NUEVO INDICADOR
-                                                        </button>
+
                                                     </div>
                                                 </div>
 
@@ -247,11 +243,7 @@
                                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
                                         <h4 class="font-medium text-gray-800 dark:text-gray-100">Recursos</h4>
                                         <div class="flex flex-wrap gap-2 self-start sm:self-auto">
-                                            <button type="button" x-data
-                                                x-on:click="$dispatch('openModal', { component: 'planificacion.create-input', arguments: { type: 'recurso' } })"
-                                                class="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
-                                                + NUEVO RECURSO
-                                            </button>
+
                                             <button type="button" wire:click="addItem({{ $index }}, 'recursos')"
                                                 class="text-xs bg-blue-500 text-white px-2 py-1 rounded">
                                                 AÑADIR RECURSO
@@ -286,11 +278,7 @@
                                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
                                         <h4 class="font-medium text-gray-800 dark:text-gray-100">Estrategias</h4>
                                         <div class="flex flex-wrap gap-2 self-start sm:self-auto">
-                                            <button type="button" x-data
-                                                x-on:click="$dispatch('openModal', { component: 'planificacion.create-input', arguments: { type: 'estrategia' } })"
-                                                class="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
-                                                + NUEVA ESTRATEGIA
-                                            </button>
+
                                             <button type="button" wire:click="addItem({{ $index }}, 'estrategias')"
                                                 class="text-xs bg-blue-500 text-white px-2 py-1 rounded">
                                                 AÑADIR ESTRATEGIA
@@ -333,16 +321,7 @@
                                         </span>
                                     </div>
                                     <div class="flex flex-wrap gap-2 self-start sm:self-auto">
-                                        <button type="button" x-data
-                                            x-on:click="$dispatch('openModal', { component: 'planificacion.create-input', arguments: { type: 'evaluacion' } })"
-                                            class="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
-                                            + NUEVA EVALUACIÓN
-                                        </button>
-                                        <button type="button" x-data
-                                            x-on:click="$dispatch('openModal', { component: 'planificacion.create-input', arguments: { type: 'tecnica' } })"
-                                            class="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
-                                            + NUEVA TÉCNICA
-                                        </button>
+
                                         <button type="button" wire:click="addItem({{ $index }}, 'evaluaciones')"
                                             class="text-xs bg-blue-500 text-white px-2 py-1 rounded">
                                             AÑADIR EVALUACIÓN
@@ -362,8 +341,8 @@
                                                     name="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.fecha_evaluacion"
                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.fecha_evaluacion"
                                                     class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline
-                                                                                                           dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 dark:focus:ring-blue-500 dark:focus:border-blue-500
-                                                                                                           date-input-dark"
+                                                                                                                           dark:bg-gray-900 dark:text-gray-300 dark:border-gray-600 dark:focus:ring-blue-500 dark:focus:border-blue-500
+                                                                                                                           date-input-dark"
                                                     style="color-scheme: light;">
                                             </div>
                                             <div class="min-w-0">
@@ -439,11 +418,7 @@
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
                             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Bibliografía</h3>
                             <div class="flex flex-wrap gap-2 self-start sm:self-auto">
-                                <button type="button" x-data
-                                    x-on:click="$dispatch('openModal', { component: 'planificacion.create-input', arguments: { type: 'bibliografia' } })"
-                                    class="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
-                                    + NUEVA BIBLIOGRAFÍA
-                                </button>
+
                                 <button type="button" wire:click="addItem(null, 'bibliografias')"
                                     class="text-xs bg-blue-500 text-white px-2 py-1 rounded">
                                     AÑADIR BIBLIOGRAFÍA

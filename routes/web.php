@@ -2,7 +2,7 @@
 
 use App\Livewire\Planificacion\CreatePlanificacion;
 use App\Livewire\Planificacion\ListPlanificacion;
-use App\Livewire\Planificacion\MisPlanificaciones;
+
 
 use App\Livewire\Pnf\CreatePnf;
 use App\Livewire\Pnf\UpdatePnf;
@@ -124,8 +124,9 @@ Route::middleware(['auth'])->group(function () { });
 
 Route::middleware(['auth', 'role:1|2'])->group(function () {
     Route::get('planificacion/create', CreatePlanificacion::class)->name('planificacion/crear');
-    Route::get('planificacion/mis-planificaciones', MisPlanificaciones::class)->name('planificacion/mis-planificaciones');
+
     Route::get('planificacion/update/{planificacionId}', \App\Livewire\Planificacion\UpdatePlanificacion::class)->name('planificaciones.update');
+    Route::get('planificacion/show/{planificacionId}', \App\Livewire\Planificacion\ShowPlanificacion::class)->name('planificacion/show');
 });
 
 require __DIR__ . '/auth.php';

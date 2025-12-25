@@ -55,7 +55,7 @@ class CreatePlanificacion extends Component
                     // Obtener propósito de la unidad curricular
                     $unidad = DB::table('unidad_curricular')->where('id_unidad_curricular', $detalle->id_unidad_curricular)->first();
                     if ($unidad) {
-                        $this->proposito = $unidad->proposito; // Asumiendo campo 'proposito' existe en 'unidad_curricular'
+                        $this->proposito = $unidad->proposito_unidad_curricular;
                     }
                 }
             }
@@ -381,7 +381,7 @@ class CreatePlanificacion extends Component
 
     public function render()
     {
-        return view('livewire.planificacion.create-planificacion', [
+        return view('livewire.pages.planificacion.create-planificacion', [
             'weekDays' => ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'], // No longer used but kept for compatibility
             'timeSlots' => $this->generateTimeSlots()
         ]);
