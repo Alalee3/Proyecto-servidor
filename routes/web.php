@@ -52,6 +52,11 @@ use App\Livewire\Evaluacion\UpdateEvaluacion;
 use App\Livewire\Evaluacion\ShowEvaluacion;
 use App\Livewire\Evaluacion\ListEvaluacion;
 
+use App\Livewire\Evento\CreateEvento;
+use App\Livewire\Evento\ListEvento;
+use App\Livewire\Evento\UpdateEvento;
+use App\Livewire\Evento\ShowEvento;
+
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
@@ -118,6 +123,12 @@ Route::middleware(['auth', 'role:1'])->group(function () {
     Route::get('evaluacion/create', CreateEvaluacion::class)->name('evaluacion/crear');
     Route::get('evaluacion/update/{id}', UpdateEvaluacion::class)->name('evaluacion/update');
     Route::get('evaluacion/show/{id}', ShowEvaluacion::class)->name('evaluacion/show');
+
+    // Rutas para Eventos
+    Route::get('evento/list', ListEvento::class)->name('evento/listar');
+    Route::get('evento/create', CreateEvento::class)->name('evento/crear');
+    Route::get('evento/update/{id}', UpdateEvento::class)->name('evento/update');
+    Route::get('evento/show/{id}', ShowEvento::class)->name('evento/show');
 });
 
 Route::middleware(['auth'])->group(function () { });

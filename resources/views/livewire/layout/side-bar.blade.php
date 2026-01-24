@@ -34,10 +34,10 @@
                 <!-- PNFS -->
                 <div>
                     <button @click="openMenu === 1 ? openMenu = null : openMenu = 1" :class="{
-                                                                                                                'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 1,
-                                                                                                                'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 1
-                                                                                                            }">
+                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
+                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 1,
+                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 1
+                                                                                                                    }">
                         <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">school</i>
                         <span>PNFS</span>
                         <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 1 }"
@@ -58,10 +58,10 @@
                 <!-- Contenidos -->
                 <div>
                     <button @click="openMenu === 7 ? openMenu = null : openMenu = 7" :class="{
-                                                                                                                'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 7,
-                                                                                                                'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 7
-                                                                                                            }">
+                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
+                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 7,
+                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 7
+                                                                                                                    }">
                         <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">description</i>
                         <span>Contenidos</span>
                         <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 7 }"
@@ -82,10 +82,10 @@
                 <!-- Temas -->
                 <div>
                     <button @click="openMenu === 8 ? openMenu = null : openMenu = 8" :class="{
-                                                                                                                'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 8,
-                                                                                                                'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 8
-                                                                                                            }">
+                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
+                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 8,
+                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 8
+                                                                                                                    }">
                         <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">topic</i>
                         <span>Temas</span>
                         <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 8 }"
@@ -106,10 +106,10 @@
                 <!-- Indicadores de Logro -->
                 <div>
                     <button @click="openMenu === 9 ? openMenu = null : openMenu = 9" :class="{
-                                                                                                                'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 9,
-                                                                                                                'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 9
-                                                                                                            }">
+                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
+                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 9,
+                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 9
+                                                                                                                    }">
                         <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">task_alt</i>
                         <span>Indicadores de Logro</span>
                         <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 9 }"
@@ -130,10 +130,10 @@
                 <!-- Bibliografía -->
                 <div>
                     <button @click="openMenu === 10 ? openMenu = null : openMenu = 10" :class="{
-                                                                                                                'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 10,
-                                                                                                                'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 10
-                                                                                                            }">
+                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
+                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 10,
+                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 10
+                                                                                                                    }">
                         <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">menu_book</i>
                         <span>Bibliografía</span>
                         <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 10 }"
@@ -154,10 +154,10 @@
                 <!-- Recursos -->
                 <div>
                     <button @click="openMenu === 11 ? openMenu = null : openMenu = 11" :class="{
-                                                                                                                'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 11,
-                                                                                                                'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 11
-                                                                                                            }">
+                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
+                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 11,
+                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 11
+                                                                                                                    }">
                         <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">inventory_2</i>
                         <span>Recursos</span>
                         <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 11 }"
@@ -178,10 +178,10 @@
                 <!-- Estrategias Pedagógicas -->
                 <div>
                     <button @click="openMenu === 12 ? openMenu = null : openMenu = 12" :class="{
-                                                                                                                'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 12,
-                                                                                                                'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 12
-                                                                                                            }">
+                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
+                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 12,
+                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 12
+                                                                                                                    }">
                         <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">psychology</i>
                         <span>Estrategias</span>
                         <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 12 }"
@@ -202,10 +202,10 @@
                 <!-- Técnicas de Evaluación -->
                 <div>
                     <button @click="openMenu === 13 ? openMenu = null : openMenu = 13" :class="{
-                                                                                                                'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 13,
-                                                                                                                'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 13
-                                                                                                            }">
+                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
+                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 13,
+                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 13
+                                                                                                                    }">
                         <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">quiz</i>
                         <span>Técnicas</span>
                         <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 13 }"
@@ -226,10 +226,10 @@
                 <!-- Evaluaciones -->
                 <div>
                     <button @click="openMenu === 14 ? openMenu = null : openMenu = 14" :class="{
-                                                                                                                'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 14,
-                                                                                                                'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 14
-                                                                                                            }">
+                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
+                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 14,
+                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 14
+                                                                                                                    }">
                         <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">assignment</i>
                         <span>Evaluaciones</span>
                         <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 14 }"
@@ -247,13 +247,37 @@
                     </ul>
                 </div>
 
+                <!-- Eventos -->
+                <div>
+                    <button @click="openMenu === 15 ? openMenu = null : openMenu = 15" :class="{
+                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
+                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 15,
+                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 15
+                                                                                                                    }">
+                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">date_range</i>
+                        <span>Eventos</span>
+                        <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 15 }"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <ul x-show="openMenu === 15" x-collapse class="ml-8 mt-2 space-y-1">
+                        <li><a href="{{ route('evento/crear') }}"
+                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                Evento</a></li>
+                        <li><a href="{{ route('evento/listar') }}"
+                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                Eventos</a></li>
+                    </ul>
+                </div>
+
                 <!-- Usuarios -->
                 <div>
                     <button @click="openMenu === 5 ? openMenu = null : openMenu = 5" :class="{
-                                                                                                                'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 5,
-                                                                                                                'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 5
-                                                                                                            }">
+                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
+                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 5,
+                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 5
+                                                                                                                    }">
                         <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">people</i>
                         <span>Usuarios</span>
                         <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 5 }"
@@ -274,10 +298,10 @@
                 <!-- Planificaciones -->
                 <div>
                     <button @click="openMenu === 6 ? openMenu = null : openMenu = 6" :class="{
-                                                                                                                'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 6,
-                                                                                                                'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 6
-                                                                                                            }">
+                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
+                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 6,
+                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 6
+                                                                                                                    }">
                         <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">assignment</i>
                         <span>Planificaciones</span>
                         <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 6 }"
