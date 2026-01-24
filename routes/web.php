@@ -57,6 +57,11 @@ use App\Livewire\Evento\ListEvento;
 use App\Livewire\Evento\UpdateEvento;
 use App\Livewire\Evento\ShowEvento;
 
+use App\Livewire\CalendarioAcademico\CreateCalendarioAcademico;
+use App\Livewire\CalendarioAcademico\ListCalendarioAcademico;
+use App\Livewire\CalendarioAcademico\UpdateCalendarioAcademico;
+use App\Livewire\CalendarioAcademico\ShowCalendarioAcademico;
+
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
@@ -129,6 +134,12 @@ Route::middleware(['auth', 'role:1'])->group(function () {
     Route::get('evento/create', CreateEvento::class)->name('evento/crear');
     Route::get('evento/update/{id}', UpdateEvento::class)->name('evento/update');
     Route::get('evento/show/{id}', ShowEvento::class)->name('evento/show');
+
+    // Rutas para Calendario Académico
+    Route::get('calendario-academico/list', ListCalendarioAcademico::class)->name('calendario-academico/listar');
+    Route::get('calendario-academico/create', CreateCalendarioAcademico::class)->name('calendario-academico/crear');
+    Route::get('calendario-academico/update/{id}', UpdateCalendarioAcademico::class)->name('calendario-academico/update');
+    Route::get('calendario-academico/show/{id}', ShowCalendarioAcademico::class)->name('calendario-academico/show');
 });
 
 Route::middleware(['auth'])->group(function () { });
