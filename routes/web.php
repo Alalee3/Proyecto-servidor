@@ -138,6 +138,10 @@ Route::middleware(['auth', 'role:1|2'])->group(function () {
 
     Route::get('planificacion/update/{planificacionId}', \App\Livewire\Planificacion\UpdatePlanificacion::class)->name('planificaciones.update');
     Route::get('planificacion/show/{planificacionId}', \App\Livewire\Planificacion\ShowPlanificacion::class)->name('planificacion/show');
+    
+    // Rutas para Reportes PDF (Abrir en pestaña)
+    Route::get('planificacion/reporte-general', [\App\Http\Controllers\ReportePlanificacionController::class, 'reporteGeneral'])->name('planificacion.reporte.general');
+    Route::get('planificacion/reporte-detalle/{id}', [\App\Http\Controllers\ReportePlanificacionController::class, 'reporteDetalle'])->name('planificacion.reporte.detalle');
 });
 
 require __DIR__ . '/auth.php';

@@ -17,7 +17,7 @@
 
     <hr class="border-gray-200 dark:border-gray-700">
 
-    <nav class="mt-6 px-2 space-y-1" x-data="{ openMenu: null }">
+    <nav class="mt-6 px-2 space-y-1" x-data="{ openMenu: null, subMenu: null }">
         @auth
             <!-- Dashboard -->
             <a href="/dashboard"
@@ -103,148 +103,166 @@
                     </ul>
                 </div>
 
-                <!-- Indicadores de Logro -->
+                <!-- Recursos Educativos -->
                 <div>
-                    <button @click="openMenu === 9 ? openMenu = null : openMenu = 9" :class="{
-                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 9,
-                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 9
-                                                                                                                    }">
-                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">task_alt</i>
-                        <span>Indicadores de Logro</span>
-                        <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 9 }"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                    <ul x-show="openMenu === 9" x-collapse class="ml-8 mt-2 space-y-1">
-                        <li><a href="{{ route('indicador-logro/crear') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
-                                Indicador</a></li>
-                        <li><a href="{{ route('indicador-logro/listar') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
-                                Indicadores</a></li>
-                    </ul>
-                </div>
-
-                <!-- Bibliografía -->
-                <div>
-                    <button @click="openMenu === 10 ? openMenu = null : openMenu = 10" :class="{
-                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 10,
-                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 10
-                                                                                                                    }">
-                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">menu_book</i>
-                        <span>Bibliografía</span>
+                    <button @click="openMenu === 10 ? openMenu = null : (openMenu = 10, subMenu = null)" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 10,
+                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 10
+                    }">
+                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">folder_special</i>
+                        <span>Recursos Educativos</span>
                         <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 10 }"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
-                    <ul x-show="openMenu === 10" x-collapse class="ml-8 mt-2 space-y-1">
-                        <li><a href="{{ route('bibliografia/crear') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
-                                Bibliografía</a></li>
-                        <li><a href="{{ route('bibliografia/listar') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
-                                Bibliografía</a></li>
-                    </ul>
-                </div>
 
-                <!-- Recursos -->
-                <div>
-                    <button @click="openMenu === 11 ? openMenu = null : openMenu = 11" :class="{
-                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 11,
-                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 11
-                                                                                                                    }">
-                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">inventory_2</i>
-                        <span>Recursos</span>
-                        <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 11 }"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                    <ul x-show="openMenu === 11" x-collapse class="ml-8 mt-2 space-y-1">
-                        <li><a href="{{ route('recurso/crear') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
-                                Recurso</a></li>
-                        <li><a href="{{ route('recurso/listar') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
-                                Recursos</a></li>
-                    </ul>
-                </div>
+                    <div x-show="openMenu === 10" x-collapse class="ml-4 mt-2 space-y-1 border-l-2 border-gray-200 dark:border-gray-700 pl-2">
+                        <!-- Indicadores de Logro -->
+                        <div>
+                            <button @click="subMenu === 1 ? subMenu = null : subMenu = 1" :class="{
+                                'flex items-center w-full p-2 rounded-lg text-sm': true,
+                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': subMenu !== 1,
+                                'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white': subMenu === 1
+                            }">
+                                <i class="material-icons mr-2 text-xs text-gray-500 dark:text-gray-400">task_alt</i>
+                                <span>Indicadores de Logro</span>
+                                <svg class="w-3 h-3 ml-auto transform transition-transform" :class="{ 'rotate-180': subMenu === 1 }"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <ul x-show="subMenu === 1" x-collapse class="ml-6 mt-1 space-y-1">
+                                <li><a href="{{ route('indicador-logro/crear') }}"
+                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        Indicador</a></li>
+                                <li><a href="{{ route('indicador-logro/listar') }}"
+                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        Indicadores</a></li>
+                            </ul>
+                        </div>
 
-                <!-- Estrategias Pedagógicas -->
-                <div>
-                    <button @click="openMenu === 12 ? openMenu = null : openMenu = 12" :class="{
-                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 12,
-                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 12
-                                                                                                                    }">
-                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">psychology</i>
-                        <span>Estrategias</span>
-                        <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 12 }"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                    <ul x-show="openMenu === 12" x-collapse class="ml-8 mt-2 space-y-1">
-                        <li><a href="{{ route('estrategia/crear') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
-                                Estrategia</a></li>
-                        <li><a href="{{ route('estrategia/listar') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
-                                Estrategias</a></li>
-                    </ul>
-                </div>
+                        <!-- Bibliografía -->
+                        <div>
+                            <button @click="subMenu === 2 ? subMenu = null : subMenu = 2" :class="{
+                                'flex items-center w-full p-2 rounded-lg text-sm': true,
+                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': subMenu !== 2,
+                                'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white': subMenu === 2
+                            }">
+                                <i class="material-icons mr-2 text-xs text-gray-500 dark:text-gray-400">menu_book</i>
+                                <span>Bibliografía</span>
+                                <svg class="w-3 h-3 ml-auto transform transition-transform" :class="{ 'rotate-180': subMenu === 2 }"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <ul x-show="subMenu === 2" x-collapse class="ml-6 mt-1 space-y-1">
+                                <li><a href="{{ route('bibliografia/crear') }}"
+                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        Bibliografía</a></li>
+                                <li><a href="{{ route('bibliografia/listar') }}"
+                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        Bibliografía</a></li>
+                            </ul>
+                        </div>
 
-                <!-- Técnicas de Evaluación -->
-                <div>
-                    <button @click="openMenu === 13 ? openMenu = null : openMenu = 13" :class="{
-                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 13,
-                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 13
-                                                                                                                    }">
-                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">quiz</i>
-                        <span>Técnicas</span>
-                        <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 13 }"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                    <ul x-show="openMenu === 13" x-collapse class="ml-8 mt-2 space-y-1">
-                        <li><a href="{{ route('tecnica/crear') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
-                                Técnica</a></li>
-                        <li><a href="{{ route('tecnica/listar') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
-                                Técnicas</a></li>
-                    </ul>
-                </div>
+                        <!-- Recursos -->
+                        <div>
+                            <button @click="subMenu === 3 ? subMenu = null : subMenu = 3" :class="{
+                                'flex items-center w-full p-2 rounded-lg text-sm': true,
+                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': subMenu !== 3,
+                                'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white': subMenu === 3
+                            }">
+                                <i class="material-icons mr-2 text-xs text-gray-500 dark:text-gray-400">inventory_2</i>
+                                <span>Recursos</span>
+                                <svg class="w-3 h-3 ml-auto transform transition-transform" :class="{ 'rotate-180': subMenu === 3 }"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <ul x-show="subMenu === 3" x-collapse class="ml-6 mt-1 space-y-1">
+                                <li><a href="{{ route('recurso/crear') }}"
+                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        Recurso</a></li>
+                                <li><a href="{{ route('recurso/listar') }}"
+                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        Recursos</a></li>
+                            </ul>
+                        </div>
 
-                <!-- Evaluaciones -->
-                <div>
-                    <button @click="openMenu === 14 ? openMenu = null : openMenu = 14" :class="{
-                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 14,
-                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 14
-                                                                                                                    }">
-                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">assignment</i>
-                        <span>Evaluaciones</span>
-                        <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 14 }"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                    <ul x-show="openMenu === 14" x-collapse class="ml-8 mt-2 space-y-1">
-                        <li><a href="{{ route('evaluacion/crear') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
-                                Evaluación</a></li>
-                        <li><a href="{{ route('evaluacion/listar') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
-                                Evaluaciones</a></li>
-                    </ul>
+                        <!-- Estrategias -->
+                        <div>
+                            <button @click="subMenu === 4 ? subMenu = null : subMenu = 4" :class="{
+                                'flex items-center w-full p-2 rounded-lg text-sm': true,
+                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': subMenu !== 4,
+                                'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white': subMenu === 4
+                            }">
+                                <i class="material-icons mr-2 text-xs text-gray-500 dark:text-gray-400">psychology</i>
+                                <span>Estrategias</span>
+                                <svg class="w-3 h-3 ml-auto transform transition-transform" :class="{ 'rotate-180': subMenu === 4 }"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <ul x-show="subMenu === 4" x-collapse class="ml-6 mt-1 space-y-1">
+                                <li><a href="{{ route('estrategia/crear') }}"
+                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        Estrategia</a></li>
+                                <li><a href="{{ route('estrategia/listar') }}"
+                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        Estrategias</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Técnicas -->
+                        <div>
+                            <button @click="subMenu === 5 ? subMenu = null : subMenu = 5" :class="{
+                                'flex items-center w-full p-2 rounded-lg text-sm': true,
+                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': subMenu !== 5,
+                                'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white': subMenu === 5
+                            }">
+                                <i class="material-icons mr-2 text-xs text-gray-500 dark:text-gray-400">quiz</i>
+                                <span>Técnicas</span>
+                                <svg class="w-3 h-3 ml-auto transform transition-transform" :class="{ 'rotate-180': subMenu === 5 }"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <ul x-show="subMenu === 5" x-collapse class="ml-6 mt-1 space-y-1">
+                                <li><a href="{{ route('tecnica/crear') }}"
+                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        Técnica</a></li>
+                                <li><a href="{{ route('tecnica/listar') }}"
+                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        Técnicas</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Evaluaciones -->
+                        <div>
+                            <button @click="subMenu === 6 ? subMenu = null : subMenu = 6" :class="{
+                                'flex items-center w-full p-2 rounded-lg text-sm': true,
+                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': subMenu !== 6,
+                                'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white': subMenu === 6
+                            }">
+                                <i class="material-icons mr-2 text-xs text-gray-500 dark:text-gray-400">assignment</i>
+                                <span>Evaluaciones</span>
+                                <svg class="w-3 h-3 ml-auto transform transition-transform" :class="{ 'rotate-180': subMenu === 6 }"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <ul x-show="subMenu === 6" x-collapse class="ml-6 mt-1 space-y-1">
+                                <li><a href="{{ route('evaluacion/crear') }}"
+                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        Evaluación</a></li>
+                                <li><a href="{{ route('evaluacion/listar') }}"
+                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        Evaluaciones</a></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Eventos -->

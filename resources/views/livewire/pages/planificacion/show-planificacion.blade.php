@@ -30,7 +30,14 @@
                             Sección: {{ $planificacion->nombre_seccion ?? '' }}
                         </p>
                     </div>
-                    <div>
+                    <div class="flex items-center gap-4">
+                        <a href="{{ route('planificacion.reporte.detalle', $planificacionId) }}" 
+                            target="_blank"
+                            class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition-all duration-200"
+                            title="Ver Plan de Curso en PDF (Nueva pestaña)">
+                            <span class="material-icons text-white text-base">picture_as_pdf</span>
+                            PDF
+                        </a>
                         <span
                             class="px-3 py-1 rounded-full text-sm font-semibold
                             @if (($planificacion->estatus ?? 0) == 1) bg-green-100 text-green-800

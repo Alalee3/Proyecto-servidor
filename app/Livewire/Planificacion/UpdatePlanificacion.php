@@ -41,6 +41,11 @@ class UpdatePlanificacion extends Component
     public $tecnicasDisponibles = [];
     public $bibliografiasDisponibles = [];
 
+    // Fechas de lapso para validación
+    public $id_unidad_curricular;
+    public $lapso_fecha_inicio;
+    public $lapso_fecha_fin;
+
     public $mostrarDetallesUnidad = false;
 
     public function __construct()
@@ -77,8 +82,11 @@ class UpdatePlanificacion extends Component
         $this->docente_nombre = $planificacion['docente_nombre'];
         $this->docente_apellido = $planificacion['docente_apellido'];
         $this->cedula = $planificacion['cedula'];
+        $this->id_unidad_curricular = $planificacion['id_unidad_curricular'];
+        $this->lapso_fecha_inicio = $planificacion['lapso_fecha_inicio'];
+        $this->lapso_fecha_fin = $planificacion['lapso_fecha_fin'];
 
-        // Cargar contenidos disponibles
+        // Cargar contenidos disponibles filtrados por unidad
         $this->loadContenidosUnidad();
 
         // Cargar detalles dinámicos (cortes, bibliografías) desde el array del repositorio
@@ -247,7 +255,7 @@ class UpdatePlanificacion extends Component
 
     protected function loadContenidosUnidad()
     {
-        $this->contenidosDisponibles = $this->planificacionCreateRepo->select_contenidos()->toArray();
+        $this->contenidosDisponibles = $this->planificacionCreateRepo->select_contenidos($this->id_unidad_curricular)->toArray();
     }
 
     public function toggleDetallesUnidad()
@@ -278,7 +286,7 @@ class UpdatePlanificacion extends Component
         foreach ($this->bibliografias as $biblioIndex => $bibliografia) {
             $rules["bibliografias.$biblioIndex.bibliografia_id"] = [
                 'required',
-                'exists:bibliografias,bibliografia_id',
+                'exists:bibliografia,id_bibliografia',
                 function ($attribute, $value, $fail) use ($biblioIndex) {
                     $allBiblioIds = collect($this->bibliografias)->pluck('bibliografia_id')->filter()->all();
                     $currentValueCount = 0;
@@ -300,7 +308,7 @@ class UpdatePlanificacion extends Component
             foreach ($corte['recursos'] as $recursoIndex => $recurso) {
                 $rules["cortes.$index.recursos.$recursoIndex.recurso_id"] = [
                     'required',
-                    'exists:recursos,recurso_id',
+                    'exists:recurso,id_recurso',
                     function ($attribute, $value, $fail) use ($corte, $recursoIndex) {
                         $recursoIdsInCorte = collect($corte['recursos'])->pluck('recurso_id')->filter()->all();
                         $currentValueCount = 0;
@@ -321,7 +329,7 @@ class UpdatePlanificacion extends Component
             foreach ($corte['estrategias'] as $estrategiaIndex => $estrategia) {
                 $rules["cortes.$index.estrategias.$estrategiaIndex.estrategia_id"] = [
                     'required',
-                    'exists:estrategias_pedagogicas,estrategia_id',
+                    'exists:estrategia_pedagogica,id_estrategia_pedagogica',
                     function ($attribute, $value, $fail) use ($corte, $estrategiaIndex) {
                         $estrategiaIdsInCorte = collect($corte['estrategias'])->pluck('estrategia_id')->filter()->all();
                         $currentValueCount = 0;
@@ -348,7 +356,7 @@ class UpdatePlanificacion extends Component
             foreach ($corte['contenidos'] as $contenidoIndex => $contenido) {
                 $rules["cortes.$index.contenidos.$contenidoIndex.contenido_id"] = [
                     'required',
-                    'exists:contenidos,contenido_id',
+                    'exists:tema,id_tema',
                     function ($attribute, $value, $fail) use ($allContenidoIdsInForm, $index, $contenidoIndex) {
                         $filteredContenidoIds = [];
                         foreach ($this->cortes as $cIdx => $corteItem) {
@@ -370,22 +378,7 @@ class UpdatePlanificacion extends Component
                     foreach ($contenido['indicadores_logros'] as $indicadorIndex => $indicador) {
                         $rules["cortes.$index.contenidos.$contenidoIndex.indicadores_logros.$indicadorIndex.indicador_id"] = [
                             'required',
-                            'exists:indicadores_logros,indicador_id',
-                            function ($attribute, $value, $fail) use ($index, $contenidoIndex, $indicadorIndex) {
-                                $currentIndicadorIds = [];
-                                foreach ($this->cortes as $cIdx => $corteItem) {
-                                    foreach ($corteItem['contenidos'] as $contIdx => $contItem) {
-                                        foreach ($contItem['indicadores_logros'] as $indIdx => $indItem) {
-                                            if (!($cIdx === $index && $contIdx === $contenidoIndex && $indIdx === $indicadorIndex)) {
-                                                $currentIndicadorIds[] = $indItem['indicador_id'];
-                                            }
-                                        }
-                                    }
-                                }
-                                if (in_array($value, $currentIndicadorIds)) {
-                                    $fail('Este indicador de logro ya ha sido seleccionado en el formulario.');
-                                }
-                            },
+                            'exists:indicador_logro,id_indicador_logro',
                         ];
                     }
                 }
@@ -401,13 +394,14 @@ class UpdatePlanificacion extends Component
                     $fechaEvaluacionRules[] = 'before_or_equal:' . $this->lapso_fecha_fin;
                 }
                 $rules["cortes.$index.evaluaciones.$evaluacionIndex.fecha_evaluacion"] = $fechaEvaluacionRules;
-                $rules["cortes.$index.evaluaciones.$evaluacionIndex.evaluacion_id"] = 'required|exists:evaluaciones,evaluacion_id';
-                $rules["cortes.$index.evaluaciones.$evaluacionIndex.tecnica_id"] = 'required|exists:tecnicas,tecnica_id';
+                $rules["cortes.$index.evaluaciones.$evaluacionIndex.evaluacion_id"] = 'required|exists:evaluacion,id_evaluacion';
+                $rules["cortes.$index.evaluaciones.$evaluacionIndex.tecnica_id"] = 'required|exists:tecnica,id_tecnica';
 
                 $rules["cortes.$index.evaluaciones.$evaluacionIndex.ponderacion"] = [
                     'required',
                     'numeric',
-                    'min:0', // Asegurarse que no sea negativo
+                    'min:1',
+                    'max:25',
                     function ($attribute, $value, $fail) use ($index, $corte, $evaluacionIndex) {
                         $totalEvaluaciones = count($corte['evaluaciones']);
                         $currentPonderacionValue = (float) $value;
@@ -418,11 +412,6 @@ class UpdatePlanificacion extends Component
                                 $fail('La única evaluación en este corte debe tener 25% de ponderación.');
                             }
                         } elseif ($totalEvaluaciones > 1) {
-                            // Validar ponderación mínima para múltiples evaluaciones
-                            if ($currentPonderacionValue < 5) {
-                                $fail('La ponderación mínima por evaluación es 5% cuando hay múltiples evaluaciones.');
-                            }
-
                             // Calcular la suma de las otras ponderaciones en el mismo corte
                             $tempEvaluaciones = $this->cortes[$index]['evaluaciones'];
                             $sumaSinCampoActual = 0;
@@ -487,6 +476,8 @@ class UpdatePlanificacion extends Component
             'cortes.*.evaluaciones.min' => 'Cada corte debe tener al menos una evaluación.',
             'cortes.*.evaluaciones.*.fecha_evaluacion.required' => 'La fecha de evaluación es obligatoria.',
             'cortes.*.evaluaciones.*.fecha_evaluacion.date' => 'La fecha de evaluación no es válida.',
+            'cortes.*.evaluaciones.*.fecha_evaluacion.after_or_equal' => 'La fecha debe ser después o igual al inicio del lapso (' . $this->lapso_fecha_inicio . ').',
+            'cortes.*.evaluaciones.*.fecha_evaluacion.before_or_equal' => 'La fecha debe ser antes o igual al fin del lapso (' . $this->lapso_fecha_fin . ').',
             'cortes.*.evaluaciones.*.evaluacion_id.required' => 'El tipo de evaluación es obligatorio.',
             'cortes.*.evaluaciones.*.evaluacion_id.exists' => 'El tipo de evaluación seleccionado no es válido.',
             'cortes.*.evaluaciones.*.tecnica_id.required' => 'La técnica de evaluación es obligatoria.',
@@ -513,7 +504,7 @@ class UpdatePlanificacion extends Component
         if ($success) {
             $data = ['tipo' => 'exitoso', 'color' => 'green', 'mensaje' => 'Planificación actualizada exitosamente.'];
             $this->dispatch('mostrar-mensaje', $data);
-            return redirect()->to('/planificacion/mis-planificaciones');
+            return redirect()->to('/planificacion/list');
         } else {
             $data = ['tipo' => 'error', 'color' => 'red', 'mensaje' => 'Error al actualizar la planificación.'];
             $this->dispatch('mostrar-mensaje', $data);

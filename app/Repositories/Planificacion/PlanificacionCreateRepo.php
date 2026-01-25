@@ -54,15 +54,17 @@ class PlanificacionCreateRepo
 
     public function select_contenidos($idUnidadCurricular = null)
     {
-        $query = DB::table('contenido')
-            ->where('estatus', '1');
+        $query = DB::table('tema as t')
+            ->join('contenido as c', 't.id_contenido', '=', 'c.id_contenido')
+            ->where('t.estatus', '1')
+            ->where('c.estatus', '1');
 
         if ($idUnidadCurricular) {
-            $query->where('id_unidad_curricular', $idUnidadCurricular);
+            $query->where('c.id_unidad_curricular', $idUnidadCurricular);
         }
 
-        return $query->select('id_contenido', 'titulo_contenido', 'descripcion_contenido')
-            ->orderBy('id_contenido')
+        return $query->select('t.id_tema as id_contenido', 't.titulo_tema as titulo_contenido', 't.descripcion_tema as descripcion_contenido')
+            ->orderBy('t.id_tema')
             ->get();
     }
 
@@ -72,8 +74,8 @@ class PlanificacionCreateRepo
         return DB::table('detalle_profesor_asignado as dpa')
             ->join('unidad_curricular as uc', 'dpa.id_unidad_curricular', '=', 'uc.id_unidad_curricular')
             ->join('seccion as s', 'dpa.id_seccion', '=', 's.id_seccion')
-            ->join('malla_academica as ma', 'uc.id_malla_academica', '=', 'ma.id_malla_academica')
-            ->join('pnf', 'ma.id_pnf', '=', 'pnf.id_pnf')
+            ->leftJoin('malla_academica as ma', 'uc.id_malla_academica', '=', 'ma.id_malla_academica')
+            ->leftJoin('pnf', 'ma.id_pnf', '=', 'pnf.id_pnf')
             ->where('dpa.id_users', $userId)
             ->where('dpa.estatus', '1')
             ->select(
@@ -86,7 +88,9 @@ class PlanificacionCreateRepo
             ->get()
             ->map(function ($asignacion) {
                 // Crear un nombre legible para el select
-                $asignacion->descripcion_completa = "{$asignacion->nombre_pnf} - T{$asignacion->trayecto_unidad_curricular} - {$asignacion->nombre_unidad_curricular} (Sección {$asignacion->nombre_seccion})";
+                $pnf = $asignacion->nombre_pnf ?? 'Sin PNF';
+                $trayecto = $asignacion->trayecto_unidad_curricular ? "T{$asignacion->trayecto_unidad_curricular}" : 'S/T';
+                $asignacion->descripcion_completa = "{$pnf} - {$trayecto} - {$asignacion->nombre_unidad_curricular} (Sección {$asignacion->nombre_seccion})";
                 return $asignacion;
             });
     }

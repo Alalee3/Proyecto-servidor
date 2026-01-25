@@ -26,6 +26,7 @@ class PlanificacionViewRepo
                 'u.apellido as docente_apellido',
                 'u.cedula',
                 'u.telefono',
+                'uc.id_unidad_curricular',
                 'uc.nombre_unidad_curricular',
                 's.nombre_seccion',
                 'la.nombre_lapso_academico as nombre_lapso',

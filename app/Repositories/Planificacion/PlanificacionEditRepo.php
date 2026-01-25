@@ -48,7 +48,7 @@ class PlanificacionEditRepo
                         'id_planificacion' => $planificacionId,
                         'id_bibliografia' => $bibliografiaId,
                         'estatus' => '1',
-                        'fecha_creacion_detalle_bibliografia' => now(),
+                        'fecha_creacion' => now(),
                     ]);
                 }
             }
