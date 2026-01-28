@@ -17,7 +17,7 @@
 
     <hr class="border-gray-200 dark:border-gray-700">
 
-    <nav class="mt-6 px-2 space-y-1" x-data="{ openMenu: null, subMenu: null }">
+    <nav class="mt-6 px-2 space-y-1" x-data="{ openMenu: null, openCategory: null }">
         @auth
             <!-- Dashboard -->
             <a href="/dashboard"
@@ -31,310 +31,438 @@
             </a>
 
             @can('is-coordinador')
-                <!-- PNFS -->
+
+                <!-- MASTER OPTION: Gestión Curricular -->
                 <div>
-                    <button @click="openMenu === 1 ? openMenu = null : openMenu = 1" :class="{
-                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 1,
-                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 1
-                                                                                                                    }">
-                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">school</i>
-                        <span>PNFS</span>
-                        <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 1 }"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button @click="openCategory === 'curricular' ? openCategory = null : openCategory = 'curricular'" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openCategory !== 'curricular',
+                        'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-bold': openCategory === 'curricular'
+                    }">
+                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">folder</i>
+                        <span class="flex-1 text-left">Gestión Curricular</span>
+                        <svg class="w-4 h-4 transform transition-transform"
+                            :class="{ 'rotate-180': openCategory === 'curricular' }" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
-                    <ul x-show="openMenu === 1" x-collapse class="ml-8 mt-2 space-y-1">
-                        <li><a href="{{ route('pnf/crear') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300">Crear
-                                PNFS</a></li>
-                        <li><a href="{{ route('pnf/listar') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300">Gestionar
-                                PNFS</a></li>
-                    </ul>
+
+                    <div x-show="openCategory === 'curricular'" x-collapse
+                        class="pl-2 border-l-2 border-gray-200 dark:border-gray-700 ml-3 space-y-1 mt-1">
+
+                        <!-- PNFS -->
+                        <div>
+                            <button @click="openMenu === 1 ? openMenu = null : openMenu = 1" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 1,
+                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 1
+                    }">
+                                <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">school</i>
+                                <span>PNFS</span>
+                                <svg class="w-4 h-4 ml-auto transform transition-transform"
+                                    :class="{ 'rotate-180': openMenu === 1 }" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <ul x-show="openMenu === 1" x-collapse class="ml-8 mt-2 space-y-1">
+                                <li><a href="{{ route('pnf/crear') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300">Crear
+                                        PNFS</a></li>
+                                <li><a href="{{ route('pnf/listar') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300">Gestionar
+                                        PNFS</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Contenidos -->
+                        <div>
+                            <button @click="openMenu === 7 ? openMenu = null : openMenu = 7" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 7,
+                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 7
+                    }">
+                                <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">description</i>
+                                <span>Contenidos</span>
+                                <svg class="w-4 h-4 ml-auto transform transition-transform"
+                                    :class="{ 'rotate-180': openMenu === 7 }" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <ul x-show="openMenu === 7" x-collapse class="ml-8 mt-2 space-y-1">
+                                <li><a href="{{ route('contenido/crear') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        Contenido</a></li>
+                                <li><a href="{{ route('contenido/listar') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        Contenidos</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Temas -->
+                        <div>
+                            <button @click="openMenu === 8 ? openMenu = null : openMenu = 8" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 8,
+                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 8
+                    }">
+                                <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">topic</i>
+                                <span>Temas</span>
+                                <svg class="w-4 h-4 ml-auto transform transition-transform"
+                                    :class="{ 'rotate-180': openMenu === 8 }" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <ul x-show="openMenu === 8" x-collapse class="ml-8 mt-2 space-y-1">
+                                <li><a href="{{ route('tema/crear') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        Tema</a></li>
+                                <li><a href="{{ route('tema/listar') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        Temas</a></li>
+                            </ul>
+                        </div>
+
+                    </div>
                 </div>
 
-                <!-- Contenidos -->
+                <!-- MASTER OPTION: Recursos Didácticos -->
                 <div>
-                    <button @click="openMenu === 7 ? openMenu = null : openMenu = 7" :class="{
-                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 7,
-                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 7
-                                                                                                                    }">
-                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">description</i>
-                        <span>Contenidos</span>
-                        <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 7 }"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button @click="openCategory === 'recursos' ? openCategory = null : openCategory = 'recursos'" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openCategory !== 'recursos',
+                        'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-bold': openCategory === 'recursos'
+                    }">
+                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">inventory_2</i>
+                        <span class="flex-1 text-left">Recursos Didácticos</span>
+                        <svg class="w-4 h-4 transform transition-transform"
+                            :class="{ 'rotate-180': openCategory === 'recursos' }" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
-                    <ul x-show="openMenu === 7" x-collapse class="ml-8 mt-2 space-y-1">
-                        <li><a href="{{ route('contenido/crear') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
-                                Contenido</a></li>
-                        <li><a href="{{ route('contenido/listar') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
-                                Contenidos</a></li>
-                    </ul>
-                </div>
 
-                <!-- Temas -->
-                <div>
-                    <button @click="openMenu === 8 ? openMenu = null : openMenu = 8" :class="{
-                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 8,
-                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 8
-                                                                                                                    }">
-                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">topic</i>
-                        <span>Temas</span>
-                        <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 8 }"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                    <ul x-show="openMenu === 8" x-collapse class="ml-8 mt-2 space-y-1">
-                        <li><a href="{{ route('tema/crear') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
-                                Tema</a></li>
-                        <li><a href="{{ route('tema/listar') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
-                                Temas</a></li>
-                    </ul>
-                </div>
+                    <div x-show="openCategory === 'recursos'" x-collapse
+                        class="pl-2 border-l-2 border-gray-200 dark:border-gray-700 ml-3 space-y-1 mt-1">
 
-                <!-- Recursos Educativos -->
-                <div>
-                    <button @click="openMenu === 10 ? openMenu = null : (openMenu = 10, subMenu = null)" :class="{
+                        <!-- Bibliografía -->
+                        <div>
+                            <button @click="openMenu === 10 ? openMenu = null : openMenu = 10" :class="{
                         'flex items-center w-full p-2 rounded-lg': true,
                         'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 10,
                         'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 10
                     }">
-                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">folder_special</i>
-                        <span>Recursos Educativos</span>
-                        <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 10 }"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-
-                    <div x-show="openMenu === 10" x-collapse class="ml-4 mt-2 space-y-1 border-l-2 border-gray-200 dark:border-gray-700 pl-2">
-                        <!-- Indicadores de Logro -->
-                        <div>
-                            <button @click="subMenu === 1 ? subMenu = null : subMenu = 1" :class="{
-                                'flex items-center w-full p-2 rounded-lg text-sm': true,
-                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': subMenu !== 1,
-                                'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white': subMenu === 1
-                            }">
-                                <i class="material-icons mr-2 text-xs text-gray-500 dark:text-gray-400">task_alt</i>
-                                <span>Indicadores de Logro</span>
-                                <svg class="w-3 h-3 ml-auto transform transition-transform" :class="{ 'rotate-180': subMenu === 1 }"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <ul x-show="subMenu === 1" x-collapse class="ml-6 mt-1 space-y-1">
-                                <li><a href="{{ route('indicador-logro/crear') }}"
-                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
-                                        Indicador</a></li>
-                                <li><a href="{{ route('indicador-logro/listar') }}"
-                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
-                                        Indicadores</a></li>
-                            </ul>
-                        </div>
-
-                        <!-- Bibliografía -->
-                        <div>
-                            <button @click="subMenu === 2 ? subMenu = null : subMenu = 2" :class="{
-                                'flex items-center w-full p-2 rounded-lg text-sm': true,
-                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': subMenu !== 2,
-                                'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white': subMenu === 2
-                            }">
-                                <i class="material-icons mr-2 text-xs text-gray-500 dark:text-gray-400">menu_book</i>
+                                <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">menu_book</i>
                                 <span>Bibliografía</span>
-                                <svg class="w-3 h-3 ml-auto transform transition-transform" :class="{ 'rotate-180': subMenu === 2 }"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 ml-auto transform transition-transform"
+                                    :class="{ 'rotate-180': openMenu === 10 }" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
-                            <ul x-show="subMenu === 2" x-collapse class="ml-6 mt-1 space-y-1">
+                            <ul x-show="openMenu === 10" x-collapse class="ml-8 mt-2 space-y-1">
                                 <li><a href="{{ route('bibliografia/crear') }}"
-                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
                                         Bibliografía</a></li>
                                 <li><a href="{{ route('bibliografia/listar') }}"
-                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
                                         Bibliografía</a></li>
                             </ul>
                         </div>
 
                         <!-- Recursos -->
                         <div>
-                            <button @click="subMenu === 3 ? subMenu = null : subMenu = 3" :class="{
-                                'flex items-center w-full p-2 rounded-lg text-sm': true,
-                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': subMenu !== 3,
-                                'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white': subMenu === 3
-                            }">
-                                <i class="material-icons mr-2 text-xs text-gray-500 dark:text-gray-400">inventory_2</i>
+                            <button @click="openMenu === 11 ? openMenu = null : openMenu = 11" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 11,
+                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 11
+                    }">
+                                <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">inventory_2</i>
                                 <span>Recursos</span>
-                                <svg class="w-3 h-3 ml-auto transform transition-transform" :class="{ 'rotate-180': subMenu === 3 }"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 ml-auto transform transition-transform"
+                                    :class="{ 'rotate-180': openMenu === 11 }" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
-                            <ul x-show="subMenu === 3" x-collapse class="ml-6 mt-1 space-y-1">
+                            <ul x-show="openMenu === 11" x-collapse class="ml-8 mt-2 space-y-1">
                                 <li><a href="{{ route('recurso/crear') }}"
-                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
                                         Recurso</a></li>
                                 <li><a href="{{ route('recurso/listar') }}"
-                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
                                         Recursos</a></li>
                             </ul>
                         </div>
 
-                        <!-- Estrategias -->
+                        <!-- Estrategias Pedagógicas -->
                         <div>
-                            <button @click="subMenu === 4 ? subMenu = null : subMenu = 4" :class="{
-                                'flex items-center w-full p-2 rounded-lg text-sm': true,
-                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': subMenu !== 4,
-                                'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white': subMenu === 4
-                            }">
-                                <i class="material-icons mr-2 text-xs text-gray-500 dark:text-gray-400">psychology</i>
+                            <button @click="openMenu === 12 ? openMenu = null : openMenu = 12" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 12,
+                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 12
+                    }">
+                                <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">psychology</i>
                                 <span>Estrategias</span>
-                                <svg class="w-3 h-3 ml-auto transform transition-transform" :class="{ 'rotate-180': subMenu === 4 }"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 ml-auto transform transition-transform"
+                                    :class="{ 'rotate-180': openMenu === 12 }" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
-                            <ul x-show="subMenu === 4" x-collapse class="ml-6 mt-1 space-y-1">
+                            <ul x-show="openMenu === 12" x-collapse class="ml-8 mt-2 space-y-1">
                                 <li><a href="{{ route('estrategia/crear') }}"
-                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
                                         Estrategia</a></li>
                                 <li><a href="{{ route('estrategia/listar') }}"
-                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
                                         Estrategias</a></li>
                             </ul>
                         </div>
 
-                        <!-- Técnicas -->
+                        <!-- Técnicas de Evaluación -->
                         <div>
-                            <button @click="subMenu === 5 ? subMenu = null : subMenu = 5" :class="{
-                                'flex items-center w-full p-2 rounded-lg text-sm': true,
-                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': subMenu !== 5,
-                                'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white': subMenu === 5
-                            }">
-                                <i class="material-icons mr-2 text-xs text-gray-500 dark:text-gray-400">quiz</i>
+                            <button @click="openMenu === 13 ? openMenu = null : openMenu = 13" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 13,
+                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 13
+                    }">
+                                <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">quiz</i>
                                 <span>Técnicas</span>
-                                <svg class="w-3 h-3 ml-auto transform transition-transform" :class="{ 'rotate-180': subMenu === 5 }"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 ml-auto transform transition-transform"
+                                    :class="{ 'rotate-180': openMenu === 13 }" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
-                            <ul x-show="subMenu === 5" x-collapse class="ml-6 mt-1 space-y-1">
+                            <ul x-show="openMenu === 13" x-collapse class="ml-8 mt-2 space-y-1">
                                 <li><a href="{{ route('tecnica/crear') }}"
-                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
                                         Técnica</a></li>
                                 <li><a href="{{ route('tecnica/listar') }}"
-                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
                                         Técnicas</a></li>
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- MASTER OPTION: Evaluación y Desempeño -->
+                <div>
+                    <button @click="openCategory === 'evaluacion' ? openCategory = null : openCategory = 'evaluacion'" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openCategory !== 'evaluacion',
+                        'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-bold': openCategory === 'evaluacion'
+                    }">
+                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">assignment_turned_in</i>
+                        <span class="flex-1 text-left">Evaluación y Desempeño</span>
+                        <svg class="w-4 h-4 transform transition-transform"
+                            :class="{ 'rotate-180': openCategory === 'evaluacion' }" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div x-show="openCategory === 'evaluacion'" x-collapse
+                        class="pl-2 border-l-2 border-gray-200 dark:border-gray-700 ml-3 space-y-1 mt-1">
+
+                        <!-- Indicadores de Logro -->
+                        <div>
+                            <button @click="openMenu === 9 ? openMenu = null : openMenu = 9" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 9,
+                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 9
+                    }">
+                                <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">task_alt</i>
+                                <span>Indicadores de Logro</span>
+                                <svg class="w-4 h-4 ml-auto transform transition-transform"
+                                    :class="{ 'rotate-180': openMenu === 9 }" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <ul x-show="openMenu === 9" x-collapse class="ml-8 mt-2 space-y-1">
+                                <li><a href="{{ route('indicador-logro/crear') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        Indicador</a></li>
+                                <li><a href="{{ route('indicador-logro/listar') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        Indicadores</a></li>
                             </ul>
                         </div>
 
                         <!-- Evaluaciones -->
                         <div>
-                            <button @click="subMenu === 6 ? subMenu = null : subMenu = 6" :class="{
-                                'flex items-center w-full p-2 rounded-lg text-sm': true,
-                                'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': subMenu !== 6,
-                                'bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white': subMenu === 6
-                            }">
-                                <i class="material-icons mr-2 text-xs text-gray-500 dark:text-gray-400">assignment</i>
+                            <button @click="openMenu === 14 ? openMenu = null : openMenu = 14" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 14,
+                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 14
+                    }">
+                                <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">assignment</i>
                                 <span>Evaluaciones</span>
-                                <svg class="w-3 h-3 ml-auto transform transition-transform" :class="{ 'rotate-180': subMenu === 6 }"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 ml-auto transform transition-transform"
+                                    :class="{ 'rotate-180': openMenu === 14 }" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
-                            <ul x-show="subMenu === 6" x-collapse class="ml-6 mt-1 space-y-1">
+                            <ul x-show="openMenu === 14" x-collapse class="ml-8 mt-2 space-y-1">
                                 <li><a href="{{ route('evaluacion/crear') }}"
-                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
                                         Evaluación</a></li>
                                 <li><a href="{{ route('evaluacion/listar') }}"
-                                        class="block px-2 py-1 text-xs text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
                                         Evaluaciones</a></li>
                             </ul>
                         </div>
+
                     </div>
                 </div>
 
-                <!-- Eventos -->
+                <!-- MASTER OPTION: Planificación y Agenda -->
                 <div>
-                    <button @click="openMenu === 15 ? openMenu = null : openMenu = 15" :class="{
-                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 15,
-                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 15
-                                                                                                                    }">
-                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">date_range</i>
-                        <span>Eventos</span>
-                        <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 15 }"
+                    <button @click="openCategory === 'agenda' ? openCategory = null : openCategory = 'agenda'" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openCategory !== 'agenda',
+                        'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-bold': openCategory === 'agenda'
+                    }">
+                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">calendar_month</i>
+                        <span class="flex-1 text-left">Planificación y Agenda</span>
+                        <svg class="w-4 h-4 transform transition-transform" :class="{ 'rotate-180': openCategory === 'agenda' }"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
-                    <ul x-show="openMenu === 15" x-collapse class="ml-8 mt-2 space-y-1">
-                        <li><a href="{{ route('evento/crear') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
-                                Evento</a></li>
-                        <li><a href="{{ route('evento/listar') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
-                                Eventos</a></li>
-                    </ul>
+
+                    <div x-show="openCategory === 'agenda'" x-collapse
+                        class="pl-2 border-l-2 border-gray-200 dark:border-gray-700 ml-3 space-y-1 mt-1">
+
+                        <!-- Planificaciones -->
+                        <div>
+                            <button @click="openMenu === 6 ? openMenu = null : openMenu = 6" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 6,
+                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 6
+                    }">
+                                <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">assignment</i>
+                                <span>Planificaciones</span>
+                                <svg class="w-4 h-4 ml-auto transform transition-transform"
+                                    :class="{ 'rotate-180': openMenu === 6 }" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <ul x-show="openMenu === 6" x-collapse class="ml-8 mt-2 space-y-1">
+                                <li><a href="{{ route('planificacion/crear') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300">Crear</a>
+                                </li>
+                                <li><a href="{{ route('planificacion/listar') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300">Gestionar</a>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Eventos -->
+                        <div>
+                            <button @click="openMenu === 15 ? openMenu = null : openMenu = 15" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 15,
+                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 15
+                    }">
+                                <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">date_range</i>
+                                <span>Eventos</span>
+                                <svg class="w-4 h-4 ml-auto transform transition-transform"
+                                    :class="{ 'rotate-180': openMenu === 15 }" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <ul x-show="openMenu === 15" x-collapse class="ml-8 mt-2 space-y-1">
+                                <li><a href="{{ route('evento/crear') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        Evento</a></li>
+                                <li><a href="{{ route('evento/listar') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        Eventos</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Calendario Académico -->
+                        <div>
+                            <button @click="openMenu === 16 ? openMenu = null : openMenu = 16" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 16,
+                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 16
+                    }">
+                                <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">edit_calendar</i>
+                                <span>Calendario</span>
+                                <svg class="w-4 h-4 ml-auto transform transition-transform"
+                                    :class="{ 'rotate-180': openMenu === 16 }" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <ul x-show="openMenu === 16" x-collapse class="ml-8 mt-2 space-y-1">
+                                <li><a href="{{ route('calendario-academico/crear') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Crear
+                                        Calendario</a></li>
+                                <li><a href="{{ route('calendario-academico/listar') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-amber-500 transition-colors">Gestionar
+                                        Calendarios</a></li>
+                            </ul>
+                        </div>
+
+                    </div>
                 </div>
 
-                <!-- Usuarios -->
+                <!-- MASTER OPTION: Administración -->
                 <div>
-                    <button @click="openMenu === 5 ? openMenu = null : openMenu = 5" :class="{
-                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 5,
-                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 5
-                                                                                                                    }">
-                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">people</i>
-                        <span>Usuarios</span>
-                        <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 5 }"
+                    <button @click="openCategory === 'admin' ? openCategory = null : openCategory = 'admin'" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openCategory !== 'admin',
+                        'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-bold': openCategory === 'admin'
+                    }">
+                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">admin_panel_settings</i>
+                        <span class="flex-1 text-left">Administración</span>
+                        <svg class="w-4 h-4 transform transition-transform" :class="{ 'rotate-180': openCategory === 'admin' }"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
-                    <ul x-show="openMenu === 5" x-collapse class="ml-8 mt-2 space-y-1">
-                        <li><a href="{{ route('usuarios/crear') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300">Crear</a>
-                        </li>
-                        <li><a href="{{ route('usuarios/listar') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300">Gestionar</a>
-                        </li>
-                    </ul>
-                </div>
 
-                <!-- Planificaciones -->
-                <div>
-                    <button @click="openMenu === 6 ? openMenu = null : openMenu = 6" :class="{
-                                                                                                                        'flex items-center w-full p-2 rounded-lg': true,
-                                                                                                                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 6,
-                                                                                                                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 6
-                                                                                                                    }">
-                        <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">assignment</i>
-                        <span>Planificaciones</span>
-                        <svg class="w-4 h-4 ml-auto transform transition-transform" :class="{ 'rotate-180': openMenu === 6 }"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </button>
-                    <ul x-show="openMenu === 6" x-collapse class="ml-8 mt-2 space-y-1">
-                        <li><a href="{{ route('planificacion/crear') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300">Crear</a>
-                        </li>
-                        <li><a href="{{ route('planificacion/listar') }}"
-                                class="block px-2 py-1 text-sm text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300">Gestionar</a>
-                        </li>
-                    </ul>
+                    <div x-show="openCategory === 'admin'" x-collapse
+                        class="pl-2 border-l-2 border-gray-200 dark:border-gray-700 ml-3 space-y-1 mt-1">
+
+                        <!-- Usuarios -->
+                        <div>
+                            <button @click="openMenu === 5 ? openMenu = null : openMenu = 5" :class="{
+                        'flex items-center w-full p-2 rounded-lg': true,
+                        'text-gray-700 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700': openMenu !== 5,
+                        'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white': openMenu === 5
+                    }">
+                                <i class="material-icons mr-2 text-gray-500 dark:text-gray-400">people</i>
+                                <span>Usuarios</span>
+                                <svg class="w-4 h-4 ml-auto transform transition-transform"
+                                    :class="{ 'rotate-180': openMenu === 5 }" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <ul x-show="openMenu === 5" x-collapse class="ml-8 mt-2 space-y-1">
+                                <li><a href="{{ route('usuarios/crear') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300">Crear</a>
+                                </li>
+                                <li><a href="{{ route('usuarios/listar') }}"
+                                        class="block px-2 py-1 text-sm text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300">Gestionar</a>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
                 </div>
 
             @endcan
