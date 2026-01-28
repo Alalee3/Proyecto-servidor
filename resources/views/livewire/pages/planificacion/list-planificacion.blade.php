@@ -19,12 +19,13 @@
         <div class="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
             <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end">
                 <div class="flex justify-center">
-                    <button wire:click="exportarReporteGeneralPdf"
+                    <a href="{{ route('planificacion.reporte.general', ['search' => $this->search]) }}" 
+                        target="_blank"
                         class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow flex items-center gap-2"
-                        title="Descargar reporte general en PDF">
+                        title="Ver reporte general en PDF (Nueva pestaña)">
                         <span class="material-icons text-white text-xl">picture_as_pdf</span>
                         Reporte PDF
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>

@@ -10,15 +10,15 @@ class PlanificacionIndexRepo
     /**
      * Obtiene una lista paginada de planificaciones con filtros.
      */
-    public function listar(array $filters = [], int $perPage = 10, bool $onlyCurrentUserAndRole = false): LengthAwarePaginator
+    public function listar(array $filters = [], int $perPage = 10, bool $onlyCurrentUserAndRole = false)
     {
         $query = DB::table('planificacion as p')
             ->join('detalle_profesor_asignado as dpa', 'p.id_profesor_asignado', '=', 'dpa.id_detalle_profesor_asignado')
             ->join('users as u', 'dpa.id_users', '=', 'u.id')
             ->join('unidad_curricular as uc', 'dpa.id_unidad_curricular', '=', 'uc.id_unidad_curricular')
             ->join('seccion as s', 'dpa.id_seccion', '=', 's.id_seccion')
-            ->join('malla_academica as ma', 'uc.id_malla_academica', '=', 'ma.id_malla_academica')
-            ->join('pnf', 'ma.id_pnf', '=', 'pnf.id_pnf')
+            ->leftJoin('malla_academica as ma', 'uc.id_malla_academica', '=', 'ma.id_malla_academica')
+            ->leftJoin('pnf', 'ma.id_pnf', '=', 'pnf.id_pnf')
             ->select(
                 'p.id_planificacion as planificacion_id',
                 'u.name as docente_nombre',
@@ -40,17 +40,17 @@ class PlanificacionIndexRepo
         }
 
         if ($onlyCurrentUserAndRole && Auth::check()) {
-            // Nota: La lógica de roles puede necesitar ajuste según la nueva tabla de roles si cambió
-            // Asumimos que id_users sigue siendo la clave foránea en detalle_profesor_asignado
             $userId = Auth::id();
-
-            // Filtrar por el usuario logueado en la tabla de asignación
             $query->where('dpa.id_users', $userId);
         }
 
         $query->orderByDesc('p.id_planificacion');
 
-        return $query->paginate($perPage);
+        if ($perPage > 0) {
+            return $query->paginate($perPage);
+        }
+
+        return $query->get();
     }
 
     /**
@@ -64,11 +64,10 @@ class PlanificacionIndexRepo
                 ->where('id_planificacion', $planificacionId)
                 ->update(['estatus' => 1]);
 
-            // Nota: Se debe verificar si 'detalle_planificacion' y 'detalle_actividad' existen en la nueva BD
-            // Según el SQL proporcionado, NO existen tablas con esos nombres exactos.
-            // Las tablas parecen ser 'corte', 'estrategia_pedagogica', 'detalle_evaluacion', etc.
-            // Por ahora, solo actualizamos el estatus de la planificación para cumplir con el requerimiento inmediato del Listado.
-            // Se requerirá una revisión más profunda para aprobar cascada en la nueva estructura.
+            // Actualizar todos los cortes asociados a la planificación
+            DB::table('corte')
+                ->where('id_planificacion', $planificacionId)
+                ->update(['estatus' => 1]);
 
             DB::commit();
             return true;
@@ -86,12 +85,33 @@ class PlanificacionIndexRepo
     {
         DB::beginTransaction();
         try {
-            // Lógica simplificada para el refactor inicial del listado
+            // Actualizar estatus de la planificación a 'Rechazada' (3)
             DB::table('planificacion')
                 ->where('id_planificacion', $planificacionId)
                 ->update(['estatus' => 3]);
 
-            // TODO: Implementar lógica de rechazo detallada para la nueva estructura de Cortes y Evaluaciones
+            foreach ($cortesRechazados as $rechazo) {
+                $corteId = $rechazo['detalle_id'];
+                $motivo = $rechazo['motivo'];
+
+                // Marcar el corte como rechazado (3)
+                DB::table('corte')
+                    ->where('id_corte', $corteId)
+                    ->update(['estatus' => 3]);
+
+                // Desactivar motivos previos (si hubiera)
+                DB::table('motivo_rechazo')
+                    ->where('id_corte', $corteId)
+                    ->update(['estatus' => '2']);
+
+                // Insertar el nuevo motivo de rechazo
+                DB::table('motivo_rechazo')->insert([
+                    'descripcion_motivo_rechazo' => $motivo,
+                    'id_corte' => $corteId,
+                    'fecha_creacion' => now(),
+                    'estatus' => '1'
+                ]);
+            }
 
             DB::commit();
             return true;
@@ -104,7 +124,23 @@ class PlanificacionIndexRepo
 
     public function eliminarMotivoRechazoPorCorte($detalleId)
     {
-        // TODO: Ajustar a la nueva estructura de 'motivo_rechazo' y 'corte'
-        return true;
+        try {
+            // Desactivar el motivo de rechazo
+            DB::table('motivo_rechazo')
+                ->where('id_corte', $detalleId)
+                ->where('estatus', '1')
+                ->update(['estatus' => '2']);
+
+            // Volver el corte a estado 'Pendiente' (2) si estaba rechazado
+            DB::table('corte')
+                ->where('id_corte', $detalleId)
+                ->where('estatus', 3)
+                ->update(['estatus' => 2]);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Error al eliminar motivo de rechazo: " . $e->getMessage());
+            return false;
+        }
     }
 }

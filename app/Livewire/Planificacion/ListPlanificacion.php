@@ -63,22 +63,4 @@ class ListPlanificacion extends Component
         ]);
     }
 
-    public function exportarReporteGeneralPdf()
-    {
-        $filters = [
-            'seccion_id' => $this->filterSeccionId,
-            'lapso_id' => $this->filterLapsoId,
-            'unidad_curricular_codigo' => $this->filterUnidadCurricularCodigo,
-            'search_term' => $this->search,
-        ];
-        // Obtener todas las planificaciones filtradas (sin paginar)
-        $planificaciones = $this->planificacionRepository->listar($filters, 10000); // Un límite alto para traer todas
-
-        $pdf = Pdf::loadView('livewire.planificacion.pdf-list-planificacion', [
-            'planificaciones' => $planificaciones
-        ]);
-        return response()->streamDownload(function () use ($pdf) {
-            echo $pdf->stream();
-        }, 'reporte_general_planificaciones.pdf');
-    }
 }

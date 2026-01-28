@@ -168,6 +168,7 @@ class CreatePlanificacion extends Component
             foreach ($corte['recursos'] as $recursoIndex => $recurso) {
                 $rules["cortes.$index.recursos.$recursoIndex.recurso_id"] = [
                     'required',
+                    'exists:recurso,id_recurso',
                     function ($attribute, $value, $fail) use ($recursoIds, $recursoIndex) {
                         if (count(array_keys($recursoIds, $value)) > 1) {
                             $fail('Este recurso ya fue seleccionado en este corte.');
@@ -181,6 +182,7 @@ class CreatePlanificacion extends Component
             foreach ($corte['estrategias'] as $estrategiaIndex => $estrategia) {
                 $rules["cortes.$index.estrategias.$estrategiaIndex.estrategia_id"] = [
                     'required',
+                    'exists:estrategia_pedagogica,id_estrategia_pedagogica',
                     function ($attribute, $value, $fail) use ($estrategiaIds, $estrategiaIndex) {
                         if (count(array_keys($estrategiaIds, $value)) > 1) {
                             $fail('Esta estrategia ya fue seleccionada en este corte.');
@@ -198,6 +200,7 @@ class CreatePlanificacion extends Component
                 $rules["cortes.$index.contenidos.$contenidoIndex.indicadores_logros"] = 'required|array|min:1';
                 $rules["cortes.$index.contenidos.$contenidoIndex.contenido_id"] = [
                     'required',
+                    'exists:tema,id_tema',
                     function ($attribute, $value, $fail) use ($contenidoIds, $contenidoIndex) {
                         if (count(array_keys($contenidoIds, $value)) > 1) {
                             $fail('Este contenido ya fue seleccionado.');
@@ -210,11 +213,6 @@ class CreatePlanificacion extends Component
                         $rules["cortes.$index.contenidos.$contenidoIndex.indicadores_logros.$indicadorIndex.indicador_id"] = [
                             'required',
                             'exists:indicador_logro,id_indicador_logro',
-                            function ($attribute, $value, $fail) use ($allIndicadorIds) {
-                                if ($value && count(array_keys($allIndicadorIds, (string) $value)) > 1) {
-                                    $fail('Este indicador de logro ya ha sido seleccionado en el formulario.');
-                                }
-                            },
                         ];
                     }
                 }
@@ -225,12 +223,14 @@ class CreatePlanificacion extends Component
                 $fechaEvaluacionRules = ['required', 'date'];
 
                 $rules["cortes.$index.evaluaciones.$evaluacionIndex.fecha_evaluacion"] = $fechaEvaluacionRules;
-                $rules["cortes.$index.evaluaciones.$evaluacionIndex.evaluacion_id"] = 'required';
-                $rules["cortes.$index.evaluaciones.$evaluacionIndex.tecnica_id"] = 'required';
+                $rules["cortes.$index.evaluaciones.$evaluacionIndex.evaluacion_id"] = 'required|exists:evaluacion,id_evaluacion';
+                $rules["cortes.$index.evaluaciones.$evaluacionIndex.tecnica_id"] = 'required|exists:tecnica,id_tecnica';
 
                 $rules["cortes.$index.evaluaciones.$evaluacionIndex.ponderacion"] = [
                     'required',
                     'numeric',
+                    'min:1',
+                    'max:25',
                     function ($attribute, $value, $fail) use ($index, $corte, $evaluacionIndex) {
                         $totalEvaluaciones = count($corte['evaluaciones']);
                         $sumaActual = $this->getTotalPonderacionForCorte($index);
@@ -238,9 +238,6 @@ class CreatePlanificacion extends Component
                         if ($totalEvaluaciones === 1 && $value != 25) {
                             $fail('La única evaluación debe tener 25% de ponderación');
                         } elseif ($totalEvaluaciones > 1) {
-                            if ($value < 5) {
-                                $fail('La ponderación mínima por evaluación es 5%');
-                            }
                             $sumaSinActual = $sumaActual - ($corte['evaluaciones'][$evaluacionIndex]['ponderacion'] ?? 0);
                             $maxPermitido = 25 - $sumaSinActual;
 
