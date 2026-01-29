@@ -55,7 +55,7 @@ class PlanificacionViewRepo
         // 3. Cortes
         $resultado['cortes'] = DB::table('corte as c')
             ->where('c.id_planificacion', $planificacionId)
-            ->where('c.estatus', '!=', '3') // Excluir eliminados si aplica, o mostrar todos
+            // ->where('c.estatus', '!=', '3') // Comentado para mostrar rechazados
             ->select('c.id_corte as detalle_id', 'c.numero_corte as corte', 'c.estatus')
             ->orderBy('c.numero_corte')
             ->get()

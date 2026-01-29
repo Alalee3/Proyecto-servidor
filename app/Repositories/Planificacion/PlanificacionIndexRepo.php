@@ -137,9 +137,59 @@ class PlanificacionIndexRepo
                 ->where('estatus', 3)
                 ->update(['estatus' => 2]);
 
+            // Verificar si quedan otros cortes rechazados en la misma planificación
+            $corte = DB::table('corte')->where('id_corte', $detalleId)->first();
+            if ($corte) {
+                $planificacionId = $corte->id_planificacion;
+                $hayRechazados = DB::table('corte')
+                    ->where('id_planificacion', $planificacionId)
+                    ->where('estatus', 3)
+                    ->exists();
+
+                // Si no hay cortes rechazados, pasar la planificación a 'Pendiente' (2)
+                // (Asumiendo que no esté ya aprobada, pero si venimos de quitar un rechazo, 
+                //  es probable que deba quedar en pendiente o revisión)
+                if (!$hayRechazados) {
+                    DB::table('planificacion')
+                        ->where('id_planificacion', $planificacionId)
+                        ->where('estatus', '!=', 1) // No cambiar si ya está aprobada (caso raro pero posible)
+                        ->update(['estatus' => 2]);
+                }
+            }
+
             return true;
         } catch (\Exception $e) {
             Log::error("Error al eliminar motivo de rechazo: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function aprobarCorte(int $corteId): bool
+    {
+        try {
+            DB::table('corte')
+                ->where('id_corte', $corteId)
+                ->update(['estatus' => 1]);
+
+            // Verificar si todos los cortes de la misma planificación están aprobados
+            $corte = DB::table('corte')->where('id_corte', $corteId)->first();
+            if ($corte) {
+                $planificacionId = $corte->id_planificacion;
+                $todosAprobados = !DB::table('corte')
+                    ->where('id_planificacion', $planificacionId)
+                    ->where('estatus', '!=', 1)
+                    ->exists();
+
+                if ($todosAprobados) {
+                    DB::table('planificacion')
+                        ->where('id_planificacion', $planificacionId)
+                        ->update(['estatus' => 1]);
+                }
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            Log::error("Error al aprobar corte: " . $e->getMessage());
             return false;
         }
     }

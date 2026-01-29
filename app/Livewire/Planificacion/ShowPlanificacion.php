@@ -49,58 +49,9 @@ class ShowPlanificacion extends Component
         })->toArray();
     }
 
-    public function aprobarPlanificacion()
-    {
-        if (!Gate::allows('is-coordinador')) {
-            session()->flash('error', 'No tienes permisos para aprobar planificaciones.');
-            return;
-        }
 
-        $success = $this->planificacionIndexRepo->aprobarPlanificacion($this->planificacionId);
 
-        if ($success) {
-            session()->flash('message', 'Planificación aprobada correctamente!.');
-            $this->mount($this->planificacionId); // Recargar
-        } else {
-            session()->flash('error', 'La planificacion no pudo ser aprobada.');
-        }
-    }
 
-    public function rechazarPlanificacion()
-    {
-        if (!Gate::allows('is-coordinador')) {
-            session()->flash('error', 'No tienes permisos para rechazar planificaciones.');
-            return;
-        }
-        $cortesARechazar = [];
-        foreach ($this->planificacion->cortes as $corte) {
-            $motivo = trim($this->motivosRechazoCortes[$corte->detalle_id] ?? '');
-            if (!empty($motivo)) {
-                if (mb_strlen($motivo) < 10) {
-                    session()->flash('error', "El motivo de rechazo para el Corte #{$corte->corte} debe tener al menos 10 caracteres.");
-                    return;
-                }
-                $cortesARechazar[] = [
-                    'detalle_id' => $corte->detalle_id,
-                    'motivo' => $motivo,
-                ];
-            }
-        }
-        if (empty($cortesARechazar)) {
-            session()->flash('error', 'La planificacion no pudo ser rechazada sin un motivo en al menos un corte.');
-            return;
-        }
-        $success = $this->planificacionIndexRepo->rechazarPlanificacionConCortes(
-            $this->planificacion->planificacion_id,
-            $cortesARechazar
-        );
-        if ($success) {
-            session()->flash('message', 'Planificación rechazada correctamente!.');
-            $this->mount($this->planificacion->planificacion_id);
-        } else {
-            session()->flash('error', 'La planificacion no pudo ser rechazada.');
-        }
-    }
 
     public function eliminarMotivoRechazo($detalleId)
     {
@@ -128,6 +79,61 @@ class ShowPlanificacion extends Component
     {
         if (isset($this->mostrarMotivoRechazoCorte[$detalleId])) {
             $this->mostrarMotivoRechazoCorte[$detalleId] = false;
+        }
+    }
+
+    public function confirmarRechazoCorte($detalleId)
+    {
+        if (!Gate::allows('is-coordinador')) {
+            session()->flash('error', 'No tienes permisos para rechazar planificaciones.');
+            return;
+        }
+
+        $motivo = trim($this->motivosRechazoCortes[$detalleId] ?? '');
+
+        if (mb_strlen($motivo) < 10) {
+            // Se usa addError para que Livewire lo detecte en la vista
+            $this->addError("motivosRechazoCortes.{$detalleId}", "El motivo de rechazo debe tener al menos 10 caracteres.");
+            return;
+        }
+
+        $corteARechazar = [
+            [
+                'detalle_id' => $detalleId,
+                'motivo' => $motivo,
+            ]
+        ];
+
+        // Reutilizamos el método del repo que ya maneja la transacción y actualización de estados
+        $success = $this->planificacionIndexRepo->rechazarPlanificacionConCortes(
+            $this->planificacion->planificacion_id,
+            $corteARechazar
+        );
+
+        if ($success) {
+            session()->flash('message', 'Corte rechazado correctamente (Planificación pasada a estado Rechazado).');
+            // Limpiamos el estado de mostrar textarea para ese corte
+            $this->mostrarMotivoRechazoCorte[$detalleId] = false;
+            $this->mount($this->planificacion->planificacion_id);
+        } else {
+            session()->flash('error', 'El corte no pudo ser rechazado.');
+        }
+    }
+
+    public function aprobarCorte($detalleId)
+    {
+        if (!Gate::allows('is-coordinador')) {
+            session()->flash('error', 'No tienes permisos para aprobar planificaciones.');
+            return;
+        }
+
+        $success = $this->planificacionIndexRepo->aprobarCorte($detalleId);
+
+        if ($success) {
+            session()->flash('message', 'Corte aprobado correctamente.');
+            $this->mount($this->planificacion->planificacion_id);
+        } else {
+            session()->flash('error', 'El corte no pudo ser aprobado.');
         }
     }
 

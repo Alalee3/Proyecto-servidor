@@ -211,52 +211,70 @@
                                         {{-- Area de Motivo de Rechazo (Solo Coordinador) --}}
                                         @if ($mostrarBotonRechazarPlanificacion && Gate::allows('is-coordinador'))
                                             <div class="mt-4 border-t pt-4 dark:border-gray-600">
-                                                @if (empty($motivosRechazoCortes[$corte->detalle_id]) && empty($mostrarMotivoRechazoCorte[$corte->detalle_id]))
-                                                    <div class="flex justify-end">
+                                                {{-- Caso 1: El corte no está rechazado y no se ha pulsado 'Rechazar' --}}
+                                                @if (($corte->estatus ?? 0) != 3 && empty($mostrarMotivoRechazoCorte[$corte->detalle_id]))
+                                                    <div class="flex justify-end gap-2">
                                                         <button wire:click="mostrarTextareaMotivo({{ $corte->detalle_id }})"
                                                             class="inline-flex items-center gap-1 text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-700 transition-colors shadow-sm uppercase">
                                                             Rechazar corte
                                                         </button>
+                                                        @if (($corte->estatus ?? 0) != 1)
+                                                            <button wire:click="aprobarCorte({{ $corte->detalle_id }})"
+                                                                class="inline-flex items-center gap-1 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-sm uppercase">
+                                                                Aceptar corte
+                                                            </button>
+                                                        @endif
                                                     </div>
                                                 @endif
 
-                                                @if (!empty($mostrarMotivoRechazoCorte[$corte->detalle_id]) || !empty($motivosRechazoCortes[$corte->detalle_id]))
+                                                {{-- Caso 2: Se está redactando el motivo de rechazo --}}
+                                                @if (!empty($mostrarMotivoRechazoCorte[$corte->detalle_id]) && ($corte->estatus ?? 0) != 3)
                                                     <div class="space-y-2">
                                                         <x-input-label for="motivo_rechazo_{{ $corte->detalle_id }}" :value="__('Motivo de Rechazo')" />
                                                         <textarea wire:model.defer="motivosRechazoCortes.{{ $corte->detalle_id }}"
                                                             id="motivo_rechazo_{{ $corte->detalle_id }}" rows="3"
                                                             class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"></textarea>
                                                         <div class="flex justify-end space-x-2">
-                                                            @if (empty($motivosRechazoCortes[$corte->detalle_id]))
-                                                                <button wire:click="ocultarTextareaMotivo({{ $corte->detalle_id }})"
-                                                                    class="inline-flex items-center gap-1 text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-700 transition-colors shadow-sm uppercase">
-                                                                    Cancelar
-                                                                </button>
-                                                            @else
-                                                                <button wire:click="eliminarMotivoRechazo({{ $corte->detalle_id }})"
-                                                                    class="text-red-500 hover:text-red-700 text-xs flex items-center">
-                                                                    <svg class="w-3 h-3 mr-1" fill="none"
-                                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                                            stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                                    </svg>
-                                                                    Quitar motivo
-                                                                </button>
-                                                            @endif
+                                                            <button wire:click="ocultarTextareaMotivo({{ $corte->detalle_id }})"
+                                                                class="inline-flex items-center gap-1 text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-700 transition-colors shadow-sm uppercase">
+                                                                Cancelar
+                                                            </button>
+                                                            <button wire:click="confirmarRechazoCorte({{ $corte->detalle_id }})"
+                                                                class="inline-flex items-center gap-1 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-sm uppercase">
+                                                                Aceptar
+                                                            </button>
                                                         </div>
+                                                        @error("motivosRechazoCortes.{$corte->detalle_id}")
+                                                            <span class="text-red-600 text-xs">{{ $message }}</span>
+                                                        @enderror
                                                     </div>
                                                 @endif
                                             </div>
                                         @endif
 
-                                        {{-- **NUEVO: Motivo de Rechazo para este Corte** --}}
+                                        {{-- Caso 3: El corte ya está rechazado (Mostramos el cuadro rojo premium) --}}
                                         @if (($corte->estatus ?? null) == 3 && !empty($corte->ultimo_motivo_rechazo))
-                                            <div
-                                                class="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md">
-                                                <p class="text-sm font-medium text-red-800 dark:text-red-300">
-                                                    Motivo de Rechazo: <span
-                                                        class="font-normal">{{ $corte->ultimo_motivo_rechazo }}</span>
-                                                </p>
+                                            <div class="mt-4">
+                                                <h4 class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+                                                    Motivo de Rechazo
+                                                </h4>
+                                                <div
+                                                    class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-md">
+                                                    <p class="text-sm text-red-800 dark:text-red-300">
+                                                        {{ $corte->ultimo_motivo_rechazo }}
+                                                    </p>
+                                                </div>
+                                                @if (Gate::allows('is-coordinador'))
+                                                    <div class="flex justify-end mt-2">
+                                                        <button wire:click="eliminarMotivoRechazo({{ $corte->detalle_id }})"
+                                                            class="inline-flex items-center gap-1 text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-700 transition-colors shadow-sm uppercase">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                            Quitar motivo
+                                                        </button>
+                                                    </div>
+                                                @endif
                                             </div>
                                         @endif
                                     </div>
@@ -285,35 +303,11 @@
 
                     {{-- Footer con Botones de Acción --}}
                     <div class="mt-8 flex justify-end space-x-3 pt-4 border-t dark:border-gray-700">
-                        <x-secondary-button wire:click="cerrar">
-                            {{ __('Volver') }}
-                        </x-secondary-button>
-
-                        @if ($mostrarBotonRechazarPlanificacion && Gate::allows('is-coordinador'))
-                            <div x-data="{ confirmingRechazo: false }">
-                                <x-danger-button @click="confirmingRechazo = true" x-show="!confirmingRechazo">
-                                    {{ __('Rechazar Planificación') }}
-                                </x-danger-button>
-
-                                <div x-show="confirmingRechazo" class="flex items-center space-x-2">
-                                    <span class="text-sm text-red-600">¿Confirmar rechazo?</span>
-                                    <button wire:click="rechazarPlanificacion"
-                                        class="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">
-                                        Sí, Rechazar
-                                    </button>
-                                    <button @click="confirmingRechazo = false"
-                                        class="px-2 py-1 bg-gray-300 text-gray-700 rounded text-xs hover:bg-gray-400">
-                                        Cancelar
-                                    </button>
-                                </div>
-                            </div>
-                        @endif
-
-                        @if (($planificacion->estatus ?? null) != 1 && Gate::allows('is-coordinador'))
-                            <x-primary-button wire:click="aprobarPlanificacion" class="bg-green-600 hover:bg-green-700">
-                                {{ __('Aprobar Planificación') }}
-                            </x-primary-button>
-                        @endif
+                        <button wire:click="cerrar"
+                            class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow transition-all duration-200 uppercase">
+                            <span class="material-icons text-white text-base">arrow_back</span>
+                            Volver
+                        </button>
                     </div>
 
                 </div>

@@ -74,7 +74,7 @@
 
                 @if (session()->has('message'))
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4
-                                                                                                                     dark:bg-green-700 dark:border-green-800 dark:text-green-100"
+                                                                                                                         dark:bg-green-700 dark:border-green-800 dark:text-green-100"
                         role="alert">
                         <span class="block sm:inline">{{ session('message') }}</span>
                     </div>
@@ -82,7 +82,7 @@
 
                 @if (session()->has('error'))
                     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4
-                                                                                                                     dark:bg-red-700 dark:border-red-800 dark:text-red-100"
+                                                                                                                         dark:bg-red-700 dark:border-red-800 dark:text-red-100"
                         role="alert">
                         <span class="block sm:inline">{{ session('error') }}</span>
                     </div>
@@ -406,7 +406,7 @@
                                         <div>
                                             @if ($index > 0)
                                                 <button type="button" @click="openCorte = {{ $index - 1 }}"
-                                                    class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 font-medium">
+                                                    class="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all">
                                                     <span class="material-icons text-sm">arrow_back</span> Corte Anterior
                                                 </button>
                                             @endif

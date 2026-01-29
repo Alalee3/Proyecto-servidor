@@ -57,7 +57,7 @@ class PlanificacionEditRepo
             // --- SINCRONIZACIÓN DE CORTES (tabla 'corte') ---
             $oldActiveCortes = DB::table('corte')
                 ->where('id_planificacion', $planificacionId)
-                ->whereIn('estatus', ['1', '3']) // Activos o Rechazados
+                ->whereIn('estatus', ['1', '2', '3']) // Activos, Pendientes o Rechazados
                 ->get()
                 ->keyBy('id_corte');
 
@@ -83,6 +83,13 @@ class PlanificacionEditRepo
                         ->where('id_planificacion', $planificacionId)
                         ->where('numero_corte', $corteNumero)
                         ->first();
+                }
+
+                // NUEVO: Si el corte está Aprobado (1) o Pendiente (2), no lo tocamos.
+                // Solo guardamos su ID para no borrarlo al final.
+                if ($foundOldCorte && in_array($foundOldCorte->estatus, ['1', '2'])) {
+                    $processedOldCorteIds[] = $foundOldCorte->id_corte;
+                    continue;
                 }
 
                 $corteId = null;

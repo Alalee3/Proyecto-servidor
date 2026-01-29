@@ -74,7 +74,7 @@
 
                 @if (session()->has('message'))
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4
-                                                                                                                                 dark:bg-green-700 dark:border-green-800 dark:text-green-100"
+                                                                                                                                             dark:bg-green-700 dark:border-green-800 dark:text-green-100"
                         role="alert">
                         <span class="block sm:inline">{{ session('message') }}</span>
                     </div>
@@ -82,7 +82,7 @@
 
                 @if (session()->has('error'))
                     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4
-                                                                                                                                 dark:bg-red-700 dark:border-red-800 dark:text-red-100"
+                                                                                                                                             dark:bg-red-700 dark:border-red-800 dark:text-red-100"
                         role="alert">
                         <span class="block sm:inline">{{ session('error') }}</span>
                     </div>
@@ -134,6 +134,10 @@
                         <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm transition-all duration-300"
                             :class="openCorte === {{ $index }} ? 'ring-2 ring-blue-500 ring-opacity-50' : ''">
 
+                            @php
+                                $locked = in_array($corte['estatus'] ?? 2, [1, 2]);
+                            @endphp
+
                             <!-- Cabecera del Accordion -->
                             <button type="button" @click="openCorte = openCorte === {{ $index }} ? null : {{ $index }}"
                                 class="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
@@ -141,12 +145,6 @@
                                     <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
                                         Corte {{ $corte['corte'] }}
                                     </h3>
-                                    @if ($corte['ultimo_motivo_rechazo'])
-                                        <span
-                                            class="ml-2 text-[10px] bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 rounded-full font-bold uppercase">
-                                            Rechazado
-                                        </span>
-                                    @endif
                                 </div>
                                 <div class="flex items-center gap-4">
                                     <div class="flex items-center gap-2">
@@ -157,6 +155,28 @@
                                             {{ $totalPonderacion }}% / 25%
                                         </span>
                                     </div>
+
+                                    @php
+                                        $estatus = $corte['estatus'] ?? 2;
+                                        $bgClass = 'bg-gray-200 text-gray-600';
+                                        $statusText = 'Desconocido';
+
+                                        if ($estatus == 1) {
+                                            $bgClass = 'bg-green-100 text-green-700';
+                                            $statusText = 'Aprobado';
+                                        } elseif ($estatus == 2) {
+                                            $bgClass = 'bg-yellow-100 text-yellow-700';
+                                            $statusText = 'Pendiente';
+                                        } elseif ($estatus == 3) {
+                                            $bgClass = 'bg-red-100 text-red-700';
+                                            $statusText = 'Rechazado';
+                                        }
+                                    @endphp
+
+                                    <span class="text-xs px-2 py-0.5 rounded-full font-bold uppercase {{ $bgClass }}">
+                                        {{ $statusText }}
+                                    </span>
+
                                     <svg class="w-5 h-5 text-gray-400 transform transition-transform duration-300"
                                         :class="openCorte === {{ $index }} ? 'rotate-180' : ''" fill="none"
                                         stroke="currentColor" viewBox="0 0 24 24">
@@ -174,8 +194,8 @@
                                             class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                                             <p class="text-xs text-red-700 dark:text-red-400 font-bold uppercase mb-1">Motivo de
                                                 rechazo:</p>
-                                            <p class="text-sm text-red-600 dark:text-red-300 italic">
-                                                "{{ $corte['ultimo_motivo_rechazo'] }}"</p>
+                                            <p class="text-sm text-red-600 dark:text-red-300">
+                                                {{ $corte['ultimo_motivo_rechazo'] }}</p>
                                         </div>
                                     @endif
 
@@ -186,11 +206,13 @@
                                                 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                                 Contenidos y Temas
                                             </h4>
-                                            <button type="button" wire:click="addItem({{ $index }}, 'contenidos')"
-                                                class="inline-flex items-center gap-1 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-sm">
-                                                <span class="material-icons text-sm">add</span>
-                                                AÑADIR CONTENIDO
-                                            </button>
+                                            @if (!$locked)
+                                                <button type="button" wire:click="addItem({{ $index }}, 'contenidos')"
+                                                    class="inline-flex items-center gap-1 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-sm">
+                                                    <span class="material-icons text-sm">add</span>
+                                                    AÑADIR CONTENIDO
+                                                </button>
+                                            @endif
                                         </div>
 
                                         @foreach ($corte['contenidos'] as $contenidoIndex => $contenido)
@@ -203,7 +225,7 @@
                                                             <label
                                                                 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Tema
                                                                 a desarrollar</label>
-                                                            @if (count($corte['contenidos']) > 1)
+                                                            @if (count($corte['contenidos']) > 1 && !$locked)
                                                                 <button type="button"
                                                                     wire:click="removeItem({{ $index }}, 'contenidos', {{ $contenidoIndex }})"
                                                                     class="text-red-500 hover:text-red-700 text-[10px] font-bold uppercase flex items-center gap-1">
@@ -214,7 +236,8 @@
                                                         <x-select :options="$contenidosDisponibles" valueField="id_contenido"
                                                             textField="titulo_contenido"
                                                             wire:model.live.debounce.250ms="cortes.{{ $index }}.contenidos.{{ $contenidoIndex }}.contenido_id"
-                                                            placeholder="Seleccione un contenido" class="text-sm w-full" />
+                                                            placeholder="Seleccione un contenido" class="text-sm w-full"
+                                                            :disabled="$locked" />
                                                         @error("cortes.$index.contenidos.$contenidoIndex.contenido_id")
                                                             <p class="mt-1 text-[11px] text-red-600">{{ $message }}</p>
                                                         @enderror
@@ -226,11 +249,13 @@
                                                             <label
                                                                 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Indicadores
                                                                 de Logro</label>
-                                                            <button type="button"
-                                                                wire:click="addItem({{ $index }}, 'indicadores_logros', {{ $contenidoIndex }})"
-                                                                class="text-blue-600 dark:text-blue-400 hover:underline text-[10px] font-bold uppercase flex items-center gap-1">
-                                                                <span class="material-icons text-xs">add_circle</span> AÑADIR
-                                                            </button>
+                                                            @if (!$locked)
+                                                                <button type="button"
+                                                                    wire:click="addItem({{ $index }}, 'indicadores_logros', {{ $contenidoIndex }})"
+                                                                    class="text-blue-600 dark:text-blue-400 hover:underline text-[10px] font-bold uppercase flex items-center gap-1">
+                                                                    <span class="material-icons text-xs">add_circle</span> AÑADIR
+                                                                </button>
+                                                            @endif
                                                         </div>
 
                                                         <div class="space-y-2">
@@ -241,10 +266,10 @@
                                                                             valueField="id_indicador_logro"
                                                                             textField="nombre_indicador_logro"
                                                                             wire:model.live.debounce.250ms="cortes.{{ $index }}.contenidos.{{ $contenidoIndex }}.indicadores_logros.{{ $indicadorIndex }}.indicador_id"
-                                                                            placeholder="Seleccione un indicador"
-                                                                            class="text-sm w-full" />
+                                                                            placeholder="Seleccione un indicator"
+                                                                            class="text-sm w-full" :disabled="$locked" />
                                                                     </div>
-                                                                    @if (count($contenido['indicadores_logros']) > 1)
+                                                                    @if (count($contenido['indicadores_logros']) > 1 && !$locked)
                                                                         <button type="button"
                                                                             wire:click="removeItem({{ $index }}, 'indicadores_logros', {{ $indicadorIndex }}, {{ $contenidoIndex }})"
                                                                             class="text-gray-400 hover:text-red-500 transition-colors">
@@ -275,10 +300,12 @@
                                                     class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                                     Recursos
                                                 </h4>
-                                                <button type="button" wire:click="addItem({{ $index }}, 'recursos')"
-                                                    class="text-blue-600 dark:text-blue-400 hover:underline text-[10px] font-bold uppercase flex items-center gap-1">
-                                                    <span class="material-icons text-xs">add_circle</span> AÑADIR
-                                                </button>
+                                                @if (!$locked)
+                                                    <button type="button" wire:click="addItem({{ $index }}, 'recursos')"
+                                                        class="text-blue-600 dark:text-blue-400 hover:underline text-[10px] font-bold uppercase flex items-center gap-1">
+                                                        <span class="material-icons text-xs">add_circle</span> AÑADIR
+                                                    </button>
+                                                @endif
                                             </div>
                                             <div class="grid grid-cols-1 gap-2">
                                                 @foreach ($corte['recursos'] as $recursoIndex => $recurso)
@@ -287,9 +314,10 @@
                                                             <x-select :options="$recursosDisponibles" valueField="id_recurso"
                                                                 textField="nombre_recurso"
                                                                 wire:model.live.debounce.250ms="cortes.{{ $index }}.recursos.{{ $recursoIndex }}.recurso_id"
-                                                                placeholder="Seleccione un recurso" class="text-sm w-full" />
+                                                                placeholder="Seleccione un recurso" class="text-sm w-full"
+                                                                :disabled="$locked" />
                                                         </div>
-                                                        @if (count($corte['recursos']) > 1)
+                                                        @if (count($corte['recursos']) > 1 && !$locked)
                                                             <button type="button"
                                                                 wire:click="removeItem({{ $index }}, 'recursos', {{ $recursoIndex }})"
                                                                 class="text-gray-400 hover:text-red-500 transition-colors">
@@ -310,10 +338,12 @@
                                                     class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                                     Estrategias
                                                 </h4>
-                                                <button type="button" wire:click="addItem({{ $index }}, 'estrategias')"
-                                                    class="text-blue-600 dark:text-blue-400 hover:underline text-[10px] font-bold uppercase flex items-center gap-1">
-                                                    <span class="material-icons text-xs">add_circle</span> AÑADIR
-                                                </button>
+                                                @if (!$locked)
+                                                    <button type="button" wire:click="addItem({{ $index }}, 'estrategias')"
+                                                        class="text-blue-600 dark:text-blue-400 hover:underline text-[10px] font-bold uppercase flex items-center gap-1">
+                                                        <span class="material-icons text-xs">add_circle</span> AÑADIR
+                                                    </button>
+                                                @endif
                                             </div>
                                             <div class="grid grid-cols-1 gap-2">
                                                 @foreach ($corte['estrategias'] as $estrategiaIndex => $estrategia)
@@ -323,10 +353,10 @@
                                                                 valueField="id_estrategia_pedagogica"
                                                                 textField="nombre_estrategia_pedagogica"
                                                                 wire:model.live.debounce.250ms="cortes.{{ $index }}.estrategias.{{ $estrategiaIndex }}.estrategia_id"
-                                                                placeholder="Seleccione una estrategia"
-                                                                class="text-sm w-full" />
+                                                                placeholder="Seleccione una estrategia" class="text-sm w-full"
+                                                                :disabled="$locked" />
                                                         </div>
-                                                        @if (count($corte['estrategias']) > 1)
+                                                        @if (count($corte['estrategias']) > 1 && !$locked)
                                                             <button type="button"
                                                                 wire:click="removeItem({{ $index }}, 'estrategias', {{ $estrategiaIndex }})"
                                                                 class="text-gray-400 hover:text-red-500 transition-colors">
@@ -349,11 +379,13 @@
                                                 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                                 Plan de Evaluación
                                             </h4>
-                                            <button type="button" wire:click="addItem({{ $index }}, 'evaluaciones')"
-                                                class="inline-flex items-center gap-1 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-sm">
-                                                <span class="material-icons text-sm">add</span>
-                                                AÑADIR EVALUACIÓN
-                                            </button>
+                                            @if (!$locked)
+                                                <button type="button" wire:click="addItem({{ $index }}, 'evaluaciones')"
+                                                    class="inline-flex items-center gap-1 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-sm">
+                                                    <span class="material-icons text-sm">add</span>
+                                                    AÑADIR EVALUACIÓN
+                                                </button>
+                                            @endif
                                         </div>
 
                                         <div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-700">
@@ -382,33 +414,37 @@
                                                             <td class="px-4 py-3">
                                                                 <x-text-input type="date"
                                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.fecha_evaluacion"
-                                                                    class="w-full text-xs" />
+                                                                    class="w-full text-xs" :disabled="$locked" />
                                                             </td>
                                                             <td class="px-4 py-3">
                                                                 <x-select :options="$evaluacionesDisponibles"
                                                                     valueField="id_evaluacion" textField="nombre_evaluacion"
                                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.evaluacion_id"
-                                                                    placeholder="Seleccione" class="w-full text-xs" />
+                                                                    placeholder="Seleccione" class="w-full text-xs"
+                                                                    :disabled="$locked" />
                                                             </td>
                                                             <td class="px-4 py-3">
                                                                 <x-select :options="$tecnicasDisponibles"
                                                                     valueField="id_tecnica" textField="nombre_tecnica"
                                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.tecnica_id"
-                                                                    placeholder="Seleccione" class="w-full text-xs" />
+                                                                    placeholder="Seleccione" class="w-full text-xs"
+                                                                    :disabled="$locked" />
                                                             </td>
                                                             <td class="px-4 py-3">
                                                                 <input type="number" step="0.5" min="1" max="25"
                                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.ponderacion"
-                                                                    class="w-16 bg-transparent border-0 focus:ring-0 p-0 text-gray-700 dark:text-gray-300 text-xs font-bold">
+                                                                    class="w-16 bg-transparent border-0 focus:ring-0 p-0 text-gray-700 dark:text-gray-300 text-xs font-bold"
+                                                                    :disabled="$locked">
                                                             </td>
                                                             <td class="px-4 py-3">
                                                                 <x-select :options="$formasParticipacion" valueField="id"
                                                                     textField="nombre"
                                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.forma_participacion"
-                                                                    placeholder="Seleccione" class="w-full text-xs" />
+                                                                    placeholder="Seleccione" class="w-full text-xs"
+                                                                    :disabled="$locked" />
                                                             </td>
                                                             <td class="px-4 py-3 text-right">
-                                                                @if (count($corte['evaluaciones']) > 1)
+                                                                @if (count($corte['evaluaciones']) > 1 && !$locked)
                                                                     <button type="button"
                                                                         wire:click="removeItem({{ $index }}, 'evaluaciones', {{ $evaluacionIndex }})"
                                                                         class="text-gray-400 hover:text-red-500">
@@ -463,7 +499,7 @@
                                         <div>
                                             @if ($index > 0)
                                                 <button type="button" @click="openCorte = {{ $index - 1 }}"
-                                                    class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors">
+                                                    class="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold shadow-lg shadow-blue-500/30 hover:bg-blue-700 transition-all">
                                                     <span class="material-icons text-sm">arrow_back</span> Corte Anterior
                                                 </button>
                                             @endif
