@@ -94,7 +94,7 @@ class PlanificacionEditRepo
                     DB::table('corte')
                         ->where('id_corte', $corteId)
                         ->update([
-                            'estatus' => '1', // Reactivar a pendiente/guardado
+                            'estatus' => '2', // Reactivar a pendiente/guardado
                         ]);
 
                     // Invalidar motivos de rechazo previos
@@ -106,7 +106,7 @@ class PlanificacionEditRepo
                     $corteId = DB::table('corte')->insertGetId([
                         'id_planificacion' => $planificacionId,
                         'numero_corte' => $corteNumero,
-                        'estatus' => '1',
+                        'estatus' => '2',
                         'fecha_creacion' => now(),
                     ]);
                 }

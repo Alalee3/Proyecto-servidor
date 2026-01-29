@@ -131,7 +131,6 @@ class CreatePlanificacion extends Component
     {
         $rules = [
             'id_profesor_asignado' => 'required|exists:detalle_profesor_asignado,id_detalle_profesor_asignado',
-            'proposito' => 'required|string|min:10',
         ];
 
         // INDICADORES DE LOGRO
@@ -271,9 +270,6 @@ class CreatePlanificacion extends Component
         $messages['id_profesor_asignado.required'] = 'Debe seleccionar una asignación (Materia y Sección).';
         $messages['id_profesor_asignado.exists'] = 'La asignación seleccionada no es válida.';
 
-        $messages['proposito.required'] = 'El propósito de la unidad curricular es obligatorio.';
-        $messages['proposito.min'] = 'El propósito debe tener al menos 10 caracteres.';
-
         // Mensajes personalizados para arrays anidados
         $messages['cortes.*.recursos.*.recurso_id.required'] = 'Debe seleccionar un recurso.';
         $messages['cortes.*.estrategias.*.estrategia_id.required'] = 'Debe seleccionar una estrategia.';
@@ -412,7 +408,7 @@ class CreatePlanificacion extends Component
                     'id_planificacion' => $planificacionId,
                     'numero_corte' => $corte['numero'],
                     'fecha_creacion' => now(),
-                    'estatus' => '1',
+                    'estatus' => '2',
                 ];
                 $corteId = DB::table('corte')->insertGetId($corteData);
 

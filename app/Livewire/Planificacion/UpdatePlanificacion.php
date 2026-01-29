@@ -181,7 +181,7 @@ class UpdatePlanificacion extends Component
     {
         $this->cortes[] = [
             'corte' => count($this->cortes) + 1,
-            'estatus' => 1, // Estatus inicial para un nuevo corte (podría ser un borrador)
+            'estatus' => 2, // Estatus inicial para un nuevo corte (Pendiente)
             'recursos' => [],
             'estrategias' => [],
             'contenidos' => [],
