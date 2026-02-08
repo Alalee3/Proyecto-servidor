@@ -8,7 +8,7 @@
     </x-slot>
 
     <!-- Contenedor principal -->
-    <div class="py-12">
+    <div class="pt-2 pb-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="sogat-card">
 
@@ -52,13 +52,6 @@
                                 </div>
                             </div>
 
-                            <!-- Descripción -->
-                            <div class="mb-6">
-                                <x-input-label value="Descripción del Tema:" />
-                                <p class="text-gray-700 dark:text-gray-300 text-xl italic leading-relaxed">
-                                    {{ $tema->descripcion_tema ?: 'Sin descripción registrada.' }}
-                                </p>
-                            </div>
                 @else
                     <p class="text-gray-500 dark:text-gray-400">No se ha encontrado el tema...</p>
                 @endif
@@ -79,3 +72,4 @@
     </div>
 </div>
 ```
+

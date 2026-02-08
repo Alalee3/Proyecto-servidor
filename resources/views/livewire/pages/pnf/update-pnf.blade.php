@@ -1,11 +1,11 @@
 <div>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-500 dark:text-gray-500 leading-tight uppercase text-center">
+        <h2 class="font-bold text-xl text-gray-800 dark:text-gray-500 leading-tight uppercase text-center">
             {{ __('Editar PNF') }}
         </h2> 
     </x-slot>
 
-    <div class="py-12">
+    <div class="pt-2 pb-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="sogat-card">
 
@@ -47,3 +47,4 @@
         </div>
     </div>
 </div>
+

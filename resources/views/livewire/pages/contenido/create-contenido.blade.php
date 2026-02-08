@@ -1,11 +1,11 @@
 <div>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-500 dark:text-gray-500 leading-tight uppercase text-center">
+        <h2 class="font-bold text-xl text-gray-800 dark:text-gray-500 leading-tight uppercase text-center">
             {{ __('Crear Contenido') }}
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="pt-2 pb-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <!-- Alertas -->
             <x-table.alert-message type="success" :message="session('message')" />
@@ -32,14 +32,6 @@
                         </div>
                     </div>
 
-                    <!-- Descripción (Full Width) -->
-                    <div class="w-full">
-                        <x-input-label for="descripcion" :value="__('Descripción (Opcional)')" />
-                        <textarea id="descripcion" wire:model.live="form.descripcion_contenido" rows="4"
-                            class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm w-full mt-1"
-                            placeholder="Descripción detallada del contenido..."></textarea>
-                        <x-input-error :messages="$errors->first('form.descripcion_contenido')" class="mt-2" />
-                    </div>
 
                     <!-- Botones -->
                     <div class="flex items-center justify-end gap-4">
@@ -52,3 +44,4 @@
         </div>
     </div>
 </div>
+

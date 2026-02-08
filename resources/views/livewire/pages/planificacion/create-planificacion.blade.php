@@ -63,12 +63,12 @@
     </style>
 
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-500 dark:text-gray-500 leading-tight uppercase text-center">
+        <h2 class="font-bold text-xl text-gray-800 dark:text-gray-100 leading-tight uppercase text-center">
             {{ __('Crear Planificación Académica') }}
         </h2>
     </x-slot>
 
-    <div class="sogat-card">
+    <div class="sogat-card planificacion-module">
         <form wire:submit.prevent="savePlanificacion">
             <div class="space-y-4">
 
@@ -88,20 +88,43 @@
                     </div>
                 @endif
 
-                <div class="grid grid-cols-1 md:grid-cols-1 gap-6 mb-6">
+                <div class="grid grid-cols-1 gap-6 mb-6">
                     {{-- Selección de Asignación (Materia y Sección) --}}
                     <div class="min-w-0">
                         <x-select label="Asignación (Materia y Sección)" :options="$asignaciones"
                             valueField="id_detalle_profesor_asignado" textField="descripcion_completa"
-                            wire:model.live="id_profesor_asignado" placeholder="Seleccione una asignación" />
-
+                            wire:model.live="id_profesor_asignado" placeholder="Seleccione una asignación"
+                            required />
                     </div>
+
+                    {{-- Propósito de la Unidad Curricular --}}
+                    @if($id_profesor_asignado && $proposito)
+                        <div class="p-4 bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-500 rounded-lg shadow-sm">
+                            <div class="flex items-start gap-3">
+                                <span class="material-icons text-blue-600 dark:text-blue-400">info</span>
+                                <div>
+                                    <h4 class="text-sm font-bold text-blue-800 dark:text-blue-200 uppercase tracking-tight">Propósito de la Unidad Curricular</h4>
+                                    <p class="mt-1 text-sm text-blue-700 dark:text-blue-300 leading-relaxed italic">
+                                        "{{ $proposito }}"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
-                <!-- Sección de Cortes -->
-
-
-                <!-- Sección de Planificación de Unidades -->
+                <!-- Sección de Distribución Académica (Cortes) -->
+                @if($id_profesor_asignado)
+                    <div class="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
+                        <div class="flex items-center gap-2 mb-2 text-gray-700 dark:text-gray-300">
+                            <span class="material-icons text-sm">event_note</span>
+                            <span class="text-xs font-bold uppercase tracking-wider">Distribución: 4 Unidades Académicas (25% cada una)</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: 100%"></div>
+                        </div>
+                    </div>
+                @endif
                 <div class="space-y-6" x-data="{ openUnidad: 0 }">
                     <div class="flex items-center justify-between border-b border-gray-300 dark:border-gray-600 pb-4">
                         <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">
@@ -257,9 +280,6 @@
                                                                 wire:model.live.debounce.250ms="unidades.{{ $index }}.contenidos.{{ $contenidoIndex }}.contenido_id"
                                                                 placeholder="Seleccione un contenido" class="text-sm w-full"
                                                                 :disabled="empty($selectedTemaId)" />
-                                                            @error("unidades.$index.contenidos.$contenidoIndex.contenido_id")
-                                                                <p class="mt-1 text-[11px] text-red-600">{{ $message }}</p>
-                                                            @enderror
                                                         </div>
                                                     </div>
 
@@ -285,20 +305,17 @@
                                                                             textField="nombre_indicador_logro"
                                                                             wire:model.live.debounce.250ms="unidades.{{ $index }}.contenidos.{{ $contenidoIndex }}.indicadores_logros.{{ $indicadorIndex }}.indicador_id"
                                                                             placeholder="Seleccione un indicador"
-                                                                            class="text-sm w-full" />
-                                                                    </div>
-                                                                    @if (count($contenido['indicadores_logros']) > 1)
-                                                                        <button type="button"
-                                                                            wire:click="removeItem({{ $index }}, 'indicadores_logros', {{ $indicadorIndex }}, {{ $contenidoIndex }})"
-                                                                            class="text-gray-400 hover:text-red-500 transition-colors">
-                                                                            <span
-                                                                                class="material-icons text-sm">remove_circle_outline</span>
-                                                                        </button>
-                                                                    @endif
-                                                                </div>
-                                                                @error("unidades.$index.contenidos.$contenidoIndex.indicadores_logros.$indicadorIndex.indicador_id")
-                                                                    <p class="mt-1 text-[11px] text-red-600">{{ $message }}</p>
-                                                                @enderror
+                                                                             class="text-sm w-full" />
+                                                                     </div>
+                                                                     @if (count($contenido['indicadores_logros']) > 1)
+                                                                         <button type="button"
+                                                                             wire:click="removeItem({{ $index }}, 'indicadores_logros', {{ $indicadorIndex }}, {{ $contenidoIndex }})"
+                                                                             class="text-gray-400 hover:text-red-500 transition-colors">
+                                                                             <span
+                                                                                 class="material-icons text-sm">remove_circle_outline</span>
+                                                                         </button>
+                                                                     @endif
+                                                                 </div>
                                                             @empty
                                                                 <p class="text-xs text-gray-500 dark:text-gray-400 italic">No hay
                                                                     indicadores añadidos.</p>
@@ -330,7 +347,7 @@
                                                             <x-select :options="$recursosMaestros" valueField="id_recurso"
                                                                 textField="nombre_recurso"
                                                                 wire:model.live.debounce.250ms="unidades.{{ $index }}.recursos.{{ $recursoIndex }}.recurso_id"
-                                                                placeholder="Seleccione un recurso" class="text-sm w-full" />
+                                                                 placeholder="Seleccione un recurso" class="text-sm w-full" />
                                                         </div>
                                                         @if (count($unidad['recursos']) > 1)
                                                             <button type="button"
@@ -340,9 +357,6 @@
                                                             </button>
                                                         @endif
                                                     </div>
-                                                    @error("unidades.$index.recursos.$recursoIndex.recurso_id")
-                                                        <p class="mt-1 text-[11px] text-red-600">{{ $message }}</p>
-                                                    @enderror
                                                 @endforeach
                                             </div>
                                         </div>
@@ -367,7 +381,7 @@
                                                                 textField="nombre_estrategia_pedagogica"
                                                                 wire:model.live.debounce.250ms="unidades.{{ $index }}.estrategias.{{ $estrategiaIndex }}.estrategia_id"
                                                                 placeholder="Seleccione una estrategia"
-                                                                class="text-sm w-full" />
+                                                                 class="text-sm w-full" />
                                                         </div>
                                                         @if (count($unidad['estrategias']) > 1)
                                                             <button type="button"
@@ -377,9 +391,6 @@
                                                             </button>
                                                         @endif
                                                     </div>
-                                                    @error("unidades.$index.estrategias.$estrategiaIndex.estrategia_id")
-                                                        <p class="mt-1 text-[11px] text-red-600">{{ $message }}</p>
-                                                    @enderror
                                                 @endforeach
                                             </div>
                                         </div>
@@ -505,9 +516,6 @@
                                     <x-select label="Seleccionar Bibliografía" :options="$bibliografiasMaestras"
                                         valueField="id_bibliografia" textField="nombre_bibliografia"
                                         wire:model.live.debounce.250ms="bibliografias.{{ $biblioIndex }}.bibliografia_id" />
-                                    @error("bibliografias.$biblioIndex.bibliografia_id")
-                                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                                    @enderror
                                 </div>
                                 @if (count($bibliografias) > 1)
                                     <button type="button" wire:click="removeItem(null, 'bibliografias', {{ $biblioIndex }})"
@@ -531,3 +539,4 @@
         </form>
     </div>
 </div>
+

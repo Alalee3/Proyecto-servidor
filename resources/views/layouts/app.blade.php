@@ -53,7 +53,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
-                    <img src="{{ asset('img/logo_viejo.jpg') }}" alt="SOGAT Sintillo" class="w-full h-auto max-h-[100px] object-contain">
+                    <img src="{{ asset('img/logo_viejo-Photoroom.png') }}" alt="SOGAT Sintillo" class="w-full h-auto max-h-[100px] object-contain">
                 </div>
             </div>
 
@@ -71,24 +71,22 @@
                 <livewire:side-bar />
 
                 {{-- Área de Contenido Principal --}}
-                <div id="main-content-wrapper" class="flex-1 transition-all duration-300 ease-in-out bg-white dark:bg-gray-900 min-h-[600px] mt-[15px]"
+                <div id="main-content-wrapper" class="flex-1 transition-all duration-300 ease-in-out bg-white dark:bg-gray-900 min-h-[600px]"
                     :class="{ 'ml-[234px]': alpineSidebarOpen && window.innerWidth < 1024, 'ml-0': !alpineSidebarOpen && window.innerWidth < 1024 }">
 
                     <livewire:notificaciones />
 
                     <!-- Page Heading (si existe) -->
                     @if (isset($header))
-                        <header class="sogat-header shadow-sm border-b border-gray-100 dark:border-gray-800">
-                            <div class="max-w-7xl mx-auto py-3 px-4 sm:px-6 lg:px-8">
-                                <h1 class="font-bold text-xl text-center leading-tight tracking-wide">
-                                    {{ $header }}
-                                </h1>
-                            </div>
+                        <header class="sogat-header">
+                            <h1 class="font-bold text-xl text-center leading-tight tracking-wide mb-2">
+                                {{ $header }}
+                            </h1>
                         </header>
                     @endif
 
                     <!-- Contenido de la Página ($slot) -->
-                    <main class="p-4 sm:p-8">
+                    <main class="p-4 sm:p-8 {{ isset($header) ? 'pt-0' : '' }}">
                         {{ $slot }}
                     </main>
                 </div>

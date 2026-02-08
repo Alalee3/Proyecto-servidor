@@ -83,6 +83,62 @@
                             </ul>
                         </div>
 
+                        <!-- Recursos -->
+                        <div>
+                            <button @click="subMenu === 3 ? subMenu = null : subMenu = 3"
+                                class="sogat-sidebar-subitem">
+                                <span>Recursos</span>
+                                <img :src="subMenu === 3 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
+                                     class="w-4 h-4 ml-auto">
+                            </button>
+                            <ul x-show="subMenu === 3" x-collapse class="mt-0 space-y-0">
+                                <li><a href="{{ route('recurso/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
+                                <li><a href="{{ route('recurso/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Estrategias Pedagógicas -->
+                        <div>
+                            <button @click="subMenu === 4 ? subMenu = null : subMenu = 4"
+                                class="sogat-sidebar-subitem">
+                                <span>Estrategias Pedagógicas</span>
+                                <img :src="subMenu === 4 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
+                                     class="w-4 h-4 ml-auto">
+                            </button>
+                            <ul x-show="subMenu === 4" x-collapse class="mt-0 space-y-0">
+                                <li><a href="{{ route('estrategia/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
+                                <li><a href="{{ route('estrategia/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Técnicas de Evaluación -->
+                        <div>
+                            <button @click="subMenu === 5 ? subMenu = null : subMenu = 5"
+                                class="sogat-sidebar-subitem">
+                                <span>Técnicas de Evaluación</span>
+                                <img :src="subMenu === 5 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
+                                     class="w-4 h-4 ml-auto">
+                            </button>
+                            <ul x-show="subMenu === 5" x-collapse class="mt-0 space-y-0">
+                                <li><a href="{{ route('tecnica/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
+                                <li><a href="{{ route('tecnica/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Evaluaciones -->
+                        <div>
+                            <button @click="subMenu === 6 ? subMenu = null : subMenu = 6"
+                                class="sogat-sidebar-subitem">
+                                <span>Evaluaciones</span>
+                                <img :src="subMenu === 6 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
+                                     class="w-4 h-4 ml-auto">
+                            </button>
+                            <ul x-show="subMenu === 6" x-collapse class="mt-0 space-y-0">
+                                <li><a href="{{ route('evaluacion/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
+                                <li><a href="{{ route('evaluacion/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
+                            </ul>
+                        </div>
+
                         <!-- Bibliografía -->
                         <div>
                             <button @click="subMenu === 2 ? subMenu = null : subMenu = 2"

@@ -1,6 +1,6 @@
 <div>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-500 dark:text-gray-500 leading-tight uppercase text-center">
+        <h2 class="font-bold text-xl text-gray-800 dark:text-gray-500 leading-tight uppercase text-center">
             {{ __('Registrar Evento') }}
         </h2>
     </x-slot>
@@ -45,3 +45,4 @@
         </form>
     </div>
 </div>
+

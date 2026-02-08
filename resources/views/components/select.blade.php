@@ -19,13 +19,13 @@
     // Obtenemos el wireModel (usando prop o atributo)
     $finalWireModel = $wireModel ?? ($wireModelFromAttributes ?? '');
     $labelValue = $label ?? $attributes->get('label');
-    $finalErrorField = $errorField ?? last(explode('.', $finalWireModel));
+    $finalErrorField = $errorField ?? $finalWireModel;
 
     // Clases condicionales
     $selectClasses = Arr::toCssClasses([
         'block w-full py-2 px-3 border rounded-md shadow-sm',
         'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100',
-        'border-gray-300 dark:border-gray-700',
+        'border-black dark:border-gray-700',
         'focus:outline-none focus:ring-indigo-500 focus:border-indigo-500',
         'mt-1' => !is_null($labelValue),
         $extraClasses,
