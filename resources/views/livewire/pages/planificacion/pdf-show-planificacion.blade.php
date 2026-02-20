@@ -225,8 +225,7 @@
                     <td class="content-cell">
                         @foreach($corte['evaluaciones'] as $eval)
                             @if($eval['forma_participacion'] == 1) Individual
-                            @elseif($eval['forma_participacion'] == 2) Pareja
-                            @elseif($eval['forma_participacion'] == 3) Grupal
+                            @elseif($eval['forma_participacion'] == 2) Grupal ({{ $eval['integrantes'] ?? '' }})
                             @endif
                             <br>
                         @endforeach

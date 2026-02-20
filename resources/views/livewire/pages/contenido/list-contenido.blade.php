@@ -21,7 +21,6 @@
                         <tr>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Título</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Tema</th>
-                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Corte</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">
                                 Estatus</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">
@@ -37,12 +36,7 @@
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">
                                         {{ $contenido->titulo_tema }}
                                     </td>
-                                    <td class="px-4 py-4 text-gray-900 dark:text-white text-center">
-                                        <span
-                                            class="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 text-xs font-medium px-2.5 py-0.5 rounded">
-                                            Corte {{ $contenido->corte_contenido }}
-                                        </span>
-                                    </td>
+
                                     <td class="px-4 py-4 text-right">
                                         <span
                                             class="{{ $contenido->estatus == 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }} text-xs font-medium px-2.5 py-0.5 rounded">
@@ -100,7 +94,7 @@
                             @endforeach
                         @else
                             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                <td colspan="5" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="4" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                     {{ $busqueda ? 'No se encontraron contenidos' : 'No hay contenidos registrados' }}
                                 </td>
                             </tr>

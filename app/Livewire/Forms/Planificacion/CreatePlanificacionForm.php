@@ -80,7 +80,7 @@ class CreatePlanificacionForm extends Form
 
             // Validación de una sola evaluación por actividad
             'cortes.*.detalle_actividades.*.evaluacion.evaluacion_id' => 'nullable|exists:evaluaciones,evaluacion_id',
-            'cortes.*.detalle_actividades.*.evaluacion.tecnica_id' => 'nullable|exists:tecnicas,tecnica_id',
+            'cortes.*.detalle_actividades.*.evaluacion.tecnica_id' => 'nullable|exists:tecnica,tecnica_id',
             'cortes.*.detalle_actividades.*.evaluacion.ponderacion' => 'required|numeric|min:0',
             'cortes.*.detalle_actividades.*.evaluacion.forma_de_participacion' => 'required|string|max:255',
             'cortes.*.detalle_actividades.*.evaluacion.new_evaluacion' => 'nullable|string|max:255',

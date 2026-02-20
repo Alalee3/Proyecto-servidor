@@ -29,14 +29,21 @@
                                     </p>
                                 </div>
 
-                                <div>
-                                    <x-input-label value="Unidad (Corte):" />
-                                    <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">Unidad
-                                        {{ $contenido->corte_contenido }}
-                                    </p>
+                                <!-- Objetivos Asociados -->
+                                <div class="lg:col-span-3 mt-4">
+                                    <x-input-label value="Objetivos Asociados:" class="mb-2" />
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        @foreach($contenido->objetivos as $objetivo)
+                                            <div class="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                                                <p class="text-gray-700 dark:text-gray-300 font-bold uppercase text-xs">
+                                                    {{ $objetivo->titulo_objetivo }}
+                                                </p>
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
 
-                                <div>
+                                <div class="mt-4">
                                     <x-input-label value="Estatus:" />
                                     <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
                                         <span
@@ -48,7 +55,7 @@
                                     </p>
                                 </div>
 
-                                <div>
+                                <div class="mt-4">
                                     <x-input-label value="Fecha de Creación:" />
                                     <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
                                         {{ \Carbon\Carbon::parse($contenido->fecha_creacion)->format('d/m/Y H:i') }}

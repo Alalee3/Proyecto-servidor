@@ -114,8 +114,16 @@
                                                     class="list-disc list-inside space-y-2 text-sm text-gray-600 dark:text-gray-400">
                                                     @foreach ($corte->contenidos as $contenido)
                                                         <li>
-                                                            <span
-                                                                class="font-medium text-gray-800 dark:text-gray-200">{{ $contenido['titulo_contenido'] ?? 'Sin Título' }}</span>
+                                                            <div class="mt-1 mb-2">
+                                                                <div>
+                                                                    <span class="text-xs font-bold text-gray-500 uppercase">Tema:</span>
+                                                                    <span class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ $contenido['titulo_tema'] ?? 'Sin Tema' }}</span>
+                                                                </div>
+                                                                <div class="mt-1">
+                                                                    <span class="text-xs font-bold text-gray-500 uppercase">Contenido:</span>
+                                                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ $contenido['titulo_contenido'] ?? 'Sin Título' }}</span>
+                                                                </div>
+                                                            </div>
                                                             @if (!empty($contenido['indicadores_logros']))
                                                                 <ul class="ml-5 list-circle mt-1 space-y-1 text-xs">
                                                                     @foreach ($contenido['indicadores_logros'] as $indicador)
@@ -193,9 +201,7 @@
                                                                         @if (($eval['forma_participacion'] ?? '') == '1')
                                                                             Individual
                                                                         @elseif(($eval['forma_participacion'] ?? '') == '2')
-                                                                            Pareja
-                                                                        @elseif(($eval['forma_participacion'] ?? '') == '3')
-                                                                            Grupal
+                                                                            Grupal ({{ $eval['integrantes'] ?? '2-10' }})
                                                                         @else
                                                                             N/A
                                                                         @endif

@@ -42,9 +42,23 @@ class CreateTema extends Component
         try {
             $this->temaRepo->crear($this->form->values());
             $this->form->reset();
+            $this->form->objetivos = [['titulo_objetivo' => '']]; // Reiniciar con uno vacío
             session()->flash('message', 'Tema creado correctamente.');
         } catch (\Exception $e) {
             session()->flash('error', 'Error: ' . $e->getMessage());
+        }
+    }
+
+    public function addObjetivo()
+    {
+        $this->form->objetivos[] = ['titulo_objetivo' => ''];
+    }
+
+    public function removeObjetivo($index)
+    {
+        if (count($this->form->objetivos) > 1) {
+            unset($this->form->objetivos[$index]);
+            $this->form->objetivos = array_values($this->form->objetivos);
         }
     }
 

@@ -69,19 +69,7 @@
                     </button>
 
                     <div x-show="openMenu === 10" x-collapse class="mt-0 space-y-0">
-                        <!-- Indicadores de Logro -->
-                        <div>
-                            <button @click="subMenu === 1 ? subMenu = null : subMenu = 1"
-                                class="sogat-sidebar-subitem">
-                                <span>Indicadores de Logro</span>
-                                <img :src="subMenu === 1 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
-                                     class="w-4 h-4 ml-auto">
-                            </button>
-                            <ul x-show="subMenu === 1" x-collapse class="mt-0 space-y-0">
-                                <li><a href="{{ route('indicador-logro/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
-                                <li><a href="{{ route('indicador-logro/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
-                            </ul>
-                        </div>
+
 
                         <!-- Recursos -->
                         <div>

@@ -10,11 +10,11 @@ use Exception;
 class CreateTecnica extends Component
 {
     public CreateTecnicaForm $form;
-    protected $tecnicasRepository;
+    protected $tecnicaRepository;
 
     public function __construct()
     {
-        $this->tecnicasRepository = new TecnicaCreateRepo();
+        $this->tecnicaRepository = new TecnicaCreateRepo();
     }
 
     public function guardar()
@@ -22,7 +22,7 @@ class CreateTecnica extends Component
         $this->form->validate();
 
         try {
-            $this->tecnicasRepository->crear($this->form->all());
+            $this->tecnicaRepository->crear($this->form->all());
             $this->reset('form.nombre');
             session()->flash('message', 'Técnica de evaluación creada correctamente.');
         } catch (Exception $e) {

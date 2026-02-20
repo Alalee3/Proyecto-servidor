@@ -130,6 +130,7 @@ class PlanificacionEditRepo
                         'ponderacion_detalle_evaluacion' => $eval['ponderacion'],
                         'fecha_evaluacion_detalle_evaluacion' => $eval['fecha_evaluacion'],
                         'forma_participacion_detalle_evaluacion' => $eval['forma_participacion'],
+                        'integrantes_detalle_evaluacion' => ($eval['forma_participacion'] == '2') ? ($eval['integrantes'] ?? null) : 1,
                     ];
                 }, $corteData['evaluaciones']);
 
@@ -139,7 +140,7 @@ class PlanificacionEditRepo
                     $corteId,
                     $evaluacionesData,
                     'evaluacion_id',
-                    ['id_tecnica', 'ponderacion_detalle_evaluacion', 'fecha_evaluacion_detalle_evaluacion', 'forma_participacion_detalle_evaluacion']
+                    ['id_tecnica', 'ponderacion_detalle_evaluacion', 'fecha_evaluacion_detalle_evaluacion', 'forma_participacion_detalle_evaluacion', 'integrantes_detalle_evaluacion']
                 );
 
 

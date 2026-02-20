@@ -31,8 +31,8 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if ($tecnicas->isNotEmpty())
-                            @foreach ($tecnicas as $tecnica)
+                        @if ($tecnica->isNotEmpty())
+                            @foreach ($tecnica as $tecnica)
                                 <tr wire:key="{{ $tecnica->id_tecnica }}"
                                     class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                     <!-- Nombre -->
@@ -131,7 +131,7 @@
                         <option value="50">50</option>
                     </select>
                 </div>
-                <div>{{ $tecnicas->links() }}</div>
+                <div>{{ $tecnica->links() }}</div>
             </div>
         </div>
     </div>

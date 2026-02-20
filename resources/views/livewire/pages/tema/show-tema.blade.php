@@ -52,17 +52,34 @@
                                 </div>
                             </div>
 
+                            <!-- Sección de Objetivos -->
+                            <div class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+                                <h4 class="text-lg font-bold text-gray-800 dark:text-gray-200 uppercase tracking-tight mb-4">
+                                    {{ __('Objetivos Asociados') }}
+                                </h4>
+                                @if(isset($tema->objetivos) && count($tema->objetivos) > 0)
+                                    <ul class="space-y-3">
+                                        @foreach($tema->objetivos as $objetivo)
+                                            <li class="flex items-start gap-3 bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                                                <span class="material-icons text-sogat-red text-sm mt-1">lens</span>
+                                                <span class="text-gray-700 dark:text-gray-300 font-medium uppercase">{{ $objetivo->titulo_objetivo }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @else
+                                    <p class="text-gray-500 italic">No hay objetivos registrados para este tema.</p>
+                                @endif
+                            </div>
+
                 @else
                     <p class="text-gray-500 dark:text-gray-400">No se ha encontrado el tema...</p>
                 @endif
 
                 <!-- Botón Volver -->
-                <div class="flex justify-end mt-6">
+                <div class="flex justify-end mt-8">
                     <a href="{{ route('tema/listar') }}">
-                        <x-danger-button type="button">
-                            <link rel="stylesheet"
-                                href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=arrow_back" />
-                            <span class="material-symbols-outlined">arrow_back</span>
+                        <x-danger-button type="button" class="flex items-center gap-2">
+                            <span class="material-icons">arrow_back</span>
                             {{ __('Volver') }}
                         </x-danger-button>
                     </a>
@@ -71,5 +88,3 @@
         </div>
     </div>
 </div>
-```
-

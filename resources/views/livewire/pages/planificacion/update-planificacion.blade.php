@@ -403,13 +403,10 @@
                                                 </thead>
                                                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                                                     @foreach ($corte['evaluaciones'] as $evaluacionIndex => $evaluacion)
-                                                        @php
                                                             $formasParticipacion = collect([
                                                                 (object) ['id' => '1', 'nombre' => 'Individual'],
-                                                                (object) ['id' => '2', 'nombre' => 'Pareja'],
-                                                                (object) ['id' => '3', 'nombre' => 'Grupal'],
+                                                                (object) ['id' => '2', 'nombre' => 'Grupal'],
                                                             ]);
-                                                        @endphp
                                                         <tr>
                                                             <td class="px-2 py-3">
                                                                 <x-text-input type="date"
@@ -424,15 +421,16 @@
                                                                     :disabled="$locked" required />
                                                             </td>
                                                             <td class="px-2 py-3">
-                                                                <x-select :options="$tecnicasDisponibles"
+                                                                <x-select :options="$tecnicaDisponibles"
                                                                     valueField="id_tecnica" textField="nombre_tecnica"
                                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.tecnica_id"
                                                                     placeholder="Seleccione" class="w-full text-xs"
                                                                     :disabled="$locked" required />
                                                             </td>
                                                             <td class="px-2 py-3 text-center">
-                                                                <input type="number" step="0.5" min="1" max="25"
-                                                                    wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.ponderacion"
+                                                                <input type="number" step="1" min="5" max="25"
+                                                                    onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                                                    wire:model.live="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.ponderacion"
                                                                     class="w-16 bg-transparent border-0 focus:ring-0 p-0 text-gray-700 dark:text-gray-300 text-xs font-bold text-center"
                                                                     :disabled="$locked">
                                                             </td>
@@ -442,6 +440,21 @@
                                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.forma_participacion"
                                                                     placeholder="Seleccione" class="w-full text-xs"
                                                                     :disabled="$locked" required />
+                                                                
+                                                                @if(isset($evaluacion['forma_participacion']) && $evaluacion['forma_participacion'] == '2')
+                                                                    <div class="mt-1 flex items-center gap-1">
+                                                                        <span class="text-[10px] text-gray-500 uppercase font-bold">N°:</span>
+                                                                        <select 
+                                                                            wire:model.live="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.integrantes"
+                                                                            class="text-[10px] rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 py-0 px-1 w-12"
+                                                                            :disabled="$locked">
+                                                                            <option value="">-</option>
+                                                                            @for($i = 2; $i <= 10; $i++)
+                                                                                <option value="{{ $i }}">{{ $i }}</option>
+                                                                            @endfor
+                                                                        </select>
+                                                                    </div>
+                                                                @endif
                                                             </td>
                                                             <td class="px-4 py-3 text-right">
                                                                 @if (count($corte['evaluaciones']) > 1 && !$locked)

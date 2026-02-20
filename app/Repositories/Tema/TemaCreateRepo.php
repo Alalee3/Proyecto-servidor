@@ -17,14 +17,28 @@ class TemaCreateRepo
 
     public function crear(array $data)
     {
-        return DB::table('tema')->insertGetId([
-            'id_unidad_curricular' => $data['id_unidad_curricular'],
-            'titulo_tema' => $data['titulo_tema'],
-            'descripcion_tema' => $data['descripcion_tema'] ?? null,
-            'unidad_tema' => $data['unidad_tema'],
-            'fecha_creacion' => Carbon::now(),
-            'fecha_actualizacion' => null,
-            'estatus' => '1',
-        ]);
+        return DB::transaction(function () use ($data) {
+            $temaId = DB::table('tema_unidad')->insertGetId([
+                'id_unidad_curricular' => $data['id_unidad_curricular'],
+                'titulo_tema' => $data['titulo_tema'],
+                'unidad_tema' => $data['unidad_tema'],
+                'fecha_creacion' => Carbon::now(),
+                'fecha_actualizacion' => null,
+                'estatus' => '1',
+            ]);
+
+            foreach ($data['objetivos'] as $objetivo) {
+                if (!empty($objetivo['titulo_objetivo'])) {
+                    DB::table('objetivo')->insert([
+                        'id_tema_unidad' => $temaId,
+                        'titulo_objetivo' => $objetivo['titulo_objetivo'],
+                        'fecha_creacion' => Carbon::now(),
+                        'estatus' => '1',
+                    ]);
+                }
+            }
+
+            return $temaId;
+        });
     }
 }

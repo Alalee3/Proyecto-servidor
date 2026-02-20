@@ -109,13 +109,17 @@ class PlanificacionViewRepo
     
                 $corteArray['contenidos'] = DB::table('detalle_contenido as dc')
                     ->join('contenido as c', 'dc.id_contenido', '=', 'c.id_contenido')
+                    ->join('objetivo as o', 'c.id_objetivo', '=', 'o.id_objetivo')
+                    ->join('tema_unidad as tu', 'o.id_tema_unidad', '=', 'tu.id_tema_unidad')
                     ->where('dc.id_unidad', $corte->detalle_id)
                     ->where('dc.estatus', '1')
                     ->select(
                         'c.id_contenido as contenido_id',
                         'dc.id_detalle_contenido as detalle_contenido_id',
                         'c.titulo_contenido as titulo_contenido',
-                        'c.descripcion_contenido as descripcion_contenido'
+                        'c.id_objetivo',
+                        'tu.id_tema_unidad as tema_id',
+                        'tu.titulo_tema as titulo_tema'
                     )
                     ->get()
                     ->map(function ($contenidoItem) { // Rename $tema to $contenidoItem
@@ -150,7 +154,8 @@ class PlanificacionViewRepo
                         'tec.nombre_tecnica as tecnica',
                         'dev.ponderacion_detalle_evaluacion as ponderacion',
                         'dev.fecha_evaluacion_detalle_evaluacion as fecha_evaluacion',
-                        'dev.forma_participacion_detalle_evaluacion as forma_participacion'
+                        'dev.forma_participacion_detalle_evaluacion as forma_participacion',
+                        'dev.integrantes_detalle_evaluacion as integrantes'
                     )
                     ->get()
                     ->map(fn($item) => (array) $item)

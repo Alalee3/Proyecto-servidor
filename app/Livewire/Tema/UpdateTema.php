@@ -29,7 +29,7 @@ class UpdateTema extends Component
             return redirect()->route('tema/listar');
         }
 
-        $this->form->setTema($tema);
+        $this->form->setTema($tema, $tema->objetivos ?? []);
         $this->unidadesCurriculares = $this->temaRepo->select_unidades_curriculares();
         $this->cortes = [
             (object) ['id' => '1', 'nombre' => 'Corte 1'],
@@ -37,6 +37,19 @@ class UpdateTema extends Component
             (object) ['id' => '3', 'nombre' => 'Corte 3'],
             (object) ['id' => '4', 'nombre' => 'Corte 4'],
         ];
+    }
+
+    public function addObjetivo()
+    {
+        $this->form->objetivos[] = ['titulo_objetivo' => ''];
+    }
+
+    public function removeObjetivo($index)
+    {
+        if (count($this->form->objetivos) > 1) {
+            unset($this->form->objetivos[$index]);
+            $this->form->objetivos = array_values($this->form->objetivos);
+        }
     }
 
     public function save()
