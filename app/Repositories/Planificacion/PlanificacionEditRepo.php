@@ -13,53 +13,12 @@ class PlanificacionEditRepo
     {
         DB::beginTransaction();
         try {
-            // --- SINCRONIZACIÓN DE BIBLIOGRAFÍAS (detalle_bibliografia) ---
-            $currentBibliografias = DB::table('detalle_bibliografia')
-                ->where('id_planificacion', $planificacionId)
-                ->where('estatus', '1')
-                ->pluck('id_bibliografia')
-                ->toArray();
-
-            $newBibliografias = collect($data['bibliografias'])->pluck('bibliografia_id')->filter()->toArray();
-
-            $toDeactivateBibliografias = array_diff($currentBibliografias, $newBibliografias);
-            if (!empty($toDeactivateBibliografias)) {
-                DB::table('detalle_bibliografia')
-                    ->where('id_planificacion', $planificacionId)
-                    ->whereIn('id_bibliografia', $toDeactivateBibliografias)
-                    ->update(['estatus' => '2']);
-            }
-
-            foreach ($newBibliografias as $bibliografiaId) {
-                $existing = DB::table('detalle_bibliografia')
-                    ->where('id_planificacion', $planificacionId)
-                    ->where('id_bibliografia', $bibliografiaId)
-                    ->first();
-
-                if ($existing) {
-                    if ($existing->estatus == '2') {
-                        DB::table('detalle_bibliografia')
-                            ->where('id_planificacion', $planificacionId)
-                            ->where('id_bibliografia', $bibliografiaId)
-                            ->update(['estatus' => '1']);
-                    }
-                } else {
-                    DB::table('detalle_bibliografia')->insert([
-                        'id_planificacion' => $planificacionId,
-                        'id_bibliografia' => $bibliografiaId,
-                        'estatus' => '1',
-                        'fecha_creacion' => now(),
-                    ]);
-                }
-            }
-
-
-            // --- SINCRONIZACIÓN DE UNIDADES (tabla 'unidad') ---
-            $oldActiveCortes = DB::table('unidad')
+            // --- SINCRONIZACIÓN DE UNIDADES (tabla 'unidad_corte') ---
+            $oldActiveCortes = DB::table('unidad_corte')
                 ->where('id_planificacion', $planificacionId)
                 ->whereIn('estatus', ['1', '2', '3']) // Activos, Pendientes o Rechazados
                 ->get()
-                ->keyBy('id_unidad');
+                ->keyBy('id_unidad_corte');
 
             $newCortes = collect($data['cortes']);
             $processedOldCorteIds = [];
@@ -70,7 +29,7 @@ class PlanificacionEditRepo
 
                 // Buscar orden existente por número
                 foreach ($oldActiveCortes as $oldCorte) {
-                    if ($oldCorte->numero_unidad == $corteNumero && $oldCorte->estatus != '3') {
+                    if ($oldCorte->numero_unidad_corte == $corteNumero && $oldCorte->estatus != '3') {
                         $foundOldCorte = $oldCorte;
                         break;
                     }
@@ -79,53 +38,49 @@ class PlanificacionEditRepo
                 // Si no encontramos uno activo (ej. estaba rechazado, o no existía), buscamos por ID si viniere, pero aquí nos basamos en numero
                 if (!$foundOldCorte) {
                     // Buscar unidad rechazada para reactivar/actualizar
-                    $foundOldCorte = DB::table('unidad')
+                    $foundOldCorte = DB::table('unidad_corte')
                         ->where('id_planificacion', $planificacionId)
-                        ->where('numero_unidad', $corteNumero)
+                        ->where('numero_unidad_corte', $corteNumero)
                         ->first();
                 }
 
                 // NUEVO: Si el corte está Aprobado (1) o Pendiente (2), no lo tocamos.
                 // Solo guardamos su ID para no borrarlo al final.
                 if ($foundOldCorte && in_array($foundOldCorte->estatus, ['1', '2'])) {
-                    $processedOldCorteIds[] = $foundOldCorte->id_unidad;
+                    $processedOldCorteIds[] = $foundOldCorte->id_unidad_corte;
                     continue;
                 }
 
                 $corteId = null;
                 if ($foundOldCorte) {
-                    $corteId = $foundOldCorte->id_unidad;
+                    $corteId = $foundOldCorte->id_unidad_corte;
                     $processedOldCorteIds[] = $corteId;
 
                     // Actualizar estatus si estaba rechazado o eliminado
-                    DB::table('unidad')
-                        ->where('id_unidad', $corteId)
+                    DB::table('unidad_corte')
+                        ->where('id_unidad_corte', $corteId)
                         ->update([
+                            'indicador_logro_unidad_corte' => $corteData['indicadores_logro'] ?? null,
                             'estatus' => '2', // Reactivar a pendiente/guardado
                         ]);
 
-                    // Invalidar motivos de rechazo previos
-                    DB::table('motivo_rechazo')
-                        ->where('id_unidad', $corteId)
-                        ->where('estatus', '1')
-                        ->update(['estatus' => '2']);
+                    // Invalidar motivos de rechazo previos - No hay tabla motivo_rechazo, se limpia el campo en unidad_corte
+                    DB::table('unidad_corte')
+                        ->where('id_unidad_corte', $corteId)
+                        ->update(['descripcion_motivo_rechazo' => null]);
                 } else {
-                    $corteId = DB::table('unidad')->insertGetId([
+                    $corteId = DB::table('unidad_corte')->insertGetId([
                         'id_planificacion' => $planificacionId,
-                        'numero_unidad' => $corteNumero,
+                        'numero_unidad_corte' => $corteNumero,
+                        'indicador_logro_unidad_corte' => $corteData['indicadores_logro'] ?? null,
                         'estatus' => '2',
                         'fecha_creacion' => now(),
                     ]);
                 }
 
-                // Sincronizar Relaciones del Corte
-                $this->syncCorteDetails('detalle_recurso', 'id_recurso', $corteId, $corteData['recursos'], 'recurso_id');
-                $this->syncCorteDetails('detalle_estrategia_pedagogica', 'id_estrategia_pedagogica', $corteId, $corteData['estrategias'], 'estrategia_id');
-
-                // Evaluaciones (mapeo especial de columnas)
                 $evaluacionesData = array_map(function ($eval) {
                     return [
-                        'evaluacion_id' => $eval['evaluacion_id'],
+                        'id_evaluacion' => $eval['evaluacion_id'],
                         'id_tecnica' => $eval['tecnica_id'],
                         'ponderacion_detalle_evaluacion' => $eval['ponderacion'],
                         'fecha_evaluacion_detalle_evaluacion' => $eval['fecha_evaluacion'],
@@ -139,21 +94,25 @@ class PlanificacionEditRepo
                     'id_evaluacion',
                     $corteId,
                     $evaluacionesData,
-                    'evaluacion_id',
+                    'id_evaluacion',
                     ['id_tecnica', 'ponderacion_detalle_evaluacion', 'fecha_evaluacion_detalle_evaluacion', 'forma_participacion_detalle_evaluacion', 'integrantes_detalle_evaluacion']
-                );
+                ); 
 
+                // --- Sincronizar Estrategias y Contenidos ---
+                // Esta parte necesita ser adaptada al nuevo esquema donde estrategias son tablas y contenidos tambien
+                $this->syncEstrategiasCorte($corteId, $corteData['estrategias']);
+                $this->syncContenidosCorte($corteId, $corteData['contenidos']);
 
-                // --- Sincronizar Contenidos (Temas e Indicadores) ---
-                $this->syncTemasCorte($corteId, $corteData['contenidos']);
+                // --- Sincronizar Bibliografías por Corte ---
+                $this->syncBibliografiasCorte($corteId, $corteData['bibliografias'] ?? []);
             }
 
             // Unidades antiguas que no están en la nueva data (marcar eliminados?)
             // En este caso, si el usuario quita una unidad de la UI (aunque no se permite borrar cortes usualmente, solo vaciar), lo marcamos inactivo
             foreach ($oldActiveCortes as $oldCorteId => $oldCorteData) {
                 if (!in_array($oldCorteId, $processedOldCorteIds)) {
-                    DB::table('unidad')
-                        ->where('id_unidad', $oldCorteId)
+                    DB::table('unidad_corte')
+                        ->where('id_unit_corte', $oldCorteId)
                         ->update(['estatus' => '2']); // 2 = Eliminado/Inactivo
                 }
             }
@@ -179,7 +138,7 @@ class PlanificacionEditRepo
     {
         // Obtener IDs actuales activos
         $currentIds = DB::table($tableName)
-            ->where('id_unidad', $corteId)
+            ->where('id_unidad_corte', $corteId)
             ->where('estatus', '1')
             ->pluck($foreignIdColumn)
             ->toArray();
@@ -190,7 +149,7 @@ class PlanificacionEditRepo
         $toDeactivate = array_diff($currentIds, $newIds);
         if (!empty($toDeactivate)) {
             DB::table($tableName)
-                ->where('id_unidad', $corteId)
+                ->where('id_unidad_corte', $corteId)
                 ->whereIn($foreignIdColumn, $toDeactivate)
                 ->update(['estatus' => '2']);
         }
@@ -216,12 +175,12 @@ class PlanificacionEditRepo
             // En este caso, asumimos unicidad por item ID en el corte.
 
             $existing = DB::table($tableName)
-                ->where('id_unidad', $corteId)
+                ->where('id_unidad_corte', $corteId)
                 ->where($foreignIdColumn, $itemId)
                 ->first();
 
             $insertData = [
-                'id_unidad' => $corteId,
+                'id_unidad_corte' => $corteId,
                 $foreignIdColumn => $itemId,
                 'estatus' => '1',
             ];
@@ -236,7 +195,7 @@ class PlanificacionEditRepo
                 // Siempre actualizamos los datos adicionales por si cambiaron (ej. ponderación)
                 // y reactivamos si estaba inactivo '2'.
                 DB::table($tableName)
-                    ->where('id_unidad', $corteId)
+                    ->where('id_unidad_corte', $corteId)
                     ->where($foreignIdColumn, $itemId)
                     ->update($insertData);
             } else {
@@ -246,106 +205,64 @@ class PlanificacionEditRepo
         }
     }
 
-    private function syncTemasCorte(int $corteId, array $contenidosData)
+    private function syncEstrategiasCorte(int $corteId, array $estrategiasData)
     {
-        // 1. Obtener temas actuales (detalle_tema)
-        $currentTemasIds = DB::table('detalle_tema')
-            ->where('id_unidad', $corteId)
-            ->where('estatus', '1')
-            ->pluck('id_tema')
-            ->toArray();
+        // Desactivar actuales
+        DB::table('detalle_estrategia')
+            ->where('id_unidad_corte', $corteId)
+            ->update(['estatus' => '2']);
 
-        $newTemasIds = collect($contenidosData)->pluck('contenido_id')->filter()->toArray(); // contenido_id es id_tema
+        foreach ($estrategiasData as $est) {
+            $temaId = $est['tema_id'] ?? null;
+            if (!$temaId) continue;
 
-        // Desactivar temas removidos
-        $toDeactivate = array_diff($currentTemasIds, $newTemasIds);
-        if (!empty($toDeactivate)) {
-            DB::table('detalle_tema')
-                ->where('id_unidad', $corteId)
-                ->whereIn('id_tema', $toDeactivate)
-                ->update(['estatus' => '2']);
-        }
-
-        foreach ($contenidosData as $contenido) {
-            $temaId = $contenido['contenido_id'] ?? null;
-            if (!$temaId)
-                continue;
-
-            $existing = DB::table('detalle_tema')
-                ->where('id_unidad', $corteId)
-                ->where('id_tema', $temaId)
-                ->first();
-
-            $detalleTemaId = null;
-
-            if ($existing) {
-                $detalleTemaId = $existing->id_detalle_tema;
-                if ($existing->estatus == '2') {
-                    DB::table('detalle_tema')
-                        ->where('id_detalle_tema', $detalleTemaId)
-                        ->update(['estatus' => '1']);
-                }
-            } else {
-                $detalleTemaId = DB::table('detalle_tema')->insertGetId([
-                    'id_unidad' => $corteId,
-                    'id_tema' => $temaId,
-                    'estatus' => '1',
-                    'fecha_creacion' => now(),
-                ]);
-            }
-
-            // Sincronizar Indicadores para este detalle_tema
-            $this->syncIndicadores($detalleTemaId, $contenido['indicadores_logros'] ?? []);
+            DB::table('detalle_estrategia')->insert([
+                'id_unidad_corte' => $corteId,
+                'id_tema_unidad' => $temaId,
+                'actividad' => $est['actividad'] ?? '',
+                'estatus' => '1',
+                'fecha_creacion' => now(),
+            ]);
         }
     }
 
-    private function syncIndicadores(int $detalleTemaId, array $indicadoresData)
+    private function syncContenidosCorte(int $corteId, array $contenidosData)
     {
-        $currentIds = DB::table('detalle_indicador')
-            ->where('id_detalle_tema', $detalleTemaId)
-            ->where('estatus', '1')
-            ->pluck('id_indicador_logro')
-            ->toArray();
+        // Desactivar actuales
+        DB::table('detalle_contenido')
+            ->where('id_unidad_corte', $corteId)
+            ->update(['estatus' => '2']);
 
-        $newIds = collect($indicadoresData)->pluck('indicador_id')->filter()->toArray();
+        foreach ($contenidosData as $cont) {
+            $contenidoId = $cont['contenido_id'] ?? null;
+            if (!$contenidoId) continue;
 
-        // Desactivar
-        $toDeactivate = array_diff($currentIds, $newIds);
-        if (!empty($toDeactivate)) {
-            DB::table('detalle_indicador')
-                ->where('id_detalle_tema', $detalleTemaId)
-                ->whereIn('id_indicador_logro', $toDeactivate)
-                ->update(['estatus' => '2']);
+            DB::table('detalle_contenido')->insert([
+                'id_unidad_corte' => $corteId,
+                'id_contenido' => $contenidoId,
+                'estatus' => '1',
+                'fecha_creacion' => now(),
+            ]);
         }
+    }
 
-        // Insertar/Actualizar
-        foreach ($newIds as $indicadorId) {
-            if (!$indicadorId)
-                continue;
+    private function syncBibliografiasCorte(int $corteId, array $bibliografiasData)
+    {
+        // Desactivar actuales
+        DB::table('detalle_bibliografia')
+            ->where('id_unidad_corte', $corteId)
+            ->update(['estatus' => '2']);
 
-            $existing = DB::table('detalle_indicador')
-                ->where('id_detalle_tema', $detalleTemaId)
-                ->where('id_indicador_logro', $indicadorId)
-                ->first();
+        foreach ($bibliografiasData as $bib) {
+            $bibId = $bib['bibliografia_id'] ?? null;
+            if (!$bibId) continue;
 
-            if ($existing) {
-                if ($existing->estatus == '2') {
-                    DB::table('detalle_indicador')
-                        ->where('id_detalle_tema', $detalleTemaId)
-                        ->where('id_indicador_logro', $indicadorId)
-                        // Nota: primary key tabla intermedia suele ser autoincrement o compuesta.
-                        // detalle_indicador suele tener id_detalle_indicador? 
-                        // Asumimos query por FKs es suficiente si unique constrain existe.
-                        ->update(['estatus' => '1']);
-                }
-            } else {
-                DB::table('detalle_indicador')->insert([
-                    'id_detalle_tema' => $detalleTemaId,
-                    'id_indicador_logro' => $indicadorId,
-                    'estatus' => '1',
-                    'fecha_creacion' => now(), // Revisar si columna existe
-                ]);
-            }
+            DB::table('detalle_bibliografia')->insert([
+                'id_unidad_corte' => $corteId,
+                'id_bibliografia' => $bibId,
+                'estatus' => '1',
+                'fecha_creacion' => now(),
+            ]);
         }
     }
 }

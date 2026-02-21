@@ -40,7 +40,7 @@ class UsuarioRepository
                 $consulta->where('users.name', 'LIKE', '%' . $busqueda . '%');
             })
             ->groupBy('users.id', 'users.name', 'users.apellido', 'users.estatus')
-            ->orderBy('name')
+            ->orderBy('users.fecha_creacion', 'desc')
             ->paginate($paginacion);
     }
 

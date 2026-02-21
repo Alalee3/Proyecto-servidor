@@ -3,7 +3,7 @@
 namespace App\Livewire\Planificacion;
 
 use App\Repositories\Planificacion\PlanificacionCreateRepo;
-use Illuminate\Support\{Collection, Facades\Auth, Facades\DB, Str};
+use Illuminate\Support\{Collection, Facades\Auth, Facades\DB, Facades\Gate, Str};
 use Livewire\Component;
 use Carbon\Carbon;
 
@@ -102,8 +102,12 @@ class CreatePlanificacion extends Component
         $this->recursosMaestros = $this->planificacionRepository->select_recursos();
         $this->bibliografiasMaestras = $this->planificacionRepository->select_bibliografias();
 
-        // Cargar asignaciones del docente
-        $this->asignaciones = $this->planificacionRepository->getAsignacionesDocente($this->docente_id);
+        // Cargar asignaciones: Si es coordinador ve todas, si es docente solo las suyas
+        if (Gate::allows('is-coordinador')) {
+            $this->asignaciones = $this->planificacionRepository->getAsignacionesDocente();
+        } else {
+            $this->asignaciones = $this->planificacionRepository->getAsignacionesDocente($this->docente_id);
+        }
     }
 
     public function refreshMasterLists($data)
@@ -195,7 +199,7 @@ class CreatePlanificacion extends Component
                 $fechaEvaluacionRules = ['required', 'date'];
 
                 $rules["unidades.$index.evaluaciones.$evaluacionIndex.fecha_evaluacion"] = $fechaEvaluacionRules;
-                $rules["unidades.$index.evaluaciones.$evaluacionIndex.evaluacion_id"] = 'required|exists:tipo_evaluacion,id_tipo_evaluacion';
+                $rules["unidades.$index.evaluaciones.$evaluacionIndex.evaluacion_id"] = 'required|exists:evaluacion,id_evaluacion';
                 $rules["unidades.$index.evaluaciones.$evaluacionIndex.tecnica_id"] = 'required|exists:tecnica_evaluacion,id_tecnica';
                 $rules["unidades.$index.evaluaciones.$evaluacionIndex.ponderacion"] = [
                     'bail',
@@ -230,6 +234,8 @@ class CreatePlanificacion extends Component
                 $rules["unidades.$index.bibliografias.$bibIndex.bibliografia_id"] = 'required|exists:bibliografia,id_bibliografia';
             }
 
+            $rules["unidades.$index.indicadores_logro"] = 'required|string|min:5';
+
 
             $rules["unidades.$index.total_ponderacion_check"] = [
                 function ($attribute, $value, $fail) use ($index) {
@@ -246,7 +252,10 @@ class CreatePlanificacion extends Component
 
     public function messages()
     {
-        $messages = [];
+        $messages = [
+            'unidades.*.indicadores_logro.required' => 'Los indicadores de logro son obligatorios.',
+            'unidades.*.indicadores_logro.min' => 'Los indicadores de logro deben tener al menos 5 caracteres.',
+        ];
 
         $messages['id_profesor_asignado.required'] = 'Debe seleccionar una Unidad Curricular.';
         $messages['id_profesor_asignado.exists'] = 'La asignación seleccionada no es válida.';
@@ -308,7 +317,8 @@ class CreatePlanificacion extends Component
             ]],
             'estrategias' => [['tema_id' => '', 'actividad' => '', 'recursos' => [['recurso_id' => '']]]], 
             'evaluaciones' => [['fecha_evaluacion' => '', 'evaluacion_id' => '', 'ponderacion' => 5, 'tecnica_id' => '', 'forma_participacion' => '', 'integrantes' => null]],
-            'bibliografias' => [['bibliografia_id' => '']]
+            'bibliografias' => [['bibliografia_id' => '']],
+            'indicadores_logro' => ''
         ];
     }
 
@@ -432,6 +442,7 @@ class CreatePlanificacion extends Component
                 $unidadId = DB::table('unidad_corte')->insertGetId([
                     'id_planificacion' => $planificacionId,
                     'numero_unidad_corte' => $unidad['numero'],
+                    'indicador_logro_unidad_corte' => $unidad['indicadores_logro'] ?? null,
                     'fecha_creacion' => now(),
                     'estatus' => '2',
                 ]);

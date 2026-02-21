@@ -350,8 +350,8 @@
                                                     <div class="flex items-center gap-2">
                                                         <div class="flex-grow">
                                                             <x-select :options="$estrategiasDisponibles"
-                                                                valueField="id_estrategia_pedagogica"
-                                                                textField="nombre_estrategia_pedagogica"
+                                                                valueField="id_tecnica_actividad"
+                                                                textField="nombre_tecnica_actividad"
                                                                 wire:model.live.debounce.250ms="cortes.{{ $index }}.estrategias.{{ $estrategiaIndex }}.estrategia_id"
                                                                 placeholder="Seleccione una estrategia" class="text-sm w-full"
                                                                 :disabled="$locked" />
@@ -369,6 +369,23 @@
                                                     @enderror
                                                 @endforeach
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Indicadores de Logros --}}
+                                    <div class="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                                        <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                                            Indicadores de Logros
+                                        </h4>
+                                        <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+                                            <textarea 
+                                                wire:model.live.debounce.500ms="cortes.{{ $index }}.indicadores_logro"
+                                                class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-sm"
+                                                rows="3" placeholder="Describa los indicadores de logros para este corte..."
+                                                :disabled="$locked"></textarea>
+                                            @error("cortes.$index.indicadores_logro") 
+                                                <span class="text-red-500 text-xs font-bold block mt-1">{{ $message }}</span> 
+                                            @enderror
                                         </div>
                                     </div>
 
@@ -393,20 +410,22 @@
                                                 <thead
                                                     class="bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 uppercase font-bold">
                                                     <tr>
-                                                        <th class="px-2 py-3" width="20%">Fecha</th>
+                                                        <th class="px-2 py-3" width="15%">Fecha</th>
                                                         <th class="px-2 py-3" width="22%">Evaluación</th>
                                                         <th class="px-2 py-3" width="22%">Técnica</th>
+                                                        <th class="px-2 py-3" width="26%">Participación</th>
                                                         <th class="px-2 py-3" width="10%">Pond. (%)</th>
-                                                        <th class="px-2 py-3" width="21%">Participación</th>
                                                         <th class="px-2 py-3" width="5%"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                                                     @foreach ($corte['evaluaciones'] as $evaluacionIndex => $evaluacion)
-                                                            $formasParticipacion = collect([
-                                                                (object) ['id' => '1', 'nombre' => 'Individual'],
-                                                                (object) ['id' => '2', 'nombre' => 'Grupal'],
-                                                            ]);
+                                                            @php
+                                                                $formasParticipacion = collect([
+                                                                    (object) ['id' => '1', 'nombre' => 'Individual'],
+                                                                    (object) ['id' => '2', 'nombre' => 'Grupal'],
+                                                                ]);
+                                                            @endphp
                                                         <tr>
                                                             <td class="px-2 py-3">
                                                                 <x-text-input type="date"
@@ -422,17 +441,10 @@
                                                             </td>
                                                             <td class="px-2 py-3">
                                                                 <x-select :options="$tecnicaDisponibles"
-                                                                    valueField="id_tecnica" textField="nombre_tecnica"
+                                                                    valueField="id_tecnica" textField="nombre_tecnica_evaluacion"
                                                                     wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.tecnica_id"
                                                                     placeholder="Seleccione" class="w-full text-xs"
                                                                     :disabled="$locked" required />
-                                                            </td>
-                                                            <td class="px-2 py-3 text-center">
-                                                                <input type="number" step="1" min="5" max="25"
-                                                                    onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-                                                                    wire:model.live="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.ponderacion"
-                                                                    class="w-16 bg-transparent border-0 focus:ring-0 p-0 text-gray-700 dark:text-gray-300 text-xs font-bold text-center"
-                                                                    :disabled="$locked">
                                                             </td>
                                                             <td class="px-2 py-3">
                                                                 <x-select :options="$formasParticipacion" valueField="id"
@@ -455,6 +467,13 @@
                                                                         </select>
                                                                     </div>
                                                                 @endif
+                                                            </td>
+                                                            <td class="px-2 py-3 text-center">
+                                                                <input type="number" step="1" min="5" max="25"
+                                                                    onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                                                    wire:model.live="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.ponderacion"
+                                                                    class="w-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 p-1 text-gray-700 dark:text-gray-300 text-xs font-bold text-center"
+                                                                    :disabled="$locked">
                                                             </td>
                                                             <td class="px-4 py-3 text-right">
                                                                 @if (count($corte['evaluaciones']) > 1 && !$locked)

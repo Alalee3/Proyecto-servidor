@@ -17,14 +17,14 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                                 <div>
                                     <x-input-label value="Título del Contenido:" />
-                                    <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
+                                    <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold break-words overflow-hidden">
                                         {{ $contenido->titulo_contenido }}
                                     </p>
                                 </div>
 
                                 <div>
                                     <x-input-label value="Unidad Curricular:" />
-                                    <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
+                                    <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold break-words overflow-hidden">
                                         {{ $contenido->nombre_unidad_curricular }}
                                     </p>
                                 </div>

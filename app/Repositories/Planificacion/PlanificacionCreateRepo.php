@@ -24,6 +24,11 @@ class PlanificacionCreateRepo
 
     public function select_tecnica()
     {
+        return $this->select_tabla('tecnica_evaluacion', 'id_tecnica', 'nombre_tecnica_evaluacion', [['estatus', '1']]);
+    }
+
+    public function select_tecnica_actividad()
+    {
         return $this->select_tabla('tecnica_actividad', 'id_tecnica_actividad', 'nombre_tecnica_actividad', [['estatus', '1']]);
     }
 
@@ -35,7 +40,7 @@ class PlanificacionCreateRepo
 
     public function select_evaluaciones()
     {
-        return $this->select_tabla('tipo_evaluacion', 'id_tipo_evaluacion', 'nombre_tipo_evaluacion', [['estatus', '1']]);
+        return $this->select_tabla('evaluacion', 'id_evaluacion', 'nombre_evaluacion', [['estatus', '1']]);
     }
 
     public function select_bibliografias()
@@ -102,28 +107,31 @@ class PlanificacionCreateRepo
     }
 
     // Nueva función vital: Obtener las asignaciones del docente logueado
-    public function getAsignacionesDocente($userId)
+    public function getAsignacionesDocente($userId = null)
     {
-        return DB::table('detalle_profesor_asignado as dpa')
+        $query = DB::table('detalle_profesor_asignado as dpa')
             ->join('unidad_curricular as uc', 'dpa.id_unidad_curricular', '=', 'uc.id_unidad_curricular')
             ->join('seccion as s', 'dpa.id_seccion', '=', 's.id_seccion')
-            ->leftJoin('malla_academica as ma', 'uc.id_malla_academica', '=', 'ma.id_malla_academica')
-            ->leftJoin('pnf', 'ma.id_pnf', '=', 'pnf.id_pnf')
-            ->where('dpa.id_users', $userId)
-            ->where('dpa.estatus', '1')
-            ->select(
+            ->join('users as u', 'dpa.id_users', '=', 'u.id')
+            ->where('dpa.estatus', '1');
+
+        if ($userId) {
+            $query->where('dpa.id_users', $userId);
+        }
+
+        return $query->select(
                 'dpa.id_detalle_profesor_asignado',
                 'uc.nombre_unidad_curricular',
                 'uc.trayecto_unidad_curricular',
                 's.nombre_seccion',
-                'pnf.nombre_pnf'
+                'u.name',
+                'u.apellido'
             )
             ->get()
             ->map(function ($asignacion) {
-                // Crear un nombre legible para el select
-                $pnf = $asignacion->nombre_pnf ?? 'Sin PNF';
                 $trayecto = $asignacion->trayecto_unidad_curricular ? "T{$asignacion->trayecto_unidad_curricular}" : 'S/T';
-                $asignacion->descripcion_completa = "{$pnf} - {$trayecto} - {$asignacion->nombre_unidad_curricular} (Sección {$asignacion->nombre_seccion})";
+                $docente = "{$asignacion->name} {$asignacion->apellido}";
+                $asignacion->descripcion_completa = "{$asignacion->nombre_unidad_curricular} ({$trayecto}) - Sección {$asignacion->nombre_seccion} | Docente: {$docente}";
                 return $asignacion;
             });
     }

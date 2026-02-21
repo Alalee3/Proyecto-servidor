@@ -12,6 +12,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Gate;
 
 class UpdatePlanificacion extends Component
 {
@@ -74,7 +75,7 @@ class UpdatePlanificacion extends Component
         // Acceder a 'docente_id' que ahora viene del array principal
         $this->docente_id = $planificacion['docente_id'];
 
-        if (Auth::id() !== $this->docente_id) {
+        if (Auth::id() !== $this->docente_id && Gate::denies('is-coordinador')) {
             abort(403, 'No tienes permiso para editar esta planificación.');
         }
 
@@ -145,6 +146,7 @@ class UpdatePlanificacion extends Component
                     'estrategias' => $estrategias,
                     'contenidos' => $contenidos,
                     'evaluaciones' => $evaluaciones,
+                    'indicadores_logro' => $corte['indicadores_logros'] ?? '',
                 ];
             })
             ->toArray();
@@ -170,8 +172,8 @@ class UpdatePlanificacion extends Component
     private function loadDropdownOptions()
     {
         $this->recursosDisponibles = $this->planificacionCreateRepo->select_recursos()->toArray();
-        $this->estrategiasDisponibles = $this->planificacionCreateRepo->select_estrategias()->toArray();
-        $this->indicadoresDisponibles = $this->planificacionCreateRepo->select_indicadores()->toArray();
+        $this->estrategiasDisponibles = $this->planificacionCreateRepo->select_tecnica_actividad()->toArray();
+        // $this->indicadoresDisponibles = $this->planificacionCreateRepo->select_tabla('indicador_logro', 'id_indicador_logro', 'nombre_indicador_logro', [['estatus', '1']])->toArray();
         $this->evaluacionesDisponibles = $this->planificacionCreateRepo->select_evaluaciones()->toArray();
         $this->tecnicaDisponibles = $this->planificacionCreateRepo->select_tecnica()->toArray();
         $this->bibliografiasDisponibles = $this->planificacionCreateRepo->select_bibliografias()->toArray();
@@ -187,7 +189,8 @@ class UpdatePlanificacion extends Component
             'estrategias' => [],
             'contenidos' => [],
             'evaluaciones' => [],
-            'ultimo_motivo_rechazo' => null, // Nuevo corte no tiene motivo de rechazo
+            'ultimo_motivo_rechazo' => null, 
+            'indicadores_logro' => '',
         ];
         // Al añadir un nuevo corte, asegúrate de añadir al menos un contenido y una evaluación
         $lastCorteIndex = count($this->cortes) - 1;
@@ -337,7 +340,7 @@ class UpdatePlanificacion extends Component
             foreach ($corte['estrategias'] as $estrategiaIndex => $estrategia) {
                 $rules["cortes.$index.estrategias.$estrategiaIndex.estrategia_id"] = [
                     'required',
-                    'exists:estrategia_pedagogica,id_estrategia_pedagogica',
+                    'exists:tecnica_actividad,id_tecnica_actividad',
                     function ($attribute, $value, $fail) use ($corte, $estrategiaIndex) {
                         $estrategiaIdsInCorte = collect($corte['estrategias'])->pluck('estrategia_id')->filter()->all();
                         $currentValueCount = 0;
@@ -364,7 +367,7 @@ class UpdatePlanificacion extends Component
             foreach ($corte['contenidos'] as $contenidoIndex => $contenido) {
                 $rules["cortes.$index.contenidos.$contenidoIndex.contenido_id"] = [
                     'required',
-                    'exists:tema,id_tema',
+                    'exists:contenido,id_contenido',
                     function ($attribute, $value, $fail) use ($allContenidoIdsInForm, $index, $contenidoIndex) {
                         $filteredContenidoIds = [];
                         foreach ($this->cortes as $cIdx => $corteItem) {
@@ -403,7 +406,7 @@ class UpdatePlanificacion extends Component
                 }
                 $rules["cortes.$index.evaluaciones.$evaluacionIndex.fecha_evaluacion"] = $fechaEvaluacionRules;
                 $rules["cortes.$index.evaluaciones.$evaluacionIndex.evaluacion_id"] = 'required|exists:evaluacion,id_evaluacion';
-                $rules["cortes.$index.evaluaciones.$evaluacionIndex.tecnica_id"] = 'required|exists:tecnica,id_tecnica';
+                $rules["cortes.$index.evaluaciones.$evaluacionIndex.tecnica_id"] = 'required|exists:tecnica_evaluacion,id_tecnica';
 
                 $rules["cortes.$index.evaluaciones.$evaluacionIndex.ponderacion"] = [
                     'bail',
@@ -444,6 +447,8 @@ class UpdatePlanificacion extends Component
                     }
                 ];
             }
+
+            $rules["cortes.$index.indicadores_logro"] = 'required|string|min:5';
         }
         return $rules;
     }
@@ -487,6 +492,8 @@ class UpdatePlanificacion extends Component
             'cortes.*.evaluaciones.*.ponderacion.min' => 'La ponderación debe ser al menos :min.',
             'cortes.*.evaluaciones.*.forma_participacion.required' => 'La forma de participación es obligatoria.',
             'cortes.*.evaluaciones.*.forma_participacion.in' => 'La forma de participación no es válida.',
+            'cortes.*.indicadores_logro.required' => 'Los indicadores de logro son obligatorios.',
+            'cortes.*.indicadores_logro.min' => 'Los indicadores de logro deben tener al menos 5 caracteres.',
             'cortes.*.total_ponderacion_corte' => 'La suma total de ponderaciones en el corte es incorrecta.',
         ];
     }

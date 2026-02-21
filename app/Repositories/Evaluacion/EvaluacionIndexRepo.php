@@ -17,7 +17,7 @@ class EvaluacionIndexRepo
             ->when($busqueda, function ($consulta, $busqueda) {
                 $consulta->where('nombre_evaluacion', 'LIKE', '%' . $busqueda . '%');
             })
-            ->orderBy('nombre_evaluacion')
+            ->orderBy('id_evaluacion', 'desc')
             ->paginate($paginacion);
     }
 

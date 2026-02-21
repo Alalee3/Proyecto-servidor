@@ -12,12 +12,12 @@ class EstrategiaIndexRepo
      */
     public function listar($busqueda = '', $paginacion = 5)
     {
-        return DB::table('estrategia_pedagogica')
-            ->select('id_estrategia_pedagogica', 'nombre_estrategia_pedagogica as nombre', 'estatus')
+        return DB::table('tecnica_actividad')
+            ->select('id_tecnica_actividad as id_estrategia_pedagogica', 'nombre_tecnica_actividad as nombre', 'estatus')
             ->when($busqueda, function ($consulta, $busqueda) {
-                $consulta->where('nombre_estrategia_pedagogica', 'LIKE', '%' . $busqueda . '%');
+                $consulta->where('nombre_tecnica_actividad', 'LIKE', '%' . $busqueda . '%');
             })
-            ->orderBy('nombre_estrategia_pedagogica')
+            ->orderBy('fecha_creacion', 'desc')
             ->paginate($paginacion);
     }
 
@@ -26,8 +26,8 @@ class EstrategiaIndexRepo
      */
     public function inhabilitar($id)
     {
-        return DB::table('estrategia_pedagogica')
-            ->where('id_estrategia_pedagogica', $id)
+        return DB::table('tecnica_actividad')
+            ->where('id_tecnica_actividad', $id)
             ->update([
                 'estatus' => '2',
                 'fecha_actualizacion' => Carbon::now()
@@ -39,8 +39,8 @@ class EstrategiaIndexRepo
      */
     public function restaurar($id)
     {
-        return DB::table('estrategia_pedagogica')
-            ->where('id_estrategia_pedagogica', $id)
+        return DB::table('tecnica_actividad')
+            ->where('id_tecnica_actividad', $id)
             ->update([
                 'estatus' => '1',
                 'fecha_actualizacion' => Carbon::now()

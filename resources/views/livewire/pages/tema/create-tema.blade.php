@@ -26,7 +26,7 @@
 
                         <!-- Corte -->
                         <div class="w-full">
-                            <x-input-label for="corte" :value="__('Corte (Unidad)')" class="text-gray-600 font-bold mb-1" />
+                            <x-input-label for="corte" :value="__('Corte')" class="text-gray-600 font-bold mb-1" />
                             <x-select id="corte" wire:model.live="form.unidad_tema" :options="$cortes" valueField="id"
                                 textField="nombre" placeholder="SELECCIONA UN CORTE" class="w-full"
                                 errorField="form.unidad_tema" required />

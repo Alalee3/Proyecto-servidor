@@ -14,7 +14,7 @@ class PnfIndexRepo
             ->when($busqueda, function ($consulta, $busqueda) {
                 $consulta->where('nombre_pnf', 'LIKE', '%' . $busqueda . '%');
             })
-            ->orderBy('nombre_pnf')
+            ->orderBy('id_pnf', 'desc')
             ->paginate($paginacion);
     }
 

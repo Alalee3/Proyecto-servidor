@@ -12,12 +12,12 @@ class TecnicaIndexRepo
      */
     public function listar($busqueda = '', $paginacion = 5)
     {
-        return DB::table('tecnica')
-            ->select('id_tecnica', 'nombre_tecnica as nombre', 'estatus')
+        return DB::table('tecnica_evaluacion')
+            ->select('id_tecnica', 'nombre_tecnica_evaluacion as nombre', 'estatus')
             ->when($busqueda, function ($consulta, $busqueda) {
-                $consulta->where('nombre_tecnica', 'LIKE', '%' . $busqueda . '%');
+                $consulta->where('nombre_tecnica_evaluacion', 'LIKE', '%' . $busqueda . '%');
             })
-            ->orderBy('nombre_tecnica')
+            ->orderBy('fecha_creacion', 'desc')
             ->paginate($paginacion);
     }
 
@@ -26,7 +26,7 @@ class TecnicaIndexRepo
      */
     public function inhabilitar($id)
     {
-        return DB::table('tecnica')
+        return DB::table('tecnica_evaluacion')
             ->where('id_tecnica', $id)
             ->update([
                 'estatus' => '2',
@@ -39,7 +39,7 @@ class TecnicaIndexRepo
      */
     public function restaurar($id)
     {
-        return DB::table('tecnica')
+        return DB::table('tecnica_evaluacion')
             ->where('id_tecnica', $id)
             ->update([
                 'estatus' => '1',

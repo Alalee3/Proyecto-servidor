@@ -67,8 +67,7 @@ class ListTecnica extends Component
             $this->paginacion = 5;
         }
 
-        $tecnica = $this->tecnicaRepository->listar($this->busqueda, $this->paginacion);
-
-        return view('livewire.pages.tecnica.list-tecnica', compact('tecnica'));
+        $tecnicas = $this->tecnicaRepository->listar($this->busqueda, $this->paginacion);
+        return view('livewire.pages.tecnica.list-tecnica', compact('tecnicas'));
     }
 }

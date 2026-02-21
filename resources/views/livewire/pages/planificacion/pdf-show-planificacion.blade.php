@@ -203,15 +203,7 @@
 
                     {{-- Indicadores --}}
                     <td>
-                        @foreach($corte['contenidos'] as $cont)
-                            @if(!empty($cont['indicadores_logros']))
-                                <ul>
-                                    @foreach($cont['indicadores_logros'] as $ind)
-                                        <li>{{ $ind['descripcion_indicador'] }}</li>
-                                    @endforeach
-                                </ul>
-                            @endif
-                        @endforeach
+                        {{ $corte['indicadores_logros'] ?? '' }}
                     </td>
 
                     {{-- Técnicas / Instrumentos --}}

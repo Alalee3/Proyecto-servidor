@@ -18,7 +18,7 @@
                                 <div>
                                     <x-input-label value="Nombre de la Estrategia:" />
                                     <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
-                                        {{ $estrategia->nombre_estrategia_pedagogica }}</p>
+                                        {{ $estrategia->nombre_tecnica_actividad }}</p>
                                 </div>
 
                                 <div>

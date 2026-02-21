@@ -18,7 +18,7 @@ class CreateEstrategiaForm extends Form
                 'min:3',
                 // Validación universal permitiendo caracteres especiales
                 'regex:/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\\d\\s\\.,\\-\\(\\)\\\"\\\':\\/]+$/u',
-                Rule::unique('estrategia_pedagogica', 'nombre_estrategia_pedagogica')
+                Rule::unique('tecnica_actividad', 'nombre_tecnica_actividad')
             ],
         ];
     }

@@ -11,7 +11,7 @@ class TecnicaViewRepo
      */
     public function mostrar($id)
     {
-        return DB::table('tecnica')
+        return DB::table('tecnica_evaluacion')
             ->where('id_tecnica', $id)
             ->first();
     }

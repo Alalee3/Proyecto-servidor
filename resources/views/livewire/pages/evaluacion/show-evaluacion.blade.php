@@ -17,7 +17,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                                 <div>
                                     <x-input-label value="Nombre de la Evaluación:" />
-                                    <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
+                                    <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold break-words overflow-hidden">
                                         {{ $evaluacion->nombre_evaluacion }}</p>
                                 </div>
 

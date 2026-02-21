@@ -18,7 +18,7 @@
                                 <div>
                                     <x-input-label value="Nombre de la Técnica:" />
                                     <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
-                                        {{ $tecnica->nombre_tecnica }}</p>
+                                        {{ $tecnica->nombre_tecnica_evaluacion }}</p>
                                 </div>
 
                                 <div>
