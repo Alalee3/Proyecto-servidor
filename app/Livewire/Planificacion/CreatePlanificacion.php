@@ -3,22 +3,30 @@
 namespace App\Livewire\Planificacion;
 
 use App\Repositories\Planificacion\PlanificacionCreateRepo;
-use Illuminate\Support\{Collection, Facades\Auth, Facades\DB, Str};
+use Illuminate\Support\{Collection, Facades\Auth, Facades\DB, Facades\Gate, Str};
 use Livewire\Component;
 use Carbon\Carbon;
 
 class CreatePlanificacion extends Component
 {
     public $docente_id, $docenteNombre, $id_profesor_asignado, $proposito;
-    public Collection $tecnicas, $recursosMaestros, $evaluaciones, $indicadores, $estrategiasMaestras, $bibliografiasMaestras, $asignaciones;
+    public Collection $tecnica, $recursosMaestros, $evaluaciones, $bibliografiasMaestras, $asignaciones;
     public array $unidades = [];
     public array $temasPorUnidad = [];
     protected $planificacionRepository;
 
-    public array $bibliografias = [['bibliografia_id' => '']];
+    // public array $bibliografias = [['bibliografia_id' => '']]; // Moved to unit level
 
     public Collection $contenidosPorTema;
     public Collection $todosLosContenidos;
+    public Collection $todosLosObjetivos;
+    
+    public $formasParticipacion = [];
+    
+    // Modal properties
+    public $showObjetivoModal = false;
+    public $newObjetivoNombre = '';
+    public $selectedTemaIdForObjetivo = null;
 
     protected $listeners = [
         'itemCreated' => 'refreshMasterLists',
@@ -37,6 +45,7 @@ class CreatePlanificacion extends Component
         $this->temasPorUnidad = [];
         $this->contenidosPorTema = collect();
         $this->todosLosContenidos = collect();
+        $this->todosLosObjetivos = collect();
 
         $this->loadInitialData();
         $this->verifyDocenteRole();
@@ -65,6 +74,9 @@ class CreatePlanificacion extends Component
                     // Se usarán para filtrar opciones cuando se seleccione un tema
                     $this->todosLosContenidos = $this->planificacionRepository->select_contenidos($detalle->id_unidad_curricular);
 
+                    // 3. Cargar TODOS los OBJETIVOS de la unidad curricular
+                    $this->todosLosObjetivos = $this->planificacionRepository->select_objetivos($detalle->id_unidad_curricular);
+
                     // Obtener propósito de la unidad curricular
                     $unidad = DB::table('unidad_curricular')->where('id_unidad_curricular', $detalle->id_unidad_curricular)->first();
                     if ($unidad) {
@@ -75,6 +87,7 @@ class CreatePlanificacion extends Component
         } else {
             $this->temasPorUnidad = [];
             $this->todosLosContenidos = collect();
+            $this->todosLosObjetivos = collect();
             $this->proposito = '';
         }
 
@@ -84,15 +97,17 @@ class CreatePlanificacion extends Component
 
     protected function loadInitialData()
     {
-        $this->tecnicas = $this->planificacionRepository->select_tecnicas();
+        $this->tecnica = $this->planificacionRepository->select_tecnica();
         $this->evaluaciones = $this->planificacionRepository->select_evaluaciones();
-        $this->indicadores = $this->planificacionRepository->select_indicadores();
         $this->recursosMaestros = $this->planificacionRepository->select_recursos();
-        $this->estrategiasMaestras = $this->planificacionRepository->select_estrategias();
         $this->bibliografiasMaestras = $this->planificacionRepository->select_bibliografias();
 
-        // Cargar asignaciones del docente
-        $this->asignaciones = $this->planificacionRepository->getAsignacionesDocente($this->docente_id);
+        // Cargar asignaciones: Si es coordinador ve todas, si es docente solo las suyas
+        if (Gate::allows('is-coordinador')) {
+            $this->asignaciones = $this->planificacionRepository->getAsignacionesDocente();
+        } else {
+            $this->asignaciones = $this->planificacionRepository->getAsignacionesDocente($this->docente_id);
+        }
     }
 
     public function refreshMasterLists($data)
@@ -101,17 +116,11 @@ class CreatePlanificacion extends Component
             case 'recurso':
                 $this->recursosMaestros = $this->planificacionRepository->select_recursos();
                 break;
-            case 'estrategia_pedagogica':
-                $this->estrategiasMaestras = $this->planificacionRepository->select_estrategias();
-                break;
             case 'tecnica':
-                $this->tecnicas = $this->planificacionRepository->select_tecnicas();
+                $this->tecnica = $this->planificacionRepository->select_tecnica();
                 break;
             case 'evaluacion':
                 $this->evaluaciones = $this->planificacionRepository->select_evaluaciones();
-                break;
-            case 'indicador_logro':
-                $this->indicadores = $this->planificacionRepository->select_indicadores();
                 break;
             case 'bibliografia':
                 $this->bibliografiasMaestras = $this->planificacionRepository->select_bibliografias();
@@ -147,89 +156,43 @@ class CreatePlanificacion extends Component
             'id_profesor_asignado' => 'required|exists:detalle_profesor_asignado,id_detalle_profesor_asignado',
         ];
 
-        // INDICADORES DE LOGRO
-        $allIndicadorIds = [];
-        foreach ($this->unidades as $unidad) {
-            if (isset($unidad['contenidos']) && is_array($unidad['contenidos'])) {
-                foreach ($unidad['contenidos'] as $contenido) {
-                    if (isset($contenido['indicadores_logros']) && is_array($contenido['indicadores_logros'])) {
-                        $allIndicadorIds = array_merge($allIndicadorIds, array_column($contenido['indicadores_logros'], 'indicador_id'));
-                    }
-                }
-            }
-        }
-        $allIndicadorIds = array_filter($allIndicadorIds);
 
-        // Reglas para bibliografías
-        foreach ($this->bibliografias as $biblioIndex => $bibliografia) {
-            $rules["bibliografias.$biblioIndex.bibliografia_id"] = [
-                'required',
-                'exists:bibliografia,id_bibliografia',
-                function ($attribute, $value, $fail) use ($biblioIndex) {
-                    $allBiblioIds = collect($this->bibliografias)->pluck('bibliografia_id')->filter()->all();
-                    $occurrences = array_keys($allBiblioIds, $value);
-                    if (count($occurrences) > 1) {
-                        $fail('Esta bibliografía ya ha sido seleccionada.');
-                    }
-                },
-            ];
-        }
 
         foreach ($this->unidades as $index => $unidad) {
-            // Validación para recursos
-            $recursoIds = array_column($unidad['recursos'], 'recurso_id');
-            foreach ($unidad['recursos'] as $recursoIndex => $recurso) {
-                $rules["unidades.$index.recursos.$recursoIndex.recurso_id"] = [
-                    'required',
-                    'exists:recurso,id_recurso',
-                    function ($attribute, $value, $fail) use ($recursoIds, $recursoIndex) {
-                        if (count(array_keys($recursoIds, $value)) > 1) {
-                            $fail('Este recurso ya fue seleccionado en esta unidad.');
-                        }
-                    }
-                ];
-            }
-
             // Validación para estrategias
-            $estrategiaIds = array_column($unidad['estrategias'], 'estrategia_id');
-            foreach ($unidad['estrategias'] as $estrategiaIndex => $estrategia) {
-                $rules["unidades.$index.estrategias.$estrategiaIndex.estrategia_id"] = [
-                    'required',
-                    'exists:estrategia_pedagogica,id_estrategia_pedagogica',
-                    function ($attribute, $value, $fail) use ($estrategiaIds, $estrategiaIndex) {
-                        if (count(array_keys($estrategiaIds, $value)) > 1) {
-                            $fail('Esta estrategia ya fue seleccionada en esta unidad.');
-                        }
-                    }
-                ];
-            }
-
-            // Validación para contenidos
-            $contenidoIds = array_column($this->unidades, 'contenidos');
-            $contenidoIds = array_merge(...array_map(function ($unidad) {
-                return array_column($unidad['contenidos'], 'contenido_id');
-            }, $this->unidades));
-            foreach ($unidad['contenidos'] as $contenidoIndex => $contenido) {
-                $rules["unidades.$index.contenidos.$contenidoIndex.indicadores_logros"] = 'required|array|min:1';
-                $rules["unidades.$index.contenidos.$contenidoIndex.contenido_id"] = [
-                    'required',
-                    'exists:tema,id_tema',
-                    function ($attribute, $value, $fail) use ($contenidoIds, $contenidoIndex) {
-                        if (count(array_keys($contenidoIds, $value)) > 1) {
-                            $fail('Este contenido ya fue seleccionado.');
-                        }
-                    }
-                ];
-
-                if (isset($contenido['indicadores_logros']) && is_array($contenido['indicadores_logros'])) {
-                    foreach ($contenido['indicadores_logros'] as $indicadorIndex => $indicador) {
-                        $rules["unidades.$index.contenidos.$contenidoIndex.indicadores_logros.$indicadorIndex.indicador_id"] = [
-                            'required',
-                            'exists:indicador_logro,id_indicador_logro',
-                        ];
-                    }
+            foreach ($unidad['estrategias'] as $estIndex => $estrategia) {
+                $rules["unidades.$index.estrategias.$estIndex.tema_id"] = 'required|exists:tema_unidad,id_tema_unidad';
+                $rules["unidades.$index.estrategias.$estIndex.actividad"] = 'required|string|min:5';
+                
+                foreach ($estrategia['recursos'] as $recIndex => $recurso) {
+                    $rules["unidades.$index.estrategias.$estIndex.recursos.$recIndex.recurso_id"] = 'required|exists:recurso,id_recurso';
                 }
             }
+
+            // Validación para objetivos y contenidos
+            $contenidoIds = [];
+            foreach ($unidad['objetivos'] as $obj) {
+                foreach ($obj['contenidos'] as $cont) {
+                    $contenidoIds[] = $cont['contenido_id'];
+                }
+            }
+
+            foreach ($unidad['objetivos'] as $objIndex => $objetivo) {
+                 $rules["unidades.$index.objetivos.$objIndex.objetivo_id"] = 'required|exists:objetivo,id_objetivo';
+                 
+                 foreach ($objetivo['contenidos'] as $contIndex => $contenido) {
+                    $rules["unidades.$index.objetivos.$objIndex.contenidos.$contIndex.contenido_id"] = [
+                        'required',
+                        'exists:contenido,id_contenido',
+                        function ($attribute, $value, $fail) use ($contenidoIds) {
+                             if (count(array_keys($contenidoIds, $value)) > 1) {
+                                $fail('Este contenido ya fue seleccionado.');
+                            }
+                        }
+                    ];
+                 }
+            }
+
 
             // Validación para evaluaciones
             foreach ($unidad['evaluaciones'] as $evaluacionIndex => $evaluacion) {
@@ -237,46 +200,51 @@ class CreatePlanificacion extends Component
 
                 $rules["unidades.$index.evaluaciones.$evaluacionIndex.fecha_evaluacion"] = $fechaEvaluacionRules;
                 $rules["unidades.$index.evaluaciones.$evaluacionIndex.evaluacion_id"] = 'required|exists:evaluacion,id_evaluacion';
-                $rules["unidades.$index.evaluaciones.$evaluacionIndex.tecnica_id"] = 'required|exists:tecnica,id_tecnica';
-
+                $rules["unidades.$index.evaluaciones.$evaluacionIndex.tecnica_id"] = 'required|exists:tecnica_evaluacion,id_tecnica';
                 $rules["unidades.$index.evaluaciones.$evaluacionIndex.ponderacion"] = [
+                    'bail',
                     'required',
-                    'numeric',
-                    'min:1',
+                    'integer',
+                    'min:5',
                     'max:25',
                     function ($attribute, $value, $fail) use ($index, $unidad, $evaluacionIndex) {
                         $totalEvaluaciones = count($unidad['evaluaciones']);
-                        $sumaActual = $this->getTotalPonderacionForUnidad($index);
-
-                        if ($totalEvaluaciones === 1 && $value != 25) {
-                            $fail('La única evaluación debe tener 25% de ponderación');
-                        } elseif ($totalEvaluaciones > 1) {
-                            $sumaSinActual = $sumaActual - ($unidad['evaluaciones'][$evaluacionIndex]['ponderacion'] ?? 0);
-                            $maxPermitido = 25 - $sumaSinActual;
-
-                            if ($value > $maxPermitido) {
-                                $fail("La ponderación máxima permitida para esta evaluación es $maxPermitido% (Suma actual sin este campo: $sumaSinActual%)");
-                            }
+                        if ($totalEvaluaciones === 1 && (int)$value !== 25) {
+                            $fail('La única evaluación debe tener exactamente 25% de ponderación.');
+                        }
+                    },
+                    function ($attribute, $value, $fail) use ($index) {
+                        $total = $this->getTotalPonderacionForUnidad($index);
+                        if ($total > 25) {
+                            $fail("La suma total de ponderaciones en la Unidad " . ($index + 1) . " no puede superar el 25% (actual: {$total}%)");
                         }
                     }
                 ];
 
-                $rules["unidades.$index.evaluaciones.$evaluacionIndex.forma_participacion"] = 'required|in:1,2,3';
-            }
-
-            // VALIDACIÓN PARA OBJETIVOS
-            foreach ($unidad['objetivos'] as $objetivoIndex => $objetivo) {
-                $rules["unidades.$index.objetivos.$objetivoIndex.nombre_objetivo"] = 'required|string|min:5|max:255';
-            }
-
-            $rules["unidades.$index.evaluaciones.$evaluacionIndex.ponderacion"][] = function ($attribute, $value, $fail) use ($index) {
-                $total = $this->getTotalPonderacionForUnidad($index);
-                if ($total < 25) {
-                    $fail("La suma total de ponderaciones en la Unidad " . ($index + 1) . " debe ser al menos 25% (actual: {$total}%)");
-                } elseif ($total > 25) {
-                    $fail("La suma total de ponderaciones en la Unidad " . ($index + 1) . " debe ser exactamente 25% (actual: {$total}%)");
+                $rules["unidades.$index.evaluaciones.$evaluacionIndex.forma_participacion"] = 'required|in:1,2';
+                
+                // Validate 'integrantes' only if forma_participacion is GRUPAL (2)
+                if (isset($evaluacion['forma_participacion']) && $evaluacion['forma_participacion'] == '2') {
+                    $rules["unidades.$index.evaluaciones.$evaluacionIndex.integrantes"] = 'required|integer|min:2|max:10';
                 }
-            };
+            }
+            
+            // Validación para bibliografías
+            foreach ($unidad['bibliografias'] as $bibIndex => $biblio) {
+                $rules["unidades.$index.bibliografias.$bibIndex.bibliografia_id"] = 'required|exists:bibliografia,id_bibliografia';
+            }
+
+            $rules["unidades.$index.indicadores_logro"] = 'required|string|min:5';
+
+
+            $rules["unidades.$index.total_ponderacion_check"] = [
+                function ($attribute, $value, $fail) use ($index) {
+                    $total = $this->getTotalPonderacionForUnidad($index);
+                    if ($total != 25) {
+                        $fail("La suma total de ponderaciones en la Unidad " . ($index + 1) . " debe ser exactamente 25% (actual: {$total}%)");
+                    }
+                }
+            ];
         }
 
         return $rules;
@@ -284,33 +252,44 @@ class CreatePlanificacion extends Component
 
     public function messages()
     {
-        $messages = [];
+        $messages = [
+            'unidades.*.indicadores_logro.required' => 'Los indicadores de logro son obligatorios.',
+            'unidades.*.indicadores_logro.min' => 'Los indicadores de logro deben tener al menos 5 caracteres.',
+        ];
 
-        $messages['id_profesor_asignado.required'] = 'Debe seleccionar una asignación (Materia y Sección).';
+        $messages['id_profesor_asignado.required'] = 'Debe seleccionar una Unidad Curricular.';
         $messages['id_profesor_asignado.exists'] = 'La asignación seleccionada no es válida.';
 
         // Mensajes personalizados para arrays anidados
-        // Mensajes personalizados para arrays anidados
         $messages['unidades.*.recursos.*.recurso_id.required'] = 'Debe seleccionar un recurso.';
-        $messages['unidades.*.estrategias.*.estrategia_id.required'] = 'Debe seleccionar una estrategia.';
 
-        $messages['unidades.*.contenidos.*.contenido_id.required'] = 'Debe seleccionar un contenido.';
-        $messages['unidades.*.contenidos.*.indicadores_logros.*.indicador_id.required'] = 'Debe seleccionar un indicador de logro.';
+        $messages['unidades.*.objetivos.*.objetivo_id.required'] = 'Debe seleccionar un objetivo.';
+        $messages['unidades.*.objetivos.*.contenidos.*.contenido_id.required'] = 'Debe seleccionar un contenido.';
+
+        $messages['unidades.*.estrategias.*.tema_id.required'] = 'Debe seleccionar un tema para la estrategia.';
+        $messages['unidades.*.estrategias.*.actividad.required'] = 'La descripción de la actividad es obligatoria.';
+        $messages['unidades.*.estrategias.*.actividad.min'] = 'La actividad debe tener al menos 5 caracteres.';
+        $messages['unidades.*.estrategias.*.recursos.*.recurso_id.required'] = 'Debe seleccionar un recurso.';
 
         $messages['unidades.*.evaluaciones.*.fecha_evaluacion.required'] = 'La fecha de evaluación es obligatoria.';
         $messages['unidades.*.evaluaciones.*.fecha_evaluacion.date'] = 'La fecha de evaluación no es válida.';
         $messages['unidades.*.evaluaciones.*.evaluacion_id.required'] = 'Debe seleccionar el tipo de evaluación.';
         $messages['unidades.*.evaluaciones.*.tecnica_id.required'] = 'Debe seleccionar una técnica de evaluación.';
         $messages['unidades.*.evaluaciones.*.ponderacion.required'] = 'La ponderación es obligatoria.';
-        $messages['unidades.*.evaluaciones.*.ponderacion.numeric'] = 'La ponderación debe ser un número.';
+        $messages['unidades.*.evaluaciones.*.ponderacion.integer'] = 'La ponderación debe ser un número entero.';
+        $messages['unidades.*.evaluaciones.*.ponderacion.min'] = 'La ponderación mínima es 5%.';
+        $messages['unidades.*.evaluaciones.*.ponderacion.max'] = 'La ponderación máxima es 25%.';
+        $messages['unidades.*.evaluaciones.*.integrantes.required'] = 'Debe indicar el número de integrantes para evaluaciones grupales.';
+        $messages['unidades.*.evaluaciones.*.integrantes.min'] = 'El grupo debe tener al menos 2 integrantes.';
+        $messages['unidades.*.evaluaciones.*.integrantes.max'] = 'El grupo no puede exceder los 10 integrantes.';
         $messages['unidades.*.evaluaciones.*.forma_participacion.required'] = 'Debe seleccionar una forma de participación.';
         $messages['unidades.*.evaluaciones.*.forma_participacion.in'] = 'La forma de participación seleccionada no es válida.';
+        $messages['unidades.*.bibliografias.*.bibliografia_id.required'] = 'Debe seleccionar una referencia bibliográfica.';
 
-        $messages['unidades.*.objetivos.*.nombre_objetivo.required'] = 'El nombre del objetivo es obligatorio.';
-        $messages['unidades.*.objetivos.*.nombre_objetivo.min'] = 'El objetivo debe tener al menos 5 caracteres.';
 
-        $messages['bibliografias.*.bibliografia_id.required'] = 'Debe seleccionar una referencia bibliográfica.';
-        $messages['bibliografias.*.bibliografia_id.exists'] = 'La referencia bibliográfica seleccionada no es válida.';
+        // REMOVED GLOBAL BIBLIOGRAPHY MESSAGES
+        // $messages['bibliografias.*.bibliografia_id.required'] = 'Debe seleccionar una referencia bibliográfica.';
+        // $messages['bibliografias.*.bibliografia_id.exists'] = 'La referencia bibliográfica seleccionada no es válida.';
 
         // Mensajes genéricos de respaldo
         $messages['*.required'] = 'El campo es obligatorio.';
@@ -331,66 +310,94 @@ class CreatePlanificacion extends Component
     {
         return [
             'numero' => $numero,
-            'objetivos' => [['nombre_objetivo' => '']],
-            'contenidos' => [['tema_id' => '', 'contenido_id' => '', 'indicadores_logros' => [['indicador_id' => '']]]],
-            'recursos' => [['recurso_id' => '']],
-            'estrategias' => [['estrategia_id' => '']],
-            'evaluaciones' => [['fecha_evaluacion' => '', 'evaluacion_id' => '', 'ponderacion' => 0, 'tecnica_id' => '', 'forma_participacion' => '']]
+            'objetivos' => [[
+                'tema_id' => '',
+                'objetivo_id' => '',
+                'contenidos' => [['contenido_id' => '']]
+            ]],
+            'estrategias' => [['tema_id' => '', 'actividad' => '', 'recursos' => [['recurso_id' => '']]]], 
+            'evaluaciones' => [['fecha_evaluacion' => '', 'evaluacion_id' => '', 'ponderacion' => 5, 'tecnica_id' => '', 'forma_participacion' => '', 'integrantes' => null]],
+            'bibliografias' => [['bibliografia_id' => '']],
+            'indicadores_logro' => ''
         ];
     }
 
-    public function addItem($unidadIndex, $arrayName, $contenidoIndex = null)
+    public function addItem($unidadIndex, $arrayName, $parentIndex = null)
     {
-        $defaultTemplates = [
-            'contenidos' => ['tema_id' => '', 'contenido_id' => '', 'indicadores_logros' => [['indicador_id' => '']]],
-            'recursos' => ['recurso_id' => ''],
-            'estrategias' => ['estrategia_id' => ''],
-            'evaluaciones' => [
-                'fecha_evaluacion' => '',
-                'evaluacion_id' => '',
-                'ponderacion' => 0,
-                'tecnica_id' => '',
-                'forma_participacion' => ''
-            ],
-            'indicadores_logros' => ['indicador_id' => ''],
-            'bibliografias' => ['bibliografia_id' => ''],
-            'objetivos' => ['nombre_objetivo' => ''],
-        ];
-
-        $template = $defaultTemplates[$arrayName] ?? [];
-
         if ($arrayName === 'bibliografias') {
-            $this->bibliografias[] = $template;
-        } elseif ($arrayName === 'indicadores_logros' && $contenidoIndex !== null) {
-            if (isset($this->unidades[$unidadIndex]['contenidos'][$contenidoIndex])) {
-                $this->unidades[$unidadIndex]['contenidos'][$contenidoIndex]['indicadores_logros'][] = $template;
-            }
+             // Add bibliography to unit
+             $this->unidades[$unidadIndex]['bibliografias'][] = ['bibliografia_id' => ''];
+        } elseif ($arrayName === 'objetivos') {
+             // Add new objective block
+             $this->unidades[$unidadIndex]['objetivos'][] = [
+                'tema_id' => '',
+                'objetivo_id' => '',
+                'contenidos' => [['contenido_id' => '']]
+            ];
+        } elseif ($arrayName === 'contenidos') {
+             // Add content to specific objective
+             $this->unidades[$unidadIndex]['objetivos'][$parentIndex]['contenidos'][] = ['contenido_id' => ''];
+
+        } elseif ($arrayName === 'estrategia_recursos') {
+             // Add resource to specific strategy
+             // $parentIndex is the strategy index
+             $this->unidades[$unidadIndex]['estrategias'][$parentIndex]['recursos'][] = ['recurso_id' => ''];
+
         } else {
-            $this->unidades[$unidadIndex][$arrayName][] = $template;
+             // Fallback for evaluations
+              $defaultTemplates = [
+                'evaluaciones' => [
+                    'fecha_evaluacion' => '',
+                    'evaluacion_id' => '',
+                    'ponderacion' => 0,
+                    'tecnica_id' => '',
+                    'forma_participacion' => '',
+                    'integrantes' => null
+                ],
+                'estrategias' => ['tema_id' => '', 'actividad' => '', 'recursos' => [['recurso_id' => '']]],
+                // 'bibliografias' => ['bibliografia_id' => ''] // This was for global, now handled above
+            ];
+            if (isset($defaultTemplates[$arrayName])) {
+                $this->unidades[$unidadIndex][$arrayName][] = $defaultTemplates[$arrayName];
+            }
         }
     }
 
-    public function removeItem($unidadIndex, $arrayName, $itemIndex, $contenidoIndex = null)
+    public function removeItem($unidadIndex, $arrayName, $itemIndex, $parentIndex = null)
     {
-        if ($arrayName === 'contenidos') {
-            unset($this->unidades[$unidadIndex][$arrayName][$itemIndex]);
-            $this->unidades[$unidadIndex][$arrayName] = array_values($this->unidades[$unidadIndex][$arrayName]);
-        } elseif ($arrayName === 'indicadores_logros' && $contenidoIndex !== null) {
-            if (isset($this->unidades[$unidadIndex]['contenidos'][$contenidoIndex]['indicadores_logros'][$itemIndex])) {
-                unset($this->unidades[$unidadIndex]['contenidos'][$contenidoIndex]['indicadores_logros'][$itemIndex]);
-                $this->unidades[$unidadIndex]['contenidos'][$contenidoIndex]['indicadores_logros'] = array_values($this->unidades[$unidadIndex]['contenidos'][$contenidoIndex]['indicadores_logros']);
-            }
-        } elseif ($arrayName === 'bibliografias') {
-            if (isset($this->bibliografias[$itemIndex])) {
-                unset($this->bibliografias[$itemIndex]);
-                $this->bibliografias = array_values($this->bibliografias);
+        // $unidadIndex is ignored for bibliografias if it was global, but now it is unit-based.
+        // Wait, original signature was removeItem($unidadIndex, $arrayName, $itemIndex) for unidad items
+        // and removeItem(null, 'bibliografias', index) for global.
+        
+        if ($arrayName === 'bibliografias') {
+             if (isset($this->unidades[$unidadIndex]['bibliografias'][$itemIndex])) {
+                unset($this->unidades[$unidadIndex]['bibliografias'][$itemIndex]);
+                $this->unidades[$unidadIndex]['bibliografias'] = array_values($this->unidades[$unidadIndex]['bibliografias']);
             }
         } elseif ($arrayName === 'objetivos') {
-            unset($this->unidades[$unidadIndex][$arrayName][$itemIndex]);
-            $this->unidades[$unidadIndex][$arrayName] = array_values($this->unidades[$unidadIndex][$arrayName]);
+            // Remove objective block
+            if (isset($this->unidades[$unidadIndex]['objetivos'][$itemIndex])) {
+                unset($this->unidades[$unidadIndex]['objetivos'][$itemIndex]);
+                $this->unidades[$unidadIndex]['objetivos'] = array_values($this->unidades[$unidadIndex]['objetivos']);
+            }
+        } elseif ($arrayName === 'contenidos') {
+            // Remove content from objective
+             if (isset($this->unidades[$unidadIndex]['objetivos'][$parentIndex]['contenidos'][$itemIndex])) {
+                unset($this->unidades[$unidadIndex]['objetivos'][$parentIndex]['contenidos'][$itemIndex]);
+                $this->unidades[$unidadIndex]['objetivos'][$parentIndex]['contenidos'] = array_values($this->unidades[$unidadIndex]['objetivos'][$parentIndex]['contenidos']);
+            }
+        } elseif ($arrayName === 'estrategia_recursos') {
+            // Remove resource from strategy
+            if (isset($this->unidades[$unidadIndex]['estrategias'][$parentIndex]['recursos'][$itemIndex])) {
+                unset($this->unidades[$unidadIndex]['estrategias'][$parentIndex]['recursos'][$itemIndex]);
+                $this->unidades[$unidadIndex]['estrategias'][$parentIndex]['recursos'] = array_values($this->unidades[$unidadIndex]['estrategias'][$parentIndex]['recursos']);
+            }
         } else {
-            unset($this->unidades[$unidadIndex][$arrayName][$itemIndex]);
-            $this->unidades[$unidadIndex][$arrayName] = array_values($this->unidades[$unidadIndex][$arrayName]);
+            // Remove resource, evaluation, or strategy
+            if (isset($this->unidades[$unidadIndex][$arrayName][$itemIndex])) {
+                unset($this->unidades[$unidadIndex][$arrayName][$itemIndex]);
+                $this->unidades[$unidadIndex][$arrayName] = array_values($this->unidades[$unidadIndex][$arrayName]);
+            }
         }
     }
 
@@ -432,67 +439,46 @@ class CreatePlanificacion extends Component
             // ya que ahora seleccionamos una asignación establecida.
 
             foreach ($this->unidades as $unidad) {
-                $unidadData = [
+                $unidadId = DB::table('unidad_corte')->insertGetId([
                     'id_planificacion' => $planificacionId,
-                    'numero_unidad' => $unidad['numero'],
+                    'numero_unidad_corte' => $unidad['numero'],
+                    'indicador_logro_unidad_corte' => $unidad['indicadores_logro'] ?? null,
                     'fecha_creacion' => now(),
                     'estatus' => '2',
-                ];
-                $unidadId = DB::table('unidad')->insertGetId($unidadData);
+                ]);
 
                 foreach ($unidad['objetivos'] as $objetivo) {
-                    if (!empty($objetivo['nombre_objetivo'])) {
-                        DB::table('objetivo')->insert([
-                            'id_unidad' => $unidadId, // Sincronizado con BD fisica
-                            'nombre_objetivo' => $objetivo['nombre_objetivo'],
-                            'fecha_creacion' => now(),
-                            'estatus' => '1',
-                        ]);
-                    }
-                }
-
-                foreach ($unidad['recursos'] as $recurso) {
-                    if (!empty($recurso['recurso_id'])) {
-                        DB::table('detalle_recurso')->insert([
-                            'id_unidad' => $unidadId,
-                            'id_recurso' => $recurso['recurso_id'],
-                            'fecha_creacion' => now(),
-                            'estatus' => '1',
-                        ]);
+                    foreach ($objetivo['contenidos'] as $contenido) {
+                         if (!empty($contenido['contenido_id'])) {
+                            DB::table('detalle_contenido')->insert([
+                                'id_unidad_corte' => $unidadId,
+                                'id_contenido' => $contenido['contenido_id'],
+                                'fecha_creacion' => now(),
+                                'estatus' => '1',
+                            ]);
+                        }
                     }
                 }
 
                 foreach ($unidad['estrategias'] as $estrategia) {
-                    if (!empty($estrategia['estrategia_id'])) {
-                        DB::table('detalle_estrategia_pedagogica')->insert([
-                            'id_unidad' => $unidadId,
-                            'id_estrategia_pedagogica' => $estrategia['estrategia_id'],
-                            'fecha_creacion' => now(),
-                            'estatus' => '1',
-                        ]);
-                    }
-                }
-
-                foreach ($unidad['contenidos'] as $contenido) {
-                    if (!empty($contenido['contenido_id'])) {
-                        // Guardar en detalle_contenido (Relación Corte -> Contenido)
-                        // Aseguramos que se guarde el ID del Contenido seleccionado
-                        $detalleContenidoId = DB::table('detalle_contenido')->insertGetId([
-                            'id_unidad' => $unidadId,
-                            'id_contenido' => $contenido['contenido_id'],
+                    if (!empty($estrategia['tema_id']) && !empty($estrategia['actividad'])) {
+                        
+                         $estrategiaId = DB::table('detalle_estrategia')->insertGetId([
+                            'id_unidad_corte' => $unidadId,
+                            'id_tema_unidad' => $estrategia['tema_id'],
+                            'actividad' => $estrategia['actividad'],
                             'fecha_creacion' => now(),
                             'estatus' => '1',
                         ]);
 
-                        // Para indicadores:
-                        foreach ($contenido['indicadores_logros'] as $indicador) {
-                            if (!empty($indicador['indicador_id'])) {
-                                DB::table('detalle_indicador')->insert([
-                                    'id_detalle_contenido' => $detalleContenidoId, // Vinculo con el contenido planificado
-                                    'id_indicador_logro' => $indicador['indicador_id'],
-                                    'fecha_creacion' => now(),
-                                    'estatus' => '1',
-                                ]);
+                        foreach ($estrategia['recursos'] as $recurso) {
+                            if (!empty($recurso['recurso_id'])) {
+                                 DB::table('detalle_estrategia_recurso')->insert([
+                                     'id_detalle_estrategia' => $estrategiaId,
+                                     'id_recurso' => $recurso['recurso_id'],
+                                     'fecha_creacion' => now(),
+                                     'estatus' => '1',
+                                 ]);
                             }
                         }
                     }
@@ -501,37 +487,87 @@ class CreatePlanificacion extends Component
                 foreach ($unidad['evaluaciones'] as $evaluacion) {
                     if (!empty($evaluacion['evaluacion_id'])) {
                         DB::table('detalle_evaluacion')->insert([
-                            'id_unidad' => $unidadId,
+                            'id_unidad_corte' => $unidadId,
                             'id_evaluacion' => $evaluacion['evaluacion_id'],
                             'id_tecnica' => $evaluacion['tecnica_id'],
+                            'id_instrumento' => null, // null for now as per schema
                             'ponderacion_detalle_evaluacion' => $evaluacion['ponderacion'],
+                            'integrantes_detalle_evaluacion' => ($evaluacion['forma_participacion'] == '2') ? ($evaluacion['integrantes'] ?? null) : 1, // 1 if individual
                             'fecha_evaluacion_detalle_evaluacion' => $evaluacion['fecha_evaluacion'],
                             'forma_participacion_detalle_evaluacion' => $evaluacion['forma_participacion'],
                             'fecha_creacion' => now(),
-                            'estatus' => '1', // Nuevo estatus default
+                            'estatus' => '2',
+                        ]);
+                    }
+                }
+
+                // Save bibliographies for this unit
+                foreach ($unidad['bibliografias'] as $bibliografia) {
+                    if (!empty($bibliografia['bibliografia_id'])) {
+                        DB::table('detalle_bibliografia')->insert([
+                            'id_unidad_corte' => $unidadId,
+                            'id_bibliografia' => $bibliografia['bibliografia_id'],
+                            'fecha_creacion' => now(),
+                            'estatus' => '1',
                         ]);
                     }
                 }
             }
 
-            foreach ($this->bibliografias as $bibliografia) {
-                if (!empty($bibliografia['bibliografia_id'])) {
-                    DB::table('detalle_bibliografia')->insert([
-                        'id_planificacion' => $planificacionId,
-                        'id_bibliografia' => $bibliografia['bibliografia_id'],
-                        'fecha_creacion' => now(),
-                        'estatus' => '1',
-                    ]);
-                }
-            }
+            // Removed global bibliography insert loop
 
             DB::commit();
             $this->dispatch('mostrar-mensaje', ['tipo' => 'exitoso', 'mensaje' => 'Planificación guardada correctamente.']);
-            $this->reset(['unidades', 'bibliografias', 'id_profesor_asignado']);
+            $this->reset(['unidades', 'id_profesor_asignado']);
             $this->inicializarUnidades();
         } catch (\Exception $e) {
             DB::rollBack();
             $this->dispatch('mostrar-mensaje', ['tipo' => 'error', 'mensaje' => 'Error al guardar la planificación: ' . $e->getMessage()]);
+        }
+    }
+    public function openObjetivoModal($temaId)
+    {
+        if (!$temaId || $temaId === '') {
+            $this->dispatch('mostrar-mensaje', ['tipo' => 'error', 'mensaje' => 'Debe seleccionar un tema primero.']);
+            return;
+        }
+        $this->selectedTemaIdForObjetivo = $temaId;
+        $this->newObjetivoNombre = '';
+        $this->showObjetivoModal = true;
+    }
+
+    public function closeObjetivoModal()
+    {
+        $this->showObjetivoModal = false;
+        $this->reset(['newObjetivoNombre', 'selectedTemaIdForObjetivo']);
+    }
+
+    public function saveObjetivo()
+    {
+        $this->validate([
+            'newObjetivoNombre' => 'required|min:3|max:255',
+            'selectedTemaIdForObjetivo' => 'required|exists:tema_unidad,id_tema_unidad',
+        ]);
+
+        try {
+            DB::table('objetivo')->insert([
+                'titulo_objetivo' => $this->newObjetivoNombre,
+                'id_tema_unidad' => $this->selectedTemaIdForObjetivo,
+                'estatus' => '1',
+                'fecha_creacion' => now(),
+            ]);
+
+            // Recargar objetivos
+            $detalle = DB::table('detalle_profesor_asignado')->where('id_detalle_profesor_asignado', $this->id_profesor_asignado)->first();
+            if ($detalle) {
+                // Refresh objectives list
+                $this->todosLosObjetivos = $this->planificacionRepository->select_objetivos($detalle->id_unidad_curricular);
+            }
+
+            $this->dispatch('mostrar-mensaje', ['tipo' => 'exitoso', 'mensaje' => 'Objetivo creado correctamente.']);
+            $this->closeObjetivoModal();
+        } catch (\Exception $e) {
+            $this->dispatch('mostrar-mensaje', ['tipo' => 'error', 'mensaje' => 'Error al guardar el objetivo: ' . $e->getMessage()]);
         }
     }
 }

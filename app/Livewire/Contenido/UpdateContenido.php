@@ -11,6 +11,7 @@ class UpdateContenido extends Component
 {
     public UpdateContenidoForm $form;
     public $temas = [];
+    public $objetivos = [];
 
     protected $contenidoRepo;
     protected $contenidoEditRepo;
@@ -30,14 +31,50 @@ class UpdateContenido extends Component
 
         $this->form->setContenido($contenido);
         $this->temas = $this->contenidoRepo->select_temas();
+        
+        // Cargar objetivos del tema actual
+        if ($this->form->id_tema) {
+            $this->objetivos = $this->contenidoRepo->select_objetivos_por_tema($this->form->id_tema);
+        }
+    }
+
+    public function updated($propertyName)
+    {
+        // Detectar si cambió el tema para cargar los objetivos
+        if ($propertyName === 'form.id_tema') {
+            $this->objetivos = $this->contenidoRepo->select_objetivos_por_tema($this->form->id_tema);
+            $this->form->id_objetivo = ['']; // Reiniciar con un solo campo select vacío
+        }
+
+        $field = str_replace('form.', '', $propertyName);
+        $this->form->validateOnly($field);
+    }
+
+    public function addObjetivo()
+    {
+        $this->form->id_objetivo[] = '';
+    }
+
+    public function removeObjetivo($index)
+    {
+        if (count($this->form->id_objetivo) > 1) {
+            unset($this->form->id_objetivo[$index]);
+            $this->form->id_objetivo = array_values($this->form->id_objetivo);
+        } else {
+            $this->form->id_objetivo = ['']; // No dejar el array vacío
+        }
     }
 
     public function save()
     {
         $this->form->validate();
-        $this->contenidoEditRepo->editar($this->form->id, $this->form->values());
-        session()->flash('message', 'Contenido actualizado con éxito.');
-        return redirect()->route('contenido/listar');
+        try {
+            $this->contenidoEditRepo->editar($this->form->id, $this->form->values());
+            session()->flash('message', 'Contenido actualizado con éxito.');
+            return redirect()->route('contenido/listar');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al actualizar el contenido.');
+        }
     }
 
     public function render()

@@ -14,7 +14,7 @@ class BibliografiaIndexRepo
             ->when($busqueda, function ($consulta, $busqueda) {
                 $consulta->where('nombre_bibliografia', 'LIKE', '%' . $busqueda . '%');
             })
-            ->orderBy('nombre_bibliografia')
+            ->orderBy('fecha_creacion', 'desc')
             ->paginate($paginacion);
     }
 

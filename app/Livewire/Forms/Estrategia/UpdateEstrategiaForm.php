@@ -18,7 +18,7 @@ class UpdateEstrategiaForm extends Form
                 'string',
                 'min:3',
                 'regex:/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\\d\\s\\.,\\-\\(\\)\\\"\\\':\\/]+$/u',
-                Rule::unique('estrategia_pedagogica', 'nombre_estrategia_pedagogica')->ignore($this->id_estrategia_pedagogica, 'id_estrategia_pedagogica')
+                Rule::unique('tecnica_actividad', 'nombre_tecnica_actividad')->ignore($this->id_estrategia_pedagogica, 'id_tecnica_actividad')
             ],
         ];
     }
@@ -36,7 +36,7 @@ class UpdateEstrategiaForm extends Form
 
     public function setForm($estrategia)
     {
-        $this->id_estrategia_pedagogica = $estrategia->id_estrategia_pedagogica;
-        $this->nombre = $estrategia->nombre_estrategia_pedagogica;
+        $this->id_estrategia_pedagogica = $estrategia->id_tecnica_actividad;
+        $this->nombre = $estrategia->nombre_tecnica_actividad;
     }
 }

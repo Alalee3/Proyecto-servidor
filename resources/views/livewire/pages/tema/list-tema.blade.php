@@ -1,11 +1,11 @@
 <div>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-500 dark:text-gray-500 leading-tight uppercase text-center">
+        <h2 class="font-bold text-xl text-gray-800 dark:text-gray-500 leading-tight uppercase text-center">
             {{ __('Temas') }}
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="pt-2 pb-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 sm:rounded-lg">
             <x-table.alert-message type="success" :message="session('message')" />
             <x-table.alert-message type="error" :message="session('error')" />
@@ -32,7 +32,7 @@
                     <tbody>
                         @if ($temas->isNotEmpty())
                             @foreach ($temas as $tema)
-                                <tr wire:key="{{ $tema->id_tema }}"
+                                <tr wire:key="{{ $tema->id_tema_unidad }}"
                                     class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">{{ $tema->titulo_tema }}</td>
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">
@@ -47,7 +47,7 @@
                                     <td class="px-4 py-4">
                                         <div class="flex items-center justify-end space-x-3">
                                             <!-- Ver -->
-                                            <a href="{{ route('tema/show', $tema->id_tema) }}" wire:navigate
+                                            <a href="{{ route('tema/show', $tema->id_tema_unidad) }}" wire:navigate
                                                 class="flex items-center gap-1 bg-blue-50 text-blue-600 text-xs font-medium px-2.5 py-0.5 rounded hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
                                                     class="w-4 h-4">
@@ -57,7 +57,7 @@
                                                 Ver
                                             </a>
                                             <!-- Editar -->
-                                            <a href="{{ route('tema/update', $tema->id_tema) }}" wire:navigate
+                                            <a href="{{ route('tema/update', $tema->id_tema_unidad) }}" wire:navigate
                                                 class="flex items-center gap-1 bg-yellow-600 text-white text-xs font-medium px-2.5 py-0.5 rounded hover:bg-yellow-700 dark:bg-yellow-600 dark:text-white dark:hover:bg-yellow-700">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
                                                     class="w-4 h-4">
@@ -66,11 +66,11 @@
                                                 </svg>
                                                 Editar
                                             </a>
-
+ 
                                             <!-- Acciones según estado -->
                                             @if ($tema->estatus == 1)
                                                 <!-- Inhabilitar -->
-                                                <button wire:click="confirmarInhabilitar({{ $tema->id_tema }})"
+                                                <button wire:click="confirmarInhabilitar({{ $tema->id_tema_unidad }})"
                                                     class="flex items-center gap-1 bg-red-50 text-red-600 dark:bg-red-900 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
                                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fill-rule="evenodd"
@@ -81,8 +81,8 @@
                                                 </button>
                                             @else
                                                 <!-- Restaurar -->
-                                                <button wire:click="confirmarRestaurar({{ $tema->id_tema }})"
-                                                    class="flex items-center gap-1 bg-green-50 text-green-600 dark:bg-green-900 dark:text-green-200 hover:bg-green-100 dark:hover:bg-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                                <button wire:click="confirmarRestaurar({{ $tema->id_tema_unidad }})"
+                                                    class="flex items-center gap-1 bg-green-50 text-green-600 dark:bg-green-900 dark:text-green-200 hover:bg-green-100 dark:hover:bg-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                             d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -129,3 +129,4 @@
         </div>
     </div>
 </div>
+

@@ -18,7 +18,7 @@ class UpdateTecnicaForm extends Form
                 'string',
                 'min:3',
                 'regex:/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\\d\\s\\.,\\-\\(\\)\\\"\\\':\\/]+$/u',
-                Rule::unique('tecnica', 'nombre_tecnica')->ignore($this->id_tecnica, 'id_tecnica')
+                Rule::unique('tecnica_evaluacion', 'nombre_tecnica_evaluacion')->ignore($this->id_tecnica, 'id_tecnica')
             ],
         ];
     }
@@ -37,6 +37,6 @@ class UpdateTecnicaForm extends Form
     public function setForm($tecnica)
     {
         $this->id_tecnica = $tecnica->id_tecnica;
-        $this->nombre = $tecnica->nombre_tecnica;
+        $this->nombre = $tecnica->nombre_tecnica_evaluacion;
     }
 }

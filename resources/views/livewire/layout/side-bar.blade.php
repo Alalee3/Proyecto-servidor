@@ -69,17 +69,61 @@
                     </button>
 
                     <div x-show="openMenu === 10" x-collapse class="mt-0 space-y-0">
-                        <!-- Indicadores de Logro -->
+
+
+                        <!-- Recursos -->
                         <div>
-                            <button @click="subMenu === 1 ? subMenu = null : subMenu = 1"
+                            <button @click="subMenu === 3 ? subMenu = null : subMenu = 3"
                                 class="sogat-sidebar-subitem">
-                                <span>Indicadores de Logro</span>
-                                <img :src="subMenu === 1 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
+                                <span>Recursos</span>
+                                <img :src="subMenu === 3 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
                                      class="w-4 h-4 ml-auto">
                             </button>
-                            <ul x-show="subMenu === 1" x-collapse class="mt-0 space-y-0">
-                                <li><a href="{{ route('indicador-logro/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
-                                <li><a href="{{ route('indicador-logro/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
+                            <ul x-show="subMenu === 3" x-collapse class="mt-0 space-y-0">
+                                <li><a href="{{ route('recurso/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
+                                <li><a href="{{ route('recurso/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Estrategias Pedagógicas -->
+                        <div>
+                            <button @click="subMenu === 4 ? subMenu = null : subMenu = 4"
+                                class="sogat-sidebar-subitem">
+                                <span>Estrategias Pedagógicas</span>
+                                <img :src="subMenu === 4 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
+                                     class="w-4 h-4 ml-auto">
+                            </button>
+                            <ul x-show="subMenu === 4" x-collapse class="mt-0 space-y-0">
+                                <li><a href="{{ route('estrategia/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
+                                <li><a href="{{ route('estrategia/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Técnicas de Evaluación -->
+                        <div>
+                            <button @click="subMenu === 5 ? subMenu = null : subMenu = 5"
+                                class="sogat-sidebar-subitem">
+                                <span>Técnicas de Evaluación</span>
+                                <img :src="subMenu === 5 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
+                                     class="w-4 h-4 ml-auto">
+                            </button>
+                            <ul x-show="subMenu === 5" x-collapse class="mt-0 space-y-0">
+                                <li><a href="{{ route('tecnica/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
+                                <li><a href="{{ route('tecnica/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
+                            </ul>
+                        </div>
+
+                        <!-- Evaluaciones -->
+                        <div>
+                            <button @click="subMenu === 6 ? subMenu = null : subMenu = 6"
+                                class="sogat-sidebar-subitem">
+                                <span>Evaluaciones</span>
+                                <img :src="subMenu === 6 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
+                                     class="w-4 h-4 ml-auto">
+                            </button>
+                            <ul x-show="subMenu === 6" x-collapse class="mt-0 space-y-0">
+                                <li><a href="{{ route('evaluacion/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
+                                <li><a href="{{ route('evaluacion/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
                             </ul>
                         </div>
 
@@ -153,7 +197,7 @@
                                 @endif
                             </span>
                         </div>
-                        <livewire:dark-mode-toggle />
+                         <livewire:dark-mode-toggle />
                     </div>
                 </div>
             @endcan

@@ -8,7 +8,7 @@
     </x-slot>
 
     <!-- Contenedor principal -->
-    <div class="py-12">
+    <div class="pt-2 pb-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="sogat-card">
 
@@ -17,7 +17,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                                 <div class="lg:col-span-2">
                                     <x-input-label value="Nombre del Indicador:" />
-                                    <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
+                                    <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold break-words overflow-hidden">
                                         {{ $indicador->nombre_indicador_logro }}</p>
                                 </div>
 
@@ -68,3 +68,4 @@
         </div>
     </div>
 </div>
+

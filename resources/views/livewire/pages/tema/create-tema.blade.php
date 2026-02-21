@@ -1,11 +1,11 @@
 <div>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-500 dark:text-gray-500 leading-tight uppercase text-center">
+        <h2 class="font-bold text-xl text-gray-800 dark:text-gray-500 leading-tight uppercase text-center">
             {{ __('Crear Tema') }}
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="pt-2 pb-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <!-- Alertas -->
             <x-table.alert-message type="success" :message="session('message')" />
@@ -14,48 +14,70 @@
             <div class="sogat-card">
                 <form wire:submit.prevent="save" class="w-full space-y-6" novalidate>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                         <!-- Unidad Curricular -->
                         <div class="w-full">
-                            <x-input-label for="unidad" :value="__('Unidad Curricular')" />
+                            <x-input-label for="unidad" :value="__('Unidad Curricular')" class="text-gray-600 font-bold mb-1" />
                             <x-select id="unidad" wire:model.live="form.id_unidad_curricular"
                                 :options="$unidadesCurriculares" valueField="id" textField="nombre"
-                                placeholder="Selecciona una unidad" class="w-full mt-1"
+                                placeholder="SELECCIONA UNA UNIDAD" class="w-full"
                                 errorField="form.id_unidad_curricular" required />
                         </div>
 
                         <!-- Corte -->
                         <div class="w-full">
-                            <x-input-label for="corte" :value="__('Corte (Unidad)')" />
+                            <x-input-label for="corte" :value="__('Corte')" class="text-gray-600 font-bold mb-1" />
                             <x-select id="corte" wire:model.live="form.unidad_tema" :options="$cortes" valueField="id"
-                                textField="nombre" placeholder="Selecciona un corte" class="w-full mt-1"
+                                textField="nombre" placeholder="SELECCIONA UN CORTE" class="w-full"
                                 errorField="form.unidad_tema" required />
                         </div>
-                    </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
                         <!-- Título -->
-                        <div class="w-full">
-                            <x-input-label for="titulo" :value="__('Título del Tema')" />
-                            <x-text-input id="titulo" wire:model.live="form.titulo_tema" class="w-full mt-1" type="text"
-                                placeholder="Ej: Tema 1: Hardware y Software" required />
+                        <div class="w-full md:col-span-2">
+                            <x-input-label for="titulo" :value="__('Título del Tema')" class="text-gray-600 font-bold mb-1" />
+                            <x-text-input id="titulo" wire:model.live="form.titulo_tema" class="w-full" type="text"
+                                placeholder="EJ: TEMA 1: HARDWARE Y SOFTWARE" required />
                             <x-input-error :messages="$errors->first('form.titulo_tema')" class="mt-2" />
                         </div>
                     </div>
 
-                    <!-- Descripción (Full Width) -->
-                    <div class="w-full">
-                        <x-input-label for="descripcion" :value="__('Descripción (Opcional)')" />
-                        <textarea id="descripcion" wire:model.live="form.descripcion_tema" rows="4"
-                            class="border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm w-full mt-1"
-                            placeholder="Descripción detallada del tema..."></textarea>
-                        <x-input-error :messages="$errors->first('form.descripcion_tema')" class="mt-2" />
+                    <!-- Sección de Objetivos -->
+                    <div class="space-y-4 pt-4">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-sm font-extrabold text-gray-800 dark:text-gray-200 uppercase tracking-tight">
+                                {{ __('OBJETIVOS DEL TEMA') }}
+                            </h4>
+                            <button type="button" wire:click="addObjetivo"
+                                class="inline-flex items-center gap-1 text-[11px] bg-[#f0f0f0] border-2 border-[#767676] text-black px-4 py-2 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
+                                <span class="material-icons text-sm">add</span>
+                                {{ __('AÑADIR OBJETIVO') }}
+                            </button>
+                        </div>
+
+                        <div class="space-y-4">
+                            @foreach ($form->objetivos as $index => $objetivo)
+                                <div class="flex items-center gap-3 group">
+                                    <div class="flex-grow">
+                                        <x-text-input wire:model.live="form.objetivos.{{ $index }}.titulo_objetivo"
+                                            class="w-full text-sm" placeholder="DESCRIBA EL OBJETIVO..." required />
+                                        <x-input-error :messages="$errors->first('form.objetivos.' . $index . '.titulo_objetivo')" class="mt-1" />
+                                    </div>
+                                    @if (count($form->objetivos) > 1)
+                                        <button type="button" wire:click="removeObjetivo({{ $index }})"
+                                            class="text-gray-400 hover:text-red-600 transition-all p-1">
+                                            <span class="material-icons text-xl">delete</span>
+                                        </button>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
 
+
                     <!-- Botones -->
-                    <div class="flex items-center justify-end gap-4">
-                        <x-primary-button type="submit" wire:loading.attr="disabled">
-                            {{ __('Guardar Tema') }}
+                    <div class="flex items-center justify-end pt-6">
+                        <x-primary-button type="submit" wire:loading.attr="disabled" class="px-10 py-3 text-base">
+                            {{ __('GUARDAR TEMA') }}
                         </x-primary-button>
                     </div>
                 </form>
@@ -63,3 +85,4 @@
         </div>
     </div>
 </div>
+

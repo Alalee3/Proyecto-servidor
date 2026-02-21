@@ -12,7 +12,7 @@ class TecnicaEditRepo
      */
     public function obtenerPorId($id)
     {
-        return DB::table('tecnica')
+        return DB::table('tecnica_evaluacion')
             ->where('id_tecnica', $id)
             ->first();
     }
@@ -22,10 +22,10 @@ class TecnicaEditRepo
      */
     public function actualizar($id, array $datos)
     {
-        return DB::table('tecnica')
+        return DB::table('tecnica_evaluacion')
             ->where('id_tecnica', $id)
             ->update([
-                'nombre_tecnica' => $datos['nombre'],
+                'nombre_tecnica_evaluacion' => $datos['nombre'],
                 'fecha_actualizacion' => Carbon::now()
             ]);
     }

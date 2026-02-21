@@ -9,17 +9,17 @@ use Exception;
 class ShowTecnica extends Component
 {
     public $tecnica;
-    protected $tecnicasRepository;
+    protected $tecnicaRepository;
 
     public function __construct()
     {
-        $this->tecnicasRepository = new TecnicaViewRepo();
+        $this->tecnicaRepository = new TecnicaViewRepo();
     }
 
     public function mount(int $id)
     {
         try {
-            $this->tecnica = $this->tecnicasRepository->mostrar($id);
+            $this->tecnica = $this->tecnicaRepository->mostrar($id);
             if (!$this->tecnica) {
                 return redirect()->route('tecnica/listar')->with('error', 'Técnica no encontrada.');
             }

@@ -10,17 +10,17 @@ use Exception;
 class UpdateTecnica extends Component
 {
     public UpdateTecnicaForm $form;
-    protected $tecnicasRepository;
+    protected $tecnicaRepository;
 
     public function __construct()
     {
-        $this->tecnicasRepository = new TecnicaEditRepo();
+        $this->tecnicaRepository = new TecnicaEditRepo();
     }
 
     public function mount($id)
     {
         try {
-            $tecnica = $this->tecnicasRepository->obtenerPorId($id);
+            $tecnica = $this->tecnicaRepository->obtenerPorId($id);
             if (!$tecnica) {
                 return redirect()->route('tecnica/listar')->with('error', 'Técnica no encontrada.');
             }
@@ -35,7 +35,7 @@ class UpdateTecnica extends Component
         $this->form->validate();
 
         try {
-            $this->tecnicasRepository->actualizar($this->form->id_tecnica, $this->form->all());
+            $this->tecnicaRepository->actualizar($this->form->id_tecnica, $this->form->all());
             session()->flash('message', 'Técnica actualizada correctamente.');
             return redirect()->route('tecnica/listar');
         } catch (Exception $e) {

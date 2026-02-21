@@ -14,7 +14,7 @@ class RecursoIndexRepo
             ->when($busqueda, function ($consulta, $busqueda) {
                 $consulta->where('nombre_recurso', 'LIKE', '%' . $busqueda . '%');
             })
-            ->orderBy('nombre_recurso')
+            ->orderBy('fecha_creacion', 'desc')
             ->paginate($paginacion);
     }
 

@@ -16,11 +16,11 @@ class ListTecnica extends Component
     public $idInhabilitar = null;
     public $idRestaurar = null;
 
-    protected $tecnicasRepository;
+    protected $tecnicaRepository;
 
     public function __construct()
     {
-        $this->tecnicasRepository = new TecnicaIndexRepo();
+        $this->tecnicaRepository = new TecnicaIndexRepo();
     }
 
     public function updatedBusqueda()
@@ -36,7 +36,7 @@ class ListTecnica extends Component
     public function inhabilitar()
     {
         try {
-            $this->tecnicasRepository->inhabilitar($this->idInhabilitar);
+            $this->tecnicaRepository->inhabilitar($this->idInhabilitar);
             session()->flash('message', 'Técnica inhabilitada correctamente.');
         } catch (Exception $e) {
             session()->flash('error', 'Error al inhabilitar la técnica.');
@@ -52,7 +52,7 @@ class ListTecnica extends Component
     public function restaurar()
     {
         try {
-            $this->tecnicasRepository->restaurar($this->idRestaurar);
+            $this->tecnicaRepository->restaurar($this->idRestaurar);
             session()->flash('message', 'Técnica restaurada correctamente.');
         } catch (Exception $e) {
             session()->flash('error', 'Error al restaurar la técnica.');
@@ -67,8 +67,7 @@ class ListTecnica extends Component
             $this->paginacion = 5;
         }
 
-        $tecnicas = $this->tecnicasRepository->listar($this->busqueda, $this->paginacion);
-
+        $tecnicas = $this->tecnicaRepository->listar($this->busqueda, $this->paginacion);
         return view('livewire.pages.tecnica.list-tecnica', compact('tecnicas'));
     }
 }

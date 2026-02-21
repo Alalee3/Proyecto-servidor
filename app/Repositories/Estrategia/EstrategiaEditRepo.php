@@ -12,8 +12,8 @@ class EstrategiaEditRepo
      */
     public function obtenerPorId($id)
     {
-        return DB::table('estrategia_pedagogica')
-            ->where('id_estrategia_pedagogica', $id)
+        return DB::table('tecnica_actividad')
+            ->where('id_tecnica_actividad', $id)
             ->first();
     }
 
@@ -22,10 +22,10 @@ class EstrategiaEditRepo
      */
     public function actualizar($id, array $datos)
     {
-        return DB::table('estrategia_pedagogica')
-            ->where('id_estrategia_pedagogica', $id)
+        return DB::table('tecnica_actividad')
+            ->where('id_tecnica_actividad', $id)
             ->update([
-                'nombre_estrategia_pedagogica' => $datos['nombre'],
+                'nombre_tecnica_actividad' => $datos['nombre'],
                 'fecha_actualizacion' => Carbon::now()
             ]);
     }

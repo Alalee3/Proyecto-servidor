@@ -18,7 +18,7 @@ class CreateTecnicaForm extends Form
                 'min:3',
                 // Validación universal permitiendo caracteres especiales
                 'regex:/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\\d\\s\\.,\\-\\(\\)\\\"\\\':\\/]+$/u',
-                Rule::unique('tecnica', 'nombre_tecnica')
+                Rule::unique('tecnica_evaluacion', 'nombre_tecnica_evaluacion')
             ],
         ];
     }

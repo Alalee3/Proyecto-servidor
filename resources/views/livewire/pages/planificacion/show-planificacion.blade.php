@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="pt-2 pb-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="sogat-card">
                 @if (session()->has('message'))
@@ -22,7 +22,7 @@
                 {{-- Header / Información General --}}
                 <div class="flex justify-between items-start border-b pb-4 mb-4 dark:border-gray-700">
                     <div>
-                        <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 uppercase tracking-tight">
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 uppercase tracking-tight break-words overflow-hidden">
                             {{ $planificacion->nombre_unidad_curricular ?? 'Unidad Curricular' }}
                         </h3>
                         <div class="flex flex-col gap-1 mt-1">
@@ -39,9 +39,9 @@
                     </div>
                     <div class="flex items-center gap-2">
                         <a href="{{ route('planificacion.reporte.detalle', $planificacionId) }}" target="_blank"
-                            class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition-all duration-200"
+                            class="flex items-center gap-2 bg-[#f0f0f0] border border-[#767676] text-black text-xs font-bold py-1.5 px-3 rounded shadow transition-all duration-200 hover:bg-gray-200"
                             title="Ver Plan de Curso en PDF (Nueva pestaña)">
-                            <span class="material-icons text-white text-base">picture_as_pdf</span>
+                            <span class="material-icons text-black text-base">picture_as_pdf</span>
                             PDF
                         </a>
                         <span class="px-3 py-1 rounded-full text-sm font-semibold
@@ -64,7 +64,7 @@
                             @if (!empty($planificacion->cortes))
                                 @foreach ($planificacion->cortes as $idx => $c)
                                     <button type="button" @click="openCorte = {{ $idx }}"
-                                        :class="openCorte === {{ $idx }} ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'"
+                                        :class="openCorte === {{ $idx }} ? 'bg-[#767676] text-white' : 'bg-[#f0f0f0] text-black border border-[#767676]'"
                                         class="w-8 h-8 rounded-full flex items-center justify-center font-bold transition-all duration-200 text-sm shadow-sm">
                                         {{ $idx + 1 }}
                                     </button>
@@ -114,8 +114,16 @@
                                                     class="list-disc list-inside space-y-2 text-sm text-gray-600 dark:text-gray-400">
                                                     @foreach ($corte->contenidos as $contenido)
                                                         <li>
-                                                            <span
-                                                                class="font-medium text-gray-800 dark:text-gray-200">{{ $contenido['titulo_contenido'] ?? 'Sin Título' }}</span>
+                                                            <div class="mt-1 mb-2">
+                                                                <div>
+                                                                    <span class="text-xs font-bold text-gray-500 uppercase">Tema:</span>
+                                                                    <span class="text-sm font-bold text-gray-800 dark:text-gray-200 break-words overflow-hidden">{{ $contenido['titulo_tema'] ?? 'Sin Tema' }}</span>
+                                                                </div>
+                                                                <div class="mt-1">
+                                                                    <span class="text-xs font-bold text-gray-500 uppercase">Contenido:</span>
+                                                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200 break-words overflow-hidden">{{ $contenido['titulo_contenido'] ?? 'Sin Título' }}</span>
+                                                                </div>
+                                                            </div>
                                                             @if (!empty($contenido['indicadores_logros']))
                                                                 <ul class="ml-5 list-circle mt-1 space-y-1 text-xs">
                                                                     @foreach ($contenido['indicadores_logros'] as $indicador)
@@ -161,6 +169,18 @@
                                             @endif
                                         </div>
 
+                                        {{-- Indicadores de Logros --}}
+                                        @if (!empty($corte->indicadores_logros))
+                                            <div>
+                                                <h4 class="font-semibold text-gray-700 dark:text-gray-300 mb-2 border-b dark:border-gray-700 pb-1 uppercase text-xs">
+                                                    Indicadores de Logros
+                                                </h4>
+                                                <div class="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-100 dark:border-gray-700 text-sm italic text-gray-600 dark:text-gray-400 break-words overflow-hidden">
+                                                    {{ $corte->indicadores_logros }}
+                                                </div>
+                                            </div>
+                                        @endif
+
                                         {{-- Evaluaciones --}}
                                         @if (!empty($corte->evaluaciones))
                                             <div>
@@ -173,33 +193,31 @@
                                                         <thead
                                                             class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                                             <tr>
-                                                                <th scope="col" class="px-3 py-2">Evaluación</th>
-                                                                <th scope="col" class="px-3 py-2">Técnica</th>
-                                                                <th scope="col" class="px-3 py-2">Ponderación</th>
-                                                                <th scope="col" class="px-3 py-2">Fecha</th>
-                                                                <th scope="col" class="px-3 py-2">Participación</th>
+                                                                <th scope="col" class="px-3 py-2 border-r dark:border-gray-600" width="15%">Fecha</th>
+                                                                <th scope="col" class="px-3 py-2 border-r dark:border-gray-600" width="22%">Evaluación</th>
+                                                                <th scope="col" class="px-3 py-2 border-r dark:border-gray-600" width="22%">Técnica</th>
+                                                                <th scope="col" class="px-3 py-2 border-r dark:border-gray-600" width="26%">Participación</th>
+                                                                <th scope="col" class="px-3 py-2" width="15%">Ponderación</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             @foreach ($corte->evaluaciones as $eval)
                                                                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                                                    <td class="px-3 py-2 font-medium text-gray-900 dark:text-white">
+                                                                    <td class="px-3 py-2 border-r dark:border-gray-700">{{ $eval['fecha_evaluacion'] ?? '' }}</td>
+                                                                    <td class="px-3 py-2 font-medium text-gray-900 dark:text-white break-words min-w-[150px] border-r dark:border-gray-700">
                                                                         {{ $eval['evaluacion'] ?? '' }}
                                                                     </td>
-                                                                    <td class="px-3 py-2">{{ $eval['tecnica'] ?? '' }}</td>
-                                                                    <td class="px-3 py-2">{{ $eval['ponderacion'] ?? 0 }}%</td>
-                                                                    <td class="px-3 py-2">{{ $eval['fecha_evaluacion'] ?? '' }}</td>
-                                                                    <td class="px-3 py-2">
+                                                                    <td class="px-3 py-2 border-r dark:border-gray-700">{{ $eval['tecnica'] ?? '' }}</td>
+                                                                    <td class="px-3 py-2 border-r dark:border-gray-700">
                                                                         @if (($eval['forma_participacion'] ?? '') == '1')
                                                                             Individual
                                                                         @elseif(($eval['forma_participacion'] ?? '') == '2')
-                                                                            Pareja
-                                                                        @elseif(($eval['forma_participacion'] ?? '') == '3')
-                                                                            Grupal
+                                                                            Grupal ({{ $eval['integrantes'] ?? '2-10' }})
                                                                         @else
                                                                             N/A
                                                                         @endif
                                                                     </td>
+                                                                    <td class="px-3 py-2 font-bold">{{ $eval['ponderacion'] ?? 0 }}%</td>
                                                                 </tr>
                                                             @endforeach
                                                         </tbody>
@@ -215,12 +233,12 @@
                                                 @if (($corte->estatus ?? 0) != 3 && empty($mostrarMotivoRechazoCorte[$corte->detalle_id]))
                                                     <div class="flex justify-end gap-2">
                                                         <button wire:click="mostrarTextareaMotivo({{ $corte->detalle_id }})"
-                                                            class="inline-flex items-center gap-1 text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-700 transition-colors shadow-sm uppercase">
+                                                            class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
                                                             Rechazar corte
                                                         </button>
                                                         @if (($corte->estatus ?? 0) != 1)
                                                             <button wire:click="aprobarCorte({{ $corte->detalle_id }})"
-                                                                class="inline-flex items-center gap-1 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-sm uppercase">
+                                                                class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
                                                                 Aceptar corte
                                                             </button>
                                                         @endif
@@ -236,11 +254,11 @@
                                                             class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"></textarea>
                                                         <div class="flex justify-end space-x-2">
                                                             <button wire:click="ocultarTextareaMotivo({{ $corte->detalle_id }})"
-                                                                class="inline-flex items-center gap-1 text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-700 transition-colors shadow-sm uppercase">
+                                                                class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
                                                                 Cancelar
                                                             </button>
                                                             <button wire:click="confirmarRechazoCorte({{ $corte->detalle_id }})"
-                                                                class="inline-flex items-center gap-1 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-sm uppercase">
+                                                                class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
                                                                 Aceptar
                                                             </button>
                                                         </div>
@@ -267,7 +285,7 @@
                                                 @if (Gate::allows('is-coordinador'))
                                                     <div class="flex justify-end mt-2">
                                                         <button wire:click="eliminarMotivoRechazo({{ $corte->detalle_id }})"
-                                                            class="inline-flex items-center gap-1 text-xs bg-red-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-700 transition-colors shadow-sm uppercase">
+                                                            class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
                                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                                             </svg>
@@ -304,8 +322,8 @@
                     {{-- Footer con Botones de Acción --}}
                     <div class="mt-8 flex justify-end space-x-3 pt-4 border-t dark:border-gray-700">
                         <button wire:click="cerrar"
-                            class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded shadow transition-all duration-200 uppercase">
-                            <span class="material-icons text-white text-base">arrow_back</span>
+                            class="inline-flex font-bold items-center px-4 py-2 bg-[#f0f0f0] border border-[#767676] rounded-lg text-sm text-black uppercase tracking-widest hover:bg-gray-200 focus:outline-none transition ease-in-out duration-150 shadow-sm gap-2">
+                            <span class="material-icons text-black text-base">arrow_back</span>
                             Volver
                         </button>
                     </div>
@@ -314,3 +332,4 @@
             </div>
         </div>
     </div>
+

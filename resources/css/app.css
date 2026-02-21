@@ -46,6 +46,12 @@
     .sogat-table-container {
         @apply relative overflow-x-auto shadow-md sm:rounded-lg border-2 border-sogat-red transition-all duration-300;
     }
+
+    /* Override for Planificacion module to keep gray borders */
+    .planificacion-module input,
+    .planificacion-module select {
+        @apply border-gray-300 dark:border-gray-700 !important;
+    }
 }
 
 @layer components {
@@ -61,7 +67,7 @@
 
     /* Header from SOGAT - Now truly responsive to theme */
     .sogat-header {
-        @apply bg-sogat-blue-light text-sogat-blue border-b border-sogat-border-gray transition-all duration-300;
+        @apply transition-all duration-300;
     }
 
     .dark .sogat-header {

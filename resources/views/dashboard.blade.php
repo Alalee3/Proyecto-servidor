@@ -1,24 +1,19 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Inicio') }}
-        </h2>
-    </x-slot>
-
     <div class="space-y-12">
         {{-- Saludo de Bienvenida --}}
         @php
             $hora = date('H');
-            $saludo = 'Buenos días';
-            if ($hora >= 12 && $hora < 19) {
-                $saludo = 'Buenas tardes';
-            } elseif ($hora >= 19 || $hora < 5) {
-                $saludo = 'Buenas noches';
+            if ($hora >= 5 && $hora < 12) {
+                $saludo = '¡Buen día!';
+            } elseif ($hora >= 12 && $hora < 18) {
+                $saludo = '¡Buenas tardes!';
+            } else {
+                $saludo = '¡Buenas noches!';
             }
         @endphp
         
-        <h2 class="text-[22px] font-bold text-gray-900 dark:text-white uppercase">
-            {{ $saludo }}: {{ auth()->user()->name }}
+        <h2 class="text-[24px] font-bold text-gray-900 dark:text-white uppercase tracking-tight">
+            {{ $saludo }} {{ auth()->user()->name }}
         </h2>
 
         {{-- Sección Entérate --}}

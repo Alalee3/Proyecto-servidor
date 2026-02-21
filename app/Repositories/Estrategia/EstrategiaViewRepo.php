@@ -11,8 +11,8 @@ class EstrategiaViewRepo
      */
     public function mostrar($id)
     {
-        return DB::table('estrategia_pedagogica')
-            ->where('id_estrategia_pedagogica', $id)
+        return DB::table('tecnica_actividad')
+            ->where('id_tecnica_actividad', $id)
             ->first();
     }
 }

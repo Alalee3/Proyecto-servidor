@@ -1,6 +1,6 @@
 <div>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-500 dark:text-gray-500 leading-tight uppercase text-center">
+        <h2 class="font-bold text-xl text-gray-800 dark:text-gray-500 leading-tight uppercase text-center">
             {{ __('Registrar Evaluación') }}
         </h2>
     </x-slot>
@@ -16,7 +16,7 @@
                 <div class="w-full">
                     <x-input-label for="nombre" :value="__('Nombre de la Evaluación')" />
                     <x-text-input id="nombre" wire:model.live="form.nombre" class="w-full" type="text"
-                        placeholder="Ej: Portafolio, Prueba Escrita, Ensayo, etc." />
+                        placeholder="Ej: Portafolio, Prueba Escrita, Ensayo, etc." required />
                     <x-input-error :messages="$errors->first('form.nombre')" class="mt-2" />
                 </div>
             </div>
@@ -30,3 +30,4 @@
         </form>
     </div>
 </div>
+

@@ -8,7 +8,7 @@
     </x-slot>
 
     <!-- Contenedor principal -->
-    <div class="py-12">
+    <div class="pt-2 pb-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="sogat-card">
 
@@ -18,7 +18,7 @@
                                 <div>
                                     <x-input-label value="Nombre de la Técnica:" />
                                     <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
-                                        {{ $tecnica->nombre_tecnica }}</p>
+                                        {{ $tecnica->nombre_tecnica_evaluacion }}</p>
                                 </div>
 
                                 <div>
@@ -57,3 +57,4 @@
         </div>
     </div>
 </div>
+

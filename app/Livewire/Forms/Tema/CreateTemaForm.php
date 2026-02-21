@@ -11,6 +11,7 @@ class CreateTemaForm extends Form
     public $titulo_tema = '';
     public $descripcion_tema = '';
     public $unidad_tema = '';
+    public $objetivos = [['titulo_objetivo' => '']];
 
     protected function rules()
     {
@@ -22,10 +23,11 @@ class CreateTemaForm extends Form
                 'min:3',
                 'max:255',
                 'regex:/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\s0-9\.]+$/u',
-                Rule::unique('tema', 'titulo_tema')
+                Rule::unique('tema_unidad', 'titulo_tema')
             ],
             'descripcion_tema' => 'nullable|string|max:500',
             'unidad_tema' => 'required|in:1,2,3,4',
+            'objetivos.*.titulo_objetivo' => 'required|string|min:3|max:255',
         ];
     }
 
@@ -44,6 +46,8 @@ class CreateTemaForm extends Form
             'descripcion_tema.max' => 'La descripción no debe exceder los 500 caracteres.',
             'unidad_tema.required' => 'Debe seleccionar un corte (unidad de tema).',
             'unidad_tema.in' => 'El corte seleccionado no es válido.',
+            'objetivos.*.titulo_objetivo.required' => 'El objetivo es obligatorio.',
+            'objetivos.*.titulo_objetivo.min' => 'El objetivo debe tener al menos 3 caracteres.',
         ];
     }
 
@@ -54,6 +58,7 @@ class CreateTemaForm extends Form
             'titulo_tema' => $this->titulo_tema,
             'descripcion_tema' => $this->descripcion_tema,
             'unidad_tema' => $this->unidad_tema,
+            'objetivos' => $this->objetivos,
         ];
     }
 }

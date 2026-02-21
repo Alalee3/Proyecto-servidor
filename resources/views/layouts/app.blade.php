@@ -53,7 +53,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                     </button>
-                    <img src="{{ asset('img/logo_viejo.jpg') }}" alt="SOGAT Sintillo" class="w-full h-auto max-h-[100px] object-contain">
+                    <img src="{{ asset('img/logo_viejo-Photoroom.png') }}" alt="SOGAT Sintillo" class="w-full h-auto max-h-[100px] object-contain">
                 </div>
             </div>
 
@@ -64,32 +64,48 @@
 
             {{-- Alpine.js wrapper para el estado de la sidebar --}}
             <div x-data="{ alpineSidebarOpen: false }"
-                class="flex flex-1"
+                class="flex flex-1 relative overflow-hidden"
                 @sidebar-state-changed.window="alpineSidebarOpen = $event.detail.isOpen">
                 
-                {{-- SideBar --}}
-                <livewire:side-bar />
+                {{-- SideBar wrapper --}}
+                <div class="z-40">
+                    <livewire:side-bar />
+                </div>
 
                 {{-- Área de Contenido Principal --}}
-                <div id="main-content-wrapper" class="flex-1 transition-all duration-300 ease-in-out bg-white dark:bg-gray-900 min-h-[600px] mt-[15px]"
-                    :class="{ 'ml-[234px]': alpineSidebarOpen && window.innerWidth < 1024, 'ml-0': !alpineSidebarOpen && window.innerWidth < 1024 }">
+                <div id="main-content-wrapper" class="flex-1 min-w-0 transition-all duration-300 ease-in-out bg-white dark:bg-gray-900 min-h-[600px] relative z-0"
+                    :class="{ 
+                        'ml-[234px] lg:ml-0': alpineSidebarOpen, 
+                        'ml-0': !alpineSidebarOpen 
+                    }">
 
                     <livewire:notificaciones />
 
                     <!-- Page Heading (si existe) -->
                     @if (isset($header))
-                        <header class="sogat-header shadow-sm border-b border-gray-100 dark:border-gray-800">
-                            <div class="max-w-7xl mx-auto py-3 px-4 sm:px-6 lg:px-8">
-                                <h1 class="font-bold text-xl text-center leading-tight tracking-wide">
-                                    {{ $header }}
-                                </h1>
-                            </div>
+                        <header class="sogat-header">
+                            <h1 class="font-bold text-xl text-center leading-tight tracking-wide mb-2">
+                                {{ $header }}
+                            </h1>
                         </header>
                     @endif
 
                     <!-- Contenido de la Página ($slot) -->
-                    <main class="p-4 sm:p-8">
+                    <main class="p-4 sm:p-8 {{ isset($header) ? 'pt-0' : '' }}">
                         {{ $slot }}
+
+                        @php
+                            $formRoutes = ['*/crear', '*/update', '*/editar', 'planificaciones.update', 'register', 'profile', 'password.confirm', 'password.request', 'password.reset'];
+                            $showMandatoryNote = request()->routeIs($formRoutes);
+                        @endphp
+
+                        @if ($showMandatoryNote)
+                            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mt-4">
+                                <div class="text-sm text-gray-700 dark:text-gray-300">
+                                    Los campos con <span class="text-red-500 font-bold">*</span> son obligatorios
+                                </div>
+                            </div>
+                        @endif
                     </main>
                 </div>
             </div>
@@ -102,6 +118,7 @@
             </footer>
         </div>
     </div>
+
     @livewireScripts
     @livewire('livewire-ui-modal')
 </body>
