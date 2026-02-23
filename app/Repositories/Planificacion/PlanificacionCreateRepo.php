@@ -120,13 +120,13 @@ class PlanificacionCreateRepo
         }
 
         return $query->select(
-                'dpa.id_detalle_profesor_asignado',
-                'uc.nombre_unidad_curricular',
-                'uc.trayecto_unidad_curricular',
-                's.nombre_seccion',
-                'u.name',
-                'u.apellido'
-            )
+            'dpa.id_detalle_profesor_asignado',
+            'uc.nombre_unidad_curricular',
+            'uc.trayecto_unidad_curricular',
+            's.nombre_seccion',
+            'u.name',
+            'u.apellido'
+        )
             ->get()
             ->map(function ($asignacion) {
                 $trayecto = $asignacion->trayecto_unidad_curricular ? "T{$asignacion->trayecto_unidad_curricular}" : 'S/T';
@@ -134,5 +134,128 @@ class PlanificacionCreateRepo
                 $asignacion->descripcion_completa = "{$asignacion->nombre_unidad_curricular} ({$trayecto}) - Sección {$asignacion->nombre_seccion} | Docente: {$docente}";
                 return $asignacion;
             });
+    }
+
+    public function hasDocenteOrCoordinadorRole($userId)
+    {
+        return DB::table('usuario_rol')->where('id_users', $userId)->where('id_rol', 1)->exists() ||
+            DB::table('usuario_rol')->where('id_users', $userId)->where('id_rol', 2)->exists();
+    }
+
+    public function getDetalleProfesorAsignado($id)
+    {
+        return DB::table('detalle_profesor_asignado')->where('id_detalle_profesor_asignado', $id)->first();
+    }
+
+    public function getUnidadCurricular($id)
+    {
+        return DB::table('unidad_curricular')->where('id_unidad_curricular', $id)->first();
+    }
+
+    public function saveNuevoObjetivo($titulo, $idTemaUnidad)
+    {
+        return DB::table('objetivo')->insert([
+            'titulo_objetivo' => $titulo,
+            'id_tema_unidad' => $idTemaUnidad,
+            'estatus' => '1',
+            'fecha_creacion' => now(),
+        ]);
+    }
+
+    public function savePlanificacionTransaccion($idProfesorAsignado, $unidades)
+    {
+        DB::beginTransaction();
+
+        try {
+            $planificacionData = [
+                'id_profesor_asignado' => $idProfesorAsignado,
+                'fecha_creacion' => now(),
+                'estatus' => '2', // Pendiente por defecto
+            ];
+
+            $planificacionId = DB::table('planificacion')->insertGetId($planificacionData);
+
+            foreach ($unidades as $unidad) {
+                $unidadId = DB::table('unidad_corte')->insertGetId([
+                    'id_planificacion' => $planificacionId,
+                    'numero_unidad_corte' => $unidad['numero'],
+                    'indicador_logro_unidad_corte' => $unidad['indicadores_logro'] ?? null,
+                    'fecha_creacion' => now(),
+                    'estatus' => '2',
+                ]);
+
+                foreach ($unidad['objetivos'] as $objetivo) {
+                    foreach ($objetivo['contenidos'] as $contenido) {
+                        if (!empty($contenido['contenido_id'])) {
+                            DB::table('detalle_contenido')->insert([
+                                'id_unidad_corte' => $unidadId,
+                                'id_contenido' => $contenido['contenido_id'],
+                                'fecha_creacion' => now(),
+                                'estatus' => '1',
+                            ]);
+                        }
+                    }
+                }
+
+                foreach ($unidad['estrategias'] as $estrategia) {
+                    if (!empty($estrategia['tema_id']) && !empty($estrategia['actividad'])) {
+
+                        $estrategiaId = DB::table('detalle_estrategia')->insertGetId([
+                            'id_unidad_corte' => $unidadId,
+                            'id_tema_unidad' => $estrategia['tema_id'],
+                            'actividad' => $estrategia['actividad'],
+                            'fecha_creacion' => now(),
+                            'estatus' => '1',
+                        ]);
+
+                        foreach ($estrategia['recursos'] as $recurso) {
+                            if (!empty($recurso['recurso_id'])) {
+                                DB::table('detalle_estrategia_recurso')->insert([
+                                    'id_detalle_estrategia' => $estrategiaId,
+                                    'id_recurso' => $recurso['recurso_id'],
+                                    'fecha_creacion' => now(),
+                                    'estatus' => '1',
+                                ]);
+                            }
+                        }
+                    }
+                }
+
+                foreach ($unidad['evaluaciones'] as $evaluacion) {
+                    if (!empty($evaluacion['evaluacion_id'])) {
+                        DB::table('detalle_evaluacion')->insert([
+                            'id_unidad_corte' => $unidadId,
+                            'id_evaluacion' => $evaluacion['evaluacion_id'],
+                            'id_tecnica' => $evaluacion['tecnica_id'],
+                            'id_instrumento' => null, // null for now as per schema
+                            'ponderacion_detalle_evaluacion' => $evaluacion['ponderacion'],
+                            'integrantes_detalle_evaluacion' => ($evaluacion['forma_participacion'] == '2') ? ($evaluacion['integrantes'] ?? null) : 1, // 1 if individual
+                            'fecha_evaluacion_detalle_evaluacion' => $evaluacion['fecha_evaluacion'],
+                            'forma_participacion_detalle_evaluacion' => $evaluacion['forma_participacion'],
+                            'fecha_creacion' => now(),
+                            'estatus' => '2',
+                        ]);
+                    }
+                }
+
+                // Save bibliographies for this unit
+                foreach ($unidad['bibliografias'] as $bibliografia) {
+                    if (!empty($bibliografia['bibliografia_id'])) {
+                        DB::table('detalle_bibliografia')->insert([
+                            'id_unidad_corte' => $unidadId,
+                            'id_bibliografia' => $bibliografia['bibliografia_id'],
+                            'fecha_creacion' => now(),
+                            'estatus' => '1',
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 }

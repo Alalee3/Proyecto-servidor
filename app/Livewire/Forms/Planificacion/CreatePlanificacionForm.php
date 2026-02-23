@@ -3,173 +3,159 @@
 namespace App\Livewire\Forms\Planificacion;
 
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\Validate;
-use Livewire\Form;
-use Illuminate\Validation\Rule;
 
+use Livewire\Form;
 
 class CreatePlanificacionForm extends Form
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize()
-    {
-        // Verificar si el usuario está autenticado y tiene el rol de profesor (rol_id = 2)
-        if (Auth::check()) {
-            $userId = Auth::id();
-            $hasProfessorRole = DB::table('usuario_rol')
-                ->where('id_users', $userId)
-                ->where('id_rol', 2) // Asumiendo que 2 es el rol de profesor
-                ->exists();
+    public $id_profesor_asignado;
+    public $unidades = [];
 
-            return $hasProfessorRole;
-        }
-        return false; // No autorizado si no hay usuario o no tiene el rol
+    public function getTotalPonderacionForUnidad($unidadIndex)
+    {
+        return collect($this->unidades[$unidadIndex]['evaluaciones'])
+            ->sum(fn($e) => (float) ($e['ponderacion'] ?? 0));
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, mixed>
-     */
     public function rules()
     {
         $rules = [
-            'proyecto_planificacion_id' => 'required|exists:proyecto_planificacion,id', // O la PK real de tu tabla
-            'docente_id' => 'required|exists:users,id', // 'users' es la tabla por defecto para Auth::id()
-            'seccion_id' => 'required|exists:secciones,seccion_id',
-            'lapso_academico_id' => 'required|exists:lapso_academico,lapso_id',
-            'fecha_asignacion' => 'nullable|date',
-
-            'selectedUnidadCurricularId' => 'required|string|max:7|exists:unidades_curriculares,codigo', // <-- Validación completa para codigo
-
-            'selectedBibliografiasIds.*' => 'nullable|exists:bibliografias,id', // Asumiendo 'id' es PK de bibliografias
-            'newBibliografias.*.titulo' => 'nullable|string|max:255',
-            'newBibliografias.*.autor' => 'nullable|string|max:255',
-            'newBibliografias.*.anio' => 'nullable|integer|digits:4',
-            'newBibliografias.*' => [
-                function ($attribute, $value, $fail) {
-                    $index = explode('.', $attribute)[1];
-                    $data = $this->all();
-                    $newBibData = $data['newBibliografias'][$index];
-                    if (empty($newBibData['titulo']) && empty($newBibData['autor']) && empty($newBibData['anio'])) {
-                        $fail("Debe proporcionar al menos un título o autor para la bibliografía #" . ($index + 1) . " o eliminarla.");
-                    }
-                }
-            ],
-
-            // Validaciones para los "cortes" anidados
-            'cortes' => 'required|array|size:4', // Debe haber exactamente 4 cortes
-            'cortes.*.detalle_actividades' => 'required|array|size:2', // Cada corte debe tener exactamente 2 actividades/contenidos
-
-            'cortes.*.detalle_actividades.*.contenido_id' => [
-                'required',
-                'exists:contenidos,id',
-                // Validación para que el contenido sea único en la unidad curricular seleccionada
-                // Esto es complejo sin Eloquent y una Planificación ID global. La validación actual
-                // se asegura que sea único en todos los contenidos de esta submission.
-            ],
-            'cortes.*.detalle_actividades.*.selectedRecursosIds.*' => 'nullable|exists:recursos,recurso_id',
-            'cortes.*.detalle_actividades.*.newRecursos' => 'nullable|string',
-            'cortes.*.detalle_actividades.*.selectedEstrategiasIds.*' => 'nullable|exists:estrategias_pedagogicas,estrategia_id',
-            'cortes.*.detalle_actividades.*.newEstrategias' => 'nullable|string',
-
-            // Validación de una sola evaluación por actividad
-            'cortes.*.detalle_actividades.*.evaluacion.evaluacion_id' => 'nullable|exists:evaluaciones,evaluacion_id',
-            'cortes.*.detalle_actividades.*.evaluacion.tecnica_id' => 'nullable|exists:tecnica,tecnica_id',
-            'cortes.*.detalle_actividades.*.evaluacion.ponderacion' => 'required|numeric|min:0',
-            'cortes.*.detalle_actividades.*.evaluacion.forma_de_participacion' => 'required|string|max:255',
-            'cortes.*.detalle_actividades.*.evaluacion.new_evaluacion' => 'nullable|string|max:255',
-            'cortes.*.detalle_actividades.*.evaluacion.new_tecnica' => 'nullable|string|max:255',
-            'cortes.*.detalle_actividades.*.evaluacion' => [
-                function ($attribute, $value, $fail) {
-                    $corteIndex = explode('.', $attribute)[1];
-                    $actIndex = explode('.', $attribute)[3];
-                    $data = $this->all();
-                    $evaluacionData = $data['cortes'][$corteIndex]['detalle_actividades'][$actIndex]['evaluacion'];
-
-                    if (empty($evaluacionData['evaluacion_id']) && empty($evaluacionData['new_evaluacion'])) {
-                        $fail("Debe seleccionar una evaluación existente o proporcionar una nueva para la actividad #" . ($actIndex + 1) . " del corte #" . ($corteIndex + 1));
-                    }
-                    if (empty($evaluacionData['tecnica_id']) && empty($evaluacionData['new_tecnica'])) {
-                        $fail("Debe seleccionar una técnica existente o proporcionar una nueva para la actividad #" . ($actIndex + 1) . " del corte #" . ($corteIndex + 1));
-                    }
-                }
-            ],
+            'id_profesor_asignado' => 'required|exists:detalle_profesor_asignado,id_detalle_profesor_asignado',
         ];
 
-        // Reglas de validación personalizadas para "cortes"
-        $rules['cortes'][] = function ($attribute, $value, $fail) {
-            $allContentsUsed = []; // Para verificar contenidos únicos en toda la planificación
+        foreach ($this->unidades as $index => $unidad) {
+            // Validación para estrategias
+            foreach ($unidad['estrategias'] as $estIndex => $estrategia) {
+                $rules["unidades.$index.estrategias.$estIndex.tema_id"] = 'required|exists:tema_unidad,id_tema_unidad';
+                $rules["unidades.$index.estrategias.$estIndex.actividad"] = 'required|string|min:5';
 
-            foreach ($value as $corteIndex => $corte) {
-                // Validación para que los contenidos sean únicos dentro del mismo corte
-                $contenidosInCorte = [];
-                foreach ($corte['detalle_actividades'] as $actividad) {
-                    $contenidosInCorte[] = $actividad['contenido_id'];
+                foreach ($estrategia['recursos'] as $recIndex => $recurso) {
+                    $rules["unidades.$index.estrategias.$estIndex.recursos.$recIndex.recurso_id"] = 'required|exists:recurso,id_recurso';
                 }
+            }
 
-                if (count(array_unique($contenidosInCorte)) !== 2) {
-                    $fail("El corte #" . ($corteIndex + 1) . " debe tener 2 contenidos únicos.");
+            // Validación para objetivos y contenidos
+            $contenidoIds = [];
+            foreach ($unidad['objetivos'] as $obj) {
+                foreach ($obj['contenidos'] as $cont) {
+                    $contenidoIds[] = $cont['contenido_id'];
                 }
+            }
 
-                // Validación para que los contenidos no se repitan entre cortes
-                foreach ($contenidosInCorte as $contenidoId) {
-                    if (in_array($contenidoId, $allContentsUsed)) {
-                        $fail("El contenido '{$contenidoId}' (ID) ya ha sido seleccionado en otro corte.");
+            foreach ($unidad['objetivos'] as $objIndex => $objetivo) {
+                $rules["unidades.$index.objetivos.$objIndex.tema_id"] = 'required|exists:tema_unidad,id_tema_unidad';
+                $rules["unidades.$index.objetivos.$objIndex.objetivo_id"] = 'required|exists:objetivo,id_objetivo';
+
+                foreach ($objetivo['contenidos'] as $contIndex => $contenido) {
+                    $rules["unidades.$index.objetivos.$objIndex.contenidos.$contIndex.contenido_id"] = [
+                        'required',
+                        'exists:contenido,id_contenido',
+                        function ($attribute, $value, $fail) use ($contenidoIds) {
+                            if (count(array_keys($contenidoIds, $value)) > 1) {
+                                $fail('Este contenido ya fue seleccionado.');
+                            }
+                        }
+                    ];
+                }
+            }
+
+            // Validación para evaluaciones
+            foreach ($unidad['evaluaciones'] as $evaluacionIndex => $evaluacion) {
+                $fechaEvaluacionRules = ['required', 'date'];
+
+                $rules["unidades.$index.evaluaciones.$evaluacionIndex.fecha_evaluacion"] = $fechaEvaluacionRules;
+                $rules["unidades.$index.evaluaciones.$evaluacionIndex.evaluacion_id"] = 'required|exists:evaluacion,id_evaluacion';
+                $rules["unidades.$index.evaluaciones.$evaluacionIndex.tecnica_id"] = 'required|exists:tecnica_evaluacion,id_tecnica';
+                $rules["unidades.$index.evaluaciones.$evaluacionIndex.ponderacion"] = [
+                    'bail',
+                    'required',
+                    'integer',
+                    'min:5',
+                    'max:25',
+                    function ($attribute, $value, $fail) use ($index, $unidad, $evaluacionIndex) {
+                        $totalEvaluaciones = count($unidad['evaluaciones']);
+                        if ($totalEvaluaciones === 1 && (int) $value !== 25) {
+                            $fail('La única evaluación debe tener exactamente 25% de ponderación.');
+                        }
+                    },
+                    function ($attribute, $value, $fail) use ($index) {
+                        $total = $this->getTotalPonderacionForUnidad($index);
+                        if ($total > 25) {
+                            $fail("La suma total de ponderaciones en la Unidad " . ($index + 1) . " no puede superar el 25% (actual: {$total}%)");
+                        }
                     }
-                    $allContentsUsed[] = $contenidoId;
-                }
+                ];
 
-                // Suma de ponderaciones para este corte
-                $ponderacionCorte = 0;
-                foreach ($corte['detalle_actividades'] as $actividad) {
-                    $ponderacionCorte += $actividad['evaluacion']['ponderacion'];
-                }
+                $rules["unidades.$index.evaluaciones.$evaluacionIndex.forma_participacion"] = 'required|in:1,2';
 
-                // Validación de suma de ponderaciones por corte
-                if ($ponderacionCorte != 25) {
-                    $fail("La suma de las ponderaciones para el corte #" . ($corteIndex + 1) . " debe ser 25%. Suma actual: " . $ponderacionCorte . "%");
+                // Validate 'integrantes' only if forma_participacion is GRUPAL (2)
+                if (isset($evaluacion['forma_participacion']) && $evaluacion['forma_participacion'] == '2') {
+                    $rules["unidades.$index.evaluaciones.$evaluacionIndex.integrantes"] = 'required|integer|min:2|max:10';
                 }
             }
 
-            // Validación de que la suma total de ponderaciones es un múltiplo de 25
-            // Se asume que siempre habrá 4 cortes, sumando 100% en total
-            $totalPonderacionGeneral = 0;
-            foreach ($value as $corte) {
-                foreach ($corte['detalle_actividades'] as $actividad) {
-                    $totalPonderacionGeneral += $actividad['evaluacion']['ponderacion'];
-                }
+            // Validación para bibliografías
+            foreach ($unidad['bibliografias'] as $bibIndex => $biblio) {
+                $rules["unidades.$index.bibliografias.$bibIndex.bibliografia_id"] = 'required|exists:bibliografia,id_bibliografia';
             }
 
-            if (count($value) == 4 && $totalPonderacionGeneral != 100) {
-                $fail("La suma total de las ponderaciones de los 4 cortes debe ser 100%. Suma actual: " . $totalPonderacionGeneral . "%");
-            }
-        };
+            $rules["unidades.$index.indicadores_logro"] = 'required|string|min:5';
+
+            $rules["unidades.$index.total_ponderacion_check"] = [
+                function ($attribute, $value, $fail) use ($index) {
+                    $total = $this->getTotalPonderacionForUnidad($index);
+                    if ($total != 25) {
+                        $fail("La suma total de ponderaciones en la Unidad " . ($index + 1) . " debe ser exactamente 25% (actual: {$total}%)");
+                    }
+                }
+            ];
+        }
 
         return $rules;
     }
 
-    /**
-     * Get custom messages for validation errors.
-     *
-     * @return array
-     */
     public function messages()
     {
-        return [
-            'selectedUnidadCurricularId.required' => 'La Unidad Curricular es obligatoria.',
-            'selectedUnidadCurricularId.exists' => 'La Unidad Curricular seleccionada no es válida.',
-            'selectedUnidadCurricularId.string' => 'El código de la Unidad Curricular debe ser texto.',
-            'selectedUnidadCurricularId.max' => 'El código de la Unidad Curricular no debe exceder los :max caracteres.',
-            'cortes.size' => 'Debe haber exactamente :size cortes en la planificación.',
-            'cortes.*.detalle_actividades.size' => 'Cada corte debe tener exactamente :size actividades.',
-            'cortes.*.detalle_actividades.*.contenido_id.unique' => 'Este contenido ya ha sido seleccionado en otra actividad de este corte o en otro corte.',
-            // ... otros mensajes personalizados
+        $messages = [
+            'unidades.*.indicadores_logro.required' => 'Los indicadores de logro son obligatorios.',
+            'unidades.*.indicadores_logro.min' => 'Los indicadores de logro deben tener al menos 5 caracteres.',
         ];
+
+        $messages['id_profesor_asignado.required'] = 'Debe seleccionar una Unidad Curricular.';
+        $messages['id_profesor_asignado.exists'] = 'La asignación seleccionada no es válida.';
+
+        $messages['unidades.*.recursos.*.recurso_id.required'] = 'Debe seleccionar un recurso.';
+        $messages['unidades.*.objetivos.*.tema_id.required'] = 'Debe seleccionar un tema.';
+        $messages['unidades.*.objetivos.*.objetivo_id.required'] = 'Debe seleccionar un objetivo.';
+        $messages['unidades.*.objetivos.*.contenidos.*.contenido_id.required'] = 'Debe seleccionar un contenido.';
+
+        $messages['unidades.*.estrategias.*.tema_id.required'] = 'Debe seleccionar un tema para la estrategia.';
+        $messages['unidades.*.estrategias.*.actividad.required'] = 'La descripción de la actividad es obligatoria.';
+        $messages['unidades.*.estrategias.*.actividad.min'] = 'La actividad debe tener al menos 5 caracteres.';
+        $messages['unidades.*.estrategias.*.recursos.*.recurso_id.required'] = 'Debe seleccionar un recurso.';
+
+        $messages['unidades.*.evaluaciones.*.fecha_evaluacion.required'] = 'La fecha de evaluación es obligatoria.';
+        $messages['unidades.*.evaluaciones.*.fecha_evaluacion.date'] = 'La fecha de evaluación no es válida.';
+        $messages['unidades.*.evaluaciones.*.evaluacion_id.required'] = 'Debe seleccionar el tipo de evaluación.';
+        $messages['unidades.*.evaluaciones.*.tecnica_id.required'] = 'Debe seleccionar una técnica de evaluación.';
+        $messages['unidades.*.evaluaciones.*.ponderacion.required'] = 'La ponderación es obligatoria.';
+        $messages['unidades.*.evaluaciones.*.ponderacion.integer'] = 'La ponderación debe ser un número entero.';
+        $messages['unidades.*.evaluaciones.*.ponderacion.min'] = 'La ponderación mínima es 5%.';
+        $messages['unidades.*.evaluaciones.*.ponderacion.max'] = 'La ponderación máxima es 25%.';
+        $messages['unidades.*.evaluaciones.*.integrantes.required'] = 'Debe indicar el número de integrantes para evaluaciones grupales.';
+        $messages['unidades.*.evaluaciones.*.integrantes.min'] = 'El grupo debe tener al menos 2 integrantes.';
+        $messages['unidades.*.evaluaciones.*.integrantes.max'] = 'El grupo no puede exceder los 10 integrantes.';
+        $messages['unidades.*.evaluaciones.*.forma_participacion.required'] = 'Debe seleccionar una forma de participación.';
+        $messages['unidades.*.evaluaciones.*.forma_participacion.in'] = 'La forma de participación seleccionada no es válida.';
+        $messages['unidades.*.bibliografias.*.bibliografia_id.required'] = 'Debe seleccionar una referencia bibliográfica.';
+
+        $messages['*.required'] = 'El campo es obligatorio.';
+        $messages['*.min'] = 'El campo debe tener al menos :min caracteres.';
+        $messages['*.numeric'] = 'El campo debe ser un número.';
+        $messages['*.in'] = 'El valor seleccionado para el campo no es válido.';
+        $messages['*.exists'] = 'El valor seleccionado no existe en la base de datos.';
+
+        return $messages;
     }
 }
+
