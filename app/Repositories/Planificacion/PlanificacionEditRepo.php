@@ -159,21 +159,6 @@ class PlanificacionEditRepo
             if (empty($itemId))
                 continue;
 
-            // Verificar si ya existe registro (activo o inactivo) para este par corte-item
-            // Nota: Para evaluaciones puede haber múltiples de la misma evaluación_id? 
-            // Si es así, esta lógica de 'first()' podría sobrescribir. 
-            // Asumiremos por ahora que evaluación es única por tipo por corte o que la lógica base lo permite así.
-            // Si se permiten multiples del mismo tipo, la lógica debe cambiar a usar ID primario si existe.
-
-            // Para evaluaciones, la clave única compuesta debería ser id_detalle_evaluacion, pero no la tenemos en el input usualmente.
-            // Si el usuario edita evaluaciones, es complejo mapear cuál es cuál si repite tipos.
-            // Simplificación: Buscar por tipo. Si hay multiples del mismo tipo, esto fallará. 
-            // PERO en update, normalmente borramos todo y recreamos o hacemos diff inteligente.
-            // Dado el tiempo, usaremos update/insert con cuidado.
-
-            // Corrección para soportar duplicados (ej: mismas estrategias) si fuera necesario:
-            // En este caso, asumimos unicidad por item ID en el corte.
-
             $existing = DB::table($tableName)
                 ->where('id_unidad_corte', $corteId)
                 ->where($foreignIdColumn, $itemId)

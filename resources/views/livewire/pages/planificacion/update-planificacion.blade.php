@@ -74,7 +74,7 @@
 
                 @if (session()->has('message'))
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4
-                                                                                                                                             dark:bg-green-700 dark:border-green-800 dark:text-green-100"
+                                                                                                                                                     dark:bg-green-700 dark:border-green-800 dark:text-green-100"
                         role="alert">
                         <span class="block sm:inline">{{ session('message') }}</span>
                     </div>
@@ -82,7 +82,7 @@
 
                 @if (session()->has('error'))
                     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4
-                                                                                                                                             dark:bg-red-700 dark:border-red-800 dark:text-red-100"
+                                                                                                                                                     dark:bg-red-700 dark:border-red-800 dark:text-red-100"
                         role="alert">
                         <span class="block sm:inline">{{ session('error') }}</span>
                     </div>
@@ -115,7 +115,7 @@
                             Definición de Cortes
                         </h2>
                         <div class="flex gap-2">
-                            @foreach ($cortes as $idx => $c)
+                            @foreach ($form->cortes as $idx => $c)
                                 <button type="button" @click="openCorte = {{ $idx }}"
                                     :class="openCorte === {{ $idx }} ? 'bg-[#767676] text-white' : 'bg-[#f0f0f0] text-black border border-[#767676]'"
                                     class="w-8 h-8 rounded-full flex items-center justify-center font-bold transition-all duration-200 text-sm shadow-sm">
@@ -125,7 +125,7 @@
                         </div>
                     </div>
 
-                    @foreach ($cortes as $index => $corte)
+                    @foreach ($form->cortes as $index => $corte)
                         @php
                             $totalPonderacion = $this->getTotalPonderacionForCorte($index);
                             $validPonderacion = abs($totalPonderacion - 25) < 0.01;
@@ -195,7 +195,8 @@
                                             <p class="text-xs text-red-700 dark:text-red-400 font-bold uppercase mb-1">Motivo de
                                                 rechazo:</p>
                                             <p class="text-sm text-red-600 dark:text-red-300">
-                                                {{ $corte['ultimo_motivo_rechazo'] }}</p>
+                                                {{ $corte['ultimo_motivo_rechazo'] }}
+                                            </p>
                                         </div>
                                     @endif
 
@@ -235,57 +236,10 @@
                                                         </div>
                                                         <x-select :options="$contenidosDisponibles" valueField="id_contenido"
                                                             textField="titulo_contenido"
-                                                            wire:model.live.debounce.250ms="cortes.{{ $index }}.contenidos.{{ $contenidoIndex }}.contenido_id"
+                                                            wire:model.live.debounce.250ms="form.cortes.{{ $index }}.contenidos.{{ $contenidoIndex }}.contenido_id"
                                                             placeholder="Seleccione un contenido" class="text-sm w-full"
                                                             :disabled="$locked" required />
-                                                        @error("cortes.$index.contenidos.$contenidoIndex.contenido_id")
-                                                            <p class="mt-1 text-[11px] text-red-600">{{ $message }}</p>
-                                                        @enderror
-                                                    </div>
 
-                                                    {{-- Columna de Indicadores --}}
-                                                    <div class="space-y-2">
-                                                        <div class="flex items-center justify-between">
-                                                            <label
-                                                                class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Indicadores
-                                                                de Logro</label>
-                                                            @if (!$locked)
-                                                                <button type="button"
-                                                                    wire:click="addItem({{ $index }}, 'indicadores_logros', {{ $contenidoIndex }})"
-                                                                    class="text-black dark:text-gray-300 hover:underline text-[10px] font-bold uppercase flex items-center gap-1">
-                                                                    <span class="material-icons text-xs">add_circle</span> AÑADIR
-                                                                </button>
-                                                            @endif
-                                                        </div>
-
-                                                        <div class="space-y-2">
-                                                            @forelse ($contenido['indicadores_logros'] as $indicadorIndex => $indicador)
-                                                                <div class="flex items-center gap-2">
-                                                                    <div class="flex-grow">
-                                                                        <x-select :options="$indicadoresDisponibles"
-                                                                            valueField="id_indicador_logro"
-                                                                            textField="nombre_indicador_logro"
-                                                                            wire:model.live.debounce.250ms="cortes.{{ $index }}.contenidos.{{ $contenidoIndex }}.indicadores_logros.{{ $indicadorIndex }}.indicador_id"
-                                                                            placeholder="Seleccione un indicator"
-                                                                            class="text-sm w-full" :disabled="$locked" />
-                                                                    </div>
-                                                                    @if (count($contenido['indicadores_logros']) > 1 && !$locked)
-                                                                        <button type="button"
-                                                                            wire:click="removeItem({{ $index }}, 'indicadores_logros', {{ $indicadorIndex }}, {{ $contenidoIndex }})"
-                                                                            class="text-gray-400 hover:text-red-500 transition-colors">
-                                                                            <span
-                                                                                class="material-icons text-sm">remove_circle_outline</span>
-                                                                        </button>
-                                                                    @endif
-                                                                </div>
-                                                                @error("cortes.$index.contenidos.$contenidoIndex.indicadores_logros.$indicadorIndex.indicador_id")
-                                                                    <p class="mt-1 text-[11px] text-red-600">{{ $message }}</p>
-                                                                @enderror
-                                                            @empty
-                                                                <p class="text-xs text-gray-500 dark:text-gray-400 italic">No hay
-                                                                    indicadores añadidos.</p>
-                                                            @endforelse
-                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -313,7 +267,7 @@
                                                         <div class="flex-grow">
                                                             <x-select :options="$recursosDisponibles" valueField="id_recurso"
                                                                 textField="nombre_recurso"
-                                                                wire:model.live.debounce.250ms="cortes.{{ $index }}.recursos.{{ $recursoIndex }}.recurso_id"
+                                                                wire:model.live.debounce.250ms="form.cortes.{{ $index }}.recursos.{{ $recursoIndex }}.recurso_id"
                                                                 placeholder="Seleccione un recurso" class="text-sm w-full"
                                                                 :disabled="$locked" />
                                                         </div>
@@ -325,9 +279,7 @@
                                                             </button>
                                                         @endif
                                                     </div>
-                                                    @error("cortes.$index.recursos.$recursoIndex.recurso_id")
-                                                        <p class="mt-1 text-[11px] text-red-600">{{ $message }}</p>
-                                                    @enderror
+
                                                 @endforeach
                                             </div>
                                         </div>
@@ -352,7 +304,7 @@
                                                             <x-select :options="$estrategiasDisponibles"
                                                                 valueField="id_tecnica_actividad"
                                                                 textField="nombre_tecnica_actividad"
-                                                                wire:model.live.debounce.250ms="cortes.{{ $index }}.estrategias.{{ $estrategiaIndex }}.estrategia_id"
+                                                                wire:model.live.debounce.250ms="form.cortes.{{ $index }}.estrategias.{{ $estrategiaIndex }}.tema_id"
                                                                 placeholder="Seleccione una estrategia" class="text-sm w-full"
                                                                 :disabled="$locked" />
                                                         </div>
@@ -364,9 +316,6 @@
                                                             </button>
                                                         @endif
                                                     </div>
-                                                    @error("cortes.$index.estrategias.$estrategiaIndex.estrategia_id")
-                                                        <p class="mt-1 text-[11px] text-red-600">{{ $message }}</p>
-                                                    @enderror
                                                 @endforeach
                                             </div>
                                         </div>
@@ -374,17 +323,19 @@
 
                                     {{-- Indicadores de Logros --}}
                                     <div class="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                                        <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                                        <h4
+                                            class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                             Indicadores de Logros
                                         </h4>
-                                        <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
-                                            <textarea 
-                                                wire:model.live.debounce.500ms="cortes.{{ $index }}.indicadores_logro"
+                                        <div
+                                            class="p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+                                            <textarea
+                                                wire:model.live.debounce.500ms="form.cortes.{{ $index }}.indicadores_logro"
                                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-sm"
                                                 rows="3" placeholder="Describa los indicadores de logros para este corte..."
                                                 :disabled="$locked"></textarea>
-                                            @error("cortes.$index.indicadores_logro") 
-                                                <span class="text-red-500 text-xs font-bold block mt-1">{{ $message }}</span> 
+                                            @error("form.cortes.$index.indicadores_logro")
+                                                <span class="text-red-500 text-xs font-bold block mt-1">{{ $message }}</span>
                                             @enderror
                                         </div>
                                     </div>
@@ -405,7 +356,8 @@
                                             @endif
                                         </div>
 
-                                        <div class="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+                                        <div
+                                            class="overflow-x-auto rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
                                             <table class="w-full text-xs text-left table-fixed min-w-[850px]">
                                                 <thead
                                                     class="bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 uppercase font-bold">
@@ -420,44 +372,45 @@
                                                 </thead>
                                                 <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                                                     @foreach ($corte['evaluaciones'] as $evaluacionIndex => $evaluacion)
-                                                            @php
-                                                                $formasParticipacion = collect([
-                                                                    (object) ['id' => '1', 'nombre' => 'Individual'],
-                                                                    (object) ['id' => '2', 'nombre' => 'Grupal'],
-                                                                ]);
-                                                            @endphp
+                                                        @php
+                                                            $formasParticipacion = collect([
+                                                                (object) ['id' => '1', 'nombre' => 'Individual'],
+                                                                (object) ['id' => '2', 'nombre' => 'Grupal'],
+                                                            ]);
+                                                        @endphp
                                                         <tr>
                                                             <td class="px-2 py-3">
                                                                 <x-text-input type="date"
-                                                                    wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.fecha_evaluacion"
+                                                                    wire:model.live.debounce.250ms="form.cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.fecha_evaluacion"
                                                                     class="w-full text-xs" :disabled="$locked" required />
                                                             </td>
                                                             <td class="px-2 py-3">
                                                                 <x-select :options="$evaluacionesDisponibles"
                                                                     valueField="id_evaluacion" textField="nombre_evaluacion"
-                                                                    wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.evaluacion_id"
+                                                                    wire:model.live.debounce.250ms="form.cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.evaluacion_id"
                                                                     placeholder="Seleccione" class="w-full text-xs"
                                                                     :disabled="$locked" required />
                                                             </td>
                                                             <td class="px-2 py-3">
-                                                                <x-select :options="$tecnicaDisponibles"
-                                                                    valueField="id_tecnica" textField="nombre_tecnica_evaluacion"
-                                                                    wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.tecnica_id"
+                                                                <x-select :options="$tecnicaDisponibles" valueField="id_tecnica"
+                                                                    textField="nombre_tecnica_evaluacion"
+                                                                    wire:model.live.debounce.250ms="form.cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.tecnica_id"
                                                                     placeholder="Seleccione" class="w-full text-xs"
                                                                     :disabled="$locked" required />
                                                             </td>
                                                             <td class="px-2 py-3">
                                                                 <x-select :options="$formasParticipacion" valueField="id"
                                                                     textField="nombre"
-                                                                    wire:model.live.debounce.250ms="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.forma_participacion"
+                                                                    wire:model.live.debounce.250ms="form.cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.forma_participacion"
                                                                     placeholder="Seleccione" class="w-full text-xs"
                                                                     :disabled="$locked" required />
-                                                                
+
                                                                 @if(isset($evaluacion['forma_participacion']) && $evaluacion['forma_participacion'] == '2')
                                                                     <div class="mt-1 flex items-center gap-1">
-                                                                        <span class="text-[10px] text-gray-500 uppercase font-bold">N°:</span>
-                                                                        <select 
-                                                                            wire:model.live="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.integrantes"
+                                                                        <span
+                                                                            class="text-[10px] text-gray-500 uppercase font-bold">N°:</span>
+                                                                        <select
+                                                                            wire:model.live="form.cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.integrantes"
                                                                             class="text-[10px] rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 py-0 px-1 w-12"
                                                                             :disabled="$locked">
                                                                             <option value="">-</option>
@@ -471,7 +424,7 @@
                                                             <td class="px-2 py-3 text-center">
                                                                 <input type="number" step="1" min="5" max="25"
                                                                     onkeypress="return event.charCode >= 48 && event.charCode <= 57"
-                                                                    wire:model.live="cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.ponderacion"
+                                                                    wire:model.live="form.cortes.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.ponderacion"
                                                                     class="w-16 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 p-1 text-gray-700 dark:text-gray-300 text-xs font-bold text-center"
                                                                     :disabled="$locked">
                                                             </td>
@@ -485,35 +438,35 @@
                                                                 @endif
                                                             </td>
                                                         </tr>
-                                                        @error("cortes.$index.evaluaciones.$evaluacionIndex.fecha_evaluacion")
+                                                        @error("form.cortes.$index.evaluaciones.$evaluacionIndex.fecha_evaluacion")
                                                             <tr>
                                                                 <td colspan="6" class="px-4 py-0 text-[10px] text-red-500">
                                                                     {{ $message }}
                                                                 </td>
                                                             </tr>
                                                         @enderror
-                                                        @error("cortes.$index.evaluaciones.$evaluacionIndex.evaluacion_id")
+                                                        @error("form.cortes.$index.evaluaciones.$evaluacionIndex.evaluacion_id")
                                                             <tr>
                                                                 <td colspan="6" class="px-4 py-0 text-[10px] text-red-500">
                                                                     {{ $message }}
                                                                 </td>
                                                             </tr>
                                                         @enderror
-                                                        @error("cortes.$index.evaluaciones.$evaluacionIndex.tecnica_id")
+                                                        @error("form.cortes.$index.evaluaciones.$evaluacionIndex.tecnica_id")
                                                             <tr>
                                                                 <td colspan="6" class="px-4 py-0 text-[10px] text-red-500">
                                                                     {{ $message }}
                                                                 </td>
                                                             </tr>
                                                         @enderror
-                                                        @error("cortes.$index.evaluaciones.$evaluacionIndex.ponderacion")
+                                                        @error("form.cortes.$index.evaluaciones.$evaluacionIndex.ponderacion")
                                                             <tr>
                                                                 <td colspan="6" class="px-4 py-0 text-[10px] text-red-500">
                                                                     {{ $message }}
                                                                 </td>
                                                             </tr>
                                                         @enderror
-                                                        @error("cortes.$index.evaluaciones.$evaluacionIndex.forma_participacion")
+                                                        @error("form.cortes.$index.evaluaciones.$evaluacionIndex.forma_participacion")
                                                             <tr>
                                                                 <td colspan="6" class="px-4 py-0 text-[10px] text-red-500">
                                                                     {{ $message }}
@@ -537,7 +490,7 @@
                                             @endif
                                         </div>
                                         <div>
-                                            @if ($index < count($cortes) - 1)
+                                            @if ($index < count($form->cortes) - 1)
                                                 <button type="button" @click="openCorte = {{ $index + 1 }}"
                                                     class="inline-flex items-center gap-2 px-6 py-2 bg-[#f0f0f0] border border-[#767676] text-black rounded-lg text-sm font-bold shadow-sm hover:bg-gray-200 transition-all">
                                                     Siguiente Corte <span class="material-icons text-sm">arrow_forward</span>
@@ -566,17 +519,17 @@
                             </div>
                         </div>
 
-                        @foreach ($bibliografias as $biblioIndex => $bibliografia)
+                        @foreach ($form->bibliografias as $biblioIndex => $bibliografia)
                             <div class="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
                                 <div class="flex-grow min-w-0">
                                     <x-select label="Seleccionar Bibliografía" required :options="$bibliografiasDisponibles"
                                         valueField="id_bibliografia" textField="nombre_bibliografia"
-                                        wire:model.live.debounce.250ms="bibliografias.{{ $biblioIndex }}.bibliografia_id" />
-                                    @error("bibliografias.$biblioIndex.bibliografia_id")
+                                        wire:model.live.debounce.250ms="form.bibliografias.{{ $biblioIndex }}.bibliografia_id" />
+                                    @error("form.bibliografias.$biblioIndex.bibliografia_id")
                                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                                     @enderror
                                 </div>
-                                @if (count($bibliografias) > 1)
+                                @if (count($form->bibliografias) > 1)
                                     <button type="button" wire:click="removeItem(null, 'bibliografias', {{ $biblioIndex }})"
                                         class="text-red-500 hover:text-red-700 text-sm self-start sm:self-auto p-2">
                                         <i class="fas fa-trash"></i>
@@ -602,4 +555,3 @@
         </form>
     </div>
 </div>
-
