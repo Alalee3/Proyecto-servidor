@@ -48,6 +48,12 @@ class PlanificacionViewRepo
             return null;
         }
 
+        // Auditar visualización
+        $planificacionModel = \App\Models\Planificacion::find($planificacionId);
+        if ($planificacionModel) {
+            \App\Models\Planificacion::logMostrar($planificacionModel);
+        }
+
         $resultado = (array) $planificacion;
 
         // 2. Bibliografías (se obtienen a través de unidad_corte)

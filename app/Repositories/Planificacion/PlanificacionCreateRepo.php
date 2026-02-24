@@ -154,7 +154,7 @@ class PlanificacionCreateRepo
 
     public function saveNuevoObjetivo($titulo, $idTemaUnidad)
     {
-        return DB::table('objetivo')->insert([
+        return \App\Models\Objetivo::create([
             'titulo_objetivo' => $titulo,
             'id_tema_unidad' => $idTemaUnidad,
             'estatus' => '1',
@@ -173,21 +173,23 @@ class PlanificacionCreateRepo
                 'estatus' => '2', // Pendiente por defecto
             ];
 
-            $planificacionId = DB::table('planificacion')->insertGetId($planificacionData);
+            $planificacion = \App\Models\Planificacion::create($planificacionData);
+            $planificacionId = $planificacion->getKey();
 
             foreach ($unidades as $unidad) {
-                $unidadId = DB::table('unidad_corte')->insertGetId([
+                $unidadCorte = \App\Models\UnidadCorte::create([
                     'id_planificacion' => $planificacionId,
                     'numero_unidad_corte' => $unidad['numero'],
                     'indicador_logro_unidad_corte' => $unidad['indicadores_logro'] ?? null,
                     'fecha_creacion' => now(),
                     'estatus' => '2',
                 ]);
+                $unidadId = $unidadCorte->getKey();
 
                 foreach ($unidad['objetivos'] as $objetivo) {
                     foreach ($objetivo['contenidos'] as $contenido) {
                         if (!empty($contenido['contenido_id'])) {
-                            DB::table('detalle_contenido')->insert([
+                            \App\Models\DetalleContenido::create([
                                 'id_unidad_corte' => $unidadId,
                                 'id_contenido' => $contenido['contenido_id'],
                                 'fecha_creacion' => now(),
@@ -200,17 +202,18 @@ class PlanificacionCreateRepo
                 foreach ($unidad['estrategias'] as $estrategia) {
                     if (!empty($estrategia['tema_id']) && !empty($estrategia['actividad'])) {
 
-                        $estrategiaId = DB::table('detalle_estrategia')->insertGetId([
+                        $detalleEstrategia = \App\Models\DetalleEstrategia::create([
                             'id_unidad_corte' => $unidadId,
                             'id_tema_unidad' => $estrategia['tema_id'],
                             'actividad' => $estrategia['actividad'],
                             'fecha_creacion' => now(),
                             'estatus' => '1',
                         ]);
+                        $estrategiaId = $detalleEstrategia->getKey();
 
                         foreach ($estrategia['recursos'] as $recurso) {
                             if (!empty($recurso['recurso_id'])) {
-                                DB::table('detalle_estrategia_recurso')->insert([
+                                \App\Models\DetalleEstrategiaRecurso::create([
                                     'id_detalle_estrategia' => $estrategiaId,
                                     'id_recurso' => $recurso['recurso_id'],
                                     'fecha_creacion' => now(),
@@ -223,7 +226,7 @@ class PlanificacionCreateRepo
 
                 foreach ($unidad['evaluaciones'] as $evaluacion) {
                     if (!empty($evaluacion['evaluacion_id'])) {
-                        DB::table('detalle_evaluacion')->insert([
+                        \App\Models\DetalleEvaluacion::create([
                             'id_unidad_corte' => $unidadId,
                             'id_evaluacion' => $evaluacion['evaluacion_id'],
                             'id_tecnica' => $evaluacion['tecnica_id'],
@@ -241,7 +244,7 @@ class PlanificacionCreateRepo
                 // Save bibliographies for this unit
                 foreach ($unidad['bibliografias'] as $bibliografia) {
                     if (!empty($bibliografia['bibliografia_id'])) {
-                        DB::table('detalle_bibliografia')->insert([
+                        \App\Models\DetalleBibliografia::create([
                             'id_unidad_corte' => $unidadId,
                             'id_bibliografia' => $bibliografia['bibliografia_id'],
                             'fecha_creacion' => now(),
