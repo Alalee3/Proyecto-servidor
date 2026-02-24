@@ -11,8 +11,10 @@ class EvaluacionViewRepo
      */
     public function mostrar($id)
     {
-        return DB::table('evaluacion')
-            ->where('id_evaluacion', $id)
-            ->first();
+        $evaluacion = \App\Models\Evaluacion::find($id);
+        if ($evaluacion) {
+            \App\Models\Evaluacion::logMostrar($evaluacion);
+        }
+        return $evaluacion;
     }
 }

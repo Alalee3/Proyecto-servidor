@@ -22,11 +22,13 @@ class EstrategiaEditRepo
      */
     public function actualizar($id, array $datos)
     {
-        return DB::table('tecnica_actividad')
-            ->where('id_tecnica_actividad', $id)
-            ->update([
+        $estrategia = \App\Models\Estrategia::find($id);
+        if ($estrategia) {
+            return $estrategia->update([
                 'nombre_tecnica_actividad' => $datos['nombre'],
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 }

@@ -36,22 +36,25 @@ class TemaIndexRepo
 
     public function inhabilitar($id)
     {
-        return DB::table('tema_unidad')
-            ->where('id_tema_unidad', $id)
-            ->update([
+        $tema = \App\Models\Tema::find($id);
+        if ($tema) {
+            return $tema->update([
                 'estatus' => '3',
                 'fecha_actualizacion' => now()
             ]);
+        }
+        return false;
     }
 
     public function restaurar($id)
     {
-        return DB::table('tema_unidad')
-            ->where('id_tema_unidad', $id)
-            ->where('estatus', '3')
-            ->update([
+        $tema = \App\Models\Tema::where('id_tema_unidad', $id)->where('estatus', '3')->first();
+        if ($tema) {
+            return $tema->update([
                 'estatus' => '1',
                 'fecha_actualizacion' => now()
             ]);
+        }
+        return false;
     }
 }

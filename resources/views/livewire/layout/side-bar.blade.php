@@ -23,8 +23,7 @@
     <nav class="flex flex-col flex-1 min-h-full px-0 space-y-0" x-data="{ openMenu: null, subMenu: null }">
         @auth
             <!-- Dashboard -->
-            <a href="/dashboard"
-                class="sogat-sidebar-item">
+            <a href="/dashboard" class="sogat-sidebar-item">
                 Inicio
             </a>
 
@@ -33,11 +32,10 @@
 
                 <!-- Temas -->
                 <div>
-                    <button @click="openMenu === 8 ? openMenu = null : openMenu = 8"
-                        class="sogat-sidebar-item">
+                    <button @click="openMenu === 8 ? openMenu = null : openMenu = 8" class="sogat-sidebar-item">
                         <span>Temas</span>
-                        <img :src="openMenu === 8 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
-                             class="w-5 h-5 ml-auto">
+                        <img :src="openMenu === 8 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
+                            class="w-5 h-5 ml-auto">
                     </button>
                     <ul x-show="openMenu === 8" x-collapse class="mt-0 space-y-0">
                         <li><a href="{{ route('tema/crear') }}" class="sogat-sidebar-link">Crear Tema</a></li>
@@ -47,11 +45,10 @@
 
                 <!-- Contenidos -->
                 <div>
-                    <button @click="openMenu === 7 ? openMenu = null : openMenu = 7"
-                        class="sogat-sidebar-item">
+                    <button @click="openMenu === 7 ? openMenu = null : openMenu = 7" class="sogat-sidebar-item">
                         <span>Contenidos</span>
-                        <img :src="openMenu === 7 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
-                             class="w-5 h-5 ml-auto">
+                        <img :src="openMenu === 7 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
+                            class="w-5 h-5 ml-auto">
                     </button>
                     <ul x-show="openMenu === 7" x-collapse class="mt-0 space-y-0">
                         <li><a href="{{ route('contenido/crear') }}" class="sogat-sidebar-link">Crear Contenido</a></li>
@@ -64,8 +61,8 @@
                     <button @click="openMenu === 10 ? openMenu = null : (openMenu = 10, subMenu = null)"
                         class="sogat-sidebar-item">
                         <span>Recursos Educativos</span>
-                        <img :src="openMenu === 10 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
-                             class="w-5 h-5 ml-auto">
+                        <img :src="openMenu === 10 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
+                            class="w-5 h-5 ml-auto">
                     </button>
 
                     <div x-show="openMenu === 10" x-collapse class="mt-0 space-y-0">
@@ -73,71 +70,72 @@
 
                         <!-- Recursos -->
                         <div>
-                            <button @click="subMenu === 3 ? subMenu = null : subMenu = 3"
-                                class="sogat-sidebar-subitem">
+                            <button @click="subMenu === 3 ? subMenu = null : subMenu = 3" class="sogat-sidebar-subitem">
                                 <span>Recursos</span>
-                                <img :src="subMenu === 3 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
-                                     class="w-4 h-4 ml-auto">
+                                <img :src="subMenu === 3 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
+                                    class="w-4 h-4 ml-auto">
                             </button>
                             <ul x-show="subMenu === 3" x-collapse class="mt-0 space-y-0">
                                 <li><a href="{{ route('recurso/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
-                                <li><a href="{{ route('recurso/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
+                                <li><a href="{{ route('recurso/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a>
+                                </li>
                             </ul>
                         </div>
 
                         <!-- Estrategias Pedagógicas -->
                         <div>
-                            <button @click="subMenu === 4 ? subMenu = null : subMenu = 4"
-                                class="sogat-sidebar-subitem">
+                            <button @click="subMenu === 4 ? subMenu = null : subMenu = 4" class="sogat-sidebar-subitem">
                                 <span>Estrategias Pedagógicas</span>
-                                <img :src="subMenu === 4 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
-                                     class="w-4 h-4 ml-auto">
+                                <img :src="subMenu === 4 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
+                                    class="w-4 h-4 ml-auto">
                             </button>
                             <ul x-show="subMenu === 4" x-collapse class="mt-0 space-y-0">
                                 <li><a href="{{ route('estrategia/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
-                                <li><a href="{{ route('estrategia/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
+                                <li><a href="{{ route('estrategia/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a>
+                                </li>
                             </ul>
                         </div>
 
                         <!-- Técnicas de Evaluación -->
                         <div>
-                            <button @click="subMenu === 5 ? subMenu = null : subMenu = 5"
-                                class="sogat-sidebar-subitem">
+                            <button @click="subMenu === 5 ? subMenu = null : subMenu = 5" class="sogat-sidebar-subitem">
                                 <span>Técnicas de Evaluación</span>
-                                <img :src="subMenu === 5 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
-                                     class="w-4 h-4 ml-auto">
+                                <img :src="subMenu === 5 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
+                                    class="w-4 h-4 ml-auto">
                             </button>
                             <ul x-show="subMenu === 5" x-collapse class="mt-0 space-y-0">
                                 <li><a href="{{ route('tecnica/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
-                                <li><a href="{{ route('tecnica/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
+                                <li><a href="{{ route('tecnica/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a>
+                                </li>
                             </ul>
                         </div>
 
                         <!-- Evaluaciones -->
                         <div>
-                            <button @click="subMenu === 6 ? subMenu = null : subMenu = 6"
-                                class="sogat-sidebar-subitem">
+                            <button @click="subMenu === 6 ? subMenu = null : subMenu = 6" class="sogat-sidebar-subitem">
                                 <span>Evaluaciones</span>
-                                <img :src="subMenu === 6 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
-                                     class="w-4 h-4 ml-auto">
+                                <img :src="subMenu === 6 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
+                                    class="w-4 h-4 ml-auto">
                             </button>
                             <ul x-show="subMenu === 6" x-collapse class="mt-0 space-y-0">
                                 <li><a href="{{ route('evaluacion/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
-                                <li><a href="{{ route('evaluacion/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
+                                <li><a href="{{ route('evaluacion/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a>
+                                </li>
                             </ul>
                         </div>
 
                         <!-- Bibliografía -->
                         <div>
-                            <button @click="subMenu === 2 ? subMenu = null : subMenu = 2"
-                                class="sogat-sidebar-subitem">
+                            <button @click="subMenu === 2 ? subMenu = null : subMenu = 2" class="sogat-sidebar-subitem">
                                 <span>Bibliografía</span>
-                                <img :src="subMenu === 2 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
-                                     class="w-4 h-4 ml-auto">
+                                <img :src="subMenu === 2 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
+                                    class="w-4 h-4 ml-auto">
                             </button>
                             <ul x-show="subMenu === 2" x-collapse class="mt-0 space-y-0">
-                                <li><a href="{{ route('bibliografia/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
-                                <li><a href="{{ route('bibliografia/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a></li>
+                                <li><a href="{{ route('bibliografia/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a>
+                                </li>
+                                <li><a href="{{ route('bibliografia/listar') }}"
+                                        class="sogat-sidebar-link !text-xs">Gestionar</a></li>
                             </ul>
                         </div>
                     </div>
@@ -145,11 +143,10 @@
 
                 <!-- Eventos -->
                 <div>
-                    <button @click="openMenu === 15 ? openMenu = null : openMenu = 15"
-                        class="sogat-sidebar-item">
+                    <button @click="openMenu === 15 ? openMenu = null : openMenu = 15" class="sogat-sidebar-item">
                         <span>Eventos</span>
-                        <img :src="openMenu === 15 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
-                             class="w-5 h-5 ml-auto">
+                        <img :src="openMenu === 15 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
+                            class="w-5 h-5 ml-auto">
                     </button>
                     <ul x-show="openMenu === 15" x-collapse class="mt-0 space-y-0">
                         <li><a href="{{ route('evento/crear') }}" class="sogat-sidebar-link">Crear Evento</a></li>
@@ -159,17 +156,21 @@
 
                 <!-- Planificaciones -->
                 <div>
-                    <button @click="openMenu === 6 ? openMenu = null : openMenu = 6"
-                        class="sogat-sidebar-item">
+                    <button @click="openMenu === 6 ? openMenu = null : openMenu = 6" class="sogat-sidebar-item">
                         <span>Planificaciones</span>
-                        <img :src="openMenu === 6 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'" 
-                             class="w-5 h-5 ml-auto">
+                        <img :src="openMenu === 6 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
+                            class="w-5 h-5 ml-auto">
                     </button>
                     <ul x-show="openMenu === 6" x-collapse class="mt-0 space-y-0">
                         <li><a href="{{ route('planificacion/crear') }}" class="sogat-sidebar-link">Crear</a></li>
                         <li><a href="{{ route('planificacion/listar') }}" class="sogat-sidebar-link">Gestionar</a></li>
                     </ul>
                 </div>
+
+                <!-- Bitácora -->
+                <a href="{{ route('bitacora/listar') }}" class="sogat-sidebar-item">
+                    <span>Bitácora</span>
+                </a>
 
                 <!-- Perfil y Sesión -->
                 <div class="border-t border-gray-200 dark:border-gray-700">
@@ -184,20 +185,21 @@
 
                 <!-- Info Usuario al final -->
                 <div class="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div class="px-4 py-3 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
+                    <div
+                        class="px-4 py-3 text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/50">
                         <div class="flex flex-col">
                             <span>Usuario: {{ auth()->user()->name }}</span>
                             <span class="text-[9px] text-sogat-blue dark:text-blue-400">
-                                @if(Gate::allows('is-coordinador')) 
-                                    (COORDINADOR) 
-                                @elseif(Gate::allows('is-profesor')) 
-                                    (PROFESOR) 
-                                @else 
+                                @if(Gate::allows('is-coordinador'))
+                                    (COORDINADOR)
+                                @elseif(Gate::allows('is-profesor'))
+                                    (PROFESOR)
+                                @else
                                     (USUARIO)
                                 @endif
                             </span>
                         </div>
-                         <livewire:dark-mode-toggle />
+                        <livewire:dark-mode-toggle />
                     </div>
                 </div>
             @endcan

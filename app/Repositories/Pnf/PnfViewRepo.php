@@ -8,14 +8,10 @@ class PnfViewRepo
 {
     public function mostrar($id)
     {
-        return DB::table('pnf')
-            ->where('id_pnf', $id)
-            ->select(
-                'id_pnf',
-                'nombre_pnf as nombre',
-                'fecha_creacion',
-                'estatus',
-            )
-            ->first();
+        $pnf = \App\Models\Pnf::find($id);
+        if ($pnf) {
+            \App\Models\Pnf::logMostrar($pnf);
+        }
+        return $pnf;
     }
 }

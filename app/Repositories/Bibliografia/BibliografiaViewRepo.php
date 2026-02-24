@@ -8,8 +8,10 @@ class BibliografiaViewRepo
 {
     public function mostrar($id)
     {
-        return DB::table('bibliografia')
-            ->where('id_bibliografia', $id)
-            ->first();
+        $bibliografia = \App\Models\Bibliografia::find($id);
+        if ($bibliografia) {
+            \App\Models\Bibliografia::logMostrar($bibliografia);
+        }
+        return $bibliografia;
     }
 }

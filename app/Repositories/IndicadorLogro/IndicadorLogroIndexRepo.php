@@ -21,15 +21,19 @@ class IndicadorLogroIndexRepo
 
     public function inhabilitar($id)
     {
-        return DB::table('indicador_logro')
-            ->where('id_indicador_logro', $id)
-            ->update(['estatus' => '2']);
+        $indicador = \App\Models\IndicadorLogro::find($id);
+        if ($indicador) {
+            return $indicador->update(['estatus' => '2']);
+        }
+        return false;
     }
 
     public function restaurar($id)
     {
-        return DB::table('indicador_logro')
-            ->where('id_indicador_logro', $id)
-            ->update(['estatus' => '1']);
+        $indicador = \App\Models\IndicadorLogro::find($id);
+        if ($indicador) {
+            return $indicador->update(['estatus' => '1']);
+        }
+        return false;
     }
 }

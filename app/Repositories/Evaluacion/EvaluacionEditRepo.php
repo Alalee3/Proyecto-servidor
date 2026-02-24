@@ -22,11 +22,13 @@ class EvaluacionEditRepo
      */
     public function actualizar($id, array $datos)
     {
-        return DB::table('evaluacion')
-            ->where('id_evaluacion', $id)
-            ->update([
+        $evaluacion = \App\Models\Evaluacion::find($id);
+        if ($evaluacion) {
+            return $evaluacion->update([
                 'nombre_evaluacion' => $datos['nombre'],
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 }

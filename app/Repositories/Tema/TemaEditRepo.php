@@ -9,17 +9,16 @@ class TemaEditRepo
 {
     public function mostrar($id)
     {
-        $tema = DB::table('tema_unidad')
-            ->where('id_tema_unidad', $id)
-            ->select(
-                'id_tema_unidad as id',
-                'id_unidad_curricular',
-                'unidad_tema',
-                'titulo_tema'
-            )
-            ->first();
+        $tema = \App\Models\Tema::select(
+            'id_tema_unidad as id',
+            'id_unidad_curricular',
+            'unidad_tema',
+            'titulo_tema'
+        )->find($id);
 
         if ($tema) {
+            \App\Models\Tema::logMostrar($tema);
+
             $tema->objetivos = DB::table('objetivo')
                 ->where('id_tema_unidad', $id)
                 ->where('estatus', '1')
@@ -35,15 +34,15 @@ class TemaEditRepo
     {
         return DB::transaction(function () use ($id, $data) {
             // Actualizar el tema
-            DB::table('tema_unidad')
-                ->where('id_tema_unidad', $id)
-                ->update([
+            $temaActualizado = \App\Models\Tema::find($id);
+            if ($temaActualizado) {
+                $temaActualizado->update([
                     'id_unidad_curricular' => $data['id_unidad_curricular'],
                     'unidad_tema' => $data['unidad_tema'],
                     'titulo_tema' => $data['titulo_tema'],
                     'fecha_actualizacion' => Carbon::now(),
                 ]);
-
+            }
             // Manejar los objetivos (Eliminar los que ya no están y actualizar/insertar nuevos)
             // Para simplificar en este entorno, inhabilitamos los actuales y re-insertamos los que vienen del form
             DB::table('objetivo')
@@ -53,7 +52,7 @@ class TemaEditRepo
             foreach ($data['objetivos'] as $objetivo) {
                 // Convertir a array si es un objeto para evitar el error "Cannot use object of type stdClass as array"
                 $objArray = (array) $objetivo;
-                
+
                 if (!empty($objArray['titulo_objetivo'])) {
                     DB::table('objetivo')->insert([
                         'id_tema_unidad' => $id,

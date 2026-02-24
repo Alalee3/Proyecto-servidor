@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+use App\Traits\Auditable;
+
 class User extends Authenticatable
 {
-
+    use Auditable;
     public $timestamps = false;
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;

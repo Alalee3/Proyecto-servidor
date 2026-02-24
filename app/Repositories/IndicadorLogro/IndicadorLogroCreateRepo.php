@@ -9,11 +9,13 @@ class IndicadorLogroCreateRepo
 {
     public function crear(array $data)
     {
-        return DB::table('indicador_logro')->insertGetId([
+        $indicador = \App\Models\IndicadorLogro::create([
             'nombre_indicador_logro' => $data['nombre_indicador_logro'],
             'fecha_creacion' => Carbon::now(),
             'fecha_actualizacion' => null,
             'estatus' => '1',
         ]);
+
+        return $indicador->getKey();
     }
 }

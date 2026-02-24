@@ -22,11 +22,13 @@ class TecnicaEditRepo
      */
     public function actualizar($id, array $datos)
     {
-        return DB::table('tecnica_evaluacion')
-            ->where('id_tecnica', $id)
-            ->update([
+        $tecnica = \App\Models\Tecnica::find($id);
+        if ($tecnica) {
+            return $tecnica->update([
                 'nombre_tecnica_evaluacion' => $datos['nombre'],
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 }

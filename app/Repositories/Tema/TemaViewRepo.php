@@ -8,21 +8,18 @@ class TemaViewRepo
 {
     public function mostrar($id)
     {
-        $tema = DB::table('tema_unidad as t')
-            ->join('unidad_curricular as uc', 't.id_unidad_curricular', '=', 'uc.id_unidad_curricular')
-            ->select(
-                't.id_tema_unidad',
-                'uc.nombre_unidad_curricular',
-                't.titulo_tema',
-                't.unidad_tema',
-                't.fecha_creacion',
-                't.fecha_actualizacion',
-                't.estatus'
-            )
-            ->where('t.id_tema_unidad', $id)
-            ->first();
+        $tema = \App\Models\Tema::find($id);
 
         if ($tema) {
+            \App\Models\Tema::logMostrar($tema);
+
+            // Agregar nombre de unidad curricular para compatibilidad con la vista
+            $uc = DB::table('unidad_curricular')
+                ->where('id_unidad_curricular', $tema->id_unidad_curricular)
+                ->value('nombre_unidad_curricular');
+
+            $tema->nombre_unidad_curricular = $uc;
+
             $tema->objetivos = DB::table('objetivo')
                 ->where('id_tema_unidad', $id)
                 ->where('estatus', '1')

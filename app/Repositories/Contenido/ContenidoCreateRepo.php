@@ -33,12 +33,13 @@ class ContenidoCreateRepo
             // Tomamos el primer objetivo para la relación directa en la tabla contenido (si existe)
             $firstObjetivo = !empty($data['id_objetivo']) ? $data['id_objetivo'][0] : null;
 
-            $idContenido = DB::table('contenido')->insertGetId([
+            $contenido = \App\Models\Contenido::create([
                 'titulo_contenido' => $data['titulo_contenido'],
                 'id_objetivo' => $firstObjetivo,
                 'fecha_creacion' => Carbon::now(),
                 'estatus' => '1',
             ]);
+            $idContenido = $contenido->id_contenido;
 
             // Insertar múltiples objetivos en la tabla de detalles (detalle_objetivo)
             foreach ($data['id_objetivo'] as $idObjetivo) {

@@ -9,11 +9,13 @@ class RecursoCreateRepo
 {
     public function crear(array $datos)
     {
-        return DB::table('recurso')->insert([
+        $recurso = \App\Models\Recurso::create([
             'nombre_recurso' => $datos['nombre'],
             'estatus' => '1',
             'fecha_creacion' => Carbon::now(),
             'fecha_actualizacion' => Carbon::now()
         ]);
+
+        return $recurso->id_recurso;
     }
 }

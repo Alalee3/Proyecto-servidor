@@ -26,12 +26,14 @@ class EvaluacionIndexRepo
      */
     public function inhabilitar($id)
     {
-        return DB::table('evaluacion')
-            ->where('id_evaluacion', $id)
-            ->update([
+        $evaluacion = \App\Models\Evaluacion::find($id);
+        if ($evaluacion) {
+            return $evaluacion->update([
                 'estatus' => '2',
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 
     /**
@@ -39,11 +41,13 @@ class EvaluacionIndexRepo
      */
     public function restaurar($id)
     {
-        return DB::table('evaluacion')
-            ->where('id_evaluacion', $id)
-            ->update([
+        $evaluacion = \App\Models\Evaluacion::find($id);
+        if ($evaluacion) {
+            return $evaluacion->update([
                 'estatus' => '1',
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 }

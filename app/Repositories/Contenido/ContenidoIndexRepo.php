@@ -32,22 +32,25 @@ class ContenidoIndexRepo
 
     public function inhabilitar($id)
     {
-        return DB::table('contenido')
-            ->where('id_contenido', $id)
-            ->update([
+        $contenido = \App\Models\Contenido::find($id);
+        if ($contenido) {
+            return $contenido->update([
                 'estatus' => '3',
                 'fecha_actualizacion' => now()
             ]);
+        }
+        return false;
     }
 
     public function restaurar($id)
     {
-        return DB::table('contenido')
-            ->where('id_contenido', $id)
-            ->where('estatus', '3')
-            ->update([
+        $contenido = \App\Models\Contenido::where('id_contenido', $id)->where('estatus', '3')->first();
+        if ($contenido) {
+            return $contenido->update([
                 'estatus' => '1',
                 'fecha_actualizacion' => now()
             ]);
+        }
+        return false;
     }
 }

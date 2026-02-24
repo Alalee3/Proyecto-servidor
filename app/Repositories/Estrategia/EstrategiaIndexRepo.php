@@ -26,12 +26,14 @@ class EstrategiaIndexRepo
      */
     public function inhabilitar($id)
     {
-        return DB::table('tecnica_actividad')
-            ->where('id_tecnica_actividad', $id)
-            ->update([
+        $estrategia = \App\Models\Estrategia::find($id);
+        if ($estrategia) {
+            return $estrategia->update([
                 'estatus' => '2',
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 
     /**
@@ -39,11 +41,13 @@ class EstrategiaIndexRepo
      */
     public function restaurar($id)
     {
-        return DB::table('tecnica_actividad')
-            ->where('id_tecnica_actividad', $id)
-            ->update([
+        $estrategia = \App\Models\Estrategia::find($id);
+        if ($estrategia) {
+            return $estrategia->update([
                 'estatus' => '1',
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 }

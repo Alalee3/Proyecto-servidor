@@ -10,13 +10,11 @@ class PnfEditRepo
 {
     public function mostrar($id)
     {
-        return DB::table('pnf')
-            ->where('id_pnf', $id)
-            ->select(
-                'id_pnf as id',
-                'nombre_pnf as nombre',
-            )
-            ->first();
+        $pnf = \App\Models\Pnf::select('id_pnf as id', 'nombre_pnf as nombre')->find($id);
+        if ($pnf) {
+            \App\Models\Pnf::logMostrar($pnf);
+        }
+        return $pnf;
     }
 
 
@@ -26,8 +24,10 @@ class PnfEditRepo
             'nombre_pnf' => $data['nombre'],
         ];
 
-        return DB::table('pnf')
-            ->where('id_pnf', $id)
-            ->update($updateData);
+        $pnf = \App\Models\Pnf::find($id);
+        if ($pnf) {
+            return $pnf->update($updateData);
+        }
+        return false;
     }
 }

@@ -16,30 +16,25 @@ class CalendarioAcademicoEditRepo
 
     public function mostrar($id)
     {
-        return DB::table('calendario_academico')
-            ->where('id_calendario_academico', $id)
-            ->select(
-                'id_calendario_academico',
-                'id_lapso_academico',
-                'semana',
-                'dia_inicio',
-                'dia_fin',
-                'carga_corte',
-                'estatus'
-            )
-            ->first();
+        $calendario = \App\Models\CalendarioAcademico::find($id);
+        if ($calendario) {
+            \App\Models\CalendarioAcademico::logMostrar($calendario);
+        }
+        return $calendario;
     }
 
     public function editar($id, array $data)
     {
-        return DB::table('calendario_academico')
-            ->where('id_calendario_academico', $id)
-            ->update([
+        $calendario = \App\Models\CalendarioAcademico::find($id);
+        if ($calendario) {
+            return $calendario->update([
                 'id_lapso_academico' => $data['id_lapso_academico'],
                 'semana' => $data['semana'],
                 'dia_inicio' => $data['dia_inicio'],
                 'dia_fin' => $data['dia_fin'],
                 'carga_corte' => $data['carga_corte'],
             ]);
+        }
+        return false;
     }
 }

@@ -17,7 +17,7 @@ class CalendarioAcademicoCreateRepo
 
     public function crear(array $data)
     {
-        return DB::table('calendario_academico')->insertGetId([
+        $calendario = \App\Models\CalendarioAcademico::create([
             'id_lapso_academico' => $data['id_lapso_academico'],
             'semana' => $data['semana'],
             'dia_inicio' => $data['dia_inicio'],
@@ -26,5 +26,7 @@ class CalendarioAcademicoCreateRepo
             'fecha_creacion' => Carbon::now(),
             'estatus' => '1',
         ]);
+
+        return $calendario->getKey();
     }
 }

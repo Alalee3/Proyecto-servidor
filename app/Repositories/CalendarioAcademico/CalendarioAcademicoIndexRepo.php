@@ -29,20 +29,23 @@ class CalendarioAcademicoIndexRepo
 
     public function inhabilitar($id)
     {
-        return DB::table('calendario_academico')
-            ->where('id_calendario_academico', $id)
-            ->update([
+        $calendario = \App\Models\CalendarioAcademico::find($id);
+        if ($calendario) {
+            return $calendario->update([
                 'estatus' => '3'
             ]);
+        }
+        return false;
     }
 
     public function restaurar($id)
     {
-        return DB::table('calendario_academico')
-            ->where('id_calendario_academico', $id)
-            ->where('estatus', '3')
-            ->update([
+        $calendario = \App\Models\CalendarioAcademico::where('id_calendario_academico', $id)->where('estatus', '3')->first();
+        if ($calendario) {
+            return $calendario->update([
                 'estatus' => '1'
             ]);
+        }
+        return false;
     }
 }

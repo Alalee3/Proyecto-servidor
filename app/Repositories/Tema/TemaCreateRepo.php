@@ -18,7 +18,7 @@ class TemaCreateRepo
     public function crear(array $data)
     {
         return DB::transaction(function () use ($data) {
-            $temaId = DB::table('tema_unidad')->insertGetId([
+            $tema = \App\Models\Tema::create([
                 'id_unidad_curricular' => $data['id_unidad_curricular'],
                 'titulo_tema' => $data['titulo_tema'],
                 'unidad_tema' => $data['unidad_tema'],
@@ -26,6 +26,7 @@ class TemaCreateRepo
                 'fecha_actualizacion' => null,
                 'estatus' => '1',
             ]);
+            $temaId = $tema->id_tema_unidad;
 
             foreach ($data['objetivos'] as $objetivo) {
                 if (!empty($objetivo['titulo_objetivo'])) {

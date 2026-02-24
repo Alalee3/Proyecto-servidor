@@ -20,21 +20,25 @@ class RecursoIndexRepo
 
     public function inhabilitar($id)
     {
-        return DB::table('recurso')
-            ->where('id_recurso', $id)
-            ->update([
+        $recurso = \App\Models\Recurso::find($id);
+        if ($recurso) {
+            return $recurso->update([
                 'estatus' => '2',
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 
     public function restaurar($id)
     {
-        return DB::table('recurso')
-            ->where('id_recurso', $id)
-            ->update([
+        $recurso = \App\Models\Recurso::find($id);
+        if ($recurso) {
+            return $recurso->update([
                 'estatus' => '1',
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 }

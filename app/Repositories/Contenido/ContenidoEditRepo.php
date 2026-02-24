@@ -9,26 +9,31 @@ class ContenidoEditRepo
 {
     public function mostrar($id)
     {
-        $contenido = DB::table('contenido as c')
-            ->leftJoin('objetivo as o', 'c.id_objetivo', '=', 'o.id_objetivo')
-            ->where('c.id_contenido', $id)
-            ->select(
-                'c.id_contenido as id',
-                'o.id_tema_unidad as id_tema', // Para que el form sepa el tema
-                'c.id_objetivo',
-                'c.titulo_contenido'
-            )
-            ->first();
+        $contenido = \App\Models\Contenido::find($id);
 
         if ($contenido) {
-            $contenido->id_objetivo = DB::table('detalle_objetivo')
-                ->where('id_contenido', $id)
-                ->where('estatus', '1')
-                ->pluck('id_objetivo')
-                ->toArray();
+            \App\Models\Contenido::logMostrar($contenido);
+
+            // Preparar datos para el formulario (compatibilidad)
+            $idTema = DB::table('objetivo')
+                ->where('id_objetivo', $contenido->id_objetivo)
+                ->value('id_tema_unidad');
+
+            $formContent = (object) [
+                'id' => $contenido->id_contenido,
+                'id_tema' => $idTema,
+                'titulo_contenido' => $contenido->titulo_contenido,
+                'id_objetivo' => DB::table('detalle_objetivo')
+                    ->where('id_contenido', $id)
+                    ->where('estatus', '1')
+                    ->pluck('id_objetivo')
+                    ->toArray()
+            ];
+
+            return $formContent;
         }
 
-        return $contenido;
+        return null;
     }
 
     public function editar($id, array $data)
@@ -37,13 +42,14 @@ class ContenidoEditRepo
             $firstObjetivo = !empty($data['id_objetivo']) ? $data['id_objetivo'][0] : null;
 
             // Actualizar contenido principal
-            DB::table('contenido')
-                ->where('id_contenido', $id)
-                ->update([
+            $contenidoUpdated = \App\Models\Contenido::find($id);
+            if ($contenidoUpdated) {
+                $contenidoUpdated->update([
                     'id_objetivo' => $firstObjetivo,
                     'titulo_contenido' => $data['titulo_contenido'],
                     'fecha_actualizacion' => Carbon::now(),
                 ]);
+            }
 
             // Sincronizar objetivos en tabla de detalles
             DB::table('detalle_objetivo')

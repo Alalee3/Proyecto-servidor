@@ -10,12 +10,14 @@ class PnfCreateRepo
 {
     public function crear(array $data)
     {
-        return DB::table('pnf')->insertGetId([
+        $pnf = \App\Models\Pnf::create([
             'nombre_pnf' => $data['nombre'],
             'fecha_creacion' => Carbon::now(),
             'fecha_actualizacion' => null,
             'estatus' => '1',
         ]);
+
+        return $pnf->id_pnf;
     }
 
 }

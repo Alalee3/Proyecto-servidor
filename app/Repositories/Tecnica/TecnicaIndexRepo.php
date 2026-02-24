@@ -26,12 +26,14 @@ class TecnicaIndexRepo
      */
     public function inhabilitar($id)
     {
-        return DB::table('tecnica_evaluacion')
-            ->where('id_tecnica', $id)
-            ->update([
+        $tecnica = \App\Models\Tecnica::find($id);
+        if ($tecnica) {
+            return $tecnica->update([
                 'estatus' => '2',
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 
     /**
@@ -39,11 +41,13 @@ class TecnicaIndexRepo
      */
     public function restaurar($id)
     {
-        return DB::table('tecnica_evaluacion')
-            ->where('id_tecnica', $id)
-            ->update([
+        $tecnica = \App\Models\Tecnica::find($id);
+        if ($tecnica) {
+            return $tecnica->update([
                 'estatus' => '1',
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 }

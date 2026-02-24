@@ -19,20 +19,23 @@ class EventoIndexRepo
 
     public function inhabilitar($id)
     {
-        return DB::table('evento')
-            ->where('id_evento', $id)
-            ->update([
+        $evento = \App\Models\Evento::find($id);
+        if ($evento) {
+            return $evento->update([
                 'estatus' => '3'
             ]);
+        }
+        return false;
     }
 
     public function restaurar($id)
     {
-        return DB::table('evento')
-            ->where('id_evento', $id)
-            ->where('estatus', '3')
-            ->update([
+        $evento = \App\Models\Evento::where('id_evento', $id)->where('estatus', '3')->first();
+        if ($evento) {
+            return $evento->update([
                 'estatus' => '1'
             ]);
+        }
+        return false;
     }
 }

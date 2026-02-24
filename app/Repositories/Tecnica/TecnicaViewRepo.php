@@ -11,8 +11,10 @@ class TecnicaViewRepo
      */
     public function mostrar($id)
     {
-        return DB::table('tecnica_evaluacion')
-            ->where('id_tecnica', $id)
-            ->first();
+        $tecnica = \App\Models\Tecnica::find($id);
+        if ($tecnica) {
+            \App\Models\Tecnica::logMostrar($tecnica);
+        }
+        return $tecnica;
     }
 }

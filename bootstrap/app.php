@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias(
             [
                 'role' => \App\Http\Middleware\RoleMiddleware::class,
+                'log.activity' => \App\Http\Middleware\LogActivity::class,
                 // 'profesor' => \App\Http\Middleware\ProfesorMiddleware::class,
             ]
         );

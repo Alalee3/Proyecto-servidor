@@ -16,11 +16,13 @@ class BibliografiaEditRepo
 
     public function actualizar($id, array $datos)
     {
-        return DB::table('bibliografia')
-            ->where('id_bibliografia', $id)
-            ->update([
+        $bibliografia = \App\Models\Bibliografia::find($id);
+        if ($bibliografia) {
+            return $bibliografia->update([
                 'nombre_bibliografia' => $datos['nombre'],
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 }

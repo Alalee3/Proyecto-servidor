@@ -11,8 +11,10 @@ class EstrategiaViewRepo
      */
     public function mostrar($id)
     {
-        return DB::table('tecnica_actividad')
-            ->where('id_tecnica_actividad', $id)
-            ->first();
+        $estrategia = \App\Models\Estrategia::find($id);
+        if ($estrategia) {
+            \App\Models\Estrategia::logMostrar($estrategia);
+        }
+        return $estrategia;
     }
 }

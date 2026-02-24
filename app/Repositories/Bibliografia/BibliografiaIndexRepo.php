@@ -20,22 +20,25 @@ class BibliografiaIndexRepo
 
     public function inhabilitar($id)
     {
-        return DB::table('bibliografia')
-            ->where('id_bibliografia', $id)
-            ->update([
+        $bibliografia = \App\Models\Bibliografia::find($id);
+        if ($bibliografia) {
+            return $bibliografia->update([
                 'estatus' => '3',
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 
     public function restaurar($id)
     {
-        return DB::table('bibliografia')
-            ->where('id_bibliografia', $id)
-            ->where('estatus', '3')
-            ->update([
+        $bibliografia = \App\Models\Bibliografia::where('id_bibliografia', $id)->where('estatus', '3')->first();
+        if ($bibliografia) {
+            return $bibliografia->update([
                 'estatus' => '1',
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 }

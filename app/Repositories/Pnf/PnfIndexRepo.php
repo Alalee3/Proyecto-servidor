@@ -20,23 +20,24 @@ class PnfIndexRepo
 
     public function inhabilitar($id)
     {
-        return DB::table('pnf')
-            ->where('id_pnf', $id)
-            ->update([
-                'estatus' => 3,
-                //'updated_at' => Carbon::now()
+        $pnf = \App\Models\Pnf::find($id);
+        if ($pnf) {
+            return $pnf->update([
+                'estatus' => '3',
             ]);
+        }
+        return false;
     }
 
     public function restaurar($id)
     {
-        return DB::table('pnf')
-            ->where('id_pnf', $id)
-            ->where('estatus', '3')
-            ->update([
+        $pnf = \App\Models\Pnf::where('id_pnf', $id)->where('estatus', '3')->first();
+        if ($pnf) {
+            return $pnf->update([
                 'estatus' => '1',
-                //'updated_at' => Carbon::now()
             ]);
+        }
+        return false;
     }
 
 }

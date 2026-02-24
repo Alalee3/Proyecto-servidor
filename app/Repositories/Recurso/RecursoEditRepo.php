@@ -16,11 +16,13 @@ class RecursoEditRepo
 
     public function actualizar($id, array $datos)
     {
-        return DB::table('recurso')
-            ->where('id_recurso', $id)
-            ->update([
+        $recurso = \App\Models\Recurso::find($id);
+        if ($recurso) {
+            return $recurso->update([
                 'nombre_recurso' => $datos['nombre'],
                 'fecha_actualizacion' => Carbon::now()
             ]);
+        }
+        return false;
     }
 }

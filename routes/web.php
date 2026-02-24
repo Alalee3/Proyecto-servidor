@@ -61,6 +61,7 @@ use App\Livewire\CalendarioAcademico\CreateCalendarioAcademico;
 use App\Livewire\CalendarioAcademico\ListCalendarioAcademico;
 use App\Livewire\CalendarioAcademico\UpdateCalendarioAcademico;
 use App\Livewire\CalendarioAcademico\ShowCalendarioAcademico;
+use App\Livewire\Bitacora\ListBitacora;
 
 use Illuminate\Support\Facades\Route;
 
@@ -140,6 +141,10 @@ Route::middleware(['auth', 'role:1'])->group(function () {
     Route::get('calendario-academico/create', CreateCalendarioAcademico::class)->name('calendario-academico/crear');
     Route::get('calendario-academico/update/{id}', UpdateCalendarioAcademico::class)->name('calendario-academico/update');
     Route::get('calendario-academico/show/{id}', ShowCalendarioAcademico::class)->name('calendario-academico/show');
+
+    // Rutas para Bitácora
+    Route::get('bitacora/list', ListBitacora::class)->name('bitacora/listar');
+    Route::get('bitacora/show/{id}', \App\Livewire\Bitacora\ShowBitacora::class)->name('bitacora/show');
 });
 
 Route::middleware(['auth'])->group(function () { });

@@ -46,17 +46,18 @@ class UsuarioRepository
 
     public function mostrar($id)
     {
-        return DB::table('users')
-            ->where('users.id', $id)
-            ->select('users.id', 'users.name', 'users.apellido', 'users.cedula', 'email', 'users.telefono', 'fecha_creacion', 'users.estatus')
-            ->first();
+        $user = \App\Models\User::find($id);
+        if ($user) {
+            \App\Models\User::logMostrar($user);
+        }
+        return $user;
     }
 
     public function crear($data, $roles)
     {
         DB::beginTransaction();
         try {
-            $user = DB::table('users')->insertGetId([
+            $user = \App\Models\User::create([
                 'name' => $data['name'],
                 'apellido' => $data['apellido'],
                 'cedula' => $data['cedula'],
@@ -64,10 +65,10 @@ class UsuarioRepository
                 'telefono' => $data['telefono'],
                 'password' => $data['password']
             ]);
-            foreach ($roles as $rol) {
 
+            foreach ($roles as $rol) {
                 DB::table('usuario_rol')->insert([
-                    'id_users' => $user,
+                    'id_users' => $user->id,
                     'id_rol' => $rol
                 ]);
             }

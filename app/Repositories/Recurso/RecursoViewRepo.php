@@ -8,8 +8,10 @@ class RecursoViewRepo
 {
     public function mostrar($id)
     {
-        return DB::table('recurso')
-            ->where('id_recurso', $id)
-            ->first();
+        $recurso = \App\Models\Recurso::find($id);
+        if ($recurso) {
+            \App\Models\Recurso::logMostrar($recurso);
+        }
+        return $recurso;
     }
 }
