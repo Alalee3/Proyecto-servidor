@@ -11,40 +11,67 @@
             <x-table.alert-message type="error" :message="session('error')" />
 
             <div class="sogat-table-container">
-                <div class="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between p-4 bg-white dark:bg-gray-800">
-                    <x-table.search-input model="busqueda" placeholder="Buscar por lapso o semana..." debounce="300ms" />
+                <div
+                    class="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between p-4 bg-white dark:bg-gray-800">
+                    <x-table.search-input model="busqueda" placeholder="Buscar por lapso o semana..."
+                        debounce="300ms" />
                 </div>
 
                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Lapso</th>
-                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-center">Semana</th>
+                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-center">
+                                Semana</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Inicio</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Fin</th>
-                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">Estatus</th>
-                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">Acciones</th>
+                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">
+                                Estatus</th>
+                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">
+                                Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if ($calendarios->isNotEmpty())
                             @foreach ($calendarios as $cal)
-                                <tr wire:key="{{ $cal->id_calendario_academico }}" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                <tr wire:key="{{ $cal->id_calendario_academico }}"
+                                    class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">{{ $cal->nombre_lapso }}</td>
                                     <td class="px-4 py-4 text-gray-900 dark:text-white text-center">{{ $cal->semana }}</td>
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">
-                                        {{ \Carbon\Carbon::parse($cal->dia_inicio)->format('d/m/Y') }}</td>
+                                        {{ \Carbon\Carbon::parse($cal->dia_inicio)->format('d/m/Y') }}
+                                    </td>
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">
-                                        {{ \Carbon\Carbon::parse($cal->dia_fin)->format('d/m/Y') }}</td>
+                                        {{ \Carbon\Carbon::parse($cal->dia_fin)->format('d/m/Y') }}
+                                    </td>
                                     <td class="px-4 py-4 text-right">
-                                        <span class="{{ $cal->estatus == 1 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }} text-xs font-medium px-2.5 py-0.5 rounded">
+                                        <span
+                                            class="{{ $cal->estatus == 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }} text-xs font-medium px-2.5 py-0.5 rounded">
                                             {{ $cal->estatus == 1 ? 'Activo' : 'Inactivo' }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-4 text-right">
+                                    <td class="px-4 py-4">
                                         <div class="flex items-center justify-end space-x-3">
-                                            <a href="{{ route('calendario-academico/show', $cal->id_calendario_academico) }}" wire:navigate class="text-blue-600 hover:text-blue-900">Ver</a>
-                                            <a href="{{ route('calendario-academico/update', $cal->id_calendario_academico) }}" wire:navigate class="text-yellow-600 hover:text-yellow-900">Editar</a>
+                                            <a href="{{ route('calendario-academico/show', $cal->id_calendario_academico) }}"
+                                                wire:navigate
+                                                class="flex items-center gap-1 bg-blue-50 text-blue-600 text-xs font-medium px-2.5 py-0.5 rounded hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
+                                                    class="w-4 h-4">
+                                                    <path
+                                                        d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                                                </svg>
+                                                Ver
+                                            </a>
+                                            <a href="{{ route('calendario-academico/update', $cal->id_calendario_academico) }}"
+                                                wire:navigate
+                                                class="flex items-center gap-1 bg-yellow-600 text-white text-xs font-medium px-2.5 py-0.5 rounded hover:bg-yellow-700 dark:bg-yellow-600 dark:text-white dark:hover:bg-yellow-700">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
+                                                    class="w-4 h-4">
+                                                    <path
+                                                        d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                                </svg>
+                                                Editar
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -60,9 +87,11 @@
                 </table>
             </div>
 
-            <div class="flex flex-col md:flex-row items-center justify-between p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
+            <div
+                class="flex flex-col md:flex-row items-center justify-between p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
                 <div class="flex items-center mb-4 md:mb-0">
-                    <select wire:model.live="paginacion" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white w-24">
+                    <select wire:model.live="paginacion"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white w-24">
                         <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="25">25</option>
