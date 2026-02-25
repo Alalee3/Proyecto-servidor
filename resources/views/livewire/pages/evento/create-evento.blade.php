@@ -19,17 +19,32 @@
                 </div>
 
                 <div class="w-full">
-                    <x-input-label for="fecha" :value="__('Fecha del Evento')" />
-                    <x-text-input id="fecha" wire:model.live="form.fecha_evento" class="w-full" type="date" required />
-                    <x-input-error :messages="$errors->first('form.fecha_evento')" class="mt-2" />
+                    <x-input-label for="semana" :value="__('Semana del Evento')" />
+                    <x-text-input id="semana" wire:model.live="form.semana_evento" class="w-full" type="number"
+                        placeholder="Ej: 1" step="1" min="1" max="52" required />
+                    <x-input-error :messages="$errors->first('form.semana_evento')" class="mt-2" />
+                </div>
+
+                <div class="w-full">
+                    <x-input-label for="dia_inicio" :value="__('Fecha de Inicio')" />
+                    <x-text-input id="dia_inicio" wire:model.live="form.dia_inicio_evento" class="w-full" type="date"
+                        required />
+                    <x-input-error :messages="$errors->first('form.dia_inicio_evento')" class="mt-2" />
+                </div>
+
+                <div class="w-full">
+                    <x-input-label for="dia_fin" :value="__('Fecha de Fin')" />
+                    <x-text-input id="dia_fin" wire:model.live="form.dia_fin_evento" class="w-full" type="date"
+                        required />
+                    <x-input-error :messages="$errors->first('form.dia_fin_evento')" class="mt-2" />
                 </div>
 
                 <div class="w-full">
                     @php
                         $tiposEvento = collect([
-                            (object) ['id' => '1', 'nombre' => 'Tipo 1'],
-                            (object) ['id' => '2', 'nombre' => 'Tipo 2'],
-                            (object) ['id' => '3', 'nombre' => 'Tipo 3'],
+                            (object) ['id' => '1', 'nombre' => 'Feriado'],
+                            (object) ['id' => '2', 'nombre' => 'Actividad Académica'],
+                            (object) ['id' => '3', 'nombre' => 'Otro'],
                         ]);
                     @endphp
                     <x-select id="tipo" wire:model.live="form.tipo_evento" label="Tipo de Evento"
@@ -47,4 +62,3 @@
         </form>
     </div>
 </div>
-

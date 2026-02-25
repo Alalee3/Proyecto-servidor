@@ -13,23 +13,41 @@
                 <div>
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Descripción</h3>
                     <p class="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
-                        {{ $evento->descripcion_evento }}</p>
+                        {{ $evento->descripcion_evento }}
+                    </p>
                 </div>
 
-                <!-- Fecha -->
+                <!-- Semana -->
                 <div>
-                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Fecha</h3>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Semana</h3>
                     <p class="mt-1 text-xl text-gray-900 dark:text-white">
-                        {{ \Carbon\Carbon::parse($evento->fecha_evento)->format('d/m/Y') }}</p>
+                        {{ $evento->semana_evento }}
+                    </p>
+                </div>
+
+                <!-- Fecha Inicio -->
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Fecha de Inicio</h3>
+                    <p class="mt-1 text-xl text-gray-900 dark:text-white">
+                        {{ \Carbon\Carbon::parse($evento->dia_inicio_evento)->format('d/m/Y') }}
+                    </p>
+                </div>
+
+                <!-- Fecha Fin -->
+                <div>
+                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Fecha de Fin</h3>
+                    <p class="mt-1 text-xl text-gray-900 dark:text-white">
+                        {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}
+                    </p>
                 </div>
 
                 <!-- Tipo -->
                 <div>
                     <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Tipo</h3>
                     <p class="mt-1 text-xl text-gray-900 dark:text-white">
-                        @if($evento->tipo_evento == '1') Tipo 1
-                        @elseif($evento->tipo_evento == '2') Tipo 2
-                        @else Tipo 3
+                        @if($evento->tipo_evento == '1') Feriado
+                        @elseif($evento->tipo_evento == '2') Actividad Académica
+                        @else Otro
                         @endif
                     </p>
                 </div>
@@ -45,13 +63,13 @@
             </div>
 
             <div class="flex justify-end pt-4">
-                <a href="{{ route('evento/listar') }}" wire:navigate
-                    class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800 transition ease-in-out duration-150">
-                    <span class="material-symbols-outlined text-sm mr-1">arrow_back</span>
-                    Volver
+                <a href="{{ route('evento/listar') }}" wire:navigate>
+                    <x-danger-button type="button" class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-sm">arrow_back</span>
+                        {{ __('Volver') }}
+                    </x-danger-button>
                 </a>
             </div>
         </div>
     </div>
 </div>
-

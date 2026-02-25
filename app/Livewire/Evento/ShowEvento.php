@@ -3,7 +3,7 @@
 namespace App\Livewire\Evento;
 
 use Livewire\Component;
-use App\Repositories\Evento\EventoEditRepo;
+use App\Repositories\Evento\EventoViewRepo;
 use Livewire\Attributes\Locked;
 
 class ShowEvento extends Component
@@ -16,7 +16,7 @@ class ShowEvento extends Component
 
     public function __construct()
     {
-        $this->eventoRepository = new EventoEditRepo();
+        $this->eventoRepository = new EventoViewRepo();
     }
 
     public function mount($id)

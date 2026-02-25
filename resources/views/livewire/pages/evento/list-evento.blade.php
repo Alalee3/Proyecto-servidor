@@ -20,8 +20,9 @@
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Descripción</th>
-                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Fecha</th>
-                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Tipo</th>
+                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Semana</th>
+                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Inicio</th>
+                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Fin</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">
                                 Estatus</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">
@@ -34,14 +35,11 @@
                                 <tr wire:key="{{ $evento->id_evento }}"
                                     class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">{{ $evento->descripcion_evento }}</td>
+                                    <td class="px-4 py-4 text-gray-900 dark:text-white text-center">{{ $evento->semana_evento }}</td>
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">
-                                        {{ \Carbon\Carbon::parse($evento->fecha_evento)->format('d/m/Y') }}</td>
+                                        {{ \Carbon\Carbon::parse($evento->dia_inicio_evento)->format('d/m/Y') }}</td>
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">
-                                        @if($evento->tipo_evento == '1') Tipo 1
-                                        @elseif($evento->tipo_evento == '2') Tipo 2
-                                        @else Tipo 3
-                                        @endif
-                                    </td>
+                                        {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}</td>
                                     <td class="px-4 py-4 text-right">
                                         <span class="{{ $evento->estatus == 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }} 
                                                             text-xs font-medium px-2.5 py-0.5 rounded">

@@ -13,4 +13,9 @@ class CalendarioAcademico extends Model
     protected $primaryKey = 'id_calendario_academico';
     public $timestamps = false;
     protected $guarded = [];
+
+    public function lapso()
+    {
+        return $this->belongsTo(Lapso::class, 'id_lapso_academico');
+    }
 }

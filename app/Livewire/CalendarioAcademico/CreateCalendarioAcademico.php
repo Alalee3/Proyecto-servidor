@@ -3,24 +3,19 @@
 namespace App\Livewire\CalendarioAcademico;
 
 use App\Livewire\Forms\CalendarioAcademico\CreateCalendarioAcademicoForm;
-use Livewire\Component;
 use App\Repositories\CalendarioAcademico\CalendarioAcademicoCreateRepo;
+use Illuminate\Support\Facades\DB;
+use Livewire\Component;
 use Exception;
 
 class CreateCalendarioAcademico extends Component
 {
     public CreateCalendarioAcademicoForm $form;
     protected $calendarioRepository;
-    public $lapsos = [];
 
     public function __construct()
     {
         $this->calendarioRepository = new CalendarioAcademicoCreateRepo();
-    }
-
-    public function mount()
-    {
-        $this->lapsos = $this->calendarioRepository->obtenerLapsosActivos();
     }
 
     public function updated($propertyName)
@@ -36,15 +31,20 @@ class CreateCalendarioAcademico extends Component
         try {
             $this->calendarioRepository->crear($this->form->all());
 
-            $this->reset('form.id_lapso_academico', 'form.semana', 'form.dia_inicio', 'form.dia_fin', 'form.carga_corte');
-            session()->flash('message', 'Calendario creado correctamente.');
+            $this->form->reset();
+            session()->flash('message', 'Semana de calendario creada correctamente.');
         } catch (Exception $e) {
-            session()->flash('error', 'Error al crear calendario: ' . $e->getMessage());
+            session()->flash('error', 'Error al crear: ' . $e->getMessage());
         }
     }
 
     public function render()
     {
-        return view('livewire.pages.calendario-academico.create-calendario-academico');
+        $lapsos = DB::table('lapso_academico')
+            ->where('estatus', '1')
+            ->select('id_lapso_academico', 'nombre_lapso_academico')
+            ->get();
+
+        return view('livewire.pages.calendario-academico.create-calendario-academico', compact('lapsos'));
     }
 }

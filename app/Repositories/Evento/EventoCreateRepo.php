@@ -9,9 +9,17 @@ class EventoCreateRepo
 {
     public function crear(array $data)
     {
+        if (empty($data['id_calendario'])) {
+            $activo = DB::table('calendario_academico')->where('estatus', '1')->first();
+            $data['id_calendario'] = $activo ? $activo->id_calendario_academico : null;
+        }
+
         $evento = \App\Models\Evento::create([
+            'id_calendario' => $data['id_calendario'],
+            'dia_inicio_evento' => $data['dia_inicio_evento'],
+            'dia_fin_evento' => $data['dia_fin_evento'],
+            'semana_evento' => $data['semana_evento'],
             'descripcion_evento' => $data['descripcion_evento'],
-            'fecha_evento' => $data['fecha_evento'],
             'tipo_evento' => $data['tipo_evento'],
             'fecha_creacion' => Carbon::now(),
             'estatus' => '1',

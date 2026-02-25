@@ -2,10 +2,11 @@
 
 namespace App\Livewire\CalendarioAcademico;
 
-use Livewire\Component;
-use Livewire\Attributes\Locked;
 use App\Livewire\Forms\CalendarioAcademico\UpdateCalendarioAcademicoForm;
 use App\Repositories\CalendarioAcademico\CalendarioAcademicoEditRepo;
+use Illuminate\Support\Facades\DB;
+use Livewire\Component;
+use Livewire\Attributes\Locked;
 use Exception;
 
 class UpdateCalendarioAcademico extends Component
@@ -14,7 +15,6 @@ class UpdateCalendarioAcademico extends Component
 
     #[Locked]
     public $calendarioId;
-    public $lapsos = [];
 
     protected $calendarioRepository;
 
@@ -27,19 +27,15 @@ class UpdateCalendarioAcademico extends Component
     {
         try {
             $this->calendarioId = $id;
-            $this->lapsos = $this->calendarioRepository->obtenerLapsosActivos();
-
-            $calendario = $this->calendarioRepository->mostrar($this->calendarioId);
+            $calendario = $this->calendarioRepository->mostrar($id);
 
             if (!$calendario) {
-                return redirect()->route('calendario-academico/listar')->with('error', 'Calendario no encontrado.');
+                return redirect()->route('calendario-academico/listar')->with('error', 'Registro no encontrado.');
             }
 
-            $this->form->fill((array) $calendario);
-
+            $this->form->setCalendario($calendario);
         } catch (Exception $e) {
-            session()->flash('error', 'Error al cargar el calendario: ' . $e->getMessage());
-            return redirect()->route('calendario-academico/listar');
+            return redirect()->route('calendario-academico/listar')->with('error', 'Error: ' . $e->getMessage());
         }
     }
 
@@ -58,10 +54,8 @@ class UpdateCalendarioAcademico extends Component
 
             return redirect()->route('calendario-academico/listar')
                 ->with('message', 'Calendario actualizado correctamente.');
-
         } catch (Exception $e) {
-            return redirect()->route('calendario-academico/listar')
-                ->with('error', 'Error al actualizar: ' . $e->getMessage());
+            session()->flash('error', 'Error al actualizar: ' . $e->getMessage());
         }
     }
 
@@ -72,6 +66,11 @@ class UpdateCalendarioAcademico extends Component
 
     public function render()
     {
-        return view('livewire.pages.calendario-academico.update-calendario-academico');
+        $lapsos = DB::table('lapso_academico')
+            ->where('estatus', '1')
+            ->select('id_lapso_academico', 'nombre_lapso_academico')
+            ->get();
+
+        return view('livewire.pages.calendario-academico.update-calendario-academico', compact('lapsos'));
     }
 }
