@@ -95,6 +95,12 @@ class UpdateEventoForm extends Form
                 'required',
                 'string',
                 'max:100',
+                function ($attribute, $value, $fail) {
+                    $repo = new \App\Repositories\Evento\EventoEditRepo();
+                    if ($repo->existeEventoConDescripcion($value, (int) $this->id_calendario, (int) $this->id_evento)) {
+                        $fail('Ya existe un evento con esta descripción en el mismo calendario.');
+                    }
+                },
                 'regex:/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\d\s\.,\-\(\)\"\':\/]+$/u'
             ],
             'tipo_evento' => [
@@ -121,6 +127,7 @@ class UpdateEventoForm extends Form
             'descripcion_evento.required' => 'La descripción es obligatoria.',
             'descripcion_evento.string' => 'La descripción debe ser texto.',
             'descripcion_evento.max' => 'La descripción no debe exceder 100 caracteres.',
+            'descripcion_evento.unique' => 'Ya existe un evento con esta descripción.',
             'descripcion_evento.regex' => 'Formato inválido en la descripción.',
             'tipo_evento.required' => 'El tipo de evento es obligatorio.',
             'tipo_evento.in' => 'El tipo de evento no es válido.',

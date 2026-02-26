@@ -51,7 +51,6 @@
                     <x-select id="tipo" wire:model.live="form.tipo_evento" label="Tipo de Evento"
                         :options="$tiposEvento" valueField="id" textField="nombre" placeholder="Seleccione..."
                         required />
-                    <x-input-error :messages="$errors->first('form.tipo_evento')" class="mt-2" />
                 </div>
             </div>
 

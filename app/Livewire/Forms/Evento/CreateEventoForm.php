@@ -91,6 +91,20 @@ class CreateEventoForm extends Form
                 'required',
                 'string',
                 'max:100',
+                function ($attribute, $value, $fail) {
+                    $id_cal = $this->id_calendario;
+                    if (empty($id_cal)) {
+                        $activo = \Illuminate\Support\Facades\DB::table('calendario_academico')->where('estatus', '1')->first();
+                        $id_cal = $activo ? $activo->id_calendario_academico : null;
+                    }
+
+                    if ($id_cal) {
+                        $repo = new \App\Repositories\Evento\EventoCreateRepo();
+                        if ($repo->existeEventoConDescripcion($value, (int) $id_cal)) {
+                            $fail('Ya existe un evento con esta descripción en el calendario seleccionado.');
+                        }
+                    }
+                },
                 'regex:/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\d\s\.,\-\(\)\"\':\/]+$/u'
             ],
             'tipo_evento' => [
@@ -117,6 +131,7 @@ class CreateEventoForm extends Form
             'descripcion_evento.required' => 'La descripción es obligatoria.',
             'descripcion_evento.string' => 'La descripción debe ser texto.',
             'descripcion_evento.max' => 'La descripción no debe exceder 100 caracteres.',
+            'descripcion_evento.unique' => 'Ya existe un evento con esta descripción.',
             'descripcion_evento.regex' => 'Formato inválido en la descripción.',
             'tipo_evento.required' => 'El tipo de evento es obligatorio.',
             'tipo_evento.in' => 'El tipo de evento no es válido.',

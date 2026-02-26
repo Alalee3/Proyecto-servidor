@@ -1,7 +1,7 @@
 <div>
     <x-slot name="header">
         <h2 class="font-bold text-xl text-gray-800 dark:text-gray-500 leading-tight uppercase text-center">
-            {{ __('Editar Semana de Calendario') }}
+            {{ __('Editar Calendario Académico') }}
         </h2>
     </x-slot>
 
@@ -12,7 +12,6 @@
                     <x-select id="lapso" wire:model.live="form.id_lapso_academico" label="Lapso Académico"
                         :options="$lapsos" valueField="id_lapso_academico" textField="nombre_lapso_academico"
                         placeholder="Seleccione..." required />
-                    <x-input-error :messages="$errors->first('form.id_lapso_academico')" class="mt-2" />
                 </div>
 
                 <div class="w-full">

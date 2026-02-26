@@ -27,4 +27,13 @@ class EventoCreateRepo
 
         return $evento->getKey();
     }
+
+    public function existeEventoConDescripcion(string $descripcion, ?int $idCalendario): bool
+    {
+        return DB::table('evento')
+            ->where('id_calendario', $idCalendario)
+            ->where('descripcion_evento', $descripcion)
+            ->where('estatus', '!=', '3')
+            ->exists();
+    }
 }

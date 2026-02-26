@@ -30,4 +30,14 @@ class EventoEditRepo
         }
         return false;
     }
+
+    public function existeEventoConDescripcion(string $descripcion, ?int $idCalendario, ?int $idEventoExcluir): bool
+    {
+        return DB::table('evento')
+            ->where('id_calendario', $idCalendario)
+            ->where('descripcion_evento', $descripcion)
+            ->where('id_evento', '!=', $idEventoExcluir)
+            ->where('estatus', '!=', '3')
+            ->exists();
+    }
 }
