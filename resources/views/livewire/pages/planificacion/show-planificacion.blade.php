@@ -114,14 +114,18 @@
                                                     class="list-disc list-inside space-y-2 text-sm text-gray-600 dark:text-gray-400">
                                                     @foreach ($corte->contenidos as $contenido)
                                                         <li>
-                                                            <div class="mt-1 mb-2">
+                                                            <div class="mt-1 mb-2 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-lg border border-gray-100 dark:border-gray-700">
                                                                 <div>
                                                                     <span class="text-xs font-bold text-gray-500 uppercase">Tema:</span>
-                                                                    <span class="text-sm font-bold text-gray-800 dark:text-gray-200 break-words overflow-hidden">{{ $contenido['titulo_tema'] ?? 'Sin Tema' }}</span>
+                                                                    <span class="text-sm font-bold text-gray-800 dark:text-gray-200">{{ $contenido['titulo_tema'] ?? 'Sin Tema' }}</span>
+                                                                </div>
+                                                                <div class="mt-1">
+                                                                    <span class="text-xs font-bold text-gray-500 uppercase">Objetivo:</span>
+                                                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ $contenido['titulo_objetivo'] ?? 'Sin Objetivo' }}</span>
                                                                 </div>
                                                                 <div class="mt-1">
                                                                     <span class="text-xs font-bold text-gray-500 uppercase">Contenido:</span>
-                                                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200 break-words overflow-hidden">{{ $contenido['titulo_contenido'] ?? 'Sin Título' }}</span>
+                                                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ $contenido['titulo_contenido'] ?? 'Sin Título' }}</span>
                                                                 </div>
                                                             </div>
                                                             @if (!empty($contenido['indicadores_logros']))
@@ -162,7 +166,10 @@
                                                     </h4>
                                                     <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-400">
                                                         @foreach ($corte->estrategias as $estrategia)
-                                                            <li>{{ $estrategia['estrategia'] ?? '' }}</li>
+                                                            <li class="mb-2">
+                                                                <span class="text-xs font-bold text-gray-500 uppercase block">Tema: {{ $estrategia['titulo_tema'] ?? 'Sin Tema' }}</span>
+                                                                <span class="text-sm text-gray-800 dark:text-gray-200">{{ $estrategia['actividad'] ?? '' }}</span>
+                                                            </li>
                                                         @endforeach
                                                     </ul>
                                                 </div>

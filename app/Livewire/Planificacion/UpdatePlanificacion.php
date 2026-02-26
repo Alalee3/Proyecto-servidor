@@ -27,6 +27,7 @@ class UpdatePlanificacion extends Component
     // Datos principales de la planificación (NO EDITABLES, solo se muestran)
     public $planificacionId;
     public $docente_id;
+    public $id_lapso_academico;
     public $docente_nombre;
     public $docente_apellido;
     public $cedula;
@@ -92,6 +93,7 @@ class UpdatePlanificacion extends Component
         $this->id_unidad_curricular = $planificacion['id_unidad_curricular'];
         $this->lapso_fecha_inicio = $planificacion['lapso_fecha_inicio'];
         $this->lapso_fecha_fin = $planificacion['lapso_fecha_fin'];
+        $this->id_lapso_academico = $planificacion['id_lapso_academico'];
         $this->nombre_unidad_curricular = $planificacion['nombre_unidad_curricular'];
         $this->nombre_seccion = $planificacion['nombre_seccion'];
         $this->nombre_lapso = $planificacion['nombre_lapso'];
@@ -264,6 +266,7 @@ class UpdatePlanificacion extends Component
     {
         $this->form->lapso_fecha_inicio = $this->lapso_fecha_inicio;
         $this->form->lapso_fecha_fin = $this->lapso_fecha_fin;
+        $this->form->id_lapso_academico = $this->id_lapso_academico;
 
         $field = str_replace('form.', '', $propertyName);
         $this->form->validateOnly($field);
@@ -279,6 +282,7 @@ class UpdatePlanificacion extends Component
     {
         $this->form->lapso_fecha_inicio = $this->lapso_fecha_inicio;
         $this->form->lapso_fecha_fin = $this->lapso_fecha_fin;
+        $this->form->id_lapso_academico = $this->id_lapso_academico;
 
         $this->form->validate();
 

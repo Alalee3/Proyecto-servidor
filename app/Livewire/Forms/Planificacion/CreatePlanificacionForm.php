@@ -61,8 +61,41 @@ class CreatePlanificacionForm extends Form
 
             // Validación para evaluaciones
             foreach ($unidad['evaluaciones'] as $evaluacionIndex => $evaluacion) {
-                $fechaEvaluacionRules = ['required', 'date'];
+                $fechaEvaluacionRules = [
+                    'required',
+                    'date',
+                    function ($attribute, $value, $fail) {
+                        if (!$this->id_profesor_asignado)
+                            return;
 
+                        $lapso = \Illuminate\Support\Facades\DB::table('detalle_profesor_asignado as dpa')
+                            ->join('seccion as s', 'dpa.id_seccion', '=', 's.id_seccion')
+                            ->join('lapso_academico as la', 's.id_lapso_academico', '=', 'la.id_lapso_academico')
+                            ->where('dpa.id_detalle_profesor_asignado', $this->id_profesor_asignado)
+                            ->select('la.fecha_inicio_lapso_academico', 'la.fecha_fin_lapso_academico', 'la.id_lapso_academico')
+                            ->first();
+
+                        if ($lapso) {
+                            if ($value < $lapso->fecha_inicio_lapso_academico || $value > $lapso->fecha_fin_lapso_academico) {
+                                $fail("La fecha de evaluación debe estar dentro del lapso académico ({$lapso->fecha_inicio_lapso_academico} al {$lapso->fecha_fin_lapso_academico}).");
+                            }
+
+                            $evento = \Illuminate\Support\Facades\DB::table('evento as e')
+                                ->join('calendario_academico as ca', 'e.id_calendario', '=', 'ca.id_calendario_academico')
+                                ->where('ca.id_lapso_academico', $lapso->id_lapso_academico)
+                                ->where(function ($q) use ($value) {
+                                    $q->whereDate('e.dia_inicio_evento', '<=', $value)
+                                        ->whereDate('e.dia_fin_evento', '>=', $value);
+                                })
+                                ->select('e.descripcion_evento')
+                                ->first();
+
+                            if ($evento) {
+                                $fail("No se puede asignar una evaluación en esta fecha debido al evento: {$evento->descripcion_evento}.");
+                            }
+                        }
+                    }
+                ];
                 $rules["unidades.$index.evaluaciones.$evaluacionIndex.fecha_evaluacion"] = $fechaEvaluacionRules;
                 $rules["unidades.$index.evaluaciones.$evaluacionIndex.evaluacion_id"] = 'required|exists:evaluacion,id_evaluacion';
                 $rules["unidades.$index.evaluaciones.$evaluacionIndex.tecnica_id"] = 'required|exists:tecnica_evaluacion,id_tecnica';

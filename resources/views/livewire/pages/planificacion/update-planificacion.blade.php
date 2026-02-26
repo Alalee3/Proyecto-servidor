@@ -72,20 +72,12 @@
         <form wire:submit.prevent="savePlanificacion">
             <div class="space-y-4">
 
-                @if (session()->has('message'))
-                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4
-                                                                                                                                                     dark:bg-green-700 dark:border-green-800 dark:text-green-100"
-                        role="alert">
-                        <span class="block sm:inline">{{ session('message') }}</span>
-                    </div>
-                @endif
+                <x-table.alert-message type="exitoso" :message="session('message')" />
+                <x-table.alert-message type="error" :message="session('error')" />
 
-                @if (session()->has('error'))
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4
-                                                                                                                                                     dark:bg-red-700 dark:border-red-800 dark:text-red-100"
-                        role="alert">
-                        <span class="block sm:inline">{{ session('error') }}</span>
-                    </div>
+                @if ($errors->any())
+                    <x-table.alert-message type="error"
+                        message="La planificación no pudo ser actualizada. Por favor, revise todos los campos requeridos." />
                 @endif
 
                 {{-- Header / Información General --}}
@@ -229,7 +221,7 @@
                                                             @if (count($corte['contenidos']) > 1 && !$locked)
                                                                 <button type="button"
                                                                     wire:click="removeItem({{ $index }}, 'contenidos', {{ $contenidoIndex }})"
-                                                                    class="text-red-500 hover:text-red-700 text-[10px] font-bold uppercase flex items-center gap-1">
+                                                                    class="text-gray-400 hover:text-red-500 transition-colors text-[10px] font-bold uppercase flex items-center gap-1">
                                                                     <span class="material-icons text-xs">delete</span> ELIMINAR
                                                                 </button>
                                                             @endif
@@ -531,7 +523,7 @@
                                 </div>
                                 @if (count($form->bibliografias) > 1)
                                     <button type="button" wire:click="removeItem(null, 'bibliografias', {{ $biblioIndex }})"
-                                        class="text-red-500 hover:text-red-700 text-sm self-start sm:self-auto p-2">
+                                        class="text-gray-400 hover:text-red-500 transition-colors text-sm self-start sm:self-auto p-2">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 @endif

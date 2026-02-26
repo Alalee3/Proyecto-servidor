@@ -1,36 +1,32 @@
 @props(['type' => 'success', 'message' => ''])
 
+@php
+    $isSuccess = in_array($type, ['success', 'exitoso', 'exito']);
+    $bgColor = $isSuccess ? 'bg-green-50' : 'bg-red-50';
+    $textColor = $isSuccess ? 'text-green-800' : 'text-red-800';
+    $borderColor = $isSuccess ? 'border-green-200' : 'border-red-200';
+    $title = $isSuccess ? '¡ÉXITO!' : '¡ERROR!';
+@endphp
+
 @if($message)
-    <div 
-        class="p-4 mb-4 text-sm rounded-lg relative
-            @if($type === 'success')
-                text-green-800 bg-green-50 dark:bg-gray-800 dark:text-green-400
-            @else
-                text-red-800 bg-red-50 dark:bg-gray-800 dark:text-red-400
-            @endif"
-        role="alert"
-        x-data
-        x-init="setTimeout(() => { 
-            let btn = $el.querySelector('.auto-close-btn'); 
-            if(btn) btn.click(); 
-        }, 2000)"
-    >
-        
-        <strong class="block font-bold">
-            @if($type === 'success') ¡ÉXITO! @else ¡ERROR! @endif
-        </strong>
-        
-        <span class="block mt-1">{{ $message }}</span>
-        
-        <!-- Botón de cierre -->
-        <button
-            class="auto-close-btn inline-flex items-center px-2 py-2 absolute top-2 right-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white rounded-lg focus:outline-none transition ease-in-out duration-150"
-            onclick="this.parentElement.style.display='none'">
-            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd"
-                    d="M6.293 4.293a1 1 0 011.414 0L10 6.586l2.293-2.293a1 1 0 111.414 1.414L11.414 8l2.293 2.293a1 1 0 11-1.414 1.414L10 9.414l-2.293 2.293a1 1 0 01-1.414-1.414L8.586 8 6.293 5.707a1 1 0 010-1.414z"
-                    clip-rule="evenodd" />
-            </svg>
-        </button>
+    <div class="p-4 mb-4 text-sm rounded-lg relative border {{ $bgColor }} {{ $textColor }} {{ $borderColor }} dark:bg-gray-800 dark:border-gray-700"
+        role="alert" x-data="{ show: true }" x-show="show" x-transition:leave="transition ease-in duration-300"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        <div class="flex items-start">
+            <div class="flex-1">
+                <strong class="block font-bold">{{ $title }}</strong>
+                <span class="block mt-1">{{ $message }}</span>
+            </div>
+
+            <button type="button"
+                class="ml-auto -mx-1.5 -my-1.5 p-1.5 inline-flex items-center justify-center h-8 w-8 text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 dark:hover:text-white"
+                @click="show = false">
+                <span class="sr-only">Cerrar</span>
+                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                </svg>
+            </button>
+        </div>
     </div>
 @endif

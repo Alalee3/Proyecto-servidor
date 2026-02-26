@@ -9,20 +9,11 @@
         <form wire:submit.prevent="savePlanificacion" novalidate>
             <div class="space-y-4">
 
-                @if (session()->has('message'))
-                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4
-                                                                                                                                                             dark:bg-green-700 dark:border-green-800 dark:text-green-100"
-                        role="alert">
-                        <span class="block sm:inline">{{ session('message') }}</span>
-                    </div>
-                @endif
+                <x-table.alert-message type="exitoso" :message="session('message')" />
+                <x-table.alert-message type="error" :message="session('error')" />
 
-                @if (session()->has('error'))
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4
-                                                                                                                                                             dark:bg-red-700 dark:border-red-800 dark:text-red-100"
-                        role="alert">
-                        <span class="block sm:inline">{{ session('error') }}</span>
-                    </div>
+                @if ($errors->any())
+                    <x-table.alert-message type="error" message="La planificación no pudo ser guardada. Por favor, revise todos los campos requeridos en cada unidad." />
                 @endif
 
                 <div class="grid grid-cols-1 gap-6 mb-6">
@@ -52,20 +43,6 @@
                     @endif
                 </div>
 
-                <!-- Sección de Distribución Académica (Cortes) -->
-                @if($form->id_profesor_asignado)
-                    <div
-                        class="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
-                        <div class="flex items-center gap-2 mb-2 text-gray-700 dark:text-gray-300">
-                            <span class="material-icons text-sm">event_note</span>
-                            <span class="text-xs font-bold uppercase tracking-wider">Distribución: 4 Unidades Académicas
-                                (25% cada una)</span>
-                        </div>
-                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <div class="bg-blue-600 h-2 rounded-full" style="width: 100%"></div>
-                        </div>
-                    </div>
-                @endif
                 <div class="space-y-6" x-data="{ openUnidad: 0 }">
                     <div class="flex items-center justify-between border-b border-gray-300 dark:border-gray-600 pb-4">
                         <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100">
@@ -158,7 +135,7 @@
                                                             @if (count($unidad['objetivos']) > 1)
                                                                 <button type="button"
                                                                     wire:click="removeItem({{ $index }}, 'objetivos', {{ $objetivoIndex }})"
-                                                                    class="text-red-500 hover:text-red-700 text-[10px] font-bold uppercase flex items-center gap-1">
+                                                                    class="text-gray-400 hover:text-red-500 transition-colors text-[10px] font-bold uppercase flex items-center gap-1">
                                                                     <span class="material-icons text-xs">delete</span> ELIMINAR
                                                                     OBJETIVO
                                                                 </button>
@@ -230,7 +207,7 @@
                                                                 @if (count($objetivo['contenidos']) > 1)
                                                                     <button type="button"
                                                                         wire:click="removeItem({{ $index }}, 'contenidos', {{ $contenidoIndex }}, {{ $objetivoIndex }})"
-                                                                        class="mt-2 text-red-500 hover:text-red-700">
+                                                                        class="mt-2 text-gray-400 hover:text-red-500 transition-colors">
                                                                         <span class="material-icons text-sm">delete</span>
                                                                     </button>
                                                                 @endif
@@ -262,7 +239,7 @@
                                                     @if (count($unidad['estrategias']) > 1)
                                                         <button type="button"
                                                             wire:click="removeItem({{ $index }}, 'estrategias', {{ $estrategiaIndex }})"
-                                                            class="text-red-500 hover:text-red-700 text-[10px] font-bold uppercase flex items-center gap-1">
+                                                            class="text-gray-400 hover:text-red-500 transition-colors text-[10px] font-bold uppercase flex items-center gap-1">
                                                             <span class="material-icons text-xs">delete</span> ELIMINAR
                                                         </button>
                                                     @endif

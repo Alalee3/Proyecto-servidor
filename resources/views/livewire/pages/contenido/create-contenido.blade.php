@@ -33,7 +33,7 @@
                                 </button>
                             </div>
                             
-                            <div class="space-y-4 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+                            <div class="space-y-4">
                                 @foreach($form->id_objetivo as $index => $idSel)
                                     <div class="flex items-center gap-3">
                                         <div class="flex-grow">
@@ -45,20 +45,13 @@
                                                 :disabled="empty($form->id_tema)" />
                                         </div>
                                         <button type="button" wire:click="removeObjetivo({{ $index }})" 
-                                            class="text-red-500 hover:text-red-700 p-2 transition-colors"
+                                            class="text-gray-400 hover:text-red-500 transition-colors p-2"
                                             title="ELIMINAR ESTE OBJETIVO">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
+                                            <span class="material-icons text-xl">delete</span>
                                         </button>
                                     </div>
                                 @endforeach
 
-                                @if(empty($form->id_tema))
-                                    <p class="text-gray-400 text-[10px] uppercase font-bold italic text-center">
-                                        {{ __('-- DEBE SELECCIONAR UN TEMA PARA ACTIVAR ESTOS CAMPOS --') }}
-                                    </p>
-                                @endif
                             </div>
                             <x-input-error :messages="$errors->first('form.id_objetivo')" class="mt-2" />
                         </div>

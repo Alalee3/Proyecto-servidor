@@ -37,6 +37,7 @@ class PlanificacionViewRepo
                 'uc.proposito_unidad_curricular',
                 'pnf.nombre_pnf',
                 's.nombre_seccion',
+                'la.id_lapso_academico',
                 'la.nombre_lapso_academico as nombre_lapso',
                 'la.fecha_inicio_lapso_academico as lapso_fecha_inicio',
                 'la.fecha_fin_lapso_academico as lapso_fecha_fin'
@@ -125,6 +126,7 @@ class PlanificacionViewRepo
                         'dc.id_detalle_contenido as detalle_contenido_id',
                         'c.titulo_contenido as titulo_contenido',
                         'c.id_objetivo',
+                        'o.titulo_objetivo',
                         'tu.id_tema_unidad as tema_id',
                         'tu.titulo_tema as titulo_tema'
                     )
