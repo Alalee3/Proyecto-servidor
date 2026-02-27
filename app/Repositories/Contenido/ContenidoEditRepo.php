@@ -9,10 +9,11 @@ class ContenidoEditRepo
 {
     public function mostrar($id)
     {
-        $contenido = \App\Models\Contenido::find($id);
+        $contenido = DB::table('contenido')
+            ->where('id_contenido', $id)
+            ->first();
 
         if ($contenido) {
-            \App\Models\Contenido::logMostrar($contenido);
 
             // Preparar datos para el formulario (compatibilidad)
             $idTema = DB::table('objetivo')

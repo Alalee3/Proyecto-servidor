@@ -97,6 +97,21 @@ return [
             'sslmode' => 'prefer',
         ],
 
+        'pgsql_daece' => [
+            'driver' => 'pgsql',
+            'url' => env('DB_URL_DAECE'),
+            'host' => env('DB_HOST_DAECE', '127.0.0.1'),
+            'port' => env('DB_PORT_DAECE', '5432'),
+            'database' => env('DB_DATABASE_DAECE', 'bd_daece'),
+            'username' => env('DB_USERNAME_DAECE', 'info'),
+            'password' => env('DB_PASSWORD_DAECE', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => 'prefer',
+        ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DB_URL'),

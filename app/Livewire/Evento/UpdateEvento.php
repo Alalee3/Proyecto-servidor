@@ -32,8 +32,8 @@ class UpdateEvento extends Component
                 return redirect()->route('evento/listar')->with('error', 'Evento no encontrado.');
             }
 
-            // Cambio aquí: Se extraen los atributos del modelo correctamente
-            $this->form->fill($evento->toArray());
+            // Cambio aquí: Se extraen los atributos convirtiendo el objeto a array
+            $this->form->fill((array) $evento);
 
         } catch (Exception $e) {
             session()->flash('error', 'Error al cargar el evento: ' . $e->getMessage());

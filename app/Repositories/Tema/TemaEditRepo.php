@@ -9,16 +9,17 @@ class TemaEditRepo
 {
     public function mostrar($id)
     {
-        $tema = \App\Models\Tema::select(
-            'id_tema_unidad as id',
-            'id_unidad_curricular',
-            'unidad_tema',
-            'titulo_tema'
-        )->find($id);
+        $tema = DB::table('tema_unidad')
+            ->select(
+                'id_tema_unidad as id',
+                'id_unidad_curricular',
+                'unidad_tema',
+                'titulo_tema'
+            )
+            ->where('id_tema_unidad', $id)
+            ->first();
 
         if ($tema) {
-            \App\Models\Tema::logMostrar($tema);
-
             $tema->objetivos = DB::table('objetivo')
                 ->where('id_tema_unidad', $id)
                 ->where('estatus', '1')

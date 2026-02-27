@@ -8,11 +8,9 @@ class CalendarioAcademicoEditRepo
 {
     public function mostrar($id)
     {
-        $calendario = CalendarioAcademico::find($id);
-        if ($calendario) {
-            CalendarioAcademico::logMostrar($calendario);
-        }
-        return $calendario;
+        return \Illuminate\Support\Facades\DB::table('calendario_academico')
+            ->where('id_calendario_academico', $id)
+            ->first();
     }
 
     public function editar($id, array $data)

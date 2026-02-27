@@ -8,11 +8,9 @@ class EventoEditRepo
 {
     public function mostrar($id)
     {
-        $evento = \App\Models\Evento::find($id);
-        if ($evento) {
-            \App\Models\Evento::logMostrar($evento);
-        }
-        return $evento;
+        return DB::table('evento')
+            ->where('id_evento', $id)
+            ->first();
     }
 
     public function editar($id, array $data)

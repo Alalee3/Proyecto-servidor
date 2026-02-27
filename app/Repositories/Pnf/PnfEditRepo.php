@@ -10,11 +10,10 @@ class PnfEditRepo
 {
     public function mostrar($id)
     {
-        $pnf = \App\Models\Pnf::select('id_pnf as id', 'nombre_pnf as nombre')->find($id);
-        if ($pnf) {
-            \App\Models\Pnf::logMostrar($pnf);
-        }
-        return $pnf;
+        return DB::table('pnf')
+            ->select('id_pnf as id', 'nombre_pnf as nombre')
+            ->where('id_pnf', $id)
+            ->first();
     }
 
 
