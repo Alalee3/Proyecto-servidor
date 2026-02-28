@@ -13,6 +13,7 @@ class Bitacora extends Model
 
     protected $fillable = [
         'id_users',
+        'modulo_bitacora',
         'tabla_afectada_bitacora',
         'id_registro_afectado_bitacora',
         'accion_bitacora',
@@ -21,5 +22,15 @@ class Bitacora extends Model
         'ip_origen_bitacora',
         'fecha_creacion',
         'estatus',
+    ];
+
+    /**
+     * Los atributos que deben ser convertidos.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'valores_anteriores_bitacora' => 'array',
+        'valores_nuevos_bitacora' => 'array',
     ];
 }

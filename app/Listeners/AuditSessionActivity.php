@@ -14,7 +14,7 @@ class AuditSessionActivity
      */
     public function handleLogin(Login $event)
     {
-        $this->log($event->user->id, 'LOGIN');
+        $this->log($event->user->getAuthIdentifier(), 'LOGIN');
     }
 
     /**
@@ -23,7 +23,7 @@ class AuditSessionActivity
     public function handleLogout(Logout $event)
     {
         if ($event->user) {
-            $this->log($event->user->id, 'LOGOUT');
+            $this->log($event->user->getAuthIdentifier(), 'LOGOUT');
         }
     }
 
@@ -34,14 +34,15 @@ class AuditSessionActivity
     {
         Bitacora::create([
             'id_users' => $userId,
+            'modulo_bitacora' => 'Seguridad',
             'tabla_afectada_bitacora' => 'users',
-            'id_registro_afectado_bitacora' => $userId,
+            'id_registro_afectado_bitacora' => (string) $userId,
             'accion_bitacora' => $accion,
             'valores_anteriores_bitacora' => null,
             'valores_nuevos_bitacora' => null,
             'ip_origen_bitacora' => Request::ip(),
             'fecha_creacion' => now(),
-            'estatus' => 1,
+            'estatus' => '1',
         ]);
     }
 }

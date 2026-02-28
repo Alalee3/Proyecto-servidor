@@ -8,12 +8,13 @@ class BitacoraViewRepo
 {
     public function mostrar($id)
     {
-        return DB::table('bitacora as b')
+        return \App\Models\Bitacora::from('bitacora as b')
             ->leftJoin('users as u', 'b.id_users', '=', 'u.id')
             ->select(
                 'b.id_bitacora',
                 'u.name as usuario_nombre',
                 'u.email as usuario_correo',
+                'b.modulo_bitacora as modulo',
                 'b.tabla_afectada_bitacora as tabla',
                 'b.id_registro_afectado_bitacora as registro_id',
                 'b.accion_bitacora as accion',

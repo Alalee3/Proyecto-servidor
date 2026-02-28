@@ -19,6 +19,7 @@
                         <tr>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Fecha</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Usuario</th>
+                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Módulo</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Acción</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Tabla</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">
@@ -36,19 +37,23 @@
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">
                                         {{ $log->usuario_nombre ?? 'Sistema' }}
                                     </td>
+                                    <td class="px-4 py-4 text-gray-900 dark:text-white">
+                                        {{ $log->modulo ?? '---' }}
+                                    </td>
                                     <td class="px-4 py-4">
                                         @php
                                             $accionMostrar = $log->accion;
 
-                                            // Verificamos si es una modificación y validamos el estatus en el JSON
+                                            // Verificamos si es una modificación y validamos el estatus
                                             if ($accionMostrar === 'MODIFICAR' && !empty($log->nuevos)) {
-                                                $datosNuevos = json_decode($log->nuevos, true);
+                                                // Si es array (por el cast del modelo), lo usamos directo, si no, intentamos decode
+                                                $datosNuevos = is_array($log->nuevos) ? $log->nuevos : json_decode($log->nuevos, true);
 
                                                 if (is_array($datosNuevos) && isset($datosNuevos['estatus'])) {
                                                     if ($datosNuevos['estatus'] == 3) {
                                                         $accionMostrar = 'INACTIVAR';
                                                     } elseif ($datosNuevos['estatus'] == 1) {
-                                                        $accionMostrar = 'ACTIVAR'; // Agregamos la nueva acción
+                                                        $accionMostrar = 'ACTIVAR';
                                                     }
                                                 }
                                             }
@@ -59,7 +64,7 @@
                                                 'MODIFICAR' => 'text-blue-800 bg-blue-100 dark:bg-blue-900 dark:text-blue-300',
                                                 'ELIMINAR' => 'text-red-800 bg-red-100 dark:bg-red-900 dark:text-red-300',
                                                 'INACTIVAR' => 'text-orange-800 bg-orange-100 dark:bg-orange-900 dark:text-orange-300',
-                                                'ACTIVAR' => 'text-teal-800 bg-teal-100 dark:bg-teal-900 dark:text-teal-300', // Color nuevo
+                                                'ACTIVAR' => 'text-teal-800 bg-teal-100 dark:bg-teal-900 dark:text-teal-300',
                                                 'LOGIN' => 'text-purple-800 bg-purple-100 dark:bg-purple-900 dark:text-purple-300',
                                                 'LOGOUT' => 'text-yellow-800 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-300',
                                                 'MOSTRAR' => 'text-indigo-800 bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-300',

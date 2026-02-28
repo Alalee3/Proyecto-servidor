@@ -8,11 +8,12 @@ class BitacoraIndexRepo
 {
     public function listar($busqueda = '', $paginacion = 10)
     {
-        return DB::table('bitacora as b')
+        return \App\Models\Bitacora::from('bitacora as b')
             ->leftJoin('users as u', 'b.id_users', '=', 'u.id')
             ->select(
                 'b.id_bitacora',
                 'u.name as usuario_nombre',
+                'b.modulo_bitacora as modulo',
                 'b.tabla_afectada_bitacora as tabla',
                 'b.id_registro_afectado_bitacora as registro_id',
                 'b.accion_bitacora as accion',
@@ -25,6 +26,7 @@ class BitacoraIndexRepo
             ->when($busqueda, function ($consulta, $busqueda) {
                 $consulta->where(function ($q) use ($busqueda) {
                     $q->where('u.name', 'LIKE', '%' . $busqueda . '%')
+                        ->orWhere('b.modulo_bitacora', 'LIKE', '%' . $busqueda . '%')
                         ->orWhere('b.tabla_afectada_bitacora', 'LIKE', '%' . $busqueda . '%')
                         ->orWhere('b.accion_bitacora', 'LIKE', '%' . $busqueda . '%')
                         ->orWhere('b.ip_origen_bitacora', 'LIKE', '%' . $busqueda . '%');

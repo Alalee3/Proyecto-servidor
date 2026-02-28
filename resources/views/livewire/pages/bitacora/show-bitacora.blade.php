@@ -26,15 +26,23 @@
                         </div>
 
                         <div>
+                            <x-input-label value="Módulo Afectado:" />
+                            <p
+                                class="text-gray-700 dark:text-gray-300 text-2xl font-semibold text-blue-600 dark:text-blue-400">
+                                {{ $bitacora->modulo ?? '---' }}
+                            </p>
+                        </div>
+
+                        <div>
                             <x-input-label value="Acción Realizada:" />
                             <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
                                 @php
                                     // Determinar la acción a mostrar dinámicamente
                                     $accionMostrar = $bitacora->accion;
 
-                                    // Verificamos si es una modificación y validamos el estatus en el JSON
+                                    // Verificamos si es una modificación y validamos el estatus
                                     if ($accionMostrar === 'MODIFICAR' && !empty($bitacora->nuevos)) {
-                                        $datosNuevos = json_decode($bitacora->nuevos, true);
+                                        $datosNuevos = is_array($bitacora->nuevos) ? $bitacora->nuevos : json_decode($bitacora->nuevos, true);
 
                                         if (is_array($datosNuevos) && isset($datosNuevos['estatus'])) {
                                             if ($datosNuevos['estatus'] == 3) {
@@ -65,12 +73,6 @@
                             </p>
                         </div>
 
-                        <div>
-                            <x-input-label value="Tabla Afectada:" />
-                            <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
-                                {{ $bitacora->tabla ?? '---' }}
-                            </p>
-                        </div>
 
                         <div>
                             <x-input-label value="Dirección IP de Origen:" />
@@ -92,14 +94,14 @@
                                 @if($accionMostrar !== 'CREAR')
                                     <div>
                                         <x-input-label value="Valores Anteriores:" />
-                                        <div class="mt-1">
+                                        <div class="mt-2">
                                             @if($bitacora->anteriores)
                                                 @php
-                                                    $datosAnteriores = json_decode($bitacora->anteriores, true) ?? $bitacora->anteriores;
-                                                    $jsonAnteriores = json_encode($datosAnteriores, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                                                    $datosAnteriores = is_array($bitacora->anteriores) ? $bitacora->anteriores : json_decode($bitacora->anteriores, true);
+                                                    $jsonAnteriores = json_encode($datosAnteriores ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
                                                 @endphp
                                                 <pre
-                                                    class="bg-gray-50 dark:bg-gray-900 rounded-md p-4 overflow-x-auto text-sm font-mono text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 shadow-sm">{{ $jsonAnteriores }}</pre>
+                                                    class="bg-gray-50 dark:bg-gray-900 rounded-md p-4 overflow-x-auto text-sm font-mono text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 shadow-sm"><span class="text-blue-600 dark:text-blue-400 font-bold">{{ $bitacora->tabla }}</span> {{ $jsonAnteriores }}</pre>
                                             @else
                                                 <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">No aplicable
                                                 </p>
@@ -110,14 +112,14 @@
 
                                 <div>
                                     <x-input-label value="Valores Nuevos:" />
-                                    <div class="mt-1">
+                                    <div class="mt-2">
                                         @if($bitacora->nuevos)
                                             @php
-                                                $datosNuevos = json_decode($bitacora->nuevos, true) ?? $bitacora->nuevos;
-                                                $jsonNuevos = json_encode($datosNuevos, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                                                $datosNuevos = is_array($bitacora->nuevos) ? $bitacora->nuevos : json_decode($bitacora->nuevos, true);
+                                                $jsonNuevos = json_encode($datosNuevos ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
                                             @endphp
                                             <pre
-                                                class="bg-gray-50 dark:bg-gray-900 rounded-md p-4 overflow-x-auto text-sm font-mono text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 shadow-sm">{{ $jsonNuevos }}</pre>
+                                                class="bg-gray-50 dark:bg-gray-900 rounded-md p-4 overflow-x-auto text-sm font-mono text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 shadow-sm"><span class="text-blue-600 dark:text-blue-400 font-bold">{{ $bitacora->tabla }}</span> {{ $jsonNuevos }}</pre>
                                         @else
                                             <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">No aplicable o nulo
                                             </p>
