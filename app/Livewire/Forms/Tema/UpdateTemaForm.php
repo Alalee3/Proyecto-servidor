@@ -16,7 +16,7 @@ class UpdateTemaForm extends Form
     protected function rules()
     {
         return [
-            'id_unidad_curricular' => 'required|exists:unidad_curricular,id_unidad_curricular',
+            'id_unidad_curricular' => 'required|exists:external_db.unidad_curricular,ucu_codigo',
             'titulo_tema' => [
                 'required',
                 'string',
@@ -54,10 +54,10 @@ class UpdateTemaForm extends Form
         $this->id_unidad_curricular = $tema->id_unidad_curricular;
         $this->titulo_tema = $tema->titulo_tema;
         $this->unidad_tema = $tema->unidad_tema;
-        
+
         // Asegurar que cada objetivo sea un array, no un objeto stdClass
-        $this->objetivos = !empty($objetivos) 
-            ? array_map(fn($o) => (array) $o, $objetivos) 
+        $this->objetivos = !empty($objetivos)
+            ? array_map(fn($o) => (array) $o, $objetivos)
             : [['titulo_objetivo' => '']];
     }
 

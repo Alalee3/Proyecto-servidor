@@ -16,7 +16,7 @@ class CreateTemaForm extends Form
     protected function rules()
     {
         return [
-            'id_unidad_curricular' => 'required|exists:unidad_curricular,id_unidad_curricular',
+            'id_unidad_curricular' => 'required|exists:external_db.unidad_curricular,ucu_codigo',
             'titulo_tema' => [
                 'required',
                 'string',

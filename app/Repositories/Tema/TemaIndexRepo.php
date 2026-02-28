@@ -8,18 +8,17 @@ class TemaIndexRepo
 {
     public function listar($busqueda = '', $paginacion = 5)
     {
-        return DB::table('tema_unidad as t')
-            ->join('unidad_curricular as uc', 't.id_unidad_curricular', '=', 'uc.id_unidad_curricular')
+        $temas = DB::table('tema_unidad as t')
             ->select(
                 't.id_tema_unidad',
                 't.titulo_tema',
-                'uc.nombre_unidad_curricular',
-                't.estatus'
+                't.id_unidad_curricular',
+                't.estatus',
+                't.fecha_creacion'
             )
             ->when($busqueda, function ($query, $busqueda) {
                 return $query->where(function ($q) use ($busqueda) {
                     $q->where('t.titulo_tema', 'LIKE', '%' . $busqueda . '%')
-                        ->orWhere('uc.nombre_unidad_curricular', 'LIKE', '%' . $busqueda . '%')
                         // Búsqueda por objetivos asociados
                         ->orWhereExists(function ($sub) use ($busqueda) {
                             $sub->select(DB::raw(1))
@@ -32,6 +31,20 @@ class TemaIndexRepo
             })
             ->orderBy('t.fecha_creacion', 'desc')
             ->paginate($paginacion);
+
+        // Obtener nombres de unidades curriculares desde la base de datos externa SOGC
+        $idUnidades = $temas->pluck('id_unidad_curricular')->unique()->toArray();
+        $unidadesSogc = DB::connection('external_db')->table('unidad_curricular')
+            ->whereIn('ucu_codigo', $idUnidades)
+            ->pluck('ucu_nombre', 'ucu_codigo');
+
+        // Mapear los nombres a la colección de temas
+        $temas->getCollection()->transform(function ($tema) use ($unidadesSogc) {
+            $tema->nombre_unidad_curricular = $unidadesSogc[$tema->id_unidad_curricular] ?? 'No definida (SOGC)';
+            return $tema;
+        });
+
+        return $temas;
     }
 
     public function inhabilitar($id)

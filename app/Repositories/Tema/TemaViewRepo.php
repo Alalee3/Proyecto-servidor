@@ -14,9 +14,9 @@ class TemaViewRepo
             \App\Models\Tema::logMostrar($tema);
 
             // Agregar nombre de unidad curricular para compatibilidad con la vista
-            $uc = DB::table('unidad_curricular')
-                ->where('id_unidad_curricular', $tema->id_unidad_curricular)
-                ->value('nombre_unidad_curricular');
+            $uc = DB::connection('external_db')->table('unidad_curricular')
+                ->where('ucu_codigo', $tema->id_unidad_curricular)
+                ->value('ucu_nombre');
 
             $tema->nombre_unidad_curricular = $uc;
 

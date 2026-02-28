@@ -9,9 +9,9 @@ class TemaCreateRepo
 {
     public function select_unidades_curriculares()
     {
-        return DB::table('unidad_curricular')
-            ->select('id_unidad_curricular as id', 'nombre_unidad_curricular as nombre')
-            ->where('estatus', '1')
+        return DB::connection('external_db')->table('unidad_curricular')
+            ->select('ucu_codigo as id', 'ucu_nombre as nombre')
+            ->where('ucu_estatus', 'A')
             ->get();
     }
 
