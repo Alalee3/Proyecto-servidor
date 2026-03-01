@@ -11,7 +11,11 @@ class EventoCreateRepo
     {
         if (empty($data['id_calendario'])) {
             $activo = DB::table('calendario_academico')->where('estatus', '1')->first();
-            $data['id_calendario'] = $activo ? $activo->id_calendario_academico : null;
+            if (!$activo) {
+                // Si no hay nada activo, lanzamos una excepción o retornamos un valor que evite el insert
+                throw new \Exception('No se puede registrar el evento porque no existe un calendario académico activo.');
+            }
+            $data['id_calendario'] = $activo->id_calendario_academico;
         }
 
         $evento = \App\Models\Evento::create([

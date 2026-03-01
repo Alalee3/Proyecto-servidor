@@ -17,8 +17,17 @@ class EventoEditRepo
     {
         $evento = \App\Models\Evento::find($id);
         if ($evento) {
+            $id_calendario = $data['id_calendario'] ?? null;
+            if (empty($id_calendario)) {
+                $activo = DB::table('calendario_academico')->where('estatus', '1')->first();
+                if (!$activo) {
+                    throw new \Exception('No se puede actualizar el evento porque no existe un calendario académico activo.');
+                }
+                $id_calendario = $activo->id_calendario_academico;
+            }
+
             return $evento->update([
-                'id_calendario' => $data['id_calendario'] ?? null,
+                'id_calendario' => $id_calendario,
                 'dia_inicio_evento' => $data['dia_inicio_evento'],
                 'dia_fin_evento' => $data['dia_fin_evento'],
                 'semana_evento' => $data['semana_evento'],
