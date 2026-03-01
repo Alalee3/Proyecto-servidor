@@ -154,20 +154,6 @@
                     </ul>
                 </div>
 
-                <!-- Calendario Académico -->
-                <div>
-                    <button @click="openMenu === 16 ? openMenu = null : openMenu = 16" class="sogat-sidebar-item">
-                        <span>Calendario</span>
-                        <img :src="openMenu === 16 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                            class="w-5 h-5 ml-auto">
-                    </button>
-                    <ul x-show="openMenu === 16" x-collapse class="mt-0 space-y-0">
-                        <li><a href="{{ route('calendario-academico/crear') }}" class="sogat-sidebar-link">Crear Calendario</a>
-                        </li>
-                        <li><a href="{{ route('calendario-academico/listar') }}" class="sogat-sidebar-link">Gestionar
-                                Calendario</a></li>
-                    </ul>
-                </div>
 
                 <!-- Planificaciones -->
                 <div>

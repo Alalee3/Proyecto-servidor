@@ -13,7 +13,7 @@ class Bitacora extends Model
 
     protected $fillable = [
         'id_users',
-        'modulo_bitacora',
+        'modulo_afectado_bitacora',
         'tabla_afectada_bitacora',
         'id_registro_afectado_bitacora',
         'accion_bitacora',

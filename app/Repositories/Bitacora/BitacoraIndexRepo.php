@@ -13,7 +13,7 @@ class BitacoraIndexRepo
             ->select(
                 'b.id_bitacora',
                 'u.name as usuario_nombre',
-                'b.modulo_bitacora as modulo',
+                'b.modulo_afectado_bitacora as modulo',
                 'b.tabla_afectada_bitacora as tabla',
                 'b.id_registro_afectado_bitacora as registro_id',
                 'b.accion_bitacora as accion',
@@ -26,7 +26,7 @@ class BitacoraIndexRepo
             ->when($busqueda, function ($consulta, $busqueda) {
                 $consulta->where(function ($q) use ($busqueda) {
                     $q->where('u.name', 'LIKE', '%' . $busqueda . '%')
-                        ->orWhere('b.modulo_bitacora', 'LIKE', '%' . $busqueda . '%')
+                        ->orWhere('b.modulo_afectado_bitacora', 'LIKE', '%' . $busqueda . '%')
                         ->orWhere('b.tabla_afectada_bitacora', 'LIKE', '%' . $busqueda . '%')
                         ->orWhere('b.accion_bitacora', 'LIKE', '%' . $busqueda . '%')
                         ->orWhere('b.ip_origen_bitacora', 'LIKE', '%' . $busqueda . '%');

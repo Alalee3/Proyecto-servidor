@@ -34,7 +34,7 @@ class AuditSessionActivity
     {
         Bitacora::create([
             'id_users' => $userId,
-            'modulo_bitacora' => 'Seguridad',
+            'modulo_afectado_bitacora' => 'Seguridad',
             'tabla_afectada_bitacora' => 'users',
             'id_registro_afectado_bitacora' => (string) $userId,
             'accion_bitacora' => $accion,

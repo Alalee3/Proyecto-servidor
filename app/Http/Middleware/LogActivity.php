@@ -26,7 +26,7 @@ class LogActivity
         if (Auth::check()) {
             Bitacora::create([
                 'id_users' => Auth::id(),
-                'modulo_bitacora' => ucfirst($request->segment(1)) ?? 'General',
+                'modulo_afectado_bitacora' => ucfirst($request->segment(1)) ?? 'General',
                 'tabla_afectada_bitacora' => $request->segment(1) ?? 'N/A', // Captura el primer segmento de la URL
                 'id_registro_afectado_bitacora' => (string) ($request->segment(2) ?? '0'), // Intenta capturar un ID si existe en la URL
                 'accion_bitacora' => strtoupper($action),
