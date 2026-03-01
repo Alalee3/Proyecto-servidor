@@ -16,9 +16,13 @@ class ContenidoEditRepo
         if ($contenido) {
 
             // Preparar datos para el formulario (compatibilidad)
-            $idTema = DB::table('objetivo')
-                ->where('id_objetivo', $contenido->id_objetivo)
-                ->value('id_tema_unidad');
+            $firstDetalle = DB::table('detalle_objetivo')->where('id_contenido', $id)->first();
+            $idTema = null;
+            if ($firstDetalle) {
+                $idTema = DB::table('objetivo')
+                    ->where('id_objetivo', $firstDetalle->id_objetivo)
+                    ->value('id_tema_unidad');
+            }
 
             $formContent = (object) [
                 'id' => $contenido->id_contenido,
@@ -40,13 +44,10 @@ class ContenidoEditRepo
     public function editar($id, array $data)
     {
         return DB::transaction(function () use ($id, $data) {
-            $firstObjetivo = !empty($data['id_objetivo']) ? $data['id_objetivo'][0] : null;
-
             // Actualizar contenido principal
             $contenidoUpdated = \App\Models\Contenido::find($id);
             if ($contenidoUpdated) {
                 $contenidoUpdated->update([
-                    'id_objetivo' => $firstObjetivo,
                     'titulo_contenido' => $data['titulo_contenido'],
                     'fecha_actualizacion' => Carbon::now(),
                 ]);

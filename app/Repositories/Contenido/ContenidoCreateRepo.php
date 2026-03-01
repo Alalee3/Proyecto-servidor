@@ -30,12 +30,8 @@ class ContenidoCreateRepo
     {
         return DB::transaction(function () use ($data) {
             // Insertar el contenido principal
-            // Tomamos el primer objetivo para la relación directa en la tabla contenido (si existe)
-            $firstObjetivo = !empty($data['id_objetivo']) ? $data['id_objetivo'][0] : null;
-
             $contenido = \App\Models\Contenido::create([
                 'titulo_contenido' => $data['titulo_contenido'],
-                'id_objetivo' => $firstObjetivo,
                 'fecha_creacion' => Carbon::now(),
                 'estatus' => '1',
             ]);
