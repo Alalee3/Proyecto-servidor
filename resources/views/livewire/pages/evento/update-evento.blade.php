@@ -15,13 +15,6 @@
                     <x-input-error :messages="$errors->first('form.descripcion_evento')" class="mt-2" />
                 </div>
 
-                <div class="w-full">
-                    <x-input-label for="semana" :value="__('Semana del Evento')" />
-                    <x-text-input id="semana" wire:model.live="form.semana_evento" class="w-full" type="number"
-                        placeholder="Ej: 1" step="1" min="1" max="52" required
-                        onkeydown="if(['e', 'E', '+', '-', '.'].includes(event.key)) event.preventDefault();" />
-                    <x-input-error :messages="$errors->first('form.semana_evento')" class="mt-2" />
-                </div>
 
                 <div class="w-full">
                     <x-input-label for="dia_inicio" :value="__('Fecha de Inicio')" />

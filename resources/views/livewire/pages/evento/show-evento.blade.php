@@ -25,13 +25,6 @@
                     </p>
                 </div>
 
-                <!-- Semana -->
-                <div>
-                    <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Semana</h3>
-                    <p class="mt-1 text-xl text-gray-900 dark:text-white">
-                        {{ $evento->semana_evento }}
-                    </p>
-                </div>
 
                 <!-- Fecha Inicio -->
                 <div>

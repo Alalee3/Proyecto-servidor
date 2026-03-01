@@ -9,7 +9,6 @@ class CreateEventoForm extends Form
     public $id_lapso = '';
     public $dia_inicio_evento = '';
     public $dia_fin_evento = '';
-    public $semana_evento = '';
     public $descripcion_evento = '';
     public $tipo_evento = '';
 
@@ -61,11 +60,6 @@ class CreateEventoForm extends Form
                     }
                 }
             ],
-            'semana_evento' => [
-                'required',
-                'integer',
-                'min:1'
-            ],
             'descripcion_evento' => [
                 'required',
                 'string',
@@ -102,10 +96,6 @@ class CreateEventoForm extends Form
             'dia_fin_evento.required' => 'La fecha de fin es obligatoria.',
             'dia_fin_evento.date' => 'La fecha de fin debe ser válida.',
             'dia_fin_evento.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la de inicio.',
-            'semana_evento.required' => 'La semana es obligatoria.',
-            'semana_evento.integer' => 'La semana debe ser un número.',
-            'semana_evento.min' => 'La semana mínima es 1.',
-            'semana_evento.max' => 'La semana máxima es 52.',
             'descripcion_evento.required' => 'La descripción es obligatoria.',
             'descripcion_evento.string' => 'La descripción debe ser texto.',
             'descripcion_evento.max' => 'La descripción no debe exceder 100 caracteres.',

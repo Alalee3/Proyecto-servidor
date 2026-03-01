@@ -21,7 +21,6 @@
                         <tr>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Lapso</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Descripción</th>
-                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Semana</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Inicio</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Fin</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">
@@ -37,7 +36,6 @@
                                     class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                                     <td class="px-4 py-4 text-gray-900 dark:text-white font-semibold">{{ $evento->nombre_lapso }}</td>
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">{{ $evento->descripcion_evento }}</td>
-                                    <td class="px-4 py-4 text-gray-900 dark:text-white text-center">{{ $evento->semana_evento }}</td>
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">
                                         {{ \Carbon\Carbon::parse($evento->dia_inicio_evento)->format('d/m/Y') }}</td>
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">

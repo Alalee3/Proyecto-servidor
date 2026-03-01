@@ -25,7 +25,6 @@ class EventoCreateRepo
             'id_lapso' => $data['id_lapso'],
             'dia_inicio_evento' => $data['dia_inicio_evento'],
             'dia_fin_evento' => $data['dia_fin_evento'],
-            'semana_evento' => $data['semana_evento'],
             'descripcion_evento' => $data['descripcion_evento'],
             'tipo_evento' => $data['tipo_evento'],
             'fecha_creacion' => Carbon::now(),

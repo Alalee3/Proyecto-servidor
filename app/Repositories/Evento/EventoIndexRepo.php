@@ -9,7 +9,7 @@ class EventoIndexRepo
     public function listar($busqueda = '', $paginacion = 5)
     {
         $eventos = DB::table('evento')
-            ->select('id_evento', 'id_lapso', 'descripcion_evento', 'dia_inicio_evento', 'dia_fin_evento', 'semana_evento', 'tipo_evento', 'estatus')
+            ->select('id_evento', 'id_lapso', 'descripcion_evento', 'dia_inicio_evento', 'dia_fin_evento', 'tipo_evento', 'estatus')
             ->when($busqueda, function ($consulta, $busqueda) {
                 $consulta->where('descripcion_evento', 'LIKE', '%' . $busqueda . '%');
             })
