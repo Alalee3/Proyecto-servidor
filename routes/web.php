@@ -2,6 +2,8 @@
 
 use App\Livewire\Planificacion\CreatePlanificacion;
 use App\Livewire\Planificacion\ListPlanificacion;
+use App\Livewire\Planificacion\UpdatePlanificacion;
+use App\Livewire\Planificacion\ShowPlanificacion;
 
 
 use App\Livewire\Pnf\CreatePnf;
@@ -92,7 +94,13 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     //Route::get('usuarios/create', CreateUsuario::class)->name('usuarios/crear');
     //Route::get('usuarios/list', ListUsuario::class)->name('usuarios/listar');
 
-    Route::get('planificacion/list', ListPlanificacion::class)->name('planificacion/listar');
+    Route::get('planificacion/list', ListPlanificacion::class)->middleware('can:listar-planificacion')->name('planificacion/listar');
+    Route::get('planificacion/create', CreatePlanificacion::class)->middleware('can:crear-planificacion')->name('planificacion/crear');
+    Route::get('planificacion/update/{planificacionId}', UpdatePlanificacion::class)->middleware('can:editar-planificacion')->name('planificaciones.update');
+    Route::get('planificacion/show/{planificacionId}', ShowPlanificacion::class)->middleware('can:ver-planificacion')->name('planificacion/show');
+    // Rutas para Reportes PDF (Abrir en pestaña)
+    Route::get('planificacion/reporte-general', [\App\Http\Controllers\ReportePlanificacionController::class, 'reporteGeneral'])->middleware('can:listar-planificacion')->name('planificacion.reporte.general');
+    Route::get('planificacion/reporte-detalle/{id}', [\App\Http\Controllers\ReportePlanificacionController::class, 'reporteDetalle'])->middleware('can:ver-planificacion')->name('planificacion.reporte.detalle');
 
     Route::get('indicador-logro/list', ListIndicadorLogro::class)->name('indicador-logro/listar');
     Route::get('indicador-logro/create', CreateIndicadorLogro::class)->name('indicador-logro/crear');
@@ -129,10 +137,10 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     Route::get('evaluacion/show/{id}', ShowEvaluacion::class)->name('evaluacion/show');
 
     // Rutas para Eventos
-    Route::get('evento/list', ListEvento::class)->name('evento/listar');
-    Route::get('evento/create', CreateEvento::class)->name('evento/crear');
-    Route::get('evento/update/{id}', UpdateEvento::class)->name('evento/update');
-    Route::get('evento/show/{id}', ShowEvento::class)->name('evento/show');
+    Route::get('evento/list', ListEvento::class)->middleware('can:listar-evento')->name('evento/listar');
+    Route::get('evento/create', CreateEvento::class)->middleware('can:crear-evento')->name('evento/crear');
+    Route::get('evento/update/{id}', UpdateEvento::class)->middleware('can:editar-evento')->name('evento/update');
+    Route::get('evento/show/{id}', ShowEvento::class)->middleware('can:ver-evento')->name('evento/show');
 
 
     // Módulo de Roles (DAECE)
@@ -147,15 +155,5 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
 
 Route::middleware(['auth'])->group(function () { });
 
-Route::middleware(['auth', /*'role:1|2'*/])->group(function () {
-    Route::get('planificacion/create', CreatePlanificacion::class)->name('planificacion/crear');
-
-    Route::get('planificacion/update/{planificacionId}', \App\Livewire\Planificacion\UpdatePlanificacion::class)->name('planificaciones.update');
-    Route::get('planificacion/show/{planificacionId}', \App\Livewire\Planificacion\ShowPlanificacion::class)->name('planificacion/show');
-
-    // Rutas para Reportes PDF (Abrir en pestaña)
-    Route::get('planificacion/reporte-general', [\App\Http\Controllers\ReportePlanificacionController::class, 'reporteGeneral'])->name('planificacion.reporte.general');
-    Route::get('planificacion/reporte-detalle/{id}', [\App\Http\Controllers\ReportePlanificacionController::class, 'reporteDetalle'])->name('planificacion.reporte.detalle');
-});
 
 require __DIR__ . '/auth.php';

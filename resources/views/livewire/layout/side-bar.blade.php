@@ -141,18 +141,22 @@
                 </div>
             </div>
 
-            <!-- Eventos -->
-            <div>
-                <button @click="openMenu === 15 ? openMenu = null : openMenu = 15" class="sogat-sidebar-item">
-                    <span>Eventos</span>
-                    <img :src="openMenu === 15 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                        class="w-5 h-5 ml-auto">
-                </button>
-                <ul x-show="openMenu === 15" x-collapse class="mt-0 space-y-0">
-                    <li><a href="{{ route('evento/crear') }}" class="sogat-sidebar-link">Crear Evento</a></li>
-                    <li><a href="{{ route('evento/listar') }}" class="sogat-sidebar-link">Gestionar Eventos</a></li>
-                </ul>
-            </div>
+            @can('listar-evento')
+                <!-- Eventos -->
+                <div>
+                    <button @click="openMenu === 15 ? openMenu = null : openMenu = 15" class="sogat-sidebar-item">
+                        <span>Eventos</span>
+                        <img :src="openMenu === 15 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
+                            class="w-5 h-5 ml-auto">
+                    </button>
+                    <ul x-show="openMenu === 15" x-collapse class="mt-0 space-y-0">
+                        @can('crear-evento')
+                            <li><a href="{{ route('evento/crear') }}" class="sogat-sidebar-link">Crear Evento</a></li>
+                        @endcan
+                        <li><a href="{{ route('evento/listar') }}" class="sogat-sidebar-link">Gestionar Eventos</a></li>
+                    </ul>
+                </div>
+            @endcan
 
 
             <!-- Roles (DAECE) -->
@@ -168,18 +172,22 @@
             </div>
 
 
-            <!-- Planificaciones -->
-            <div>
-                <button @click="openMenu === 6 ? openMenu = null : openMenu = 6" class="sogat-sidebar-item">
-                    <span>Planificaciones</span>
-                    <img :src="openMenu === 6 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                        class="w-5 h-5 ml-auto">
-                </button>
-                <ul x-show="openMenu === 6" x-collapse class="mt-0 space-y-0">
-                    <li><a href="{{ route('planificacion/crear') }}" class="sogat-sidebar-link">Crear</a></li>
-                    <li><a href="{{ route('planificacion/listar') }}" class="sogat-sidebar-link">Gestionar</a></li>
-                </ul>
-            </div>
+            @can('listar-planificacion')
+                <!-- Planificaciones -->
+                <div>
+                    <button @click="openMenu === 6 ? openMenu = null : openMenu = 6" class="sogat-sidebar-item">
+                        <span>Planificaciones</span>
+                        <img :src="openMenu === 6 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
+                            class="w-5 h-5 ml-auto">
+                    </button>
+                    <ul x-show="openMenu === 6" x-collapse class="mt-0 space-y-0">
+                        @can('crear-planificacion')
+                            <li><a href="{{ route('planificacion/crear') }}" class="sogat-sidebar-link">Crear</a></li>
+                        @endcan
+                        <li><a href="{{ route('planificacion/listar') }}" class="sogat-sidebar-link">Gestionar</a></li>
+                    </ul>
+                </div>
+            @endcan
 
             <!-- Bitácora -->
             <a href="{{ route('bitacora/listar') }}" class="sogat-sidebar-item">
@@ -204,13 +212,7 @@
                     <div class="flex flex-col">
                         <span>Usuario: {{ auth()->user()->name }}</span>
                         <span class="text-[9px] text-sogat-blue dark:text-blue-400">
-                            @if(Gate::allows('is-coordinador'))
-                                (COORDINADOR)
-                            @elseif(Gate::allows('is-profesor'))
-                                (PROFESOR)
-                            @else
-                                (USUARIO)
-                            @endif
+                            (AUTENTICADO)
                         </span>
                     </div>
                     <livewire:dark-mode-toggle />

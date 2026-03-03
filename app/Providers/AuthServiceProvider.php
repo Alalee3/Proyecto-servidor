@@ -31,42 +31,47 @@ class AuthServiceProvider extends ServiceProvider
         // Laravel inyectará automáticamente las dependencias necesarias.
         $accesoRepository = app(AccesoRepository::class);
 
-        // Define un Gate para verificar si el usuario es Coordinador.
-        // Uso en Blade: @can('is-coordinador') ... @endcan
-        // Uso en controladores: $this->authorize('is-coordinador');
-        // Uso manual: Gate::allows('is-coordinador');
-        //
-        // @param \App\Models\User $user El objeto de usuario autenticado (se pasa automáticamente).
-        // @param \App\Repositories\AccesoRepository $accesoRepository Inyectado automáticamente por el contenedor de servicios de Laravel.
-        // @return bool
-        Gate::define('is-coordinador', function ($user) use ($accesoRepository) {
-            return Auth::check() && $accesoRepository->checkRole(1); // '2' es el ID para Profesor
+
+        // --- GATES PARA EL MÓDULO DE EVENTO ---
+        Gate::define('listar-evento', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Listar Evento');
         });
 
-
-        /**
-         * Define un Gate para verificar si el usuario es Profesor.
-         * Uso en Blade: @can('is-profesor') ... @endcan
-         * Uso en controladores: $this->authorize('is-profesor');
-         * Uso manual: Gate::allows('is-profesor');
-         *
-         * @param \App\Models\User $user El objeto de usuario autenticado.
-         * @return bool
-         */
-        Gate::define('is-profesor', function ($user) use ($accesoRepository) {
-            return Auth::check() && $accesoRepository->checkRole(2); // '2' es el ID para Profesor
+        Gate::define('crear-evento', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Crear Evento');
         });
 
-        /**
-         * Define un Gate para verificar si el usuario tiene uno de varios roles (Coordinador O Profesor).
-         * Uso en Blade: @can('manage-pnf') ... @endcan
-         *
-         * @param \App\Models\User $user El objeto de usuario autenticado.
-         * @return bool
-         */
-        Gate::define('manage-planificacion', function ($user) use ($accesoRepository) {
-            return Auth::check() && ($accesoRepository->checkRole(1) || $accesoRepository->checkRole(2));
+        Gate::define('editar-evento', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Editar Evento');
         });
+
+        Gate::define('ver-evento', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Ver Detalles de Evento');
+        });
+        // --------------------------------------
+
+        // --- GATES PARA EL MÓDULO DE PLANIFICACIÓN ---
+        Gate::define('listar-planificacion', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Listar Planificacion');
+        });
+
+        Gate::define('crear-planificacion', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Crear Planificacion');
+        });
+
+        Gate::define('editar-planificacion', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Editar Planificacion');
+        });
+
+        Gate::define('ver-planificacion', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Ver Detalles de Planificacion');
+        });
+
+        Gate::define('aprobar-planificacion', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Aceptar corte Planificacion') ||
+                $accesoRepository->checkPermission('Rechazar corte Planificacion');
+        });
+        // ---------------------------------------------
 
         // NOTA: Si ya habías creado directivas personalizadas en AppServiceProvider (ej. @ifcoordinador),
         // y ahora vas a usar Gates (@can), puedes considerar eliminar esas directivas duplicadas para evitar redundancia.

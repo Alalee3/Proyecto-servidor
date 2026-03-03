@@ -32,6 +32,30 @@ class AccesoRepository
     }
 
     // Puedes mantener estas funciones para claridad o eliminarlas si solo usas checkRole
+    /**
+     * Verifica si el usuario autenticado tiene un permiso específico a través de sus roles activos.
+     *
+     * @param string $permissionName Nombre exacto del permiso (ej: 'Listar Evento').
+     * @return bool
+     */
+    public function checkPermission(string $permissionName): bool
+    {
+        if (!Auth::check()) {
+            return false;
+        }
+
+        // Buscamos si existe una relación activa entre el usuario, sus roles y el permiso solicitado
+        return DB::table('usuario_rol as ur')
+            ->join('rol_permiso as rp', 'ur.id_rol', '=', 'rp.id_rol')
+            ->join('permiso as p', 'rp.id_permiso', '=', 'p.id_permiso')
+            ->where('ur.id_users', Auth::id())
+            ->where('ur.estatus', '1')        // El rol asignado al usuario debe estar activo
+            ->where('p.nombre_permiso', $permissionName)
+            ->where('p.estatus', '1')         // El permiso debe existir y estar activo
+            ->where('rp.estatus', '1')        // La vinculación rol-permiso debe estar activa
+            ->exists();
+    }
+
     public function checkCoordinador(): bool
     {
         return $this->checkRole(1); // El rol_id para Coordinador
