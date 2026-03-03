@@ -20,9 +20,10 @@
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Código (ID)</th>
-                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Nombre del Rol</th>
-                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-center">Estatus</th>
-                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">Acciones</th>
+                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Nombre del Rol
+                            </th>
+                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">
+                                Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -34,13 +35,7 @@
                                     <td class="px-4 py-4 text-gray-900 dark:text-white font-semibold">
                                         {{ $rol->rol_nombre }}
                                     </td>
-                                    <td class="px-4 py-4 text-center">
-                                        @if($rol->rol_estatus === 'A' || $rol->rol_estatus === '1' || $rol->rol_estatus == 1)
-                                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Activo</span>
-                                        @else
-                                            <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Inactivo</span>
-                                        @endif
-                                    </td>
+
                                     <td class="px-4 py-4">
                                         <div class="flex items-center justify-end space-x-3">
                                             <a href="{{ route('rol/update', $rol->rol_codigo) }}" wire:navigate
@@ -58,7 +53,7 @@
                             @endforeach
                         @else
                             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                <td colspan="4" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                <td colspan="3" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                     {{ $busqueda ? 'No se encontraron roles' : 'No hay roles registrados' }}
                                 </td>
                             </tr>
