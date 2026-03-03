@@ -49,8 +49,8 @@ class AppServiceProvider extends ServiceProvider
                 DB::connection('pgsql_daece')->getPdo();
                 return DB::connection('pgsql_daece');
             } catch (Exception $e) {
-                Log::warning('Fallo la conexión a pgsql_daece (Conexión diferida). Usando mysql_sogc. Error: ' . $e->getMessage());
-                return DB::connection('mysql_sogc');
+                Log::warning('Fallo la conexión a pgsql_daece (Conexión diferida). Usando emulacion_sogac_2. Error: ' . $e->getMessage());
+                return DB::connection('emulacion_sogac_2');
             }
         });
     }

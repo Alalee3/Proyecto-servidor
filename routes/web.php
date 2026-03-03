@@ -57,6 +57,9 @@ use App\Livewire\Evento\ListEvento;
 use App\Livewire\Evento\UpdateEvento;
 use App\Livewire\Evento\ShowEvento;
 
+use App\Livewire\Permiso\ListPermiso;
+use App\Livewire\Permiso\ShowPermiso;
+
 use App\Livewire\Bitacora\ListBitacora;
 
 use Illuminate\Support\Facades\Route;
@@ -131,6 +134,10 @@ Route::middleware(['auth', 'role:1'])->group(function () {
     Route::get('evento/create', CreateEvento::class)->name('evento/crear');
     Route::get('evento/update/{id}', UpdateEvento::class)->name('evento/update');
     Route::get('evento/show/{id}', ShowEvento::class)->name('evento/show');
+
+    // Rutas para Permisos
+    Route::get('permiso/list', ListPermiso::class)->name('permiso/listar');
+    Route::get('permiso/show/{id}', ShowPermiso::class)->name('permiso/show');
 
 
     // Rutas para Bitácora
