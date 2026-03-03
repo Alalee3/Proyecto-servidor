@@ -1,24 +1,23 @@
 <?php
 
-namespace App\Livewire\Permiso;
+namespace App\Livewire\Rol;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Repositories\Permiso\PermisoIndexRepo;
-use Exception;
+use App\Repositories\Rol\RolIndexRepo;
 
-class ListPermiso extends Component
+class ListRol extends Component
 {
     use WithPagination;
 
     public $busqueda = '';
     public $paginacion = 5;
 
-    protected $permisoRepository;
+    protected $rolRepository;
 
     public function __construct()
     {
-        $this->permisoRepository = new PermisoIndexRepo();
+        $this->rolRepository = new RolIndexRepo();
     }
 
     public function render()
@@ -28,8 +27,8 @@ class ListPermiso extends Component
             $this->paginacion = 5;
         }
 
-        $permisos = $this->permisoRepository->listar($this->busqueda, $this->paginacion);
+        $roles = $this->rolRepository->listar($this->busqueda, $this->paginacion);
 
-        return view('livewire.pages.permiso.list-permiso', compact('permisos'));
+        return view('livewire.pages.rol.list-rol', compact('roles'));
     }
 }

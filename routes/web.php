@@ -57,8 +57,7 @@ use App\Livewire\Evento\ListEvento;
 use App\Livewire\Evento\UpdateEvento;
 use App\Livewire\Evento\ShowEvento;
 
-use App\Livewire\Permiso\ListPermiso;
-use App\Livewire\Permiso\ShowPermiso;
+
 
 use App\Livewire\Bitacora\ListBitacora;
 
@@ -74,7 +73,7 @@ Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
 
-Route::middleware(['auth', 'role:1'])->group(function () {
+Route::middleware(['auth', /*'role:1'*/])->group(function () {
     //Route::get('pnf/list', ListPnf::class)->name('pnf/listar');
     //Route::get('pnf/create', CreatePnf::class)->name('pnf/crear');
     //Route::get('pnf/update/{id}', UpdatePnf::class)->name('pnf/update');
@@ -135,9 +134,10 @@ Route::middleware(['auth', 'role:1'])->group(function () {
     Route::get('evento/update/{id}', UpdateEvento::class)->name('evento/update');
     Route::get('evento/show/{id}', ShowEvento::class)->name('evento/show');
 
-    // Rutas para Permisos
-    Route::get('permiso/list', ListPermiso::class)->name('permiso/listar');
-    Route::get('permiso/show/{id}', ShowPermiso::class)->name('permiso/show');
+
+    // Módulo de Roles (DAECE)
+    Route::get('rol/list', \App\Livewire\Rol\ListRol::class)->name('rol/listar');
+    Route::get('rol/update/{rolId}', \App\Livewire\Rol\UpdateRolPermisos::class)->name('rol/update');
 
 
     // Rutas para Bitácora
@@ -147,7 +147,7 @@ Route::middleware(['auth', 'role:1'])->group(function () {
 
 Route::middleware(['auth'])->group(function () { });
 
-Route::middleware(['auth', 'role:1|2'])->group(function () {
+Route::middleware(['auth', /*'role:1|2'*/])->group(function () {
     Route::get('planificacion/create', CreatePlanificacion::class)->name('planificacion/crear');
 
     Route::get('planificacion/update/{planificacionId}', \App\Livewire\Planificacion\UpdatePlanificacion::class)->name('planificaciones.update');
