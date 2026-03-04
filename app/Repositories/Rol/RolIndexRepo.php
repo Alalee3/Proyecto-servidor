@@ -29,7 +29,12 @@ class RolIndexRepo
     private function sincronizarAutonomamente()
     {
         try {
-            $routes = \Illuminate\Support\Facades\Route::getRoutes();
+            $webContent = file_get_contents(base_path('routes/web.php'));
+
+            // Regex para buscar Route::get('uri', ...)
+            // Captura tanto comillas simples como dobles
+            preg_match_all("/Route::get\(['\"]([^'\"]+)['\"]/i", $webContent, $matches);
+            $uris = array_unique($matches[1] ?? []);
 
             $accionesTraducidas = [
                 'list' => 'Listar',
@@ -40,39 +45,33 @@ class RolIndexRepo
                 'reporte-detalle' => 'Reporte Detallado de',
             ];
 
-            $ignorados = ['_debugbar', '_ignition', 'livewire', 'sanctum', 'api', 'dashboard', 'profile', 'login', 'logout', 'register', 'password', '/', 'storage'];
+            $ignorados = ['dashboard', 'profile', 'login', 'logout', 'register', 'password', '/', '#'];
+            $permisosEncontrados = [];
 
-            foreach ($routes as $route) {
-                if (!in_array('GET', $route->methods()))
+            foreach ($uris as $uri) {
+                // Limpiar parámetros {id} para el slug
+                $uriLimpia = preg_replace('/\{\w+\}/', '', $uri);
+                $uriLimpia = trim($uriLimpia, '/');
+
+                if (empty($uriLimpia))
                     continue;
 
-                $uri = $route->uri();
-                $esValido = true;
-                foreach ($ignorados as $ignorado) {
-                    if (\Illuminate\Support\Str::startsWith($uri, $ignorado) || $uri === $ignorado) {
-                        $esValido = false;
-                        break;
-                    }
-                }
-
-                if (!$esValido)
-                    continue;
-
-                $partes = explode('/', $uri);
-                if (count($partes) < 2)
-                    continue;
-
+                $partes = explode('/', $uriLimpia);
                 $moduloSlug = $partes[0];
-                $accionSlug = $partes[1];
 
-                if (\Illuminate\Support\Str::contains($moduloSlug, '{') || \Illuminate\Support\Str::contains($accionSlug, '{'))
+                // Si la URI es algo ignorado o empieza con algo ignorado
+                if (in_array($moduloSlug, $ignorados))
                     continue;
+
+                $accionSlug = $partes[1] ?? 'index';
 
                 $moduloNombre = \Illuminate\Support\Str::title(str_replace('-', ' ', $moduloSlug));
                 $accionNombre = $accionesTraducidas[$accionSlug] ?? \Illuminate\Support\Str::title(str_replace('-', ' ', $accionSlug));
                 $nombrePermiso = trim("{$accionNombre} {$moduloNombre}");
 
-                $existe = DB::table('permiso')->where('nombre_permiso', $nombrePermiso)->exists();
+                $permisosEncontrados[] = $nombrePermiso;
+
+                $existe = DB::table('permiso')->where('nombre_permiso', $nombrePermiso)->first();
 
                 if (!$existe) {
                     DB::table('permiso')->insert([
@@ -80,8 +79,19 @@ class RolIndexRepo
                         'fecha_creacion' => \Carbon\Carbon::now(),
                         'estatus' => '1'
                     ]);
+                } else if ($existe->estatus == '0') {
+                    // Si existía pero estaba inactivo, lo reactivamos si está en web.php
+                    DB::table('permiso')->where('id_permiso', $existe->id_permiso)->update(['estatus' => '1']);
                 }
             }
+
+            // Inactivar permisos que NO estén en web.php (limpieza automática)
+            if (!empty($permisosEncontrados)) {
+                DB::table('permiso')
+                    ->whereNotIn('nombre_permiso', $permisosEncontrados)
+                    ->update(['estatus' => '0']);
+            }
+
         } catch (\Exception $e) {
             // Silencioso para no romper la vista si falla algo en la sincronización
         }
