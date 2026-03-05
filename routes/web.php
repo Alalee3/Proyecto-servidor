@@ -44,10 +44,6 @@ use App\Livewire\Estrategia\UpdateEstrategia;
 use App\Livewire\Estrategia\ShowEstrategia;
 use App\Livewire\Estrategia\ListEstrategia;
 
-use App\Livewire\Tecnica\CreateTecnica;
-use App\Livewire\Tecnica\UpdateTecnica;
-use App\Livewire\Tecnica\ShowTecnica;
-use App\Livewire\Tecnica\ListTecnica;
 
 use App\Livewire\Evaluacion\CreateEvaluacion;
 use App\Livewire\Evaluacion\UpdateEvaluacion;
@@ -124,11 +120,6 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     Route::get('estrategia/update/{id}', UpdateEstrategia::class)->middleware('can:editar-estrategia')->name('estrategia/update');
     Route::get('estrategia/show/{id}', ShowEstrategia::class)->middleware('can:ver-estrategia')->name('estrategia/show');
 
-    // Rutas para Técnicas de Evaluación
-    Route::get('tecnica/list', ListTecnica::class)->middleware('can:listar-tecnica')->name('tecnica/listar');
-    Route::get('tecnica/create', CreateTecnica::class)->middleware('can:crear-tecnica')->name('tecnica/crear');
-    Route::get('tecnica/update/{id}', UpdateTecnica::class)->middleware('can:editar-tecnica')->name('tecnica/update');
-    Route::get('tecnica/show/{id}', ShowTecnica::class)->middleware('can:ver-tecnica')->name('tecnica/show');
 
     // Rutas para Evaluaciones
     Route::get('evaluacion/list', ListEvaluacion::class)->middleware('can:listar-evaluacion')->name('evaluacion/listar');

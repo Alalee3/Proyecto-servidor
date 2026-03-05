@@ -64,7 +64,7 @@
                 </div>
             @endcan
 
-            @canany(['listar-recurso', 'listar-estrategia', 'listar-tecnica', 'listar-evaluacion', 'listar-bibliografia'])
+            @canany(['listar-recurso', 'listar-estrategia', 'listar-evaluacion', 'listar-bibliografia'])
                 <!-- Recursos Educativos -->
                 <div>
                     <button @click="openMenu === 10 ? openMenu = null : (openMenu = 10, subMenu = null)"
@@ -113,23 +113,6 @@
                             </div>
                         @endcan
 
-                        @can('listar-tecnica')
-                            <!-- Técnicas de Evaluación -->
-                            <div>
-                                <button @click="subMenu === 5 ? subMenu = null : subMenu = 5" class="sogat-sidebar-subitem">
-                                    <span>Técnicas de Evaluación</span>
-                                    <img :src="subMenu === 5 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                                        class="w-4 h-4 ml-auto">
-                                </button>
-                                <ul x-show="subMenu === 5" x-collapse class="mt-0 space-y-0">
-                                    @can('crear-tecnica')
-                                        <li><a href="{{ route('tecnica/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
-                                    @endcan
-                                    <li><a href="{{ route('tecnica/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        @endcan
 
                         @can('listar-evaluacion')
                             <!-- Evaluaciones -->
