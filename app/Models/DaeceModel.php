@@ -17,7 +17,7 @@ abstract class DaeceModel extends Model
      *
      * @var string|null
      */
-    protected $connection = 'pgsql_daece';
+    protected $connection = 'external_db';
 
     /**
      * Indica si el modelo debe gestionar los timestamps (created_at, updated_at).

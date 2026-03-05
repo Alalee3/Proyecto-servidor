@@ -42,7 +42,7 @@
                                     <!-- Estatus -->
                                     <td class="px-4 py-4 text-right">
                                         <span class="{{ $recurso->estatus == 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }} 
-                                                                            text-xs font-medium px-2.5 py-0.5 rounded">
+                                                                                    text-xs font-medium px-2.5 py-0.5 rounded">
                                             {{ $recurso->estatus == 1 ? 'Activo' : 'Inactivo' }}
                                         </span>
                                     </td>
@@ -50,49 +50,55 @@
                                     <td class="px-4 py-4">
                                         <div class="flex items-center justify-end space-x-3">
                                             <!-- Ver -->
-                                            <a href="{{ route('recurso/show', $recurso->id_recurso) }}" wire:navigate
-                                                class="flex items-center gap-1 bg-blue-50 text-blue-600 text-xs font-medium px-2.5 py-0.5 rounded hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
-                                                    class="w-4 h-4">
-                                                    <path
-                                                        d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                                                </svg>
-                                                Ver
-                                            </a>
+                                            @can('ver-recurso')
+                                                <a href="{{ route('recurso/show', $recurso->id_recurso) }}" wire:navigate
+                                                    class="flex items-center gap-1 bg-blue-50 text-blue-600 text-xs font-medium px-2.5 py-0.5 rounded hover:bg-blue-100 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
+                                                        class="w-4 h-4">
+                                                        <path
+                                                            d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                                                    </svg>
+                                                    Ver
+                                                </a>
+                                            @endcan
                                             <!-- Editar -->
-                                            <a href="{{ route('recurso/update', $recurso->id_recurso) }}" wire:navigate
-                                                class="flex items-center gap-1 bg-yellow-600 text-white text-xs font-medium px-2.5 py-0.5 rounded hover:bg-yellow-700 dark:bg-yellow-600 dark:text-white dark:hover:bg-yellow-700">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
-                                                    class="w-4 h-4">
-                                                    <path
-                                                        d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                                                </svg>
-                                                Editar
-                                            </a>
+                                            @can('editar-recurso')
+                                                <a href="{{ route('recurso/update', $recurso->id_recurso) }}" wire:navigate
+                                                    class="flex items-center gap-1 bg-yellow-600 text-white text-xs font-medium px-2.5 py-0.5 rounded hover:bg-yellow-700 dark:bg-yellow-600 dark:text-white dark:hover:bg-yellow-700">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"
+                                                        class="w-4 h-4">
+                                                        <path
+                                                            d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                                    </svg>
+                                                    Editar
+                                                </a>
+                                            @endcan
 
                                             <!-- Acciones según estado -->
-                                            @if ($recurso->estatus == 1)
-                                                <!-- Inactivar -->
-                                                <button wire:click="confirmarInhabilitar({{ $recurso->id_recurso }})"
-                                                    class="flex items-center gap-1 bg-red-50 text-red-600 dark:bg-red-900 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fill-rule="evenodd"
-                                                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                                            clip-rule="evenodd" />
-                                                    </svg>
-                                                    Inactivar
-                                                </button>
-                                            @else
-                                                <!-- Activar -->
-                                                <button wire:click="confirmarRestaurar({{ $recurso->id_recurso }})"
-                                                    class="flex items-center gap-1 bg-green-50 text-green-600 dark:bg-green-900 dark:text-green-200 hover:bg-green-100 dark:hover:bg-green-800 text-xs font-medium px-2.5 py-0.5 rounded text-left">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                                                    </svg>
-                                                    Activar
-                                                </button>
-                                            @endif
+                                            @can('editar-recurso')
+                                                @if ($recurso->estatus == 1)
+                                                    <!-- Inactivar -->
+                                                    <button wire:click="confirmarInhabilitar({{ $recurso->id_recurso }})"
+                                                        class="flex items-center gap-1 bg-red-50 text-red-600 dark:bg-red-900 dark:text-red-200 hover:bg-red-100 dark:hover:bg-red-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd"
+                                                                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                                                                clip-rule="evenodd" />
+                                                        </svg>
+                                                        Inactivar
+                                                    </button>
+                                                @else
+                                                    <!-- Activar -->
+                                                    <button wire:click="confirmarRestaurar({{ $recurso->id_recurso }})"
+                                                        class="flex items-center gap-1 bg-green-50 text-green-600 dark:bg-green-900 dark:text-green-200 hover:bg-green-100 dark:hover:bg-green-800 text-xs font-medium px-2.5 py-0.5 rounded text-left">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                                        </svg>
+                                                        Activar
+                                                    </button>
+                                                @endif
+                                            @endcan
                                         </div>
                                     </td>
                                 </tr>

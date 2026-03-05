@@ -18,7 +18,7 @@ class EventoIndexRepo
 
         // Obtener nombres de lapsos desde la base de datos externa DAECE
         $idLapsos = $eventos->pluck('id_lapso')->filter()->unique()->toArray();
-        $lapsosDaece = DB::connection('pgsql_daece')->table('lapso_academico')
+        $lapsosDaece = DB::connection('external_db')->table('lapso_academico')
             ->whereIn('lap_codigo', $idLapsos)
             ->pluck('lap_nombre', 'lap_codigo');
 

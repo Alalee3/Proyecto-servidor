@@ -81,15 +81,15 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     //Route::get('pnf/update/{id}', UpdatePnf::class)->name('pnf/update');
     //Route::get('pnf/show/{id}', ShowPnf::class)->name('pnf/show');
 
-    Route::get('contenido/list', ListContenido::class)->name('contenido/listar');
-    Route::get('contenido/create', CreateContenido::class)->name('contenido/crear');
-    Route::get('contenido/update/{id}', UpdateContenido::class)->name('contenido/update');
-    Route::get('contenido/show/{id}', ShowContenido::class)->name('contenido/show');
+    Route::get('contenido/list', ListContenido::class)->middleware('can:listar-contenido')->name('contenido/listar');
+    Route::get('contenido/create', CreateContenido::class)->middleware('can:crear-contenido')->name('contenido/crear');
+    Route::get('contenido/update/{id}', UpdateContenido::class)->middleware('can:editar-contenido')->name('contenido/update');
+    Route::get('contenido/show/{id}', ShowContenido::class)->middleware('can:ver-contenido')->name('contenido/show');
 
-    Route::get('tema/list', ListTema::class)->name('tema/listar');
-    Route::get('tema/create', CreateTema::class)->name('tema/crear');
-    Route::get('tema/update/{id}', UpdateTema::class)->name('tema/update');
-    Route::get('tema/show/{id}', ShowTema::class)->name('tema/show');
+    Route::get('tema/list', ListTema::class)->middleware('can:listar-tema')->name('tema/listar');
+    Route::get('tema/create', CreateTema::class)->middleware('can:crear-tema')->name('tema/crear');
+    Route::get('tema/update/{id}', UpdateTema::class)->middleware('can:editar-tema')->name('tema/update');
+    Route::get('tema/show/{id}', ShowTema::class)->middleware('can:ver-tema')->name('tema/show');
 
     //Route::get('usuarios/create', CreateUsuario::class)->name('usuarios/crear');
     //Route::get('usuarios/list', ListUsuario::class)->name('usuarios/listar');
@@ -102,39 +102,39 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     Route::get('planificacion/reporte-general', [\App\Http\Controllers\ReportePlanificacionController::class, 'reporteGeneral'])->middleware('can:listar-planificacion')->name('planificacion.reporte.general');
     Route::get('planificacion/reporte-detalle/{id}', [\App\Http\Controllers\ReportePlanificacionController::class, 'reporteDetalle'])->middleware('can:ver-planificacion')->name('planificacion.reporte.detalle');
 
-    Route::get('indicador-logro/list', ListIndicadorLogro::class)->name('indicador-logro/listar');
-    Route::get('indicador-logro/create', CreateIndicadorLogro::class)->name('indicador-logro/crear');
-    Route::get('indicador-logro/update/{id}', UpdateIndicadorLogro::class)->name('indicador-logro/update');
-    Route::get('indicador-logro/show/{id}', ShowIndicadorLogro::class)->name('indicador-logro/show');
+    Route::get('indicador-logro/list', ListIndicadorLogro::class)->middleware('can:listar-indicador-logro')->name('indicador-logro/listar');
+    Route::get('indicador-logro/create', CreateIndicadorLogro::class)->middleware('can:crear-indicador-logro')->name('indicador-logro/crear');
+    Route::get('indicador-logro/update/{id}', UpdateIndicadorLogro::class)->middleware('can:editar-indicador-logro')->name('indicador-logro/update');
+    Route::get('indicador-logro/show/{id}', ShowIndicadorLogro::class)->middleware('can:ver-indicador-logro')->name('indicador-logro/show');
 
-    Route::get('bibliografia/list', ListBibliografia::class)->name('bibliografia/listar');
-    Route::get('bibliografia/create', CreateBibliografia::class)->name('bibliografia/crear');
-    Route::get('bibliografia/update/{id}', UpdateBibliografia::class)->name('bibliografia/update');
-    Route::get('bibliografia/show/{id}', ShowBibliografia::class)->name('bibliografia/show');
+    Route::get('bibliografia/list', ListBibliografia::class)->middleware('can:listar-bibliografia')->name('bibliografia/listar');
+    Route::get('bibliografia/create', CreateBibliografia::class)->middleware('can:crear-bibliografia')->name('bibliografia/crear');
+    Route::get('bibliografia/update/{id}', UpdateBibliografia::class)->middleware('can:editar-bibliografia')->name('bibliografia/update');
+    Route::get('bibliografia/show/{id}', ShowBibliografia::class)->middleware('can:ver-bibliografia')->name('bibliografia/show');
 
     // Rutas para Recursos
-    Route::get('recurso/list', ListRecurso::class)->name('recurso/listar');
-    Route::get('recurso/create', CreateRecurso::class)->name('recurso/crear');
-    Route::get('recurso/update/{id}', UpdateRecurso::class)->name('recurso/update');
-    Route::get('recurso/show/{id}', ShowRecurso::class)->name('recurso/show');
+    Route::get('recurso/list', ListRecurso::class)->middleware('can:listar-recurso')->name('recurso/listar');
+    Route::get('recurso/create', CreateRecurso::class)->middleware('can:crear-recurso')->name('recurso/crear');
+    Route::get('recurso/update/{id}', UpdateRecurso::class)->middleware('can:editar-recurso')->name('recurso/update');
+    Route::get('recurso/show/{id}', ShowRecurso::class)->middleware('can:ver-recurso')->name('recurso/show');
 
     // Rutas para Estrategias Pedagógicas
-    Route::get('estrategia/list', ListEstrategia::class)->name('estrategia/listar');
-    Route::get('estrategia/create', CreateEstrategia::class)->name('estrategia/crear');
-    Route::get('estrategia/update/{id}', UpdateEstrategia::class)->name('estrategia/update');
-    Route::get('estrategia/show/{id}', ShowEstrategia::class)->name('estrategia/show');
+    Route::get('estrategia/list', ListEstrategia::class)->middleware('can:listar-estrategia')->name('estrategia/listar');
+    Route::get('estrategia/create', CreateEstrategia::class)->middleware('can:crear-estrategia')->name('estrategia/crear');
+    Route::get('estrategia/update/{id}', UpdateEstrategia::class)->middleware('can:editar-estrategia')->name('estrategia/update');
+    Route::get('estrategia/show/{id}', ShowEstrategia::class)->middleware('can:ver-estrategia')->name('estrategia/show');
 
     // Rutas para Técnicas de Evaluación
-    Route::get('tecnica/list', ListTecnica::class)->name('tecnica/listar');
-    Route::get('tecnica/create', CreateTecnica::class)->name('tecnica/crear');
-    Route::get('tecnica/update/{id}', UpdateTecnica::class)->name('tecnica/update');
-    Route::get('tecnica/show/{id}', ShowTecnica::class)->name('tecnica/show');
+    Route::get('tecnica/list', ListTecnica::class)->middleware('can:listar-tecnica')->name('tecnica/listar');
+    Route::get('tecnica/create', CreateTecnica::class)->middleware('can:crear-tecnica')->name('tecnica/crear');
+    Route::get('tecnica/update/{id}', UpdateTecnica::class)->middleware('can:editar-tecnica')->name('tecnica/update');
+    Route::get('tecnica/show/{id}', ShowTecnica::class)->middleware('can:ver-tecnica')->name('tecnica/show');
 
     // Rutas para Evaluaciones
-    Route::get('evaluacion/list', ListEvaluacion::class)->name('evaluacion/listar');
-    Route::get('evaluacion/create', CreateEvaluacion::class)->name('evaluacion/crear');
-    Route::get('evaluacion/update/{id}', UpdateEvaluacion::class)->name('evaluacion/update');
-    Route::get('evaluacion/show/{id}', ShowEvaluacion::class)->name('evaluacion/show');
+    Route::get('evaluacion/list', ListEvaluacion::class)->middleware('can:listar-evaluacion')->name('evaluacion/listar');
+    Route::get('evaluacion/create', CreateEvaluacion::class)->middleware('can:crear-evaluacion')->name('evaluacion/crear');
+    Route::get('evaluacion/update/{id}', UpdateEvaluacion::class)->middleware('can:editar-evaluacion')->name('evaluacion/update');
+    Route::get('evaluacion/show/{id}', ShowEvaluacion::class)->middleware('can:ver-evaluacion')->name('evaluacion/show');
 
     // Rutas para Eventos
     Route::get('evento/list', ListEvento::class)->middleware('can:listar-evento')->name('evento/listar');
@@ -149,8 +149,8 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
 
 
     // Rutas para Bitácora
-    Route::get('bitacora/list', ListBitacora::class)->name('bitacora/listar');
-    Route::get('bitacora/show/{id}', \App\Livewire\Bitacora\ShowBitacora::class)->name('bitacora/show');
+    Route::get('bitacora/list', ListBitacora::class)->middleware('can:listar-bitacora')->name('bitacora/listar');
+    Route::get('bitacora/show/{id}', \App\Livewire\Bitacora\ShowBitacora::class)->middleware('can:ver-bitacora')->name('bitacora/show');
 });
 
 Route::middleware(['auth'])->group(function () { });

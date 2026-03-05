@@ -9,7 +9,7 @@ class RolPermisoRepo
 {
     public function getRol($rolId)
     {
-        return DB::connection('pgsql_daece')
+        return DB::connection('external_db')
             ->table('rol')
             ->where('rol_codigo', $rolId)
             ->first();

@@ -14,7 +14,7 @@ class EventoViewRepo
 
         // Get lapso info
         if ($evento && $evento->id_lapso) {
-            $lapso = DB::connection('pgsql_daece')->table('lapso_academico')
+            $lapso = DB::connection('external_db')->table('lapso_academico')
                 ->where('lap_codigo', $evento->id_lapso)
                 ->first();
             $evento->nombre_lapso = $lapso ? $lapso->lap_nombre : 'No definido (DAECE)';

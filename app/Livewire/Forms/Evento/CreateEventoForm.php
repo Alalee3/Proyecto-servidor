@@ -25,12 +25,12 @@ class CreateEventoForm extends Form
                 function ($attribute, $value, $fail) {
                     $id_lapso = $this->id_lapso;
                     if (empty($id_lapso)) {
-                        $activo = \Illuminate\Support\Facades\DB::connection('pgsql_daece')->table('lapso_academico')->where('lap_estatus', 'A')->where('lap_cerrado', 'N')->first();
+                        $activo = \Illuminate\Support\Facades\DB::connection('external_db')->table('lapso_academico')->where('lap_estatus', 'A')->where('lap_cerrado', 'N')->first();
                         $id_lapso = $activo ? $activo->lap_codigo : null;
                     }
 
                     if ($id_lapso) {
-                        $lapso = \Illuminate\Support\Facades\DB::connection('pgsql_daece')->table('lapso_academico')->where('lap_codigo', $id_lapso)->first();
+                        $lapso = \Illuminate\Support\Facades\DB::connection('external_db')->table('lapso_academico')->where('lap_codigo', $id_lapso)->first();
                         if ($lapso) {
                             if ($value < $lapso->lap_fecha_inicio || $value > $lapso->lap_fecha_fin) {
                                 $fail("La fecha de inicio debe estar entre {$lapso->lap_fecha_inicio} y {$lapso->lap_fecha_fin}.");
@@ -46,12 +46,12 @@ class CreateEventoForm extends Form
                 function ($attribute, $value, $fail) {
                     $id_lapso = $this->id_lapso;
                     if (empty($id_lapso)) {
-                        $activo = \Illuminate\Support\Facades\DB::connection('pgsql_daece')->table('lapso_academico')->where('lap_estatus', 'A')->where('lap_cerrado', 'N')->first();
+                        $activo = \Illuminate\Support\Facades\DB::connection('external_db')->table('lapso_academico')->where('lap_estatus', 'A')->where('lap_cerrado', 'N')->first();
                         $id_lapso = $activo ? $activo->lap_codigo : null;
                     }
 
                     if ($id_lapso) {
-                        $lapso = \Illuminate\Support\Facades\DB::connection('pgsql_daece')->table('lapso_academico')->where('lap_codigo', $id_lapso)->first();
+                        $lapso = \Illuminate\Support\Facades\DB::connection('external_db')->table('lapso_academico')->where('lap_codigo', $id_lapso)->first();
                         if ($lapso) {
                             if ($value < $lapso->lap_fecha_inicio || $value > $lapso->lap_fecha_fin) {
                                 $fail("La fecha de fin debe estar entre {$lapso->lap_fecha_inicio} y {$lapso->lap_fecha_fin}.");
@@ -67,7 +67,7 @@ class CreateEventoForm extends Form
                 function ($attribute, $value, $fail) {
                     $id_lapso = $this->id_lapso;
                     if (empty($id_lapso)) {
-                        $activo = \Illuminate\Support\Facades\DB::connection('pgsql_daece')->table('lapso_academico')->where('lap_estatus', 'A')->where('lap_cerrado', 'N')->first();
+                        $activo = \Illuminate\Support\Facades\DB::connection('external_db')->table('lapso_academico')->where('lap_estatus', 'A')->where('lap_cerrado', 'N')->first();
                         $id_lapso = $activo ? $activo->lap_codigo : null;
                     }
 
