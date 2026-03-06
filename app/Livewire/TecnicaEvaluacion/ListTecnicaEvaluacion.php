@@ -35,6 +35,10 @@ class ListTecnicaEvaluacion extends Component
 
     public function inhabilitar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-evaluacion')) {
+            abort(403);
+        }
+
         try {
             $this->evaluacionesRepository->inhabilitar($this->idInhabilitar);
             session()->flash('message', 'Técnica de evaluación inhabilitada correctamente.');
@@ -51,6 +55,10 @@ class ListTecnicaEvaluacion extends Component
 
     public function restaurar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-evaluacion')) {
+            abort(403);
+        }
+
         try {
             $this->evaluacionesRepository->restaurar($this->idRestaurar);
             session()->flash('message', 'Técnica de evaluación restaurada correctamente.');

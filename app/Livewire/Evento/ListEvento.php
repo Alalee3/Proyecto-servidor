@@ -35,6 +35,10 @@ class ListEvento extends Component
 
     public function inhabilitar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-evento')) {
+            abort(403);
+        }
+
         try {
             $result = $this->eventoRepository->inhabilitar($this->idInhabilitar);
 
@@ -53,6 +57,10 @@ class ListEvento extends Component
 
     public function restaurar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-evento')) {
+            abort(403);
+        }
+
         try {
             $result = $this->eventoRepository->restaurar($this->idRestaurar);
 

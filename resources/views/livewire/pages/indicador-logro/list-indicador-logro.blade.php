@@ -70,7 +70,7 @@
                                             @endcan
 
                                             <!-- Acciones según estado -->
-                                            @can('editar-indicador-logro')
+                                            @can('cambiar-estatus-indicador-logro')
                                                 @if ($indicador->estatus == 1)
                                                     <!-- Inactivar -->
                                                     <button wire:click="confirmarInhabilitar({{ $indicador->id_indicador_logro }})"

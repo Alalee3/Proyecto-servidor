@@ -34,6 +34,10 @@ class ListIndicadorLogro extends Component
 
     public function inhabilitar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-indicador-logro')) {
+            abort(403);
+        }
+
         try {
             $result = $this->indicadorRepo->inhabilitar($this->idInhabilitar);
             if ($result) {
@@ -54,6 +58,10 @@ class ListIndicadorLogro extends Component
 
     public function restaurar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-indicador-logro')) {
+            abort(403);
+        }
+
         try {
             $result = $this->indicadorRepo->restaurar($this->idRestaurar);
             if ($result) {

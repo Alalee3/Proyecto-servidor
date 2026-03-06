@@ -70,7 +70,7 @@
                                                 </a>
                                             @endcan
                                             <!-- Acciones según estado -->
-                                            @can('editar-contenido')
+                                            @can('cambiar-estatus-contenido')
                                                 @if ($contenido->estatus == 1)
                                                     <!-- Inactivar -->
                                                     <button wire:click="confirmarInhabilitar({{ $contenido->id_contenido }})"

@@ -72,7 +72,7 @@
                                             @endcan
 
                                             <!-- Acciones según estado -->
-                                            @can('editar-tema')
+                                            @can('cambiar-estatus-tema')
                                                 @if ($tema->estatus == 1)
                                                     <!-- Inactivar -->
                                                     <button wire:click="confirmarInhabilitar({{ $tema->id_tema_unidad }})"

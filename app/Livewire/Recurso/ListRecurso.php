@@ -35,6 +35,10 @@ class ListRecurso extends Component
 
     public function inhabilitar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-recurso')) {
+            abort(403);
+        }
+
         try {
             $result = $this->recursosRepository->inhabilitar($this->idInhabilitar);
 
@@ -52,6 +56,10 @@ class ListRecurso extends Component
 
     public function restaurar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-recurso')) {
+            abort(403);
+        }
+
         try {
             $result = $this->recursosRepository->restaurar($this->idRestaurar);
 

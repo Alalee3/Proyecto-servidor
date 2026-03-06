@@ -35,6 +35,9 @@ class ListContenido extends Component
 
     public function inhabilitar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-contenido')) {
+            abort(403);
+        }
         $this->contenidoRepo->inhabilitar($this->idInhabilitar);
         session()->flash('message', 'Contenido inhabilitado con éxito.');
         $this->idInhabilitar = null;
@@ -47,6 +50,9 @@ class ListContenido extends Component
 
     public function restaurar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-contenido')) {
+            abort(403);
+        }
         $this->contenidoRepo->restaurar($this->idRestaurar);
         session()->flash('message', 'Contenido restaurado con éxito.');
         $this->idRestaurar = null;

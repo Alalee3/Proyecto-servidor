@@ -35,6 +35,10 @@ class ListBibliografia extends Component
 
     public function inhabilitar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-bibliografia')) {
+            abort(403);
+        }
+
         try {
             $result = $this->bibliografiasRepository->inhabilitar($this->idInhabilitar);
 
@@ -53,6 +57,10 @@ class ListBibliografia extends Component
 
     public function restaurar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-bibliografia')) {
+            abort(403);
+        }
+
         try {
             $result = $this->bibliografiasRepository->restaurar($this->idRestaurar);
 

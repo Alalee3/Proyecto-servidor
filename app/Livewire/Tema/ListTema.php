@@ -35,6 +35,9 @@ class ListTema extends Component
 
     public function inhabilitar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-tema')) {
+            abort(403);
+        }
         $this->temaRepo->inhabilitar($this->idInhabilitar);
         session()->flash('message', 'Tema inhabilitado con éxito.');
         $this->idInhabilitar = null;
@@ -47,6 +50,9 @@ class ListTema extends Component
 
     public function restaurar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-tema')) {
+            abort(403);
+        }
         $this->temaRepo->restaurar($this->idRestaurar);
         session()->flash('message', 'Tema restaurado con éxito.');
         $this->idRestaurar = null;

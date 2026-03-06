@@ -35,6 +35,10 @@ class ListTipoEvaluacion extends Component
 
     public function inhabilitar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-tipo-evaluacion')) {
+            abort(403);
+        }
+
         try {
             $this->tipoEvaluacionRepository->inhabilitar($this->idInhabilitar);
             session()->flash('message', 'Tipo de evaluación inhabilitado correctamente.');
@@ -51,6 +55,10 @@ class ListTipoEvaluacion extends Component
 
     public function restaurar()
     {
+        if (!\Illuminate\Support\Facades\Gate::allows('cambiar-estatus-tipo-evaluacion')) {
+            abort(403);
+        }
+
         try {
             $this->tipoEvaluacionRepository->restaurar($this->idRestaurar);
             session()->flash('message', 'Tipo de evaluación restaurado correctamente.');

@@ -41,8 +41,9 @@
                                     </td>
                                     <!-- Estatus -->
                                     <td class="px-4 py-4 text-right">
-                                        <span class="{{ $recurso->estatus == 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }} 
-                                                                                    text-xs font-medium px-2.5 py-0.5 rounded">
+                                        <span
+                                            class="{{ $recurso->estatus == 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }} 
+                                                                                            text-xs font-medium px-2.5 py-0.5 rounded">
                                             {{ $recurso->estatus == 1 ? 'Activo' : 'Inactivo' }}
                                         </span>
                                     </td>
@@ -75,7 +76,7 @@
                                             @endcan
 
                                             <!-- Acciones según estado -->
-                                            @can('editar-recurso')
+                                            @can('cambiar-estatus-recurso')
                                                 @if ($recurso->estatus == 1)
                                                     <!-- Inactivar -->
                                                     <button wire:click="confirmarInhabilitar({{ $recurso->id_recurso }})"

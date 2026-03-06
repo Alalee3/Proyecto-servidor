@@ -48,6 +48,10 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('ver-evento', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Evento');
         });
+
+        Gate::define('cambiar-estatus-evento', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Cambiar Estatus de Evento');
+        });
         // --------------------------------------
 
         // --- GATES PARA EL MÓDULO DE CONTENIDO ---
@@ -63,6 +67,9 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('ver-contenido', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Contenido');
         });
+        Gate::define('cambiar-estatus-contenido', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Cambiar Estatus de Contenido');
+        });
 
         // --- GATES PARA EL MÓDULO DE TEMA ---
         Gate::define('listar-tema', function ($user) use ($accesoRepository) {
@@ -76,6 +83,9 @@ class AuthServiceProvider extends ServiceProvider
         });
         Gate::define('ver-tema', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Tema');
+        });
+        Gate::define('cambiar-estatus-tema', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Cambiar Estatus de Tema');
         });
 
         // --- GATES PARA EL MÓDULO DE INDICADOR LOGRO ---
@@ -91,6 +101,9 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('ver-indicador-logro', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Indicador Logro');
         });
+        Gate::define('cambiar-estatus-indicador-logro', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Cambiar Estatus de Indicador Logro');
+        });
 
         // --- GATES PARA EL MÓDULO DE BIBLIOGRAFIA ---
         Gate::define('listar-bibliografia', function ($user) use ($accesoRepository) {
@@ -105,6 +118,9 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('ver-bibliografia', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Bibliografia');
         });
+        Gate::define('cambiar-estatus-bibliografia', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Cambiar Estatus de Bibliografia');
+        });
 
         // --- GATES PARA EL MÓDULO DE RECURSO ---
         Gate::define('listar-recurso', function ($user) use ($accesoRepository) {
@@ -118,6 +134,9 @@ class AuthServiceProvider extends ServiceProvider
         });
         Gate::define('ver-recurso', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Recurso');
+        });
+        Gate::define('cambiar-estatus-recurso', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Cambiar Estatus de Recurso');
         });
 
         // --- GATES PARA EL MÓDULO DE ESTRATEGIA ---
@@ -150,6 +169,9 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('ver-tecnica', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Tecnica');
         });
+        Gate::define('cambiar-estatus-tecnica', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Cambiar Estatus de Tecnica');
+        });
 
         // --- GATES PARA EL MÓDULO DE EVALUACION ---
         Gate::define('listar-evaluacion', function ($user) use ($accesoRepository) {
@@ -164,6 +186,9 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('ver-evaluacion', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Tecnica Evaluacion');
         });
+        Gate::define('cambiar-estatus-evaluacion', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Cambiar Estatus de Tecnica Evaluacion');
+        });
 
         // --- GATES PARA EL MÓDULO DE TIPO EVALUACION ---
         Gate::define('listar-tipo-evaluacion', function ($user) use ($accesoRepository) {
@@ -177,6 +202,9 @@ class AuthServiceProvider extends ServiceProvider
         });
         Gate::define('ver-tipo-evaluacion', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Tipo Evaluacion');
+        });
+        Gate::define('cambiar-estatus-tipo-evaluacion', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Cambiar Estatus de Tipo Evaluacion');
         });
 
         // --- GATES PARA EL MÓDULO DE ROL ---
@@ -210,6 +238,10 @@ class AuthServiceProvider extends ServiceProvider
 
         Gate::define('ver-planificacion', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Planificacion');
+        });
+
+        Gate::define('cambiar-estatus-planificacion', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Cambiar Estatus de Planificacion');
         });
 
         // ---------------------------------------------
