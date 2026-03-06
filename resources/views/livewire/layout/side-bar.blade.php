@@ -28,7 +28,6 @@
             </a>
 
 
-            <!-- PNFS -->
 
             @can('listar-tema')
                 <!-- Temas -->

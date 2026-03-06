@@ -6,10 +6,6 @@ use App\Livewire\Planificacion\UpdatePlanificacion;
 use App\Livewire\Planificacion\ShowPlanificacion;
 
 
-use App\Livewire\Pnf\CreatePnf;
-use App\Livewire\Pnf\UpdatePnf;
-use App\Livewire\Pnf\ShowPnf;
-use App\Livewire\Pnf\ListPnf;
 
 use App\Livewire\Contenido\CreateContenido;
 use App\Livewire\Contenido\ListContenido;
@@ -77,10 +73,6 @@ Route::view('profile', 'profile')
     ->name('profile');
 
 Route::middleware(['auth', /*'role:1'*/])->group(function () {
-    //Route::get('pnf/list', ListPnf::class)->name('pnf/listar');
-    //Route::get('pnf/create', CreatePnf::class)->name('pnf/crear');
-    //Route::get('pnf/update/{id}', UpdatePnf::class)->name('pnf/update');
-    //Route::get('pnf/show/{id}', ShowPnf::class)->name('pnf/show');
 
     Route::get('contenido/list', ListContenido::class)->middleware('can:listar-contenido')->name('contenido/listar');
     Route::get('contenido/create', CreateContenido::class)->middleware('can:crear-contenido')->name('contenido/crear');
