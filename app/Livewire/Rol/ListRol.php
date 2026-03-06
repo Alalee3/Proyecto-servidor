@@ -49,6 +49,7 @@ class ListRol extends Component
 
             $ignorados = ['dashboard', 'profile', 'login', 'logout', 'register', 'password', '/', '#'];
             $permisosEncontrados = [];
+            $modulosEncontrados = [];
 
             foreach ($uris as $uri) {
                 // Limpiar parámetros {id} y separar en partes
@@ -79,6 +80,21 @@ class ListRol extends Component
 
                 // Delegar la persistencia al repositorio
                 $this->rolRepository->upsertPermiso($nombrePermiso);
+
+                // Guardamos el nombre del módulo en un array temporal para luego asignarle permisos que no dependen de rutas
+                $modulosEncontrados[$moduloNombre] = true;
+            }
+
+            // Una vez que tenemos todos los módulos, generamos los permisos "virtuales" que no provienen de rutas
+            foreach (array_keys($modulosEncontrados) as $moduloNombre) {
+                // Generamos el permiso de Activación / Inactivación (Cabiar Estatus)
+                $permisoEstatus = "Cambiar Estatus de {$moduloNombre}";
+
+                // Lo añadimos a la lista para que no sea marcado como obsoleto
+                $permisosEncontrados[] = $permisoEstatus;
+
+                // Lo guardamos en BD
+                $this->rolRepository->upsertPermiso($permisoEstatus);
             }
 
             // Delegar la limpieza al repositorio
