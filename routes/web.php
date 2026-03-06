@@ -45,10 +45,10 @@ use App\Livewire\Estrategia\ShowEstrategia;
 use App\Livewire\Estrategia\ListEstrategia;
 
 
-use App\Livewire\Evaluacion\CreateEvaluacion;
-use App\Livewire\Evaluacion\UpdateEvaluacion;
-use App\Livewire\Evaluacion\ShowEvaluacion;
-use App\Livewire\Evaluacion\ListEvaluacion;
+use App\Livewire\TecnicaEvaluacion\CreateTecnicaEvaluacion;
+use App\Livewire\TecnicaEvaluacion\UpdateTecnicaEvaluacion;
+use App\Livewire\TecnicaEvaluacion\ShowTecnicaEvaluacion;
+use App\Livewire\TecnicaEvaluacion\ListTecnicaEvaluacion;
 
 use App\Livewire\Evento\CreateEvento;
 use App\Livewire\Evento\ListEvento;
@@ -121,11 +121,11 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     Route::get('estrategia/show/{id}', ShowEstrategia::class)->middleware('can:ver-estrategia')->name('estrategia/show');
 
 
-    // Rutas para Evaluaciones
-    Route::get('evaluacion/list', ListEvaluacion::class)->middleware('can:listar-evaluacion')->name('evaluacion/listar');
-    Route::get('evaluacion/create', CreateEvaluacion::class)->middleware('can:crear-evaluacion')->name('evaluacion/crear');
-    Route::get('evaluacion/update/{id}', UpdateEvaluacion::class)->middleware('can:editar-evaluacion')->name('evaluacion/update');
-    Route::get('evaluacion/show/{id}', ShowEvaluacion::class)->middleware('can:ver-evaluacion')->name('evaluacion/show');
+    // Rutas para Técnicas de Evaluación
+    Route::get('tecnica-evaluacion/list', ListTecnicaEvaluacion::class)->middleware('can:listar-evaluacion')->name('tecnica-evaluacion/listar');
+    Route::get('tecnica-evaluacion/create', CreateTecnicaEvaluacion::class)->middleware('can:crear-evaluacion')->name('tecnica-evaluacion/crear');
+    Route::get('tecnica-evaluacion/update/{id}', UpdateTecnicaEvaluacion::class)->middleware('can:editar-evaluacion')->name('tecnica-evaluacion/update');
+    Route::get('tecnica-evaluacion/show/{id}', ShowTecnicaEvaluacion::class)->middleware('can:ver-evaluacion')->name('tecnica-evaluacion/show');
 
     // Rutas para Eventos
     Route::get('evento/list', ListEvento::class)->middleware('can:listar-evento')->name('evento/listar');

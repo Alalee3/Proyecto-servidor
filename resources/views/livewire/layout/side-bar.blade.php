@@ -118,15 +118,17 @@
                             <!-- Evaluaciones -->
                             <div>
                                 <button @click="subMenu === 6 ? subMenu = null : subMenu = 6" class="sogat-sidebar-subitem">
-                                    <span>Evaluaciones</span>
+                                    <span>Técnicas de Evaluación</span>
                                     <img :src="subMenu === 6 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
                                         class="w-4 h-4 ml-auto">
                                 </button>
                                 <ul x-show="subMenu === 6" x-collapse class="mt-0 space-y-0">
                                     @can('crear-evaluacion')
-                                        <li><a href="{{ route('evaluacion/crear') }}" class="sogat-sidebar-link !text-xs">Crear</a></li>
+                                        <li><a href="{{ route('tecnica-evaluacion/crear') }}"
+                                                class="sogat-sidebar-link !text-xs">Crear</a></li>
                                     @endcan
-                                    <li><a href="{{ route('evaluacion/listar') }}" class="sogat-sidebar-link !text-xs">Gestionar</a>
+                                    <li><a href="{{ route('tecnica-evaluacion/listar') }}"
+                                            class="sogat-sidebar-link !text-xs">Gestionar</a>
                                     </li>
                                 </ul>
                             </div>

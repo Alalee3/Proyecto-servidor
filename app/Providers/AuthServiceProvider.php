@@ -34,15 +34,15 @@ class AuthServiceProvider extends ServiceProvider
 
         // --- GATES PARA EL MÓDULO DE EVENTO ---
         Gate::define('listar-evento', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Listar Evento');
+            return $accesoRepository->checkPermission('Listar de Evento');
         });
 
         Gate::define('crear-evento', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Crear Evento');
+            return $accesoRepository->checkPermission('Crear de Evento');
         });
 
         Gate::define('editar-evento', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Editar Evento');
+            return $accesoRepository->checkPermission('Editar de Evento');
         });
 
         Gate::define('ver-evento', function ($user) use ($accesoRepository) {
@@ -52,13 +52,13 @@ class AuthServiceProvider extends ServiceProvider
 
         // --- GATES PARA EL MÓDULO DE CONTENIDO ---
         Gate::define('listar-contenido', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Listar Contenido');
+            return $accesoRepository->checkPermission('Listar de Contenido');
         });
         Gate::define('crear-contenido', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Crear Contenido');
+            return $accesoRepository->checkPermission('Crear de Contenido');
         });
         Gate::define('editar-contenido', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Editar Contenido');
+            return $accesoRepository->checkPermission('Editar de Contenido');
         });
         Gate::define('ver-contenido', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Contenido');
@@ -66,13 +66,13 @@ class AuthServiceProvider extends ServiceProvider
 
         // --- GATES PARA EL MÓDULO DE TEMA ---
         Gate::define('listar-tema', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Listar Tema');
+            return $accesoRepository->checkPermission('Listar de Tema');
         });
         Gate::define('crear-tema', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Crear Tema');
+            return $accesoRepository->checkPermission('Crear de Tema');
         });
         Gate::define('editar-tema', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Editar Tema');
+            return $accesoRepository->checkPermission('Editar de Tema');
         });
         Gate::define('ver-tema', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Tema');
@@ -80,13 +80,13 @@ class AuthServiceProvider extends ServiceProvider
 
         // --- GATES PARA EL MÓDULO DE INDICADOR LOGRO ---
         Gate::define('listar-indicador-logro', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Listar Indicador Logro');
+            return $accesoRepository->checkPermission('Listar de Indicador Logro');
         });
         Gate::define('crear-indicador-logro', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Crear Indicador Logro');
+            return $accesoRepository->checkPermission('Crear de Indicador Logro');
         });
         Gate::define('editar-indicador-logro', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Editar Indicador Logro');
+            return $accesoRepository->checkPermission('Editar de Indicador Logro');
         });
         Gate::define('ver-indicador-logro', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Indicador Logro');
@@ -94,13 +94,13 @@ class AuthServiceProvider extends ServiceProvider
 
         // --- GATES PARA EL MÓDULO DE BIBLIOGRAFIA ---
         Gate::define('listar-bibliografia', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Listar Bibliografia');
+            return $accesoRepository->checkPermission('Listar de Bibliografia');
         });
         Gate::define('crear-bibliografia', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Crear Bibliografia');
+            return $accesoRepository->checkPermission('Crear de Bibliografia');
         });
         Gate::define('editar-bibliografia', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Editar Bibliografia');
+            return $accesoRepository->checkPermission('Editar de Bibliografia');
         });
         Gate::define('ver-bibliografia', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Bibliografia');
@@ -108,13 +108,13 @@ class AuthServiceProvider extends ServiceProvider
 
         // --- GATES PARA EL MÓDULO DE RECURSO ---
         Gate::define('listar-recurso', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Listar Recurso');
+            return $accesoRepository->checkPermission('Listar de Recurso');
         });
         Gate::define('crear-recurso', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Crear Recurso');
+            return $accesoRepository->checkPermission('Crear de Recurso');
         });
         Gate::define('editar-recurso', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Editar Recurso');
+            return $accesoRepository->checkPermission('Editar de Recurso');
         });
         Gate::define('ver-recurso', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Recurso');
@@ -122,13 +122,13 @@ class AuthServiceProvider extends ServiceProvider
 
         // --- GATES PARA EL MÓDULO DE ESTRATEGIA ---
         Gate::define('listar-estrategia', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Listar Estrategia');
+            return $accesoRepository->checkPermission('Listar de Estrategia');
         });
         Gate::define('crear-estrategia', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Crear Estrategia');
+            return $accesoRepository->checkPermission('Crear de Estrategia');
         });
         Gate::define('editar-estrategia', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Editar Estrategia');
+            return $accesoRepository->checkPermission('Editar de Estrategia');
         });
         Gate::define('ver-estrategia', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Estrategia');
@@ -136,13 +136,13 @@ class AuthServiceProvider extends ServiceProvider
 
         // --- GATES PARA EL MÓDULO DE TECNICA ---
         Gate::define('listar-tecnica', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Listar Tecnica');
+            return $accesoRepository->checkPermission('Listar de Tecnica');
         });
         Gate::define('crear-tecnica', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Crear Tecnica');
+            return $accesoRepository->checkPermission('Crear de Tecnica');
         });
         Gate::define('editar-tecnica', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Editar Tecnica');
+            return $accesoRepository->checkPermission('Editar de Tecnica');
         });
         Gate::define('ver-tecnica', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Tecnica');
@@ -150,29 +150,29 @@ class AuthServiceProvider extends ServiceProvider
 
         // --- GATES PARA EL MÓDULO DE EVALUACION ---
         Gate::define('listar-evaluacion', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Listar Evaluacion');
+            return $accesoRepository->checkPermission('Listar de Tecnica Evaluacion');
         });
         Gate::define('crear-evaluacion', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Crear Evaluacion');
+            return $accesoRepository->checkPermission('Crear de Tecnica Evaluacion');
         });
         Gate::define('editar-evaluacion', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Editar Evaluacion');
+            return $accesoRepository->checkPermission('Editar de Tecnica Evaluacion');
         });
         Gate::define('ver-evaluacion', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Ver Detalles de Evaluacion');
+            return $accesoRepository->checkPermission('Ver Detalles de Tecnica Evaluacion');
         });
 
         // --- GATES PARA EL MÓDULO DE ROL ---
         Gate::define('listar-rol', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Listar Rol');
+            return $accesoRepository->checkPermission('Listar de Rol');
         });
         Gate::define('editar-rol', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Editar Rol');
+            return $accesoRepository->checkPermission('Editar de Rol');
         });
 
         // --- GATES PARA EL MÓDULO DE BITACORA ---
         Gate::define('listar-bitacora', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Listar Bitacora');
+            return $accesoRepository->checkPermission('Listar de Bitacora');
         });
         Gate::define('ver-bitacora', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Ver Detalles de Bitacora');
@@ -180,15 +180,15 @@ class AuthServiceProvider extends ServiceProvider
 
         // --- GATES PARA EL MÓDULO DE PLANIFICACIÓN ---
         Gate::define('listar-planificacion', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Listar Planificacion');
+            return $accesoRepository->checkPermission('Listar de Planificacion');
         });
 
         Gate::define('crear-planificacion', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Crear Planificacion');
+            return $accesoRepository->checkPermission('Crear de Planificacion');
         });
 
         Gate::define('editar-planificacion', function ($user) use ($accesoRepository) {
-            return $accesoRepository->checkPermission('Editar Planificacion');
+            return $accesoRepository->checkPermission('Editar de Planificacion');
         });
 
         Gate::define('ver-planificacion', function ($user) use ($accesoRepository) {

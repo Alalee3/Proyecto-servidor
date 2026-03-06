@@ -39,9 +39,9 @@ class ListRol extends Component
             $uris = array_unique($matches[1] ?? []);
 
             $accionesTraducidas = [
-                'list' => 'Listar',
-                'create' => 'Crear',
-                'update' => 'Editar',
+                'list' => 'Listar de',
+                'create' => 'Crear de',
+                'update' => 'Editar de',
                 'show' => 'Ver Detalles de',
                 'reporte-general' => 'Reporte General de',
                 'reporte-detalle' => 'Reporte Detallado de',
@@ -67,6 +67,12 @@ class ListRol extends Component
                 // Transformación de texto (Lógica de Negocio)
                 $moduloNombre = Str::title(str_replace('-', ' ', $moduloSlug));
                 $accionNombre = $accionesTraducidas[$accionSlug] ?? Str::title(str_replace('-', ' ', $accionSlug));
+
+                // Forzamos el uso de ' de ' para asegurar la agrupación de módulos con nombres compuestos
+                if (!str_ends_with(strtolower($accionNombre), ' de')) {
+                    $accionNombre .= " de";
+                }
+
                 $nombrePermiso = trim("{$accionNombre} {$moduloNombre}");
 
                 $permisosEncontrados[] = $nombrePermiso;

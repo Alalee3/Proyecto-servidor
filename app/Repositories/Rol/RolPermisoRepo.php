@@ -19,6 +19,7 @@ class RolPermisoRepo
     {
         $permisos = DB::table('permiso')
             ->orderBy('nombre_permiso')
+            ->where('estatus', '1')
             ->get();
 
         $modules = [];
@@ -65,7 +66,7 @@ class RolPermisoRepo
     {
         return DB::table('rol_permiso')
             ->where('id_rol', $rolId)
-            ->where('estatus', 1)
+            ->where('estatus', '1')
             ->pluck('id_permiso')
             ->toArray();
     }
@@ -78,12 +79,12 @@ class RolPermisoRepo
             if (empty($selectedPermissions)) {
                 DB::table('rol_permiso')
                     ->where('id_rol', $rolId)
-                    ->update(['estatus' => 0, 'fecha_actualizacion' => Carbon::now()]);
+                    ->update(['estatus' => '3', 'fecha_actualizacion' => Carbon::now()]);
             } else {
                 DB::table('rol_permiso')
                     ->where('id_rol', $rolId)
                     ->whereNotIn('id_permiso', $selectedPermissions)
-                    ->update(['estatus' => 0, 'fecha_actualizacion' => Carbon::now()]);
+                    ->update(['estatus' => '3', 'fecha_actualizacion' => Carbon::now()]);
             }
 
             // Insertar o activar los permisos seleccionados
@@ -97,14 +98,14 @@ class RolPermisoRepo
                     DB::table('rol_permiso')
                         ->where('id_rol_permiso', $exists->id_rol_permiso)
                         ->update([
-                            'estatus' => 1,
+                            'estatus' => '1',
                             'fecha_actualizacion' => Carbon::now()
                         ]);
                 } else {
                     DB::table('rol_permiso')->insert([
                         'id_rol' => $rolId,
                         'id_permiso' => $idPermiso,
-                        'estatus' => 1,
+                        'estatus' => '1',
                         'fecha_creacion' => Carbon::now()
                     ]);
                 }

@@ -35,8 +35,8 @@ class RolIndexRepo
                 'fecha_creacion' => Carbon::now(),
                 'estatus' => '1'
             ]);
-        } else if ($existe->estatus == '0') {
-            // Si existía pero estaba inactivo, lo reactivamos
+        } else if ($existe->estatus != '1') {
+            // Si existía pero no estaba activo, lo reactivamos
             DB::table('permiso')->where('id_permiso', $existe->id_permiso)->update(['estatus' => '1']);
         }
     }
@@ -49,8 +49,25 @@ class RolIndexRepo
         if (empty($permisosValidos))
             return;
 
-        DB::table('permiso')
+        // 1. Identificamos los IDs de los permisos que ya no son válidos
+        $idsObsoletos = DB::table('permiso')
             ->whereNotIn('nombre_permiso', $permisosValidos)
-            ->update(['estatus' => '0']);
+            ->pluck('id_permiso');
+
+        if ($idsObsoletos->isEmpty())
+            return;
+
+        // 2. Inactivamos las relaciones en rol_permiso para esos IDs
+        DB::table('rol_permiso')
+            ->whereIn('id_permiso', $idsObsoletos)
+            ->update([
+                'estatus' => '3',
+                'fecha_actualizacion' => Carbon::now()
+            ]);
+
+        // 3. Inactivamos el permiso en sí
+        DB::table('permiso')
+            ->whereIn('id_permiso', $idsObsoletos)
+            ->update(['estatus' => '3']);
     }
 }
