@@ -13,34 +13,33 @@ class UsuarioRepository
 
     public function select_roles()
     {
-        return DB::table('rol')
-            ->select('id_rol', 'acceso_rol as acceso')
-            ->where('estatus', 1)
+        return DB::connection('external_db')
+            ->table('rol')
+            ->select('rol_codigo as id_rol', 'rol_nombre as acceso')
+            //->where('rol_estatus', 'A')
             ->get();
     }
 
     public function listar($busqueda = '', $paginacion = 5)
     {
-        return DB::table('users')
+        return DB::connection('external_db')
+            ->table('usuario as u')
+            ->join('persona as p', 'u.usu_cedula', '=', 'p.per_cedula')
+            ->join('rol as r', 'u.usu_cod_rol', '=', 'r.rol_codigo')
             ->select(
-                'users.id',
-                'users.name',
-                'users.apellido',
-                'users.estatus',
-                // Usamos 'rol.acceso_rol' en GROUP_CONCAT y lo renombramos a 'roles_nombres'
-                DB::raw('GROUP_CONCAT(rol.acceso_rol SEPARATOR ", ") as roles_nombres')
-            )->where('users.id', '!=', Auth::id())
-            ->leftJoin('usuario_rol', function ($join) {
-                $join->on('users.id', '=', 'usuario_rol.id_users')
-                    ->where('usuario_rol.estatus', 1);
-            })
-            ->leftJoin('rol', 'usuario_rol.id_rol', '=', 'rol.id_rol')
+                'u.usu_codigo as id',
+                'p.per_nombres as name',
+                'p.per_apellidos as apellido',
+                'u.usu_estatus as estatus',
+                'r.rol_nombre as roles_nombres'
+            )
+            ->where('u.usu_codigo', '!=', Auth::id())
             ->when($busqueda, function ($consulta, $busqueda) {
-                // Aquí solo mantenemos la búsqueda por 'name'
-                $consulta->where('users.name', 'LIKE', '%' . $busqueda . '%');
+                $consulta->where('p.per_nombres', 'LIKE', '%' . $busqueda . '%')
+                    ->orWhere('p.per_apellidos', 'LIKE', '%' . $busqueda . '%')
+                    ->orWhere('u.usu_cedula', 'LIKE', '%' . $busqueda . '%');
             })
-            ->groupBy('users.id', 'users.name', 'users.apellido', 'users.estatus')
-            ->orderBy('users.fecha_creacion', 'desc')
+            ->orderBy('u.usu_codigo', 'desc')
             ->paginate($paginacion);
     }
 

@@ -21,19 +21,12 @@ class AccesoRepository
             return false;
         }
 
-        DB::enableQueryLog();
-
-        // Busca en la tabla 'usuario_rol' si el usuario tiene el rol y está activo
-        return DB::table('usuario_rol')
-            ->where('id_users', Auth::id()) // ID del usuario autenticado
-            ->where('id_rol', $rolId)         // ID del rol que se está buscando
-            ->where('estatus', 1)             // Verifica que el estatus del rol sea activo (1)
-            ->exists();                       // Retorna true si encuentra una coincidencia, false en caso contrario
+        // El rol ahora viene directamente del modelo User (conectado a emulacion_sogac_2)
+        return Auth::user()->usu_cod_rol == $rolId && Auth::user()->usu_estatus == 'A';
     }
 
-    // Puedes mantener estas funciones para claridad o eliminarlas si solo usas checkRole
     /**
-     * Verifica si el usuario autenticado tiene un permiso específico a través de sus roles activos.
+     * Verifica si el usuario autenticado tiene un permiso específico a través de su rol activo.
      *
      * @param string $permissionName Nombre exacto del permiso (ej: 'Listar Evento').
      * @return bool
@@ -44,12 +37,18 @@ class AccesoRepository
             return false;
         }
 
-        // Buscamos si existe una relación activa entre el usuario, sus roles y el permiso solicitado
-        return DB::table('usuario_rol as ur')
-            ->join('rol_permiso as rp', 'ur.id_rol', '=', 'rp.id_rol')
+        $user = Auth::user();
+
+        // Si el usuario no tiene rol o no está activo (en la BD externa 'A' es activo), no tiene permisos
+        if (!$user->usu_cod_rol || $user->usu_estatus != 'A') {
+            return false;
+        }
+
+        // Buscamos el permiso en la tabla local 'rol_permiso' y 'permiso' (hp_10)
+        // El id_rol coincide con el usu_cod_rol de la BD externa.
+        return DB::table('rol_permiso as rp')
             ->join('permiso as p', 'rp.id_permiso', '=', 'p.id_permiso')
-            ->where('ur.id_users', Auth::id())
-            ->where('ur.estatus', '1')        // El rol asignado al usuario debe estar activo
+            ->where('rp.id_rol', $user->usu_cod_rol)
             ->where('p.nombre_permiso', $permissionName)
             ->where('p.estatus', '1')         // El permiso debe existir y estar activo
             ->where('rp.estatus', '1')        // La vinculación rol-permiso debe estar activa

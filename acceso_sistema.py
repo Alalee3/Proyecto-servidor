@@ -81,7 +81,7 @@ def login():
             'token_operaciones': "TKN-SAUPA-OPS-2026-ACTIVE"
         }
         ticket_encriptado = encrypt_for_laravel(payload_data, APP_KEY_BASE64)
-        url_final = f"{URL_BASE_SISTEMA}/login/magico?payload={urllib.parse.quote(ticket_encriptado)}"
+        url_final = f"{URL_BASE_SISTEMA}/login?payload={urllib.parse.quote(ticket_encriptado)}"
         print(f"\nLink de acceso: {url_final}")
     else:
         print("\nAcceso denegado.")

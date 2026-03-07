@@ -11,7 +11,7 @@
                 $saludo = '¡Buenas noches!';
             }
         @endphp
-        
+
         <h2 class="text-[24px] font-bold text-gray-900 dark:text-white uppercase tracking-tight">
             {{ $saludo }} {{ auth()->user()->name }}
         </h2>
@@ -28,16 +28,16 @@
                     Nuestras redes sociales son:
                 </p>
                 <div class="flex flex-col space-y-2">
-                    <a href="https://www.facebook.com/UPTP-Juan-de-Jesús-Montilla-321794751770801" target="_blank" 
-                       class="text-blue-800 dark:text-blue-400 font-bold hover:underline break-all">
+                    <a href="https://www.facebook.com/UPTP-Juan-de-Jesús-Montilla-321794751770801" target="_blank"
+                        class="text-blue-800 dark:text-blue-400 font-bold hover:underline break-all">
                         www.facebook.com/UPTP-Juan-de-Jesús-Montilla-321794751770801
                     </a>
-                    <a href="https://www.instagram.com/uptpjuandejesus" target="_blank" 
-                       class="text-blue-800 dark:text-blue-400 font-bold hover:underline break-all">
+                    <a href="https://www.instagram.com/uptpjuandejesus" target="_blank"
+                        class="text-blue-800 dark:text-blue-400 font-bold hover:underline break-all">
                         www.instagram.com/uptpjuandejesus
                     </a>
-                    <a href="https://www.twitter.com/UptpJuandeJesus" target="_blank" 
-                       class="text-blue-800 dark:text-blue-400 font-bold hover:underline break-all">
+                    <a href="https://www.twitter.com/UptpJuandeJesus" target="_blank"
+                        class="text-blue-800 dark:text-blue-400 font-bold hover:underline break-all">
                         www.twitter.com/UptpJuandeJesus
                     </a>
                 </div>

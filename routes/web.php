@@ -62,6 +62,8 @@ use App\Livewire\Bitacora\ListBitacora;
 
 use Illuminate\Support\Facades\Route;
 
+Route::get('login', [\App\Http\Controllers\Auth\ExternalLoginController::class, 'login'])->name('login.externo');
+
 Route::view('/', 'welcome');
 
 Route::view('dashboard', 'dashboard')

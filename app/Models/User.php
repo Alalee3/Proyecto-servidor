@@ -13,6 +13,11 @@ class User extends Authenticatable
 {
     use Auditable;
     public $timestamps = false;
+
+    protected $connection = 'external_db';
+    protected $table = 'usuario';
+    protected $primaryKey = 'usu_codigo';
+
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
@@ -22,13 +27,10 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
-        'apellido',
-        'cedula',
-        'email',
-        'telefono',
-        'password',
-        'estatus',
+        'usu_nombre',
+        'usu_cedula',
+        'usu_clave',
+        'usu_estatus',
     ];
 
     /**
@@ -37,10 +39,42 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $hidden = [
-        'password',
+        'usu_clave',
         'remember_token',
-        'estatus',
     ];
+
+    public function getAuthPassword()
+    {
+        return $this->usu_clave;
+    }
+
+    public function getNameAttribute()
+    {
+        return $this->usu_nombre;
+    }
+
+    public function getCedulaAttribute()
+    {
+        return $this->usu_cedula;
+    }
+
+    public function getEstatusAttribute()
+    {
+        // En la BD externa 'A' es activo, 'I' inactivo. 
+        // El sistema local espera 1 para activo.
+        return ($this->usu_estatus == 'A') ? 1 : 2;
+    }
+
+    public function getEmailAttribute()
+    {
+        // El email real está en la tabla persona, pero como fallback usamos usu_nombre
+        return $this->usu_nombre . '@sogac.com';
+    }
+
+    public function getTelefonoAttribute()
+    {
+        return 'N/A';
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -50,8 +84,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'usu_clave' => 'hashed',
         ];
     }
 }
