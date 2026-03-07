@@ -8,12 +8,10 @@ class BitacoraViewRepo
 {
     public function mostrar($id)
     {
-        return \App\Models\Bitacora::from('bitacora as b')
-            ->leftJoin('users as u', 'b.id_users', '=', 'u.id')
+        $registro = \App\Models\Bitacora::from('bitacora as b')
             ->select(
                 'b.id_bitacora',
-                'u.name as usuario_nombre',
-                'u.email as usuario_correo',
+                'b.id_usuario',
                 'b.modulo_afectado_bitacora as modulo',
                 'b.tabla_afectada_bitacora as tabla',
                 'b.id_registro_afectado_bitacora as registro_id',
@@ -25,5 +23,24 @@ class BitacoraViewRepo
             )
             ->where('b.id_bitacora', $id)
             ->first();
+
+        if ($registro && $registro->id_usuario) {
+            // Buscar datos del usuario en la BD externa
+            $usuarioExterno = DB::connection('external_db')
+                ->table('usuario')
+                ->where('usu_codigo', $registro->id_usuario)
+                ->first();
+
+            if ($usuarioExterno) {
+                $registro->usuario_nombre = $usuarioExterno->usu_nombre;
+                // Si la tabla externa no tiene correo, podrías poner un fallback
+                $registro->usuario_correo = $usuarioExterno->usu_nombre . '.';
+            } else {
+                $registro->usuario_nombre = 'Usuario ' . $registro->id_usuario . ' (No encontrado)';
+                $registro->usuario_correo = 'N/A';
+            }
+        }
+
+        return $registro;
     }
 }

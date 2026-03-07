@@ -12,7 +12,7 @@ class Bitacora extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'id_users',
+        'id_usuario',
         'modulo_afectado_bitacora',
         'tabla_afectada_bitacora',
         'id_registro_afectado_bitacora',

@@ -49,7 +49,7 @@ trait Auditable
         $modulo = property_exists($model, 'moduleName') ? $model->moduleName : class_basename($model);
 
         Bitacora::create([
-            'id_users' => Auth::id() ?? 1, // ID 1 o null si es un proceso de consola
+            'id_usuario' => Auth::id() ?? 1, // ID 1 o null si es un proceso de consola
             'modulo_afectado_bitacora' => $modulo,
             'tabla_afectada_bitacora' => $model->getTable(),
             'id_registro_afectado_bitacora' => (string) $model->getKey(),
