@@ -33,11 +33,8 @@ class BitacoraViewRepo
 
             if ($usuarioExterno) {
                 $registro->usuario_nombre = $usuarioExterno->usu_nombre;
-                // Si la tabla externa no tiene correo, podrías poner un fallback
-                $registro->usuario_correo = $usuarioExterno->usu_nombre . '.';
             } else {
                 $registro->usuario_nombre = 'Usuario ' . $registro->id_usuario . ' (No encontrado)';
-                $registro->usuario_correo = 'N/A';
             }
         }
 
