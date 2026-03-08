@@ -68,8 +68,6 @@ class ExternalLoginController extends Controller
             // 6. Iniciar Sesión
             Auth::login($user);
 
-            // Guardar un token de operaciones seguro en la sesión para el futuro
-            session(['token_operaciones' => \Illuminate\Support\Str::random(40)]);
 
             // Redirigir al inicio del sistema
             return redirect()->intended(route('dashboard', absolute: false));
