@@ -175,8 +175,23 @@
                 </div>
             @endcanany
 
+            @can('listar-calendario')
+                <div>
+                    <button @click="openMenu === 18 ? openMenu = null : openMenu = 18" class="sogat-sidebar-item">
+                        <span>Calendario Académico</span>
+                        <img :src="openMenu === 18 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
+                            class="w-5 h-5 ml-auto">
+                    </button>
+                    <ul x-show="openMenu === 18" x-collapse class="mt-0 space-y-0">
+                        @can('crear-calendario')
+                            <li><a href="{{ route('calendario.create') }}" class="sogat-sidebar-link">Crear Semana</a></li>
+                        @endcan
+                        <li><a href="{{ route('calendario.list') }}" class="sogat-sidebar-link">Gestionar Calendario</a></li>
+                    </ul>
+                </div>
+            @endcan
+
             @can('listar-evento')
-                <!-- Eventos -->
                 <div>
                     <button @click="openMenu === 15 ? openMenu = null : openMenu = 15" class="sogat-sidebar-item">
                         <span>Eventos</span>

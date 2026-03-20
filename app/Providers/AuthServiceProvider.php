@@ -54,6 +54,28 @@ class AuthServiceProvider extends ServiceProvider
         });
         // --------------------------------------
 
+        // --- GATES PARA EL MÓDULO DE CALENDARIO ---
+        Gate::define('listar-calendario', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Listar de Calendario');
+        });
+
+        Gate::define('crear-calendario', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Crear de Calendario');
+        });
+
+        Gate::define('editar-calendario', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Editar de Calendario');
+        });
+
+        Gate::define('ver-calendario', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Ver Detalles de Calendario');
+        });
+
+        Gate::define('cambiar-estatus-calendario', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Cambiar Estatus de Calendario');
+        });
+        // --------------------------------------
+
         // --- GATES PARA EL MÓDULO DE CONTENIDO ---
         Gate::define('listar-contenido', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Listar de Contenido');
