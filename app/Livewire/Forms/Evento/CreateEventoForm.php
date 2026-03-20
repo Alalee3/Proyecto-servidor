@@ -6,7 +6,7 @@ use Livewire\Form;
 
 class CreateEventoForm extends Form
 {
-    public $id_lapso = '';
+    public $id_calendario = '';
     public $dia_inicio_evento = '';
     public $dia_fin_evento = '';
     public $descripcion_evento = '';
@@ -15,7 +15,7 @@ class CreateEventoForm extends Form
     protected function rules()
     {
         return [
-            'id_lapso' => [
+            'id_calendario' => [
                 'nullable',
                 'integer'
             ],
@@ -23,19 +23,22 @@ class CreateEventoForm extends Form
                 'required',
                 'date',
                 function ($attribute, $value, $fail) {
-                    $id_lapso = $this->id_lapso;
-                    if (empty($id_lapso)) {
-                        $activo = \Illuminate\Support\Facades\DB::connection('external_db')->table('lapso_academico')->where('lap_estatus', 'A')->where('lap_cerrado', 'N')->first();
-                        $id_lapso = $activo ? $activo->lap_codigo : null;
+                    $ultimoCalendario = \Illuminate\Support\Facades\DB::table('calendario_academico')
+                        ->orderBy('id_calendario_academico', 'desc')
+                        ->first();
+
+                    if (!$ultimoCalendario) {
+                        $fail('No existe un calendario académico configurado para realizar la validación.');
+                        return;
                     }
 
-                    if ($id_lapso) {
-                        $lapso = \Illuminate\Support\Facades\DB::connection('external_db')->table('lapso_academico')->where('lap_codigo', $id_lapso)->first();
-                        if ($lapso) {
-                            if ($value < $lapso->lap_fecha_inicio || $value > $lapso->lap_fecha_fin) {
-                                $fail("La fecha de inicio debe estar entre {$lapso->lap_fecha_inicio} y {$lapso->lap_fecha_fin}.");
-                            }
-                        }
+                    // Asignamos el ID del calendario automáticamente si está vacío
+                    if (empty($this->id_calendario)) {
+                        $this->id_calendario = $ultimoCalendario->id_calendario_academico;
+                    }
+
+                    if ($value < $ultimoCalendario->dia_inicio_calendario_academico || $value > $ultimoCalendario->dia_fin_calendario_academico) {
+                        $fail("La fecha de inicio debe estar dentro del rango del último calendario configurado ({$ultimoCalendario->dia_inicio_calendario_academico} al {$ultimoCalendario->dia_fin_calendario_academico}).");
                     }
                 }
             ],
@@ -44,19 +47,17 @@ class CreateEventoForm extends Form
                 'date',
                 'after_or_equal:dia_inicio_evento',
                 function ($attribute, $value, $fail) {
-                    $id_lapso = $this->id_lapso;
-                    if (empty($id_lapso)) {
-                        $activo = \Illuminate\Support\Facades\DB::connection('external_db')->table('lapso_academico')->where('lap_estatus', 'A')->where('lap_cerrado', 'N')->first();
-                        $id_lapso = $activo ? $activo->lap_codigo : null;
+                    $ultimoCalendario = \Illuminate\Support\Facades\DB::table('calendario_academico')
+                        ->orderBy('id_calendario_academico', 'desc')
+                        ->first();
+
+                    if (!$ultimoCalendario) {
+                        $fail('No existe un calendario académico configurado para realizar la validación.');
+                        return;
                     }
 
-                    if ($id_lapso) {
-                        $lapso = \Illuminate\Support\Facades\DB::connection('external_db')->table('lapso_academico')->where('lap_codigo', $id_lapso)->first();
-                        if ($lapso) {
-                            if ($value < $lapso->lap_fecha_inicio || $value > $lapso->lap_fecha_fin) {
-                                $fail("La fecha de fin debe estar entre {$lapso->lap_fecha_inicio} y {$lapso->lap_fecha_fin}.");
-                            }
-                        }
+                    if ($value < $ultimoCalendario->dia_inicio_calendario_academico || $value > $ultimoCalendario->dia_fin_calendario_academico) {
+                        $fail("La fecha de fin debe estar dentro del rango del último calendario configurado ({$ultimoCalendario->dia_inicio_calendario_academico} al {$ultimoCalendario->dia_fin_calendario_academico}).");
                     }
                 }
             ],
@@ -65,17 +66,16 @@ class CreateEventoForm extends Form
                 'string',
                 'max:100',
                 function ($attribute, $value, $fail) {
-                    $id_lapso = $this->id_lapso;
-                    if (empty($id_lapso)) {
-                        $activo = \Illuminate\Support\Facades\DB::connection('external_db')->table('lapso_academico')->where('lap_estatus', 'A')->where('lap_cerrado', 'N')->first();
-                        $id_lapso = $activo ? $activo->lap_codigo : null;
+                    $repo = new \App\Repositories\Evento\EventoCreateRepo();
+                    $id_cal = $this->id_calendario;
+                    
+                    if (empty($id_cal)) {
+                        $ultimo = \Illuminate\Support\Facades\DB::table('calendario_academico')->orderBy('id_calendario_academico', 'desc')->first();
+                        $id_cal = $ultimo ? $ultimo->id_calendario_academico : null;
                     }
 
-                    if ($id_lapso) {
-                        $repo = new \App\Repositories\Evento\EventoCreateRepo();
-                        if ($repo->existeEventoConDescripcion($value, (int) $id_lapso)) {
-                            $fail('Ya existe un evento con esta descripción en el lapso seleccionado.');
-                        }
+                    if ($repo->existeEventoConDescripcion($value, (int) $id_cal)) {
+                        $fail('Ya existe un evento con esta descripción en el calendario seleccionado.');
                     }
                 },
                 'regex:/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\d\s\.,\-\(\)\"\':\/]+$/u'
@@ -90,7 +90,7 @@ class CreateEventoForm extends Form
     protected function messages()
     {
         return [
-            'id_lapso.integer' => 'El lapso debe ser un número entero.',
+            'id_calendario.integer' => 'El calendario debe ser un número entero.',
             'dia_inicio_evento.required' => 'La fecha de inicio es obligatoria.',
             'dia_inicio_evento.date' => 'La fecha de inicio debe ser válida.',
             'dia_fin_evento.required' => 'La fecha de fin es obligatoria.',
@@ -99,7 +99,6 @@ class CreateEventoForm extends Form
             'descripcion_evento.required' => 'La descripción es obligatoria.',
             'descripcion_evento.string' => 'La descripción debe ser texto.',
             'descripcion_evento.max' => 'La descripción no debe exceder 100 caracteres.',
-            'descripcion_evento.unique' => 'Ya existe un evento con esta descripción.',
             'descripcion_evento.regex' => 'Formato inválido en la descripción.',
             'tipo_evento.required' => 'El tipo de evento es obligatorio.',
             'tipo_evento.in' => 'El tipo de evento no es válido.',

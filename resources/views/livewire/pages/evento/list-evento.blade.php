@@ -73,6 +73,7 @@
                                                 </svg>
                                                 Editar
                                             </a>
+                                            @endcan
                                             <!-- Acciones según estado -->
                                             @can('cambiar-estatus-evento')
                                                 @if ($evento->estatus == 1)

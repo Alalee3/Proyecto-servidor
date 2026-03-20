@@ -28,9 +28,9 @@ class CreateEvento extends Component
         $this->form->validate();
 
         try {
-            $this->eventoRepository->crear($this->form->all());
+            $id_repo = $this->eventoRepository->crear($this->form->all());
 
-            $this->reset('form.descripcion_evento', 'form.id_lapso', 'form.dia_inicio_evento', 'form.dia_fin_evento', 'form.tipo_evento');
+            $this->reset('form.descripcion_evento', 'form.id_calendario', 'form.dia_inicio_evento', 'form.dia_fin_evento', 'form.tipo_evento');
             session()->flash('message', 'Evento creado correctamente.');
         } catch (Exception $e) {
             session()->flash('error', 'Error al crear evento: ' . $e->getMessage());

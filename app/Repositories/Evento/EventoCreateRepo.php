@@ -9,20 +9,19 @@ class EventoCreateRepo
 {
     public function crear(array $data)
     {
-        if (empty($data['id_lapso'])) {
-            $activo = DB::connection('external_db')->table('lapso_academico')
-                ->where('lap_estatus', 'A')
-                ->where('lap_cerrado', 'N')
+        if (empty($data['id_calendario'])) {
+            $ultimo = DB::table('calendario_academico')
+                ->orderBy('id_calendario_academico', 'desc')
                 ->first();
-            if (!$activo) {
-                // Si no hay nada activo, lanzamos una excepción o retornamos un valor que evite el insert
-                throw new \Exception('No se puede registrar el evento porque no existe un lapso académico activo.');
+            
+            if (!$ultimo) {
+                throw new \Exception('No se puede registrar el evento porque no existe un calendario académico configurado.');
             }
-            $data['id_lapso'] = $activo->lap_codigo;
+            $data['id_calendario'] = $ultimo->id_calendario_academico;
         }
 
         $evento = \App\Models\Evento::create([
-            'id_lapso' => $data['id_lapso'],
+            'id_calendario' => $data['id_calendario'],
             'dia_inicio_evento' => $data['dia_inicio_evento'],
             'dia_fin_evento' => $data['dia_fin_evento'],
             'descripcion_evento' => $data['descripcion_evento'],
@@ -34,10 +33,10 @@ class EventoCreateRepo
         return $evento->getKey();
     }
 
-    public function existeEventoConDescripcion(string $descripcion, ?int $idLapso): bool
+    public function existeEventoConDescripcion(string $descripcion, ?int $idCalendario): bool
     {
         return DB::table('evento')
-            ->where('id_lapso', $idLapso)
+            ->where('id_calendario', $idCalendario)
             ->where('descripcion_evento', $descripcion)
             ->where('estatus', '!=', '3')
             ->exists();

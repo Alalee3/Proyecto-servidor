@@ -17,20 +17,19 @@ class EventoEditRepo
     {
         $evento = \App\Models\Evento::find($id);
         if ($evento) {
-            $id_lapso = $data['id_lapso'] ?? null;
-            if (empty($id_lapso)) {
-                $activo = DB::connection('external_db')->table('lapso_academico')
-                    ->where('lap_estatus', 'A')
-                    ->where('lap_cerrado', 'N')
+            $id_calendario = $data['id_calendario'] ?? null;
+            if (empty($id_calendario)) {
+                $ultimo = DB::table('calendario_academico')
+                    ->orderBy('id_calendario_academico', 'desc')
                     ->first();
-                if (!$activo) {
-                    throw new \Exception('No se puede actualizar el evento porque no existe un lapso académico activo.');
+                if (!$ultimo) {
+                    throw new \Exception('No se puede actualizar el evento porque no existe un calendario académico configurado.');
                 }
-                $id_lapso = $activo->lap_codigo;
+                $id_calendario = $ultimo->id_calendario_academico;
             }
 
             return $evento->update([
-                'id_lapso' => $id_lapso,
+                'id_calendario' => $id_calendario,
                 'dia_inicio_evento' => $data['dia_inicio_evento'],
                 'dia_fin_evento' => $data['dia_fin_evento'],
                 'descripcion_evento' => $data['descripcion_evento'],
@@ -40,10 +39,10 @@ class EventoEditRepo
         return false;
     }
 
-    public function existeEventoConDescripcion(string $descripcion, ?int $idLapso, ?int $idEventoExcluir): bool
+    public function existeEventoConDescripcion(string $descripcion, ?int $idCalendario, ?int $idEventoExcluir): bool
     {
         return DB::table('evento')
-            ->where('id_lapso', $idLapso)
+            ->where('id_calendario', $idCalendario)
             ->where('descripcion_evento', $descripcion)
             ->where('id_evento', '!=', $idEventoExcluir)
             ->where('estatus', '!=', '3')

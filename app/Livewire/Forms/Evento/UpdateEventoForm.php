@@ -10,7 +10,7 @@ class UpdateEventoForm extends Form
     #[Locked]
     public $id_evento;
 
-    public $id_lapso;
+    public $id_calendario;
     public $dia_inicio_evento = '';
     public $dia_fin_evento = '';
     public $descripcion_evento = '';
@@ -19,7 +19,7 @@ class UpdateEventoForm extends Form
     protected function rules()
     {
         return [
-            'id_lapso' => [
+            'id_calendario' => [
                 'nullable',
                 'integer'
             ],
@@ -27,19 +27,17 @@ class UpdateEventoForm extends Form
                 'required',
                 'date',
                 function ($attribute, $value, $fail) {
-                    $id_lapso = $this->id_lapso;
-                    if (empty($id_lapso)) {
-                        $activo = \Illuminate\Support\Facades\DB::connection('external_db')->table('lapso_academico')->where('lap_estatus', 'A')->where('lap_cerrado', 'N')->first();
-                        $id_lapso = $activo ? $activo->lap_codigo : null;
+                    $calendario = \Illuminate\Support\Facades\DB::table('calendario_academico')
+                        ->where('id_calendario_academico', $this->id_calendario)
+                        ->first();
+
+                    if (!$calendario) {
+                        $fail('No se encontró el calendario académico asociado para realizar la validación.');
+                        return;
                     }
 
-                    if ($id_lapso) {
-                        $lapso = \Illuminate\Support\Facades\DB::connection('external_db')->table('lapso_academico')->where('lap_codigo', $id_lapso)->first();
-                        if ($lapso) {
-                            if ($value < $lapso->lap_fecha_inicio || $value > $lapso->lap_fecha_fin) {
-                                $fail("La fecha de inicio debe estar entre {$lapso->lap_fecha_inicio} y {$lapso->lap_fecha_fin}.");
-                            }
-                        }
+                    if ($value < $calendario->dia_inicio_calendario_academico || $value > $calendario->dia_fin_calendario_academico) {
+                        $fail("La fecha de inicio debe estar dentro del rango del calendario asociado ({$calendario->dia_inicio_calendario_academico} al {$calendario->dia_fin_calendario_academico}).");
                     }
                 }
             ],
@@ -48,19 +46,17 @@ class UpdateEventoForm extends Form
                 'date',
                 'after_or_equal:dia_inicio_evento',
                 function ($attribute, $value, $fail) {
-                    $id_lapso = $this->id_lapso;
-                    if (empty($id_lapso)) {
-                        $activo = \Illuminate\Support\Facades\DB::connection('external_db')->table('lapso_academico')->where('lap_estatus', 'A')->where('lap_cerrado', 'N')->first();
-                        $id_lapso = $activo ? $activo->lap_codigo : null;
+                    $calendario = \Illuminate\Support\Facades\DB::table('calendario_academico')
+                        ->where('id_calendario_academico', $this->id_calendario)
+                        ->first();
+
+                    if (!$calendario) {
+                        $fail('No se encontró el calendario académico asociado para realizar la validación.');
+                        return;
                     }
 
-                    if ($id_lapso) {
-                        $lapso = \Illuminate\Support\Facades\DB::connection('external_db')->table('lapso_academico')->where('lap_codigo', $id_lapso)->first();
-                        if ($lapso) {
-                            if ($value < $lapso->lap_fecha_inicio || $value > $lapso->lap_fecha_fin) {
-                                $fail("La fecha de fin debe estar entre {$lapso->lap_fecha_inicio} y {$lapso->lap_fecha_fin}.");
-                            }
-                        }
+                    if ($value < $calendario->dia_inicio_calendario_academico || $value > $calendario->dia_fin_calendario_academico) {
+                        $fail("La fecha de fin debe estar dentro del rango del calendario asociado ({$calendario->dia_inicio_calendario_academico} al {$calendario->dia_fin_calendario_academico}).");
                     }
                 }
             ],
@@ -70,8 +66,8 @@ class UpdateEventoForm extends Form
                 'max:100',
                 function ($attribute, $value, $fail) {
                     $repo = new \App\Repositories\Evento\EventoEditRepo();
-                    if ($repo->existeEventoConDescripcion($value, (int) $this->id_lapso, (int) $this->id_evento)) {
-                        $fail('Ya existe un evento con esta descripción en el mismo lapso.');
+                    if ($repo->existeEventoConDescripcion($value, (int) $this->id_calendario, (int) $this->id_evento)) {
+                        $fail('Ya existe un evento con esta descripción en el mismo calendario.');
                     }
                 },
                 'regex:/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\d\s\.,\-\(\)\"\':\/]+$/u'
@@ -86,7 +82,7 @@ class UpdateEventoForm extends Form
     protected function messages()
     {
         return [
-            'id_lapso.integer' => 'El lapso debe ser un número entero.',
+            'id_calendario.integer' => 'El calendario debe ser un número entero.',
             'dia_inicio_evento.required' => 'La fecha de inicio es obligatoria.',
             'dia_inicio_evento.date' => 'La fecha de inicio debe ser válida.',
             'dia_fin_evento.required' => 'La fecha de fin es obligatoria.',
@@ -95,10 +91,19 @@ class UpdateEventoForm extends Form
             'descripcion_evento.required' => 'La descripción es obligatoria.',
             'descripcion_evento.string' => 'La descripción debe ser texto.',
             'descripcion_evento.max' => 'La descripción no debe exceder 100 caracteres.',
-            'descripcion_evento.unique' => 'Ya existe un evento con esta descripción.',
             'descripcion_evento.regex' => 'Formato inválido en la descripción.',
             'tipo_evento.required' => 'El tipo de evento es obligatorio.',
             'tipo_evento.in' => 'El tipo de evento no es válido.',
         ];
+    }
+
+    public function setEvento($evento)
+    {
+        $this->id_evento = $evento->id_evento;
+        $this->id_calendario = $evento->id_calendario;
+        $this->dia_inicio_evento = $evento->dia_inicio_evento;
+        $this->dia_fin_evento = $evento->dia_fin_evento;
+        $this->descripcion_evento = $evento->descripcion_evento;
+        $this->tipo_evento = $evento->tipo_evento;
     }
 }

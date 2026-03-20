@@ -1,4 +1,3 @@
-<div>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-center text-gray-800 dark:text-gray-500 leading-tight uppercase">
             {{ __('Detalles de la Bitácora') }}
@@ -20,15 +19,14 @@
 
                         <div>
                             <x-input-label value="Usuario Autor:" />
-                            <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold overflow-wrap break-words">
+                            <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold break-words overflow-hidden">
                                 {{ $bitacora->usuario_nombre ?? 'Sistema Automático' }}
                             </p>
                         </div>
 
                         <div>
                             <x-input-label value="Módulo Afectado:" />
-                            <p
-                                class="text-gray-700 dark:text-gray-300 text-2xl font-semibold text-blue-600 dark:text-blue-400">
+                            <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold break-words overflow-hidden">
                                 {{ $bitacora->modulo ?? '---' }}
                             </p>
                         </div>
@@ -55,19 +53,18 @@
 
                                     // Asignamos el color basado en la acción final a mostrar
                                     $color = match ($accionMostrar) {
-                                        'CREAR' => 'text-green-800 bg-green-100 dark:bg-green-900 dark:text-green-300',
-                                        'MODIFICAR' => 'text-blue-800 bg-blue-100 dark:bg-blue-900 dark:text-blue-300',
-                                        'ELIMINAR' => 'text-red-800 bg-red-100 dark:bg-red-900 dark:text-red-300',
-                                        'INHABILITAR' => 'text-orange-800 bg-orange-100 dark:bg-orange-900 dark:text-orange-300',
-                                        'REHABILITAR' => 'text-teal-800 bg-teal-100 dark:bg-teal-900 dark:text-teal-300',
-                                        'LOGIN' => 'text-purple-800 bg-purple-100 dark:bg-purple-900 dark:text-purple-300',
-                                        'LOGOUT' => 'text-yellow-800 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-300',
-                                        'MOSTRAR' => 'text-indigo-800 bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-300',
-                                        default => 'text-gray-800 bg-gray-100 dark:bg-gray-900 dark:text-gray-300',
+                                        'CREAR' => 'text-green-800 bg-green-100 dark:bg-green-600 dark:text-green-100',
+                                        'MODIFICAR' => 'text-blue-800 bg-blue-100 dark:bg-blue-600 dark:text-blue-100',
+                                        'ELIMINAR' => 'text-red-800 bg-red-100 dark:bg-red-600 dark:text-red-100',
+                                        'INHABILITAR' => 'text-orange-800 bg-orange-100 dark:bg-orange-600 dark:text-orange-100',
+                                        'REHABILITAR' => 'text-teal-800 bg-teal-100 dark:bg-teal-600 dark:text-teal-100',
+                                        'LOGIN' => 'text-purple-800 bg-purple-100 dark:bg-purple-600 dark:text-purple-100',
+                                        'LOGOUT' => 'text-yellow-800 bg-yellow-100 dark:bg-yellow-600 dark:text-yellow-100',
+                                        'MOSTRAR' => 'text-indigo-800 bg-indigo-100 dark:bg-indigo-600 dark:text-indigo-100',
+                                        default => 'text-gray-800 bg-gray-100 dark:bg-gray-600 dark:text-gray-100',
                                     };
                                 @endphp
-                                <span
-                                    class="{{ $color }} px-2 py-1 font-semibold leading-tight rounded-full uppercase text-sm align-middle">
+                                <span class="{{ $color }} px-2 py-1 font-semibold leading-tight rounded-full uppercase">
                                     {{ $accionMostrar }}
                                 </span>
                             </p>
@@ -135,11 +132,11 @@
                     <p class="text-gray-500 dark:text-gray-400">No se ha encontrado el registro de Bitácora...</p>
                 @endif
 
+                <!-- Botón Volver -->
                 <div class="flex justify-end mt-6">
                     <x-danger-button type="button" wire:click="cerrar">
-                        <link rel="stylesheet"
-                            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=arrow_back" />
-                        <span class="material-symbols-outlined mr-1">arrow_back</span>
+                        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=arrow_back" />
+                        <span class="material-symbols-outlined">arrow_back</span>
                         {{ __('Volver') }}
                     </x-danger-button>
                 </div>

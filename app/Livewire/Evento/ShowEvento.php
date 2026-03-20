@@ -33,4 +33,9 @@ class ShowEvento extends Component
     {
         return view('livewire.pages.evento.show-evento');
     }
+
+    public function cerrar()
+    {
+        return redirect()->route('evento/listar');
+    }
 }
