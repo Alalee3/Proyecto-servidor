@@ -10,7 +10,7 @@ class CalendarioCreateRepo
     public function crear(array $data)
     {
         if (empty($data['id_lapso_academico'])) {
-            $activo = DB::connection('pgsql_daece')->table('lapso_academico')
+            $activo = DB::connection('external_db')->table('lapso_academico')
                 ->where('lap_estatus', 'A')
                 ->where('lap_cerrado', 'N')
                 ->orderBy('lap_codigo', 'desc')
