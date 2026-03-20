@@ -20,29 +20,6 @@ class UpdateCalendarioForm extends Form
                 'required',
                 'integer'
             ],
-            'semana_calendario_academico' => [
-                'required',
-                'integer',
-                'min:1',
-                'max:52',
-                function ($attribute, $value, $fail) {
-                    $id_lapso = (int) $this->id_lapso_academico;
-                    $id_actual = (int) $this->id_calendario_academico;
-
-                    if ($id_lapso) {
-                        $duplicate = DB::table('calendario_academico')
-                            ->where('id_lapso_academico', $id_lapso)
-                            ->where('semana_calendario_academico', (int) $value)
-                            ->where('id_calendario_academico', '!=', $id_actual)
-                            ->where('estatus', '!=', '3')
-                            ->exists();
-
-                        if ($duplicate) {
-                            $fail('Ya existe otra semana configurada para este lapso.');
-                        }
-                    }
-                }
-            ],
             'dia_inicio_calendario_academico' => [
                 'required',
                 'date',
@@ -80,8 +57,6 @@ class UpdateCalendarioForm extends Form
     protected function messages()
     {
         return [
-            'semana_calendario_academico.required' => 'La semana es obligatoria.',
-            'semana_calendario_academico.integer' => 'La semana debe ser un número entero.',
             'dia_inicio_calendario_academico.required' => 'La fecha de inicio es obligatoria.',
             'dia_inicio_calendario_academico.date' => 'La fecha de inicio debe ser válida.',
             'dia_fin_calendario_academico.required' => 'La fecha de fin es obligatoria.',

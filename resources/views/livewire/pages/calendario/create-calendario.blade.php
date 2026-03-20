@@ -11,14 +11,6 @@
     <div class="sogat-card">
         <form wire:submit.prevent="save" class="w-full space-y-6" novalidate>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {{-- Semana --}}
-                <div class="w-full">
-                    <x-input-label for="semana_calendario_academico" :value="__('Número de Semana')" />
-                    <x-text-input id="semana_calendario_academico" wire:model.live="form.semana_calendario_academico"
-                        class="w-full" type="number" placeholder="Ej: 1" required />
-                    <x-input-error :messages="$errors->first('form.semana_calendario_academico')" class="mt-2" />
-                </div>
-
                 {{-- Fecha Inicio --}}
                 <div class="w-full">
                     <x-input-label for="dia_inicio_calendario_academico" :value="__('Fecha de Inicio')" />

@@ -49,4 +49,11 @@ class CalendarioIndexRepo
         }
         return false;
     }
+
+    public function hayCalendarioActivo(): bool
+    {
+        return DB::table('calendario_academico')
+            ->where('estatus', '1')
+            ->exists();
+    }
 }

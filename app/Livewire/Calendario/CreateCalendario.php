@@ -20,6 +20,14 @@ class CreateCalendario extends Component
 
     public function save()
     {
+        // Calcular semanas antes de validar
+        if ($this->form->dia_inicio_calendario_academico && $this->form->dia_fin_calendario_academico) {
+            $inicio = \Carbon\Carbon::parse($this->form->dia_inicio_calendario_academico);
+            $fin = \Carbon\Carbon::parse($this->form->dia_fin_calendario_academico);
+            $diferenciaDias = $inicio->diffInDays($fin) + 1;
+            $this->form->semana_calendario_academico = ceil($diferenciaDias / 7);
+        }
+
         $this->validate();
 
         if (!Gate::allows('crear-calendario')) {

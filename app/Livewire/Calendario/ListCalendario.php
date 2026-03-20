@@ -63,6 +63,13 @@ class ListCalendario extends Component
         }
 
         try {
+            // Validar si ya existe un calendario activo
+            if ($this->calendarioRepository->hayCalendarioActivo()) {
+                session()->flash('error', 'Ya existe un calendario activo. Debe inhabilitar el actual para poder habilitar este.');
+                $this->idRestaurar = null;
+                return;
+            }
+
             $result = $this->calendarioRepository->restaurar($this->idRestaurar);
 
             if ($result) {

@@ -42,6 +42,13 @@ class CalendarioCreateRepo
             ->exists();
     }
 
+    public function hayCalendarioActivo(): bool
+    {
+        return DB::table('calendario_academico')
+            ->where('estatus', '1')
+            ->exists();
+    }
+
     public function obtenerLapsos()
     {
         return DB::connection('pgsql_daece')->table('lapso_academico')

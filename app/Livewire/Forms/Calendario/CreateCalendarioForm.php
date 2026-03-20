@@ -19,26 +19,6 @@ class CreateCalendarioForm extends Form
                 'nullable',
                 'integer'
             ],
-            'semana_calendario_academico' => [
-                'required',
-                'integer',
-                'min:1',
-                'max:52',
-                function ($attribute, $value, $fail) {
-                    $id_lapso = $this->id_lapso_academico;
-                    if (empty($id_lapso)) {
-                        $activo = DB::connection('pgsql_daece')->table('lapso_academico')->where('lap_estatus', 'A')->where('lap_cerrado', 'N')->first();
-                        $id_lapso = $activo ? $activo->lap_codigo : null;
-                    }
-
-                    if ($id_lapso) {
-                        $repo = new \App\Repositories\Calendario\CalendarioCreateRepo();
-                        if ($repo->existeCalendarioEnSemana((int) $value, (int) $id_lapso)) {
-                            $fail('Ya existe una semana configurada para este lapso.');
-                        }
-                    }
-                }
-            ],
             'dia_inicio_calendario_academico' => [
                 'required',
                 'date',
@@ -50,6 +30,14 @@ class CreateCalendarioForm extends Form
                     }
 
                     if ($id_lapso) {
+                        $repo = new \App\Repositories\Calendario\CalendarioCreateRepo();
+                        
+                        // Validar si ya existe un calendario activo (estatus = 1)
+                        if ($repo->hayCalendarioActivo()) {
+                            $fail('Ya existe un calendario activo configurado. Debe inhabilitar el actual para crear uno nuevo.');
+                            return;
+                        }
+
                         $lapso = DB::connection('pgsql_daece')->table('lapso_academico')->where('lap_codigo', $id_lapso)->first();
                         if ($lapso) {
                             if ($value < $lapso->lap_fecha_inicio || $value > $lapso->lap_fecha_fin) {
@@ -86,8 +74,6 @@ class CreateCalendarioForm extends Form
     protected function messages()
     {
         return [
-            'semana_calendario_academico.required' => 'La semana es obligatoria.',
-            'semana_calendario_academico.integer' => 'La semana debe ser un número entero.',
             'dia_inicio_calendario_academico.required' => 'La fecha de inicio es obligatoria.',
             'dia_inicio_calendario_academico.date' => 'La fecha de inicio debe ser válida.',
             'dia_fin_calendario_academico.required' => 'La fecha de fin es obligatoria.',
