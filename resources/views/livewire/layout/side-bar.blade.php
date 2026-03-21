@@ -187,6 +187,9 @@
                             <li><a href="{{ route('calendario.create') }}" class="sogat-sidebar-link">Crear Semana</a></li>
                         @endcan
                         <li><a href="{{ route('calendario.list') }}" class="sogat-sidebar-link">Gestionar Calendario</a></li>
+                        @can('crear-calendario')
+                            <li><a href="{{ route('calendario.reporte') }}" target="_blank" class="sogat-sidebar-link">Imprimir Calendario</a></li>
+                        @endcan
                     </ul>
                 </div>
             @endcan

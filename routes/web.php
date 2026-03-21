@@ -100,6 +100,7 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     // Rutas para Reportes PDF (Abrir en pestaña)
     Route::get('planificacion/reporte-general', [\App\Http\Controllers\ReportePlanificacionController::class, 'reporteGeneral'])->middleware('can:listar-planificacion')->name('planificacion.reporte.general');
     Route::get('planificacion/reporte-detalle/{id}', [\App\Http\Controllers\ReportePlanificacionController::class, 'reporteDetalle'])->middleware('can:ver-planificacion')->name('planificacion.reporte.detalle');
+    Route::get('calendario/reporte', [\App\Http\Controllers\ReporteCalendarioController::class, 'reporteUltimoCalendario'])->middleware('can:listar-calendario')->name('calendario.reporte');
 
     Route::get('indicador-logro/list', ListIndicadorLogro::class)->middleware('can:listar-indicador-logro')->name('indicador-logro/listar');
     Route::get('indicador-logro/create', CreateIndicadorLogro::class)->middleware('can:crear-indicador-logro')->name('indicador-logro/crear');
