@@ -52,23 +52,34 @@ class ExternalLoginController extends Controller
                 return redirect('/');
             }
 
-            // 4. Buscar al usuario en la base de datos externa (vía modelo User mapeado)
-            $user = User::where('usu_cedula', $data['cedula'])->first();
+            // 5. Verificar si tiene múltiples roles activos en la base de datos de emulación
+            $rolesList = \DB::connection('emulacion_sogac_2')
+                ->table('usuario as u')
+                ->join('rol as r', 'u.usu_cod_rol', '=', 'r.rol_codigo')
+                ->where('u.usu_cedula', $data['cedula'])
+                ->where('u.usu_estatus', 'A')
+                ->select('u.usu_cod_rol', 'r.rol_nombre')
+                ->get();
+
+            if ($rolesList->count() > 1) {
+                // Guardamos la cédula temporalmente y NO hacemos Auth aún
+                session(['temp_cedula' => $data['cedula']]);
+                return redirect()->route('seleccionar-rol');
+            }
+
+            // 6. Si solo tiene un rol, buscamos ese usuario específico y hacemos login
+            $user = User::on('emulacion_sogac_2')
+                ->where('usu_cedula', $data['cedula'])
+                ->where('usu_estatus', 'A')
+                ->first();
 
             if (!$user) {
                 return redirect('/');
             }
 
-            // 5. Verificar estatus del usuario (el modelo traduce 'A' a 1)
-            if ($user->estatus != 1) {
-                return redirect('/');
-            }
-
-            // 6. Iniciar Sesión
             Auth::login($user);
 
-
-            // Redirigir al inicio del sistema
+            // Redirigir al inicio del sistema (Dashboard)
             return redirect()->intended(route('dashboard', absolute: false));
 
         } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {

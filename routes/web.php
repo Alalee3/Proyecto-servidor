@@ -80,6 +80,9 @@ Route::get('/perfil', \App\Livewire\Perfil\ShowPerfil::class)
     ->middleware(['auth', 'verified'])
     ->name('perfil');
 
+Route::get('/seleccionar-rol', \App\Livewire\Auth\SeleccionarRol::class)
+    ->name('seleccionar-rol');
+
 
 Route::middleware(['auth', /*'role:1'*/])->group(function () {
 

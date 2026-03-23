@@ -12,22 +12,15 @@ class ShowPerfil extends Component
     #[Layout('layouts.app')]
     public function render()
     {
-        $user = Auth::user();
+        $user = auth()->user();
         
-        // Buscamos todas las "cuentas" (roles) que tiene esta persona 
-        // explícitamente en la base de datos de emulación (emulacion_sogac_2)
-        // para saltar cualquier lógica de fallback o conexión de producción (real SOGAC)
-        $misRoles = \DB::connection('emulacion_sogac_2')
-            ->table('usuario as u')
-            ->join('rol as r', 'u.usu_cod_rol', '=', 'r.rol_codigo')
-            ->where('u.usu_cedula', $user->usu_cedula)
-            ->select('u.usu_codigo', 'u.usu_estatus', 'u.usu_cod_rol', 'r.rol_nombre')
-            ->get();
+        // Usamos el nuevo método del modelo User para obtener todos los perfiles
+        $misRoles = $user->obtenerRolesAsociados();
 
         return view('livewire.perfil.show-perfil', [
             'user' => $user,
             'misRoles' => $misRoles,
-            'rolActivo' => $user->usu_cod_rol // El rol que ya trae por el accesor modificado
+            'rolActivo' => $user->usu_cod_rol
         ]);
     }
 

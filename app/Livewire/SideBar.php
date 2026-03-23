@@ -46,16 +46,7 @@ class SideBar extends Component
     public function render()
     {
         $user = auth()->user();
-        $roleCount = 0;
-        
-        if ($user) {
-            // Contamos cuántos perfiles activos tiene el usuario en la BD de emulación
-            $roleCount = \DB::connection('emulacion_sogac_2')
-                ->table('usuario')
-                ->where('usu_cedula', $user->usu_cedula)
-                ->where('usu_estatus', 'A')
-                ->count();
-        }
+        $roleCount = $user ? $user->obtenerRolesAsociados()->count() : 0;
 
         return view('livewire.layout.side-bar', [
             'isOpen' => $this->isOpen,

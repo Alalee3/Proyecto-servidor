@@ -123,4 +123,19 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Persona::class, 'usu_cedula', 'per_cedula');
     }
+
+    /**
+     * Obtiene todos los perfiles activos asociados a la misma cédula
+     * en la base de datos de emulación.
+     */
+    public function obtenerRolesAsociados()
+    {
+        return \DB::connection('emulacion_sogac_2')
+            ->table('usuario as u')
+            ->join('rol as r', 'u.usu_cod_rol', '=', 'r.rol_codigo')
+            ->where('u.usu_cedula', $this->usu_cedula)
+            ->where('u.usu_estatus', 'A')
+            ->select('u.usu_cod_rol', 'r.rol_nombre', 'u.usu_codigo')
+            ->get();
+    }
 }
