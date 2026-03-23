@@ -129,7 +129,6 @@
 
     <div class="title">CALENDARIO ACADÉMICO {{ $year }}</div>
     <div style="text-align: center; margin-bottom: 20px;">
-        <strong>Lapso:</strong> {{ $calendario->nombre_lapso }} | 
         <strong>Vigencia:</strong> {{ \Carbon\Carbon::parse($calendario->dia_inicio_calendario_academico)->format('d/m/Y') }} 
         hasta {{ \Carbon\Carbon::parse($calendario->dia_fin_calendario_academico)->format('d/m/Y') }}
     </div>

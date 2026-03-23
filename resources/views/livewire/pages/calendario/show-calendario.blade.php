@@ -10,13 +10,6 @@
             <div class="sogat-card">
                 <!-- Grid de información - 3 columnas como en Recurso -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                    {{-- Lapso --}}
-                    <div>
-                        <x-input-label value="Lapso Académico:" />
-                        <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
-                            {{ $calendario->nombre_lapso }}
-                        </p>
-                    </div>
 
                     {{-- Semana --}}
                     <div>

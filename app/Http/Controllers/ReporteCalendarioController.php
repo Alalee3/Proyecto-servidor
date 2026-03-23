@@ -23,13 +23,6 @@ class ReporteCalendarioController extends Controller
             return redirect()->back()->with('error', 'No existe ningún calendario académico para imprimir.');
         }
 
-        // Obtener nombre del lapso desde DAECE
-        $lapso = DB::connection('external_db')->table('lapso_academico')
-            ->where('lap_codigo', $calendario->id_lapso_academico)
-            ->first();
-        
-        $calendario->nombre_lapso = $lapso ? $lapso->lap_nombre : 'No definido (DAECE)';
-
         // Determinar el año a mostrar (el año del inicio del calendario)
         $year = Carbon::parse($calendario->dia_inicio_calendario_academico)->year;
 

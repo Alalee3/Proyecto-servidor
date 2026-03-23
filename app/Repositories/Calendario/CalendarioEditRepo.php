@@ -19,21 +19,11 @@ class CalendarioEditRepo
         $calendario = CalendarioAcademico::find($id);
         if ($calendario) {
             return $calendario->update([
-                'id_lapso_academico' => $data['id_lapso_academico'],
                 'semana_calendario_academico' => $data['semana_calendario_academico'],
                 'dia_inicio_calendario_academico' => $data['dia_inicio_calendario_academico'],
                 'dia_fin_calendario_academico' => $data['dia_fin_calendario_academico'],
             ]);
         }
         return false;
-    }
-
-    public function obtenerLapsos()
-    {
-        return DB::connection('pgsql_daece')->table('lapso_academico')
-            ->select('lap_codigo', 'lap_nombre')
-            ->where('lap_estatus', 'A')
-            ->orderBy('lap_codigo', 'desc')
-            ->get();
     }
 }

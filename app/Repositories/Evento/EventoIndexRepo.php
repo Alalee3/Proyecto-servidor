@@ -17,26 +17,13 @@ class EventoIndexRepo
                 'evento.dia_inicio_evento',
                 'evento.dia_fin_evento',
                 'evento.tipo_evento',
-                'evento.estatus',
-                'calendario_academico.id_lapso_academico'
+                'evento.estatus'
             )
             ->when($busqueda, function ($consulta, $busqueda) {
                 $consulta->where('evento.descripcion_evento', 'LIKE', '%' . $busqueda . '%');
             })
             ->orderBy('evento.dia_inicio_evento', 'desc')
             ->paginate($paginacion);
-
-        // Obtener nombres de lapsos desde la base de datos externa DAECE
-        $idLapsos = $eventos->pluck('id_lapso_academico')->filter()->unique()->toArray();
-        $lapsosDaece = DB::connection('external_db')->table('lapso_academico')
-            ->whereIn('lap_codigo', $idLapsos)
-            ->pluck('lap_nombre', 'lap_codigo');
-
-        // Mapear los nombres a la colección
-        $eventos->getCollection()->transform(function ($evento) use ($lapsosDaece) {
-            $evento->nombre_lapso = $evento->id_lapso_academico ? ($lapsosDaece[$evento->id_lapso_academico] ?? 'No definido (DAECE)') : 'Sin Lapso';
-            return $evento;
-        });
 
         return $eventos;
     }

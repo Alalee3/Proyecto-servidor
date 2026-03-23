@@ -15,13 +15,6 @@
                 @if ($evento)
                     <!-- Grid de información -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                        {{-- Lapso --}}
-                        <div>
-                            <x-input-label value="Lapso:" />
-                            <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold break-words overflow-hidden">
-                                {{ $evento->nombre_lapso }}
-                            </p>
-                        </div>
 
                         {{-- Descripción --}}
                         <div>

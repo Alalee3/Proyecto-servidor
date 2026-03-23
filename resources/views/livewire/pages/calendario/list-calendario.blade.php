@@ -19,7 +19,6 @@
                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Lapso</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Semana</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Inicio</th>
                             <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Fin</th>
@@ -35,8 +34,6 @@
                             @foreach ($calendarios as $calendario)
                                 <tr wire:key="{{ $calendario->id_calendario_academico }}"
                                     class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                    <td class="px-4 py-4 text-gray-900 dark:text-white font-semibold">
-                                        {{ $calendario->nombre_lapso }}</td>
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">Semana
                                         {{ $calendario->semana_calendario_academico }}</td>
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">
@@ -105,7 +102,7 @@
                             @endforeach
                         @else
                             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                <td colspan="{{ auth()->user()->can('cambiar-estatus-calendario') ? 6 : 5 }}"
+                                <td colspan="{{ auth()->user()->can('cambiar-estatus-calendario') ? 5 : 4 }}"
                                     class="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                     {{ $busqueda ? 'No se encontraron registros' : 'No hay semanas registradas' }}
                                 </td>

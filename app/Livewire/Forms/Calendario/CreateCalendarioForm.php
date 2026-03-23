@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\DB;
 
 class CreateCalendarioForm extends Form
 {
-    public $id_lapso_academico = '';
     public $semana_calendario_academico = '';
     public $dia_inicio_calendario_academico = '';
     public $dia_fin_calendario_academico = '';
@@ -15,35 +14,13 @@ class CreateCalendarioForm extends Form
     protected function rules()
     {
         return [
-            'id_lapso_academico' => [
-                'nullable',
-                'integer'
-            ],
             'dia_inicio_calendario_academico' => [
                 'required',
                 'date',
                 function ($attribute, $value, $fail) {
-                    $id_lapso = $this->id_lapso_academico;
-                    if (empty($id_lapso)) {
-                        $activo = DB::connection('pgsql_daece')->table('lapso_academico')->where('lap_estatus', 'A')->where('lap_cerrado', 'N')->first();
-                        $id_lapso = $activo ? $activo->lap_codigo : null;
-                    }
-
-                    if ($id_lapso) {
-                        $repo = new \App\Repositories\Calendario\CalendarioCreateRepo();
-                        
-                        // Validar si ya existe un calendario activo (estatus = 1)
-                        if ($repo->hayCalendarioActivo()) {
-                            $fail('Ya existe un calendario activo configurado. Debe inhabilitar el actual para crear uno nuevo.');
-                            return;
-                        }
-
-                        $lapso = DB::connection('pgsql_daece')->table('lapso_academico')->where('lap_codigo', $id_lapso)->first();
-                        if ($lapso) {
-                            if ($value < $lapso->lap_fecha_inicio || $value > $lapso->lap_fecha_fin) {
-                                $fail("La fecha de inicio debe estar entre {$lapso->lap_fecha_inicio} y {$lapso->lap_fecha_fin}.");
-                            }
-                        }
+                    $repo = new \App\Repositories\Calendario\CalendarioCreateRepo();
+                    if ($repo->hayCalendarioActivo()) {
+                        $fail('Ya existe un calendario activo configurado.');
                     }
                 }
             ],
@@ -51,22 +28,6 @@ class CreateCalendarioForm extends Form
                 'required',
                 'date',
                 'after_or_equal:dia_inicio_calendario_academico',
-                function ($attribute, $value, $fail) {
-                    $id_lapso = $this->id_lapso_academico;
-                    if (empty($id_lapso)) {
-                        $activo = DB::connection('pgsql_daece')->table('lapso_academico')->where('lap_estatus', 'A')->where('lap_cerrado', 'N')->first();
-                        $id_lapso = $activo ? $activo->lap_codigo : null;
-                    }
-
-                    if ($id_lapso) {
-                        $lapso = DB::connection('pgsql_daece')->table('lapso_academico')->where('lap_codigo', $id_lapso)->first();
-                        if ($lapso) {
-                            if ($value < $lapso->lap_fecha_inicio || $value > $lapso->lap_fecha_fin) {
-                                $fail("La fecha de fin debe estar entre {$lapso->lap_fecha_inicio} y {$lapso->lap_fecha_fin}.");
-                            }
-                        }
-                    }
-                }
             ],
         ];
     }
