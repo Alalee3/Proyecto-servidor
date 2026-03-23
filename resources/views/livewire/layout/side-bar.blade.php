@@ -262,7 +262,7 @@
                     <div class="flex flex-col">
                         <span>Usuario: {{ auth()->user()->name }}</span>
                         <span class="text-[9px] text-sogat-blue dark:text-blue-400">
-                            (AUTENTICADO)
+                            {{ auth()->user()->rol->rol_nombre}}
                         </span>
                     </div>
                     <livewire:dark-mode-toggle />

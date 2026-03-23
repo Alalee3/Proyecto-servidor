@@ -50,7 +50,7 @@ class User extends Authenticatable
 
     public function getNameAttribute()
     {
-        return $this->usu_nombre;
+        return $this->persona ? $this->persona->full_name : $this->usu_nombre;
     }
 
     public function getCedulaAttribute()
@@ -81,5 +81,21 @@ class User extends Authenticatable
         return [
             'usu_clave' => 'hashed',
         ];
+    }
+
+    /**
+     * Relación con el modelo Rol en la base de datos externa.
+     */
+    public function rol()
+    {
+        return $this->belongsTo(Rol::class, 'usu_cod_rol', 'rol_codigo');
+    }
+
+    /**
+     * Relación con el modelo Persona en la base de datos externa.
+     */
+    public function persona()
+    {
+        return $this->belongsTo(Persona::class, 'usu_cedula', 'per_cedula');
     }
 }
