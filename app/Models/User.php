@@ -58,6 +58,31 @@ class User extends Authenticatable
         return $this->usu_cedula;
     }
 
+    /**
+     * Accesor para forzar que el rol provenga de la base de datos de emulación.
+     */
+    public function getUsuCodRolAttribute($value)
+    {
+        // Primero intentamos obtener el rol desde la sesión de navegación activa
+        if (session()->has('active_role')) {
+            return session('active_role');
+        }
+
+        try {
+            // Si no hay selección manual en sesión, buscamos el rol en emulación
+            $emulacionRol = \DB::connection('emulacion_sogac_2')
+                ->table('usuario')
+                ->where('usu_cedula', $this->usu_cedula)
+                ->where('usu_estatus', 'A')
+                ->orderBy('usu_codigo', 'desc')
+                ->value('usu_cod_rol');
+
+            return $emulacionRol ?? $value;
+        } catch (\Exception $e) {
+            return $value;
+        }
+    }
+
     public function getEstatusAttribute()
     {
         // En la BD externa 'A' es activo, 'I' inactivo. 

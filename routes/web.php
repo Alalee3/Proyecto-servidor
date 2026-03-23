@@ -74,8 +74,11 @@ Route::get('/', function () {
 });
 
 Route::view('dashboard', 'dashboard')
-    ->middleware(['auth', 'verified'])
     ->name('dashboard');
+
+Route::get('/perfil', \App\Livewire\Perfil\ShowPerfil::class)
+    ->middleware(['auth', 'verified'])
+    ->name('perfil');
 
 
 Route::middleware(['auth', /*'role:1'*/])->group(function () {

@@ -27,6 +27,13 @@
                 Inicio
             </a>
 
+            @if($roleCount > 1)
+                <!-- Perfil -->
+                <a href="{{ route('perfil') }}" class="sogat-sidebar-item">
+                    Mis Roles
+                </a>
+            @endif
+
 
 
             @can('listar-tema')
@@ -214,7 +221,7 @@
             <!-- Roles (DAECE) -->
             <div>
                 <button @click="openMenu === 17 ? openMenu = null : openMenu = 17" class="sogat-sidebar-item">
-                    <span>Roles (DAECE)</span>
+                    <span>Roles</span>
                     <img :src="openMenu === 17 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
                         class="w-5 h-5 ml-auto">
                 </button>

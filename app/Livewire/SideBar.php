@@ -45,10 +45,21 @@ class SideBar extends Component
 
     public function render()
     {
-        // Asegúrate de que la ruta de la vista sea correcta.
-        // Si tu vista está en resources/views/livewire/layout/side-bar.blade.php
+        $user = auth()->user();
+        $roleCount = 0;
+        
+        if ($user) {
+            // Contamos cuántos perfiles activos tiene el usuario en la BD de emulación
+            $roleCount = \DB::connection('emulacion_sogac_2')
+                ->table('usuario')
+                ->where('usu_cedula', $user->usu_cedula)
+                ->where('usu_estatus', 'A')
+                ->count();
+        }
+
         return view('livewire.layout.side-bar', [
-            'isOpen' => $this->isOpen, // Pasar explícitamente está bien, aunque las propiedades públicas son accesibles.
+            'isOpen' => $this->isOpen,
+            'roleCount' => $roleCount
         ]);
     }
 }
