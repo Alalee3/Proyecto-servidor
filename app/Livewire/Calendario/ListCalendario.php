@@ -14,75 +14,12 @@ class ListCalendario extends Component
 
     public $busqueda = '';
     public $paginacion = 5;
-    public $idInhabilitar = null;
-    public $idRestaurar = null;
 
     protected $calendarioRepository;
 
     public function boot()
     {
         $this->calendarioRepository = new CalendarioIndexRepo();
-    }
-
-    public function confirmarInhabilitar($id)
-    {
-        $this->idInhabilitar = $id;
-    }
-
-    public function confirmarRestaurar($id)
-    {
-        $this->idRestaurar = $id;
-    }
-
-    public function inhabilitar()
-    {
-        if (!Gate::allows('cambiar-estatus-calendario')) { 
-            abort(403);
-        }
-
-        try {
-            $result = $this->calendarioRepository->inhabilitar($this->idInhabilitar);
-
-            if ($result) {
-                session()->flash('message', 'Semana de calendario inhabilitado exitosamente.');
-                $this->dispatch('calendarioUpdated');
-            } else {
-                session()->flash('error', 'No se pudo inhabilitar la semana.');
-            }
-        } catch (Exception $e) {
-            session()->flash('error', $e->getMessage());
-        }
-
-        $this->idInhabilitar = null;
-    }
-
-    public function restaurar()
-    {
-        if (!Gate::allows('cambiar-estatus-calendario')) {
-            abort(403);
-        }
-
-        try {
-            // Validar si ya existe un calendario activo
-            if ($this->calendarioRepository->hayCalendarioActivo()) {
-                session()->flash('error', 'Ya existe un calendario activo. Debe inhabilitar el actual para poder habilitar este.');
-                $this->idRestaurar = null;
-                return;
-            }
-
-            $result = $this->calendarioRepository->restaurar($this->idRestaurar);
-
-            if ($result) {
-                session()->flash('message', 'Semana de calendario restaurada exitosamente.');
-                $this->dispatch('calendarioUpdated');
-            } else {
-                session()->flash('error', 'No se pudo restaurar la semana.');
-            }
-        } catch (Exception $e) {
-            session()->flash('error', 'Error al restaurar la semana: ' . $e->getMessage());
-        }
-
-        $this->idRestaurar = null;
     }
 
     public function render()

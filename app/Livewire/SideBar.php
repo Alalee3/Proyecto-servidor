@@ -47,10 +47,17 @@ class SideBar extends Component
     {
         $user = auth()->user();
         $roleCount = $user ? $user->obtenerRolesAsociados()->count() : 0;
+        
+        $hayCalendarioActivo = false;
+        if ($user && $user->can('crear-calendario')) {
+            $repo = new \App\Repositories\Calendario\CalendarioCreateRepo();
+            $hayCalendarioActivo = $repo->hayCalendarioActivo();
+        }
 
         return view('livewire.layout.side-bar', [
             'isOpen' => $this->isOpen,
-            'roleCount' => $roleCount
+            'roleCount' => $roleCount,
+            'hayCalendarioActivo' => $hayCalendarioActivo
         ]);
     }
 }

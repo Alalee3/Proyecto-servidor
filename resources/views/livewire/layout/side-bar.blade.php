@@ -191,7 +191,9 @@
                     </button>
                     <ul x-show="openMenu === 18" x-collapse class="mt-0 space-y-0">
                         @can('crear-calendario')
-                            <li><a href="{{ route('calendario.create') }}" class="sogat-sidebar-link">Crear Semana</a></li>
+                            @if(!$hayCalendarioActivo)
+                            <li><a href="{{ route('calendario.create') }}" class="sogat-sidebar-link">Calendario</a></li>
+                            @endif
                         @endcan
                         <li><a href="{{ route('calendario.list') }}" class="sogat-sidebar-link">Gestionar Calendario</a></li>
                         @can('crear-calendario')

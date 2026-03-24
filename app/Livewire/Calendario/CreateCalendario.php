@@ -38,10 +38,10 @@ class CreateCalendario extends Component
             $id = $this->calendarioRepository->crear($this->form->all());
 
             if ($id) {
-                session()->flash('message', 'Semana de calendario creada exitosamente.');
+                session()->flash('message', 'Calendario guardado exitosamente.');
                 return redirect()->route('calendario.list');
             } else {
-                session()->flash('error', 'No se pudo crear la semana.');
+                session()->flash('error', 'No se pudo guardar el calendario.');
             }
         } catch (Exception $e) {
             session()->flash('error', $e->getMessage());

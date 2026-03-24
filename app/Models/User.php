@@ -14,7 +14,7 @@ class User extends Authenticatable
     use Auditable;
     public $timestamps = false;
 
-    protected $connection = 'external_db';
+    protected $connection = 'emulacion_sogac_2';
     protected $table = 'usuario';
     protected $primaryKey = 'usu_codigo';
 

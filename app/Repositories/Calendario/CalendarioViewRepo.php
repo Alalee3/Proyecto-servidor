@@ -9,6 +9,8 @@ class CalendarioViewRepo
 {
     public function mostrar($id)
     {
+        CalendarioAcademico::inactivarVencidos();
+
         $calendario = DB::table('calendario_academico')
             ->where('id_calendario_academico', $id)
             ->first();

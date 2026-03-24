@@ -49,10 +49,10 @@ class UpdateCalendario extends Component
             $result = $this->calendarioRepository->actualizar($this->form->id_calendario_academico, $this->form->all());
 
             if ($result) {
-                session()->flash('message', 'Semana de calendario actualizada exitosamente.');
+                session()->flash('message', 'Calendario actualizado exitosamente.');
                 return redirect()->route('calendario.list');
             } else {
-                session()->flash('error', 'No se pudo actualizar la semana.');
+                session()->flash('error', 'No se pudo actualizar el calendario.');
             }
         } catch (Exception $e) {
             session()->flash('error', $e->getMessage());

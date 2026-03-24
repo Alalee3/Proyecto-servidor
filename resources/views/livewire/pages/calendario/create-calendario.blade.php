@@ -1,7 +1,7 @@
 <div>
     <x-slot name="header">
         <h2 class="font-bold text-xl text-gray-800 dark:text-gray-500 leading-tight uppercase text-center">
-            {{ __('Agregar Semana al Calendario') }}
+            {{ __('Agregar al Calendario') }}
         </h2>
     </x-slot>
 
@@ -30,12 +30,12 @@
 
             <div class="flex items-center justify-end gap-5">
                 <a href="{{ route('calendario.list') }}" wire:navigate>
-                    <x-secondary-button type="button">
+                    <x-primary-button type="button">
                         {{ __('Cancelar') }}
-                    </x-secondary-button>
+                    </x-primary-button>
                 </a>
                 <x-primary-button type="submit" wire:loading.attr="disabled">
-                    {{ __('Guardar Semana') }}
+                    {{ __('Guardar Calendario') }}
                 </x-primary-button>
             </div>
         </form>

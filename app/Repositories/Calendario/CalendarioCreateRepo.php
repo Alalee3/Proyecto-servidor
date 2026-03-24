@@ -30,6 +30,7 @@ class CalendarioCreateRepo
 
     public function hayCalendarioActivo(): bool
     {
+        \App\Models\CalendarioAcademico::inactivarVencidos();
         return DB::table('calendario_academico')
             ->where('estatus', '1')
             ->exists();

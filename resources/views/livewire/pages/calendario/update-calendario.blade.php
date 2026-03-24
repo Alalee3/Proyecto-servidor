@@ -1,7 +1,7 @@
 <div>
     <x-slot name="header">
         <h2 class="font-bold text-xl text-gray-800 dark:text-gray-500 leading-tight uppercase text-center">
-            {{ __('Editar Semana del Calendario') }}
+            {{ __('Editar Calendario') }}
         </h2>
     </x-slot>
 
@@ -30,13 +30,13 @@
 
             <div class="flex items-center justify-end gap-4">
                 <a href="{{ route('calendario.list') }}" wire:navigate>
-                    <x-danger-button type="button" class="flex items-center gap-1">
+                    <x-primary-button type="button" class="flex items-center gap-1">
                         <span class="material-symbols-outlined text-sm">arrow_back</span>
                         {{ __('Volver') }}
-                    </x-danger-button>
+                    </x-primary-button>
                 </a>
                 <x-primary-button type="submit" wire:loading.attr="disabled">
-                    {{ __('Actualizar Semana') }}
+                    {{ __('Actualizar Calendario') }}
                 </x-primary-button>
             </div>
         </form>
