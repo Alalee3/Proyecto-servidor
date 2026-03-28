@@ -4,7 +4,12 @@
             {{ __('Planificaciones') }}
         </h2>
     </x-slot>
-
+    <div class="pt-2 pb-6">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 sm:rounded-lg">
+            <x-table.alert-message type="exitoso" :message="session('message')" />
+            <x-table.alert-message type="error" :message="session('error')" />
+        </div>
+    </div>
     <div class="sogat-table-container">
         <!-- Controles -->
         <div

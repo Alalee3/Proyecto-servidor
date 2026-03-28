@@ -291,12 +291,10 @@ class UpdatePlanificacion extends Component
         ]);
 
         if ($success) {
-            $data = ['tipo' => 'exitoso', 'color' => 'green', 'mensaje' => 'Planificación actualizada exitosamente.'];
-            $this->dispatch('mostrar-mensaje', $data);
+            session()->flash('message', 'Planificación actualizada exitosamente.');
             return redirect()->to('/planificacion/list');
         } else {
-            $data = ['tipo' => 'error', 'color' => 'red', 'mensaje' => 'Error al actualizar la planificación.'];
-            $this->dispatch('mostrar-mensaje', $data);
+            session()->flash('error', 'Error al actualizar la planificación.');
         }
     }
 

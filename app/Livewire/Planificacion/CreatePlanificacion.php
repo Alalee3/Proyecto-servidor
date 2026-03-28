@@ -134,7 +134,7 @@ class CreatePlanificacion extends Component
         if (Auth::check() && (Gate::allows('crear-planificacion') || Gate::allows('editar-planificacion'))) {
             $this->docenteNombre = Auth::user()->name;
         } else {
-            $this->dispatch('mostrar-mensaje', ['tipo' => 'error', 'mensaje' => 'Acceso denegado.']);
+            session()->flash('error', 'Acceso denegado.');
         }
     }
 
@@ -182,6 +182,12 @@ class CreatePlanificacion extends Component
                 'contenidos' => [['contenido_id' => '']]
             ];
         } elseif ($arrayName === 'contenidos') {
+            // Check if objective is selected
+            $objetivoId = $this->form->unidades[$unidadIndex]['objetivos'][$parentIndex]['objetivo_id'] ?? null;
+            if (empty($objetivoId)) {
+                session()->flash('error', 'Debe seleccionar un objetivo primero.');
+                return;
+            }
             // Add content to specific objective
             $this->form->unidades[$unidadIndex]['objetivos'][$parentIndex]['contenidos'][] = ['contenido_id' => ''];
 
@@ -267,17 +273,17 @@ class CreatePlanificacion extends Component
                 $this->form->unidades
             );
 
-            $this->dispatch('mostrar-mensaje', ['tipo' => 'exitoso', 'mensaje' => 'Planificación guardada correctamente.']);
+            session()->flash('message', 'Planificación guardada correctamente.');
             $this->form->reset(['unidades', 'id_profesor_asignado']);
             $this->inicializarUnidades();
         } catch (\Exception $e) {
-            $this->dispatch('mostrar-mensaje', ['tipo' => 'error', 'mensaje' => 'Error al guardar la planificación: ' . $e->getMessage()]);
+            session()->flash('error', 'Error al guardar la planificación: ' . $e->getMessage());
         }
     }
     public function openObjetivoModal($temaId)
     {
         if (!$temaId || $temaId === '') {
-            $this->dispatch('mostrar-mensaje', ['tipo' => 'error', 'mensaje' => 'Debe seleccionar un tema primero.']);
+            session()->flash('error', 'Debe seleccionar un tema primero.');
             return;
         }
         $this->selectedTemaIdForObjetivo = $temaId;
@@ -308,10 +314,10 @@ class CreatePlanificacion extends Component
                 $this->todosLosObjetivos = $this->planificacionRepository->select_objetivos($detalle->id_unidad_curricular);
             }
 
-            $this->dispatch('mostrar-mensaje', ['tipo' => 'exitoso', 'mensaje' => 'Objetivo creado correctamente.']);
+            session()->flash('message', 'Objetivo creado correctamente.');
             $this->closeObjetivoModal();
         } catch (\Exception $e) {
-            $this->dispatch('mostrar-mensaje', ['tipo' => 'error', 'mensaje' => 'Error al guardar el objetivo: ' . $e->getMessage()]);
+            session()->flash('error', 'Error al guardar el objetivo: ' . $e->getMessage());
         }
     }
 }

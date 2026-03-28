@@ -5,16 +5,18 @@
         </h2>
     </x-slot>
 
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 sm:rounded-lg">
+        <x-table.alert-message type="exitoso" :message="session('message')" />
+        <x-table.alert-message type="error" :message="session('error')" />
+
+        @if ($errors->any())
+            <x-table.alert-message type="error" message="La planificación no pudo ser guardada. Por favor, revise todos los campos requeridos en cada unidad." />
+        @endif
+    </div>
+
     <div class="sogat-card planificacion-module">
         <form wire:submit.prevent="savePlanificacion" novalidate>
             <div class="space-y-4">
-
-                <x-table.alert-message type="exitoso" :message="session('message')" />
-                <x-table.alert-message type="error" :message="session('error')" />
-
-                @if ($errors->any())
-                    <x-table.alert-message type="error" message="La planificación no pudo ser guardada. Por favor, revise todos los campos requeridos en cada unidad." />
-                @endif
 
                 <div class="grid grid-cols-1 gap-6 mb-6">
                     {{-- Selección de Unidad Curricular --}}
@@ -124,7 +126,7 @@
 
                                         @foreach ($unidad['objetivos'] as $objetivoIndex => $objetivo)
                                             <div
-                                                class="p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 space-y-4">
+                                                class="p-4 rounded-xl bg-gray-100 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 space-y-4">
 
                                                 {{-- Selección de Tema y Objetivo --}}
                                                 <div class="grid grid-cols-1 gap-4">
@@ -160,7 +162,7 @@
                                                             @endphp
                                                             <button type="button"
                                                                 wire:click="openObjetivoModal('{{ $selectedTemaId }}')"
-                                                                class="text-[10px] text-blue-600 dark:text-blue-400 font-bold hover:underline flex items-center gap-1 uppercase">
+                                                                class="inline-flex items-center gap-1 text-[10px] bg-[#f0f0f0] border border-[#767676] text-black px-2 py-1 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
                                                                 <span class="material-icons text-[12px]">add</span> NUEVO
                                                             </button>
                                                         </div>
@@ -179,14 +181,18 @@
 
                                                 {{-- Contedor de Contenidos para este Objetivo --}}
                                                 <div
-                                                    class="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                                                    class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                                                     <div class="flex items-center justify-between mb-3">
                                                         <label
                                                             class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Contenidos
                                                             del Objetivo</label>
+                                                        @php
+                                                            $selectedObjetivoId = $unidad['objetivos'][$objetivoIndex]['objetivo_id'] ?? null;
+                                                        @endphp
                                                         <button type="button"
                                                             wire:click="addItem({{ $index }}, 'contenidos', {{ $objetivoIndex }})"
-                                                            class="text-[10px] font-bold uppercase text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                                                            @if(empty($selectedObjetivoId)) disabled @endif
+                                                            class="inline-flex items-center gap-1 text-[10px] border border-[#767676] px-2 py-1 rounded-lg font-bold transition-colors shadow-sm uppercase {{ empty($selectedObjetivoId) ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#f0f0f0] text-black hover:bg-gray-200' }}">
                                                             <span class="material-icons text-xs">add</span> Agregar Contenido
                                                         </button>
                                                     </div>
@@ -235,7 +241,7 @@
 
                                         @foreach ($unidad['estrategias'] as $estrategiaIndex => $estrategia)
                                             <div
-                                                class="p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 space-y-4">
+                                                class="p-4 rounded-xl bg-gray-100 dark:bg-gray-950 border border-gray-200 dark:border-gray-700 space-y-4">
                                                 <div class="flex items-center justify-end">
                                                     @if (count($unidad['estrategias']) > 1)
                                                         <button type="button"
@@ -280,8 +286,8 @@
                                                                 class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Recursos</label>
                                                             <button type="button"
                                                                 wire:click="addItem({{ $index }}, 'estrategia_recursos', {{ $estrategiaIndex }})"
-                                                                class="text-black dark:text-gray-300 hover:underline text-[10px] font-bold uppercase flex items-center gap-1">
-                                                                <span class="material-icons text-xs">add_circle</span> AÑADIR
+                                                                class="inline-flex items-center gap-1 text-[10px] bg-[#f0f0f0] border border-[#767676] text-black px-2 py-1 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
+                                                                <span class="material-icons text-xs">add</span> AÑADIR
                                                             </button>
                                                         </div>
                                                         @foreach ($estrategia['recursos'] as $recursoIndex => $recurso)
@@ -316,7 +322,7 @@
                                             Indicadores de Logros
                                         </h4>
                                         <div
-                                            class="p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+                                            class="p-4 rounded-xl bg-gray-100 dark:bg-gray-950 border border-gray-200 dark:border-gray-700">
                                             <textarea
                                                 wire:model.live.debounce.500ms="form.unidades.{{ $index }}.indicadores_logro"
                                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-sm"
@@ -336,7 +342,7 @@
                                                 Plan de Evaluación
                                             </h4>
                                             <button type="button" wire:click="addItem({{ $index }}, 'evaluaciones')"
-                                                class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm">
+                                                class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
                                                 <span class="material-icons text-sm">add</span>
                                                 AÑADIR EVALUACIÓN
                                             </button>
@@ -437,7 +443,7 @@
                                                     Referencias Bibliográficas
                                                 </h4>
                                                 <button type="button" wire:click="addItem({{ $index }}, 'bibliografias')"
-                                                    class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm">
+                                                    class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
                                                     <span class="material-icons text-sm">add</span>
                                                     AÑADIR BIBLIOGRAFÍA
                                                 </button>

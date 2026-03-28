@@ -75,8 +75,9 @@
                             </x-danger-button>
                         </a>
 
-                        <x-primary-button type="submit" wire:loading.attr="disabled">
-                            {{ __('Actualizar') }}
+                        <x-primary-button type="submit" wire:loading.attr="disabled"
+                            class="bg-gray-600 hover:bg-gray-700 text-white border-none transition-all shadow-lg active:scale-95">
+                            {{ __('Actualizar Contenido') }}
                         </x-primary-button>
                     </div>
                 </form>

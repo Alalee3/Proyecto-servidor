@@ -68,17 +68,19 @@
         </h2>
     </x-slot>
 
+    <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 sm:rounded-lg">
+        <x-table.alert-message type="exitoso" :message="session('message')" />
+        <x-table.alert-message type="error" :message="session('error')" />
+
+        @if ($errors->any())
+            <x-table.alert-message type="error"
+                message="La planificación no pudo ser actualizada. Por favor, revise todos los campos requeridos." />
+        @endif
+    </div>
+
     <div class="p-6 bg-white dark:bg-gray-800 shadow-md rounded-lg">
         <form wire:submit.prevent="savePlanificacion">
             <div class="space-y-4">
-
-                <x-table.alert-message type="exitoso" :message="session('message')" />
-                <x-table.alert-message type="error" :message="session('error')" />
-
-                @if ($errors->any())
-                    <x-table.alert-message type="error"
-                        message="La planificación no pudo ser actualizada. Por favor, revise todos los campos requeridos." />
-                @endif
 
                 {{-- Header / Información General --}}
                 <div class="flex justify-between items-start border-b pb-4 mb-4 dark:border-gray-700">
@@ -132,7 +134,7 @@
 
                             <!-- Cabecera del Accordion -->
                             <button type="button" @click="openCorte = openCorte === {{ $index }} ? null : {{ $index }}"
-                                class="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                                class="w-full flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                                 <div class="flex items-center gap-3">
                                     <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">
                                         Corte {{ $corte['corte'] }}
@@ -201,7 +203,7 @@
                                             </h4>
                                             @if (!$locked)
                                                 <button type="button" wire:click="addItem({{ $index }}, 'contenidos')"
-                                                    class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm">
+                                                    class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
                                                     <span class="material-icons text-sm">add</span>
                                                     AÑADIR CONTENIDO
                                                 </button>
@@ -210,7 +212,7 @@
 
                                         @foreach ($corte['contenidos'] as $contenidoIndex => $contenido)
                                             <div
-                                                class="p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 space-y-4">
+                                                class="p-4 rounded-xl bg-gray-100 dark:bg-gray-950 border border-gray-100 dark:border-gray-700 space-y-4">
                                                 <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
                                                     {{-- Columna de Contenido --}}
                                                     <div class="space-y-2">
@@ -248,8 +250,8 @@
                                                 </h4>
                                                 @if (!$locked)
                                                     <button type="button" wire:click="addItem({{ $index }}, 'recursos')"
-                                                        class="text-black dark:text-gray-300 hover:underline text-[10px] font-bold uppercase flex items-center gap-1">
-                                                        <span class="material-icons text-xs">add_circle</span> AÑADIR
+                                                        class="inline-flex items-center gap-1 text-[10px] bg-[#f0f0f0] border border-[#767676] text-black px-2 py-1 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
+                                                        <span class="material-icons text-xs">add</span> AÑADIR
                                                     </button>
                                                 @endif
                                             </div>
@@ -284,8 +286,8 @@
                                                 </h4>
                                                 @if (!$locked)
                                                     <button type="button" wire:click="addItem({{ $index }}, 'estrategias')"
-                                                        class="text-black dark:text-gray-300 hover:underline text-[10px] font-bold uppercase flex items-center gap-1">
-                                                        <span class="material-icons text-xs">add_circle</span> AÑADIR
+                                                        class="inline-flex items-center gap-1 text-[10px] bg-[#f0f0f0] border border-[#767676] text-black px-2 py-1 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
+                                                        <span class="material-icons text-xs">add</span> AÑADIR
                                                     </button>
                                                 @endif
                                             </div>
@@ -320,7 +322,7 @@
                                             Indicadores de Logros
                                         </h4>
                                         <div
-                                            class="p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+                                            class="p-4 rounded-xl bg-gray-100 dark:bg-gray-950 border border-gray-200 dark:border-gray-700">
                                             <textarea
                                                 wire:model.live.debounce.500ms="form.cortes.{{ $index }}.indicadores_logro"
                                                 class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-sm"
@@ -341,7 +343,7 @@
                                             </h4>
                                             @if (!$locked)
                                                 <button type="button" wire:click="addItem({{ $index }}, 'evaluaciones')"
-                                                    class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm">
+                                                    class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
                                                     <span class="material-icons text-sm">add</span>
                                                     AÑADIR EVALUACIÓN
                                                 </button>
@@ -504,7 +506,7 @@
                             <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Bibliografía</h3>
                             <div class="flex flex-wrap gap-2 self-start sm:self-auto">
                                 <button type="button" wire:click="addItem(null, 'bibliografias')"
-                                    class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm">
+                                    class="inline-flex items-center gap-1 text-xs bg-[#f0f0f0] border border-[#767676] text-black px-3 py-1.5 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
                                     <span class="material-icons text-sm">add</span>
                                     AÑADIR BIBLIOGRAFÍA
                                 </button>

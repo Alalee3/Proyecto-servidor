@@ -68,7 +68,8 @@
 
                     <!-- Botones -->
                     <div class="flex items-center justify-end pt-6">
-                        <x-primary-button type="submit" wire:loading.attr="disabled" class="px-10 py-3 text-base">
+                        <x-primary-button type="submit" wire:loading.attr="disabled" 
+                            class="px-10 py-3 text-base bg-gray-600 hover:bg-gray-700 text-white border-none transition-all shadow-lg active:scale-95">
                             {{ __('GUARDAR CONTENIDO') }}
                         </x-primary-button>
                     </div>
