@@ -20,13 +20,18 @@ class PlanificacionIndexRepo
             ->join("$dbSogc.persona as per", 'u.usu_cedula', '=', 'per.per_cedula')
             ->join("$dbSogc.unidad_curricular as uc", 'sud.sud_cod_unidad', '=', 'uc.ucu_codigo')
             ->join("$dbSogc.seccion as s", 'sud.sud_cod_seccion', '=', 's.sec_codigo')
+            ->join("$dbSogc.malla as ma", 'uc.ucu_cod_malla', '=', 'ma.mal_codigo')
+            ->join("$dbSogc.programa as pr", 'ma.mal_cod_programa', '=', 'pr.pro_codigo')
+            ->join("$dbSogc.trayecto as tr", 'ma.mal_cod_trayecto', '=', 'tr.tra_codigo')
             ->select(
                 'p.id_planificacion as planificacion_id',
                 'per.per_nombres as docente_nombre',
                 'per.per_apellidos as docente_apellido',
                 'p.estatus',
                 'uc.ucu_nombre as nombre_unidad_curricular',
-                's.sec_nombre as nombre_seccion'
+                's.sec_nombre as nombre_seccion',
+                'pr.pro_nombre as nombre_pnf',
+                'tr.tra_nombre as trayecto_unidad_curricular'
             );
 
         if (isset($filters['search_term']) && !empty($filters['search_term'])) {
