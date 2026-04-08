@@ -21,6 +21,9 @@ class PlanificacionViewRepo
             ->join("$dbSogc.unidad_curricular as uc", 'sud.sud_cod_unidad', '=', 'uc.ucu_codigo')
             ->join("$dbSogc.seccion as s", 'sud.sud_cod_seccion', '=', 's.sec_codigo')
             ->join("$dbSogc.lapso_academico as la", 's.sec_cod_lapso_academico', '=', 'la.lap_codigo')
+            ->join("$dbSogc.malla as ma", 'uc.ucu_cod_malla', '=', 'ma.mal_codigo')
+            ->join("$dbSogc.programa as pr", 'ma.mal_cod_programa', '=', 'pr.pro_codigo')
+            ->join("$dbSogc.trayecto as tr", 'uc.ucu_cod_tuc', '=', 'tr.tra_codigo')
             ->select(
                 'p.id_planificacion as planificacion_id',
                 'p.estatus',
@@ -30,11 +33,15 @@ class PlanificacionViewRepo
                 'u.usu_cedula as cedula',
                 'uc.ucu_codigo as id_unidad_curricular',
                 'uc.ucu_nombre as nombre_unidad_curricular',
+                'uc.ucu_unidad_credito as unidades_credito_unidad_curricular',
+                'uc.ucu_thte as horas_semanales_unidad_curricular',
                 's.sec_nombre as nombre_seccion',
                 'la.lap_codigo as id_lapso_academico',
                 'la.lap_nombre as nombre_lapso',
                 'la.lap_fecha_inicio as lapso_fecha_inicio',
-                'la.lap_fecha_fin as lapso_fecha_fin'
+                'la.lap_fecha_fin as lapso_fecha_fin',
+                'pr.pro_nombre as nombre_pnf',
+                'tr.tra_nombre as trayecto_unidad_curricular'
             )
             ->where('p.id_planificacion', $planificacionId)
             ->first();
