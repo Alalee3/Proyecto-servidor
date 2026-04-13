@@ -125,7 +125,7 @@ class UpdatePlanificacionForm extends Form
 
                         if ($this->id_lapso_academico) {
                             $evento = \Illuminate\Support\Facades\DB::table('evento as e')
-                                ->where('e.id_lapso', $this->id_lapso_academico)
+                                ->where('e.estatus', '!=', '3')
                                 ->where(function ($q) use ($value) {
                                     $q->whereDate('e.dia_inicio_evento', '<=', $value)
                                         ->whereDate('e.dia_fin_evento', '>=', $value);
