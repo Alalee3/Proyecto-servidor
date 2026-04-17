@@ -18,7 +18,7 @@
                                             <div wire:click="cambiarRol({{ $miRol->usu_cod_rol }})"
                                                 class="cursor-pointer group relative p-5 rounded-xl border-2 transition-all duration-300 shadow-sm
                                                      {{ $rolActivo == $miRol->usu_cod_rol
-                            ? 'bg-white dark:bg-gray-800 border-sogat-red ring-2 ring-sogat-red/30'
+                            ? 'bg-white dark:bg-gray-800 border-sogat-red'
                             : 'bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 hover:border-sogat-red hover:shadow-md' }}">
 
                                                 <div class="flex items-center justify-between">

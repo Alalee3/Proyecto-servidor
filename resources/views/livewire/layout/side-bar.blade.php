@@ -30,7 +30,7 @@
             @if($roleCount > 1)
                 <!-- Perfil -->
                 <a href="{{ route('perfil') }}" class="sogat-sidebar-item">
-                    Mis Roles
+                    Perfil
                 </a>
             @endif
 
