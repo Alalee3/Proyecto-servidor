@@ -35,4 +35,36 @@ class CalendarioCreateRepo
             ->where('estatus', '1')
             ->exists();
     }
+
+    /**
+     * Crea un calendario académico junto con todos sus eventos en una transacción.
+     */
+    public function crearConEventos(array $data, array $eventos)
+    {
+        return DB::transaction(function () use ($data, $eventos) {
+            // Calcular semanas si no vienen calculadas
+            if (!isset($data['semana_calendario_academico'])) {
+                $inicio = Carbon::parse($data['dia_inicio_calendario_academico']);
+                $fin = Carbon::parse($data['dia_fin_calendario_academico']);
+                $data['semana_calendario_academico'] = ceil(($inicio->diffInDays($fin) + 1) / 7);
+            }
+
+            $id = $this->crear($data);
+
+            if ($id && count($eventos) > 0) {
+                $eventoRepo = new \App\Repositories\Evento\EventoCreateRepo();
+                foreach ($eventos as $evento) {
+                    $eventoRepo->crear([
+                        'id_calendario' => $id,
+                        'dia_inicio_evento' => $evento['inicio'],
+                        'dia_fin_evento' => $evento['fin'],
+                        'descripcion_evento' => $evento['nombre'],
+                        'tipo_evento' => $evento['tipo'],
+                    ]);
+                }
+            }
+
+            return $id;
+        });
+    }
 }

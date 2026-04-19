@@ -29,23 +29,25 @@
             <div>
                 <img src="{{ asset('assets/img/android-chrome-512x512.png') }}" alt="Mi Logo" class="rounded-full w-20 h-20 fill-current text-gray-500">
             </div>
-            <div class="w-full sm:max-w-7xl px-4 sm:px-6 lg:px-8 mt-6 bg-transparent overflow-hidden">
-                <div class="px-6 py-4 bg-white dark:bg-gray-800 shadow-[0px_0px_15px_#000000] sm:rounded-[25px] transition-all duration-500">
-                    {{ $slot }}
+            <div class="w-full sm:max-w-7xl px-4 sm:px-6 lg:px-8 mt-6 mb-8 bg-transparent">
+                <div class="bg-white dark:bg-gray-800 shadow-[0px_0px_15px_rgba(0,0,0,0.5)] sm:rounded-[25px] transition-all duration-500 overflow-hidden">
+                    <div class="px-6 py-8">
+                        {{ $slot }}
 
-                    @if(!Route::is('seleccionar-rol'))
-                        <div class="mt-4 text-sm text-gray-700 dark:text-gray-300">
-                            Los campos con <span class="text-red-500 font-bold">*</span> son obligatorios
-                        </div>
-                    @endif
+                        @if(!Route::is('seleccionar-rol'))
+                            <div class="mt-4 text-sm text-gray-700 dark:text-gray-300">
+                                Los campos con <span class="text-red-500 font-bold">*</span> son obligatorios
+                            </div>
+                        @endif
+                    </div>
+
+                    <footer class="bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 py-4 text-center transition-colors duration-300">
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-tighter">
+                            Todos los derechos reservados © 2026 UPTP - CRÉDITOS UNIDAD DE SISTEMAS / DESARROLLO DE
+                            SOFTWARE.
+                        </p>
+                    </footer>
                 </div>
-
-                <footer class="bg-gray-50 dark:bg-gray-800/50 border-t border-gray-200 dark:border-gray-700 py-3 text-center transition-colors duration-300">
-                    <p class="text-[11px] text-gray-500 dark:text-gray-400 uppercase tracking-tighter">
-                        Todos los derechos reservados © 2026 UPTP - CRÉDITOS UNIDAD DE SISTEMAS / DESARROLLO DE
-                        SOFTWARE.
-                    </p>
-                </footer>
             </div>
         </div>
     </body>

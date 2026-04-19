@@ -77,4 +77,44 @@ class UsuarioRepository
             throw $e;
         }
     }
+
+    /**
+     * Obtiene los roles de un usuario por su cédula.
+     */
+    public function getRolesPorCedula(string $cedula)
+    {
+        return DB::connection('emulacion_sogac_2')
+            ->table('usuario as u')
+            ->join('rol as r', 'u.usu_cod_rol', '=', 'r.rol_codigo')
+            ->where('u.usu_cedula', $cedula)
+            ->where('u.usu_estatus', 'A')
+            ->select('u.usu_cod_rol', 'r.rol_nombre')
+            ->get();
+    }
+
+    /**
+     * Verifica si un usuario tiene el rol 3 activo.
+     */
+    public function tieneRol3(string $cedula): bool
+    {
+        return DB::connection('emulacion_sogac_2')
+            ->table('usuario')
+            ->where('usu_cedula', $cedula)
+            ->where('usu_cod_rol', 3)
+            ->where('usu_estatus', 'A')
+            ->exists();
+    }
+
+    /**
+     * Obtiene el código de usuario (usu_codigo) para un rol específico.
+     */
+    public function getUsuCodigo(string $cedula, int $rolId)
+    {
+        return DB::connection('emulacion_sogac_2')
+            ->table('usuario')
+            ->where('usu_cedula', $cedula)
+            ->where('usu_cod_rol', $rolId)
+            ->where('usu_estatus', 'A')
+            ->value('usu_codigo');
+    }
 }
