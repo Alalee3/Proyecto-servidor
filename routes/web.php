@@ -146,13 +146,11 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     // Rutas para Eventos
     Route::get('evento/list', ListEvento::class)->middleware('can:listar-evento')->name('evento/listar');
     Route::get('evento/create', CreateEvento::class)->middleware('can:crear-evento')->name('evento/crear');
-    Route::get('evento/update/{id}', UpdateEvento::class)->middleware('can:editar-evento')->name('evento/update');
     Route::get('evento/show/{id}', ShowEvento::class)->middleware('can:ver-evento')->name('evento/show');
 
     // Rutas para Calendario Académico
     Route::get('calendario/list', ListCalendario::class)->middleware('can:listar-calendario')->name('calendario.list');
     Route::get('calendario/create', CreateCalendario::class)->middleware('can:crear-calendario')->name('calendario.create');
-    Route::get('calendario/update/{id}', UpdateCalendario::class)->middleware('can:editar-calendario')->name('calendario.update');
     Route::get('calendario/show/{id}', ShowCalendario::class)->middleware('can:ver-calendario')->name('calendario.show');
 
 

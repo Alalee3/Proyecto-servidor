@@ -64,13 +64,6 @@
                             {{ __('Volver') }}
                         </x-danger-button>
                     </a>
-                    @can('editar-calendario')
-                        <a href="{{ route('calendario.update', $calendario->id_calendario_academico) }}" wire:navigate>
-                            <x-primary-button type="button">
-                                {{ __('Editar Semana') }}
-                            </x-primary-button>
-                        </a>
-                    @endcan
                 </div>
             </div>
         </div>
