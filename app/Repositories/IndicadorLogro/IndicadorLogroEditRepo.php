@@ -16,11 +16,8 @@ class IndicadorLogroEditRepo
 
     public function actualizar($id, array $data)
     {
-        $indicador = \App\Models\IndicadorLogro::find($id);
-        if ($indicador) {
             return $indicador->update([
-                'nombre_indicador_logro' => $data['nombre_indicador_logro'],
-                'fecha_actualizacion' => Carbon::now(),
+                'nombre_indicador_logro' => $data['nombre_indicador_logro']
             ]);
         }
         return false;

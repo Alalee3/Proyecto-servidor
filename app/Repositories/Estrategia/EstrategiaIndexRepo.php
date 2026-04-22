@@ -17,7 +17,7 @@ class EstrategiaIndexRepo
             ->when($busqueda, function ($consulta, $busqueda) {
                 $consulta->where('nombre_tecnica_actividad', 'LIKE', '%' . $busqueda . '%');
             })
-            ->orderBy('fecha_creacion', 'desc')
+            ->orderBy('id_tecnica_actividad', 'desc')
             ->paginate($paginacion);
     }
 
@@ -29,8 +29,7 @@ class EstrategiaIndexRepo
         $estrategia = \App\Models\Estrategia::find($id);
         if ($estrategia) {
             return $estrategia->update([
-                'estatus' => '3',
-                'fecha_actualizacion' => Carbon::now()
+                'estatus' => '3'
             ]);
         }
         return false;
@@ -44,8 +43,7 @@ class EstrategiaIndexRepo
         $estrategia = \App\Models\Estrategia::where('id_tecnica_actividad', $id)->where('estatus', '3')->first();
         if ($estrategia) {
             return $estrategia->update([
-                'estatus' => '1',
-                'fecha_actualizacion' => Carbon::now()
+                'estatus' => '1'
             ]);
         }
         return false;

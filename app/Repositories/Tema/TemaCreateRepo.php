@@ -22,8 +22,6 @@ class TemaCreateRepo
                 'id_unidad_curricular' => $data['id_unidad_curricular'],
                 'titulo_tema' => $data['titulo_tema'],
                 'unidad_tema' => $data['unidad_tema'],
-                'fecha_creacion' => Carbon::now(),
-                'fecha_actualizacion' => null,
                 'estatus' => '1',
             ]);
             $temaId = $tema->id_tema_unidad;
@@ -33,7 +31,6 @@ class TemaCreateRepo
                     DB::table('objetivo')->insert([
                         'id_tema_unidad' => $temaId,
                         'titulo_objetivo' => $objetivo['titulo_objetivo'],
-                        'fecha_creacion' => Carbon::now(),
                         'estatus' => '1',
                     ]);
                 }

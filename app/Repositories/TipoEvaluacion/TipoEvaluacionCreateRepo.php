@@ -14,9 +14,7 @@ class TipoEvaluacionCreateRepo
     {
         $tipoEvaluacion = TipoEvaluacion::create([
             'nombre_tipo_evaluacion' => $datos['nombre'],
-            'estatus' => '1',
-            'fecha_creacion' => Carbon::now(),
-            'fecha_actualizacion' => Carbon::now()
+            'estatus' => '1'
         ]);
 
         return $tipoEvaluacion->id_tipo_evaluacion;

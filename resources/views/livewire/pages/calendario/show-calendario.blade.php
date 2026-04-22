@@ -47,12 +47,6 @@
                         </p>
                     </div>
 
-                    {{-- Registro --}}
-                    <div>
-                        <x-input-label value="Fecha de Registro:" />
-                        <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
-                            {{ \Carbon\Carbon::parse($calendario->fecha_creacion)->format('d/m/Y H:i') }}
-                        </p>
                     </div>
                 </div>
 

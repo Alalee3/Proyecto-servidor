@@ -55,12 +55,6 @@
                                     </p>
                                 </div>
 
-                                <div class="mt-4">
-                                    <x-input-label value="Fecha de Creación:" />
-                                    <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
-                                        {{ \Carbon\Carbon::parse($contenido->fecha_creacion)->format('d/m/Y H:i') }}
-                                    </p>
-                                </div>
                             </div>
 
                 @else

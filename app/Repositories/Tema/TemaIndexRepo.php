@@ -13,8 +13,7 @@ class TemaIndexRepo
                 't.id_tema_unidad',
                 't.titulo_tema',
                 't.id_unidad_curricular',
-                't.estatus',
-                't.fecha_creacion'
+                't.estatus'
             )
             ->when($busqueda, function ($query, $busqueda) {
                 return $query->where(function ($q) use ($busqueda) {
@@ -29,7 +28,7 @@ class TemaIndexRepo
                         });
                 });
             })
-            ->orderBy('t.fecha_creacion', 'desc')
+            ->orderBy('t.id_tema_unidad', 'desc')
             ->paginate($paginacion);
 
         // Obtener nombres de unidades curriculares desde la base de datos externa SOGC
@@ -52,8 +51,7 @@ class TemaIndexRepo
         $tema = \App\Models\Tema::find($id);
         if ($tema) {
             return $tema->update([
-                'estatus' => '3',
-                'fecha_actualizacion' => now()
+                'estatus' => '3'
             ]);
         }
         return false;
@@ -64,8 +62,7 @@ class TemaIndexRepo
         $tema = \App\Models\Tema::where('id_tema_unidad', $id)->where('estatus', '3')->first();
         if ($tema) {
             return $tema->update([
-                'estatus' => '1',
-                'fecha_actualizacion' => now()
+                'estatus' => '1'
             ]);
         }
         return false;

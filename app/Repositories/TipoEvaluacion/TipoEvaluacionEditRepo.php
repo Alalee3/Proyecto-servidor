@@ -26,8 +26,7 @@ class TipoEvaluacionEditRepo
         $tipoEvaluacion = TipoEvaluacion::find($id);
         if ($tipoEvaluacion) {
             return $tipoEvaluacion->update([
-                'nombre_tipo_evaluacion' => $datos['nombre'],
-                'fecha_actualizacion' => Carbon::now()
+                'nombre_tipo_evaluacion' => $datos['nombre']
             ]);
         }
         return false;

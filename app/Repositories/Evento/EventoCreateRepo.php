@@ -27,7 +27,6 @@ class EventoCreateRepo
             'dia_fin_evento' => $data['dia_fin_evento'],
             'descripcion_evento' => $data['descripcion_evento'],
             'tipo_evento' => $data['tipo_evento'],
-            'fecha_creacion' => Carbon::now(),
             'estatus' => '1',
         ]);
 

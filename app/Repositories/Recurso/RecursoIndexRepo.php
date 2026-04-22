@@ -14,7 +14,7 @@ class RecursoIndexRepo
             ->when($busqueda, function ($consulta, $busqueda) {
                 $consulta->where('nombre_recurso', 'LIKE', '%' . $busqueda . '%');
             })
-            ->orderBy('fecha_creacion', 'desc')
+            ->orderBy('id_recurso', 'desc')
             ->paginate($paginacion);
     }
 
@@ -23,8 +23,7 @@ class RecursoIndexRepo
         $recurso = \App\Models\Recurso::find($id);
         if ($recurso) {
             return $recurso->update([
-                'estatus' => '3',
-                'fecha_actualizacion' => Carbon::now()
+                'estatus' => '3'
             ]);
         }
         return false;
@@ -35,8 +34,7 @@ class RecursoIndexRepo
         $recurso = \App\Models\Recurso::where('id_recurso', $id)->where('estatus', '3')->first();
         if ($recurso) {
             return $recurso->update([
-                'estatus' => '1',
-                'fecha_actualizacion' => Carbon::now()
+                'estatus' => '1'
             ]);
         }
         return false;

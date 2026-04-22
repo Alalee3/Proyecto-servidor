@@ -44,12 +44,6 @@
                                     </p>
                                 </div>
 
-                                <div>
-                                    <x-input-label value="Fecha de Creación:" />
-                                    <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
-                                        {{ \Carbon\Carbon::parse($tema->fecha_creacion)->format('d/m/Y H:i') }}
-                                    </p>
-                                </div>
                             </div>
 
                             <!-- Sección de Objetivos -->

@@ -19,8 +19,7 @@ class BibliografiaEditRepo
         $bibliografia = \App\Models\Bibliografia::find($id);
         if ($bibliografia) {
             return $bibliografia->update([
-                'nombre_bibliografia' => $datos['nombre'],
-                'fecha_actualizacion' => Carbon::now()
+                'nombre_bibliografia' => $datos['nombre']
             ]);
         }
         return false;
