@@ -19,10 +19,9 @@
                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Descripción</th>
+                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Nombre</th>
+                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Color</th>
 
-                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Inicio</th>
-                            <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Fin</th>
                             @can('cambiar-estatus-evento')
                                 <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white text-right">
                                     Estatus</th>
@@ -34,14 +33,17 @@
                     <tbody>
                         @if ($eventos->isNotEmpty())
                             @foreach ($eventos as $evento)
-                                <tr wire:key="{{ $evento->id_evento }}-{{ $evento->id_calendario }}"
+                                <tr wire:key="{{ $evento->id_evento }}"
                                     class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                    <td class="px-4 py-4 text-gray-900 dark:text-white break-words">{{ $evento->descripcion_evento }}</td>
+                                    <td class="px-4 py-4 text-gray-900 dark:text-white break-words">{{ $evento->nombre_evento }}</td>
+                                    <td class="px-4 py-4 text-gray-900 dark:text-white">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm" style="background-color: {{ $evento->color }}"></span>
+                                            <span class="text-sm">{{ $evento->nombre_color }}</span>
+                                        </div>
+                                    </td>
 
-                                    <td class="px-4 py-4 text-gray-900 dark:text-white">
-                                        {{ $evento->dia_inicio_evento ? \Carbon\Carbon::parse($evento->dia_inicio_evento)->format('d/m/Y') : 'Sin asignar' }}</td>
-                                    <td class="px-4 py-4 text-gray-900 dark:text-white">
-                                        {{ $evento->dia_fin_evento ? \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') : 'Sin asignar' }}</td>
+
                                     @can('cambiar-estatus-evento')
                                         <td class="px-4 py-4 text-right">
                                             <span class="{{ $evento->estatus == 1 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300' }} 

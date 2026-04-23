@@ -17,6 +17,7 @@ class RecursoEditRepo
     public function actualizar($id, array $datos)
     {
         $recurso = \App\Models\Recurso::find($id);
+        if ($recurso) {
             return $recurso->update([
                 'nombre_recurso' => $datos['nombre']
             ]);

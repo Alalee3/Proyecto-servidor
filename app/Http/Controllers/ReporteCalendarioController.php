@@ -11,7 +11,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class ReporteCalendarioController extends Controller
 {
     /**
-     * Genera el reporte del último calendario académico.
+     * Genera el reporte del último calendario académico activo.
      */
     public function reporteUltimoCalendario()
     {
@@ -21,9 +21,33 @@ class ReporteCalendarioController extends Controller
             ->first();
 
         if (!$calendario) {
-            return redirect()->back()->with('error', 'No existe ningún calendario académico para imprimir.');
+            return redirect()->back()->with('error', 'No existe ningún calendario académico activo para imprimir.');
         }
 
+        return $this->generarExcel($calendario);
+    }
+
+    /**
+     * Genera el reporte de un calendario específico por ID.
+     */
+    public function reporteCalendario($id)
+    {
+        $calendario = DB::table('calendario_academico')
+            ->where('id_calendario_academico', $id)
+            ->first();
+
+        if (!$calendario) {
+            return redirect()->back()->with('error', 'El calendario solicitado no existe.');
+        }
+
+        return $this->generarExcel($calendario);
+    }
+
+    /**
+     * Lógica compartida para generar el archivo Excel.
+     */
+    private function generarExcel($calendario)
+    {
         // Determinar el año a mostrar (el año del inicio del calendario)
         $year = Carbon::parse($calendario->dia_inicio_calendario_academico)->year;
 
@@ -44,12 +68,9 @@ class ReporteCalendarioController extends Controller
 
         $eventDays = [];
         $eventColors = [];
-        $palette = [
-            '#007BFF', '#28A745', '#DC3545', '#FD7E14', '#6610F2'
-        ];
+        $palette = ['#007BFF', '#28A745', '#DC3545', '#FD7E14', '#6610F2'];
 
         foreach ($eventosRaw as $index => $eventoItem) {
-            // Priorizar el color de la BD, si no tiene, usar paleta
             $color = $eventoItem->codigo_color ?? $palette[$index % count($palette)];
             $eventColors[$eventoItem->id_evento] = $color;
 

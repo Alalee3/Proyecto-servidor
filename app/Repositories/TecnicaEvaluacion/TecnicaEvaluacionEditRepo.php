@@ -23,6 +23,7 @@ class TecnicaEvaluacionEditRepo
     public function actualizar($id, array $datos)
     {
         $evaluacion = \App\Models\TecnicaEvaluacion::find($id);
+        if ($evaluacion) {
             return $evaluacion->update([
                 'nombre_tecnica_evaluacion' => $datos['nombre']
             ]);

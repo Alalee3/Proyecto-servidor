@@ -108,191 +108,194 @@
                         <div class="max-w-2xl mx-auto mt-4 mb-4">
                         </div>
                         <div x-data="{
-                                            picker: null,
-                                            showEventModal: false,
-                                            selectedEventStart: '',
-                                            selectedEventEnd: '',
-                                            eventoNombre: '',
-                                            eventoTipo: '1',
-                                            eventoSeleccionado: '',
-                                            clickCount: 0,
-                                            eventosAlpine: @entangle('eventosRegistrados'),
-                                            tooltip: { visible: false, x: 0, y: 0, content: null },
-                                            init() {
-                                                const isDark = document.documentElement.classList.contains('dark');
-                                                const start = @js($form->dia_inicio_calendario_academico);
-                                                const end = @js($form->dia_fin_calendario_academico);
-                                                const startYear = parseInt(start.substring(0, 4)) || new Date().getFullYear();
+                                                    picker: null,
+                                                    showEventModal: false,
+                                                    selectedEventStart: '',
+                                                    selectedEventEnd: '',
+                                                    eventoNombre: '',
+                                                    eventoTipo: '1',
+                                                    eventoColor: '',
+                                                    eventoSeleccionado: '',
+                                                    clickCount: 0,
+                                                    eventosAlpine: @entangle('eventosRegistrados'),
+                                                    tooltip: { visible: false, x: 0, y: 0, content: null },
+                                                    init() {
+                                                        const isDark = document.documentElement.classList.contains('dark');
+                                                        const start = @js($form->dia_inicio_calendario_academico);
+                                                        const end = @js($form->dia_fin_calendario_academico);
+                                                        const startYear = parseInt(start.substring(0, 4)) || new Date().getFullYear();
 
-                                                this.picker = new VanillaCalendar($refs.calendar, {
-                                                    type: 'multiple',
-                                                    months: 12,
-                                                    displayMonthsCount: 12,
-                                                    selectedMonth: 0,
-                                                    selectedYear: startYear,
-                                                    settings: {
-                                                        lang: 'es',
-                                                        range: {
-                                                            min: start,
-                                                            max: end,
-                                                            disablePast: false,
-                                                        },
-                                                        selection: {
-                                                            day: 'multiple-ranged', // Allow select range
-                                                        },
-                                                        visibility: {
-                                                            daysOutside: false,
-                                                            theme: isDark ? 'dark' : 'light'
-                                                        }
+                                                        this.picker = new VanillaCalendar($refs.calendar, {
+                                                            type: 'multiple',
+                                                            months: 12,
+                                                            displayMonthsCount: 12,
+                                                            selectedMonth: 0,
+                                                            selectedYear: startYear,
+                                                            settings: {
+                                                                lang: 'es',
+                                                                range: {
+                                                                    min: start,
+                                                                    max: end,
+                                                                    disablePast: false,
+                                                                },
+                                                                selection: {
+                                                                    day: 'multiple-ranged', // Allow select range
+                                                                },
+                                                                visibility: {
+                                                                    daysOutside: false,
+                                                                    theme: isDark ? 'dark' : 'light'
+                                                                }
+                                                            },
+                                                                actions: {
+                                                                clickDay: (e, self) => {
+                                                                    // Handle fetching the clicked date manually from DOM or Fallback
+                                                                    let btn = e.target.closest('.vanilla-calendar-day__btn');
+                                                                    let clickedDate = btn ? btn.dataset.calendarDay : null;
+
+                                                                    if (!clickedDate && self.selectedDates.length > 0) {
+                                                                        clickedDate = self.selectedDates[self.selectedDates.length - 1];
+                                                                    }
+
+                                                                    if (!clickedDate) return;
+
+                                                                    if (this.clickCount === 0) {
+                                                                        // Primer click (Inicio)
+                                                                        this.selectedEventStart = clickedDate;
+                                                                        this.selectedEventEnd = '';
+                                                                        this.clickCount = 1;
+
+                                                                        self.selectedDates = [clickedDate];
+                                                                        self.update();
+                                                                        // Re-apply event colors after calendar re-renders
+                                                                        this.$nextTick(() => this.refrescarEventosVisuales());
+                                                                    } else {
+                                                                        // Segundo click (Fin)
+                                                                        this.selectedEventEnd = clickedDate;
+
+                                                                        // Validar orden
+                                                                        let d1 = new Date(this.selectedEventStart);
+                                                                        let d2 = new Date(this.selectedEventEnd);
+
+                                                                        if (d1 > d2) {
+                                                                            let temp = this.selectedEventStart;
+                                                                            this.selectedEventStart = this.selectedEventEnd;
+                                                                            this.selectedEventEnd = temp;
+                                                                        }
+
+                                                                        // Si es el mismo día
+                                                                        if (d1.getTime() === d2.getTime()) {
+                                                                            self.selectedDates = [this.selectedEventStart];
+                                                                            self.update();
+                                                                            // Re-apply event colors after calendar re-renders
+                                                                            this.$nextTick(() => this.refrescarEventosVisuales());
+                                                                        }
+
+                                                                        this.showEventModal = true;
+                                                                        this.clickCount = 0;
+                                                                    }
+                                                                }
+                                                            }
+                                                        });
+                                                        this.picker.init();
+                                                        this.$nextTick(() => this.refrescarEventosVisuales());
+
+                                                        this.$watch('eventosAlpine', () => {
+                                                            this.picker.update();
+                                                            this.$nextTick(() => this.refrescarEventosVisuales());
+                                                        });
                                                     },
-                                                        actions: {
-                                                        clickDay: (e, self) => {
-                                                            // Handle fetching the clicked date manually from DOM or Fallback
-                                                            let btn = e.target.closest('.vanilla-calendar-day__btn');
-                                                            let clickedDate = btn ? btn.dataset.calendarDay : null;
+                                                        refrescarEventosVisuales() {
+                                                            if (!this.picker) return;
 
-                                                            if (!clickedDate && self.selectedDates.length > 0) {
-                                                                clickedDate = self.selectedDates[self.selectedDates.length - 1];
+                                                            // Mapear cada día al color del ÚLTIMO evento registrado que lo cubra
+                                                            let dayColors = {};
+
+                                                            if (this.eventosAlpine && this.eventosAlpine.length > 0) {
+                                                                this.eventosAlpine.forEach(ev => {
+                                                                    let startD = new Date(ev.inicio + 'T00:00:00');
+                                                                    let endD   = new Date(ev.fin   + 'T00:00:00');
+
+                                                                    while (startD <= endD) {
+                                                                        let y = startD.getFullYear();
+                                                                        let m = String(startD.getMonth() + 1).padStart(2, '0');
+                                                                        let d = String(startD.getDate()).padStart(2, '0');
+                                                                        let dateStr = `${y}-${m}-${d}`;
+
+                                                                        // Al sobreescribir, el último evento registrado gana el color del día
+                                                                        dayColors[dateStr] = ev.color;
+
+                                                                        startD.setDate(startD.getDate() + 1);
+                                                                    }
+                                                                });
                                                             }
 
-                                                            if (!clickedDate) return;
+                                                            const calendarEl = this.$refs.calendar;
+                                                            if (!calendarEl) return;
 
-                                                            if (this.clickCount === 0) {
-                                                                // Primer click (Inicio)
-                                                                this.selectedEventStart = clickedDate;
-                                                                this.selectedEventEnd = '';
-                                                                this.clickCount = 1;
+                                                            calendarEl.querySelectorAll('[data-calendar-day]').forEach(btn => {
+                                                                const day = btn.dataset.calendarDay;
 
-                                                                self.selectedDates = [clickedDate];
-                                                                self.update();
-                                                                // Re-apply event colors after calendar re-renders
-                                                                this.$nextTick(() => this.refrescarEventosVisuales());
-                                                            } else {
-                                                                // Segundo click (Fin)
-                                                                this.selectedEventEnd = clickedDate;
+                                                                // Limpiar estilos previos
+                                                                btn.style.backgroundColor = '';
+                                                                btn.style.color = '';
+                                                                btn.style.border = '';
+                                                                btn.classList.remove('sogat-evento-registrado');
 
-                                                                // Validar orden
-                                                                let d1 = new Date(this.selectedEventStart);
-                                                                let d2 = new Date(this.selectedEventEnd);
+                                                                if (dayColors[day]) {
+                                                                    btn.classList.add('sogat-evento-registrado');
+                                                                    // Aplicar el color del último evento registrado
+                                                                    btn.style.setProperty('background-color', dayColors[day] + '26', 'important'); // 15% opacidad para el fondo
+                                                                    btn.style.setProperty('color', dayColors[day], 'important');
+                                                                    btn.style.setProperty('border', '2px solid ' + dayColors[day], 'important');
+                                                                    btn.style.setProperty('font-weight', '900', 'important');
 
-                                                                if (d1 > d2) {
-                                                                    let temp = this.selectedEventStart;
-                                                                    this.selectedEventStart = this.selectedEventEnd;
-                                                                    this.selectedEventEnd = temp;
+                                                                    const matchingEvents = this.eventosAlpine.filter(ev => {
+                                                                        let s = new Date(ev.inicio + 'T00:00:00');
+                                                                        let e = new Date(ev.fin   + 'T00:00:00');
+                                                                        let d = new Date(day      + 'T00:00:00');
+                                                                        return d >= s && d <= e;
+                                                                    });
+
+                                                                    btn.addEventListener('mouseenter', () => {
+                                                                        this.tooltip.content = matchingEvents;
+                                                                        this.tooltip.visible = true;
+                                                                    });
+                                                                    btn.addEventListener('mousemove', (e) => {
+                                                                        this.tooltip.x = e.clientX;
+                                                                        this.tooltip.y = e.clientY;
+                                                                    });
+                                                                    btn.addEventListener('mouseleave', () => {
+                                                                        this.tooltip.visible = false;
+                                                                        this.tooltip.content = null;
+                                                                    });
                                                                 }
-
-                                                                // Si es el mismo día
-                                                                if (d1.getTime() === d2.getTime()) {
-                                                                    self.selectedDates = [this.selectedEventStart];
-                                                                    self.update();
-                                                                    // Re-apply event colors after calendar re-renders
-                                                                    this.$nextTick(() => this.refrescarEventosVisuales());
-                                                                }
-
-                                                                this.showEventModal = true;
-                                                                this.clickCount = 0;
-                                                            }
+                                                            });
+                                                        },
+                                                    closeModal() {
+                                                        this.showEventModal = false;
+                                                        if(this.picker) {
+                                                            this.picker.selectedDates = [];
+                                                            this.picker.update();
+                                                            // Re-apply event colors after picker resets the DOM
+                                                            this.$nextTick(() => this.refrescarEventosVisuales());
                                                         }
-                                                    }
-                                                });
-                                                this.picker.init();
-                                                this.$nextTick(() => this.refrescarEventosVisuales());
-
-                                                this.$watch('eventosAlpine', () => {
-                                                    this.picker.update();
-                                                    this.$nextTick(() => this.refrescarEventosVisuales());
-                                                });
-                                            },
-                                            refrescarEventosVisuales() {
-                                                if (!this.picker) return;
-
-                                                // Calcular todos los días cubiertos por eventos
-                                                let eventDates = new Set();
-
-                                                if (this.eventosAlpine && this.eventosAlpine.length > 0) {
-                                                    this.eventosAlpine.forEach(ev => {
-                                                        let startD = new Date(ev.inicio + 'T00:00:00');
-                                                        let endD   = new Date(ev.fin   + 'T00:00:00');
-
-                                                        while (startD <= endD) {
-                                                            // Formato YYYY-MM-DD en hora local
-                                                            let y = startD.getFullYear();
-                                                            let m = String(startD.getMonth() + 1).padStart(2, '0');
-                                                            let d = String(startD.getDate()).padStart(2, '0');
-                                                            eventDates.add(`${y}-${m}-${d}`);
-                                                            startD.setDate(startD.getDate() + 1);
+                                                        this.selectedEventStart = '';
+                                                        this.selectedEventEnd = '';
+                                                        this.eventoNombre = '';
+                                                        this.eventoTipo = '1';
+                                                        this.eventoColor = '';
+                                                        this.eventoSeleccionado = '';
+                                                        this.clickCount = 0;
+                                                    },
+                                                    guardarEvento() {
+                                                        if(!this.eventoNombre.trim()) {
+                                                            alert('Debe ingresar un nombre para el evento.');
+                                                            return;
                                                         }
-                                                    });
-                                                }
-
-                                                // Aplicar / quitar clase CSS y tooltip directamente sobre cada botón de día
-                                                const calendarEl = this.$refs.calendar;
-                                                if (!calendarEl) return;
-
-                                                calendarEl.querySelectorAll('[data-calendar-day]').forEach(btn => {
-                                                    const day = btn.dataset.calendarDay;
-
-                                                    // Remove previous listeners to avoid duplicates on re-render
-                                                    btn.replaceWith(btn.cloneNode(true));
-                                                });
-
-                                                calendarEl.querySelectorAll('[data-calendar-day]').forEach(btn => {
-                                                    const day = btn.dataset.calendarDay;
-
-                                                    if (eventDates.has(day)) {
-                                                        btn.classList.add('sogat-evento-registrado');
-
-                                                        // Build tooltip content for this day
-                                                        const matchingEvents = this.eventosAlpine.filter(ev => {
-                                                            let s = new Date(ev.inicio + 'T00:00:00');
-                                                            let e = new Date(ev.fin   + 'T00:00:00');
-                                                            let d = new Date(day      + 'T00:00:00');
-                                                            return d >= s && d <= e;
-                                                        });
-
-                                                        btn.addEventListener('mouseenter', (e) => {
-                                                            this.tooltip.content = matchingEvents;
-                                                            this.tooltip.visible = true;
-                                                        });
-
-                                                        btn.addEventListener('mousemove', (e) => {
-                                                            this.tooltip.x = e.clientX;
-                                                            this.tooltip.y = e.clientY;
-                                                        });
-
-                                                        btn.addEventListener('mouseleave', () => {
-                                                            this.tooltip.visible = false;
-                                                            this.tooltip.content = null;
-                                                        });
-                                                    } else {
-                                                        btn.classList.remove('sogat-evento-registrado');
+                                                        $wire.agregarEvento(this.selectedEventStart, this.selectedEventEnd, this.eventoSeleccionado, this.eventoNombre, this.eventoTipo, this.eventoColor);
+                                                        this.closeModal();
                                                     }
-                                                });
-                                            },
-                                            closeModal() {
-                                                this.showEventModal = false;
-                                                if(this.picker) {
-                                                    this.picker.selectedDates = [];
-                                                    this.picker.update();
-                                                    // Re-apply event colors after picker resets the DOM
-                                                    this.$nextTick(() => this.refrescarEventosVisuales());
-                                                }
-                                                this.selectedEventStart = '';
-                                                this.selectedEventEnd = '';
-                                                this.eventoNombre = '';
-                                                this.eventoTipo = '1';
-                                                this.eventoSeleccionado = '';
-                                                this.clickCount = 0;
-                                            },
-                                            guardarEvento() {
-                                                if(!this.eventoNombre.trim()) {
-                                                    alert('Debe ingresar un nombre para el evento.');
-                                                    return;
-                                                }
-                                                $wire.agregarEvento(this.selectedEventStart, this.selectedEventEnd, this.eventoNombre, this.eventoTipo);
-                                                this.closeModal();
-                                            }
-                                        }" class="space-y-6 mt-4 pt-4">
+                                                }" class="space-y-6 mt-4 pt-4">
 
                             {{-- Floating Tooltip --}}
                             <div x-show="tooltip.visible" x-cloak
@@ -301,13 +304,13 @@
                                 <template x-if="tooltip.content && tooltip.content.length > 0">
                                     <div>
                                         <template x-for="(ev, i) in tooltip.content" :key="i">
-                                            <div :class="i > 0 ? 'mt-2 pt-2 border-t border-white/20' : ''">
+                                            <div :class="i > 0 ? 'mt-2 pt-2 border-t border-gray-100' : ''">
                                                 <div class="flex items-center gap-2 mb-1">
-                                                    <span class="material-icons text-xs">event</span>
+                                                    <span class="w-3 h-3 rounded-full shadow-sm"
+                                                        :style="`background-color: ${ev.color}`"></span>
                                                     <span class="font-extrabold text-sm" x-text="ev.nombre"></span>
                                                 </div>
-                                                <div class="text-[10px] uppercase tracking-widest opacity-75 font-bold"
-                                                    x-text="ev.tipo"></div>
+
                                                 <div class="text-[11px] mt-1 opacity-90">
                                                     <span x-text="ev.inicio"></span>
                                                     <template x-if="ev.inicio !== ev.fin">
@@ -361,17 +364,28 @@
 
                                     <div class="space-y-5">
                                         <div>
-                                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Seleccionar Evento</label>
-                                            <select x-model="eventoSeleccionado" x-on:change="eventoNombre = $event.target.options[$event.target.selectedIndex].text; eventoTipo = $event.target.value"
+                                            <label
+                                                class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Seleccionar
+                                                Evento</label>
+                                            <select x-model="eventoSeleccionado" x-on:change="
+                                                            let opt = $event.target.options[$event.target.selectedIndex];
+                                                            eventoNombre = opt.text; 
+                                                            eventoTipo = opt.dataset.tipo;
+                                                            eventoColor = opt.dataset.color;
+                                                        "
                                                 class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 shadow-sm">
                                                 <option value="" disabled selected>-- Seleccione un Evento --</option>
-                                                <option value="2">Inscripciones</option>
-                                                <option value="2">Inicio de Clases</option>
-                                                <option value="2">Cierre de Notas</option>
-                                                <option value="2">Fin de Clases</option>
-                                                <option value="1">Feriado Nacional</option>
-                                                <option value="2">Actividad Administrativa</option>
-                                                <option value="3">Otros Eventos</option>
+                                                @php
+                                                    $idsRegistrados = collect($eventosRegistrados)->pluck('id')->toArray();
+                                                @endphp
+                                                @foreach($bibliotecaEventos as $evento)
+                                                    @if(!in_array($evento->id_evento, $idsRegistrados))
+                                                        <option value="{{ $evento->id_evento }}" data-tipo="{{ $evento->tipo_evento }}"
+                                                            data-color="{{ $evento->codigo_color }}">
+                                                            {{ $evento->nombre_evento }}
+                                                        </option>
+                                                    @endif
+                                                @endforeach
                                             </select>
                                         </div>
                                     </div>
@@ -398,8 +412,9 @@
                                                 class="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
                                                 <div>
                                                     <div class="flex items-center gap-2 mb-1">
-                                                        <span
-                                                            class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300">{{ $evento['tipo'] }}</span>
+                                                        <span class="w-3 h-3 rounded-full shadow-sm"
+                                                            style="background-color: {{ $evento['color'] }}"></span>
+
                                                         <span
                                                             class="text-sm font-bold text-gray-900 dark:text-gray-100">{{ $evento['nombre'] }}</span>
                                                     </div>
@@ -619,14 +634,14 @@
 
                         /* Floating Tooltip Card */
                         .sogat-tooltip-card {
-                            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-                            color: #f1f5f9;
-                            border: 1px solid rgba(99, 102, 241, 0.4);
+                            background: #ffffff;
+                            color: #1f2937;
+                            border: 1px solid #e5e7eb;
                             border-radius: 0.875rem;
                             padding: 0.75rem 1rem;
                             min-width: 200px;
                             max-width: 280px;
-                            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+                            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
                             backdrop-filter: blur(12px);
                             font-family: inherit;
                             animation: sogat-tooltip-in 0.15s ease-out forwards;
