@@ -11,8 +11,6 @@ class IndicadorLogroCreateRepo
     {
         $indicador = \App\Models\IndicadorLogro::create([
             'nombre_indicador_logro' => $data['nombre_indicador_logro'],
-            'fecha_creacion' => Carbon::now(),
-            'fecha_actualizacion' => null,
             'estatus' => '1',
         ]);
 

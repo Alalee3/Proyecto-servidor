@@ -14,7 +14,7 @@ class BibliografiaIndexRepo
             ->when($busqueda, function ($consulta, $busqueda) {
                 $consulta->where('nombre_bibliografia', 'LIKE', '%' . $busqueda . '%');
             })
-            ->orderBy('fecha_creacion', 'desc')
+            ->orderBy('id_bibliografia', 'desc')
             ->paginate($paginacion);
     }
 
@@ -23,8 +23,7 @@ class BibliografiaIndexRepo
         $bibliografia = \App\Models\Bibliografia::find($id);
         if ($bibliografia) {
             return $bibliografia->update([
-                'estatus' => '3',
-                'fecha_actualizacion' => Carbon::now()
+                'estatus' => '3'
             ]);
         }
         return false;
@@ -35,8 +34,7 @@ class BibliografiaIndexRepo
         $bibliografia = \App\Models\Bibliografia::where('id_bibliografia', $id)->where('estatus', '3')->first();
         if ($bibliografia) {
             return $bibliografia->update([
-                'estatus' => '1',
-                'fecha_actualizacion' => Carbon::now()
+                'estatus' => '1'
             ]);
         }
         return false;

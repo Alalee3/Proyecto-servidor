@@ -33,21 +33,6 @@
                                     </p>
                                 </div>
 
-                                <div>
-                                    <x-input-label value="Fecha de Creación:" />
-                                    <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
-                                        {{ \Carbon\Carbon::parse($indicador->fecha_creacion)->format('d/m/Y H:i') }}
-                                    </p>
-                                </div>
-
-                                @if($indicador->fecha_actualizacion)
-                                    <div>
-                                        <x-input-label value="Última Actualización:" />
-                                        <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
-                                            {{ \Carbon\Carbon::parse($indicador->fecha_actualizacion)->format('d/m/Y H:i') }}
-                                        </p>
-                                    </div>
-                                @endif
                             </div>
                 @else
                     <p class="text-gray-500 dark:text-gray-400">No se ha encontrado el indicador...</p>

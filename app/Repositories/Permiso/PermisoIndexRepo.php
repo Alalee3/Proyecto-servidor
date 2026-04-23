@@ -33,7 +33,6 @@ class PermisoIndexRepo
         if (!$existe) {
             DB::table('permiso')->insert([
                 'nombre_permiso' => $nombre,
-                'fecha_creacion' => Carbon::now(),
                 'estatus' => '1'
             ]);
         } else if ($existe->estatus != '1') {
@@ -62,8 +61,7 @@ class PermisoIndexRepo
         DB::table('rol_permiso')
             ->whereIn('id_permiso', $idsObsoletos)
             ->update([
-                'estatus' => '3',
-                'fecha_actualizacion' => Carbon::now()
+                'estatus' => '3'
             ]);
 
         // 3. Inactivamos el permiso en sí

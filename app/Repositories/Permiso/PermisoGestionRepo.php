@@ -44,7 +44,7 @@ class PermisoGestionRepo
             $toDeactivate = $queryToDeactivate->get();
             foreach ($toDeactivate as $rp) {
                 if ($rp->estatus != '3') {
-                    $rp->update(['estatus' => '3', 'fecha_actualizacion' => Carbon::now()]);
+                    $rp->update(['estatus' => '3']);
                 }
             }
 
@@ -58,16 +58,14 @@ class PermisoGestionRepo
                     if ($rp) {
                         if ($rp->estatus != '1') {
                             $rp->update([
-                                'estatus' => '1',
-                                'fecha_actualizacion' => Carbon::now()
+                                'estatus' => '1'
                             ]);
                         }
                     } else {
                         \App\Models\RolPermiso::create([
                             'id_rol' => $id,
                             'id_permiso' => $idPermiso,
-                            'estatus' => '1',
-                            'fecha_creacion' => Carbon::now()
+                            'estatus' => '1'
                         ]);
                     }
                 }

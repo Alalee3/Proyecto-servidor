@@ -18,10 +18,9 @@ class ContenidoIndexRepo
                 'c.titulo_contenido',
                 't.id_unidad_curricular',
                 't.titulo_tema',
-                'c.estatus',
-                'c.fecha_creacion'
+                'c.estatus'
             )
-            ->groupBy('c.id_contenido', 'c.titulo_contenido', 't.id_unidad_curricular', 't.titulo_tema', 'c.estatus', 'c.fecha_creacion')
+            ->groupBy('c.id_contenido', 'c.titulo_contenido', 't.id_unidad_curricular', 't.titulo_tema', 'c.estatus')
             ->when($busqueda, function ($query, $busqueda) {
                 // Si hay búsqueda, buscar coincidencias en la DB externa primero
                 $unidadesCoincidentes = DB::connection('external_db')->table('unidad_curricular')
@@ -37,7 +36,7 @@ class ContenidoIndexRepo
                     }
                 });
             })
-            ->orderBy('c.fecha_creacion', 'desc')
+            ->orderBy('c.id_contenido', 'desc')
             ->paginate($paginacion);
 
         // Obtener nombres de unidades curriculares desde la base de datos externa SOGC
@@ -60,8 +59,7 @@ class ContenidoIndexRepo
         $contenido = \App\Models\Contenido::find($id);
         if ($contenido) {
             return $contenido->update([
-                'estatus' => '3',
-                'fecha_actualizacion' => now()
+                'estatus' => '3'
             ]);
         }
         return false;
@@ -72,8 +70,7 @@ class ContenidoIndexRepo
         $contenido = \App\Models\Contenido::where('id_contenido', $id)->where('estatus', '3')->first();
         if ($contenido) {
             return $contenido->update([
-                'estatus' => '1',
-                'fecha_actualizacion' => now()
+                'estatus' => '1'
             ]);
         }
         return false;

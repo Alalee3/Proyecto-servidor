@@ -25,8 +25,7 @@ class EstrategiaEditRepo
         $estrategia = \App\Models\Estrategia::find($id);
         if ($estrategia) {
             return $estrategia->update([
-                'nombre_tecnica_actividad' => $datos['nombre'],
-                'fecha_actualizacion' => Carbon::now()
+                'nombre_tecnica_actividad' => $datos['nombre']
             ]);
         }
         return false;

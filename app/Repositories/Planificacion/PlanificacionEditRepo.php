@@ -70,7 +70,6 @@ class PlanificacionEditRepo
                         'numero_unidad_corte' => $corteNumero,
                         'indicador_logro_unidad_corte' => $corteData['indicadores_logro'] ?? null,
                         'estatus' => '2',
-                        'fecha_creacion' => now(),
                     ]);
                     $corteId = $corteModel->getKey();
                 }
@@ -175,7 +174,6 @@ class PlanificacionEditRepo
             if ($itemToUpdate) {
                 $itemToUpdate->update($insertData);
             } else {
-                $insertData['fecha_creacion'] = now();
                 \App\Models\DetalleEvaluacion::create($insertData);
             }
         }
@@ -197,7 +195,6 @@ class PlanificacionEditRepo
                 'id_tema_unidad' => $temaId,
                 'actividad' => $est['actividad'] ?? '',
                 'estatus' => '1',
-                'fecha_creacion' => now(),
             ]);
         }
     }
@@ -217,7 +214,6 @@ class PlanificacionEditRepo
                 'id_unidad_corte' => $corteId,
                 'id_contenido' => $contenidoId,
                 'estatus' => '1',
-                'fecha_creacion' => now(),
             ]);
         }
     }
@@ -237,7 +233,6 @@ class PlanificacionEditRepo
                 'id_unidad_corte' => $corteId,
                 'id_bibliografia' => $bibId,
                 'estatus' => '1',
-                'fecha_creacion' => now(),
             ]);
         }
     }

@@ -32,7 +32,6 @@ class ContenidoCreateRepo
             // Insertar el contenido principal
             $contenido = \App\Models\Contenido::create([
                 'titulo_contenido' => $data['titulo_contenido'],
-                'fecha_creacion' => Carbon::now(),
                 'estatus' => '1',
             ]);
             $idContenido = $contenido->id_contenido;
@@ -42,7 +41,6 @@ class ContenidoCreateRepo
                 DB::table('detalle_objetivo')->insert([
                     'id_contenido' => $idContenido,
                     'id_objetivo' => $idObjetivo,
-                    'fecha_creacion' => Carbon::now(),
                     'estatus' => '1',
                 ]);
             }

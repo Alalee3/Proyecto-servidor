@@ -14,9 +14,7 @@ class EstrategiaCreateRepo
     {
         $estrategia = \App\Models\Estrategia::create([
             'nombre_tecnica_actividad' => $datos['nombre'],
-            'estatus' => '1',
-            'fecha_creacion' => Carbon::now(),
-            'fecha_actualizacion' => Carbon::now()
+            'estatus' => '1'
         ]);
 
         return $estrategia->id_tecnica_actividad;
