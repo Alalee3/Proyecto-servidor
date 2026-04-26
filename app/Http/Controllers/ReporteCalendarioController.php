@@ -11,7 +11,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class ReporteCalendarioController extends Controller
 {
     /**
-     * Genera el reporte del último calendario académico.
+     * Genera el reporte del último calendario académico activo.
      */
     public function reporteUltimoCalendario()
     {
@@ -21,35 +21,63 @@ class ReporteCalendarioController extends Controller
             ->first();
 
         if (!$calendario) {
-            return redirect()->back()->with('error', 'No existe ningún calendario académico para imprimir.');
+            return redirect()->back()->with('error', 'No existe ningún calendario académico activo para imprimir.');
         }
 
+        return $this->generarExcel($calendario);
+    }
+
+    /**
+     * Genera el reporte de un calendario específico por ID.
+     */
+    public function reporteCalendario($id)
+    {
+        $calendario = DB::table('calendario_academico')
+            ->where('id_calendario_academico', $id)
+            ->first();
+
+        if (!$calendario) {
+            return redirect()->back()->with('error', 'El calendario solicitado no existe.');
+        }
+
+        return $this->generarExcel($calendario);
+    }
+
+    /**
+     * Lógica compartida para generar el archivo Excel.
+     */
+    private function generarExcel($calendario)
+    {
         // Determinar el año a mostrar (el año del inicio del calendario)
         $year = Carbon::parse($calendario->dia_inicio_calendario_academico)->year;
 
         // Obtener días con eventos para este año
         $eventosRaw = DB::table('evento')
-            ->whereYear('dia_inicio_evento', $year)
-            ->where('estatus', 1)
+            ->join('detalle_evento', 'evento.id_evento', '=', 'detalle_evento.id_evento')
+            ->leftJoin('color', 'evento.id_color', '=', 'color.id_color')
+            ->select(
+                'evento.id_evento',
+                'evento.nombre_evento as descripcion_evento',
+                'detalle_evento.dia_inicio_detalle_evento as dia_inicio_evento',
+                'detalle_evento.dia_fin_detalle_evento as dia_fin_evento',
+                'color.codigo_color'
+            )
+            ->where('detalle_evento.id_calendario_academico', $calendario->id_calendario_academico)
+            ->where('evento.estatus', 1)
             ->get();
 
         $eventDays = [];
         $eventColors = [];
-        $palette = [
-            '#007BFF', '#28A745', '#DC3545', '#FD7E14', '#6610F2', 
-            '#E83E8C', '#20C997', '#17A2B8', '#FFC107', '#6F42C1',
-            '#004085', '#155724', '#721C24', '#856404', '#0C5460'
-        ];
+        $palette = ['#007BFF', '#28A745', '#DC3545', '#FD7E14', '#6610F2'];
 
-        foreach($eventosRaw as $index => $eventoItem) {
-            // Asignar color único al evento (si hay muchos repetirá paleta)
-            $color = $palette[$index % count($palette)];
+        foreach ($eventosRaw as $index => $eventoItem) {
+            $color = $eventoItem->codigo_color ?? $palette[$index % count($palette)];
             $eventColors[$eventoItem->id_evento] = $color;
 
             $start = Carbon::parse($eventoItem->dia_inicio_evento);
             $end = Carbon::parse($eventoItem->dia_fin_evento);
-            
-            while($start <= $end) {
+
+            while ($start <= $end) {
                 if ($start->year == $year) {
                     $eventDays[$start->format('Y-m-d')] = $eventoItem->id_evento;
                 }

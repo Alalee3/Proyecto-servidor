@@ -107,6 +107,7 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     Route::get('planificacion/reporte-general', [\App\Http\Controllers\ReportePlanificacionController::class, 'reporteGeneral'])->middleware('can:listar-planificacion')->name('planificacion.reporte.general');
     Route::get('planificacion/reporte-detalle/{id}', [\App\Http\Controllers\ReportePlanificacionController::class, 'reporteDetalle'])->middleware('can:ver-planificacion')->name('planificacion.reporte.detalle');
     Route::get('calendario/reporte', [\App\Http\Controllers\ReporteCalendarioController::class, 'reporteUltimoCalendario'])->middleware('can:listar-calendario')->name('calendario.reporte');
+    Route::get('calendario/reporte/{id}', [\App\Http\Controllers\ReporteCalendarioController::class, 'reporteCalendario'])->middleware('can:listar-calendario')->name('calendario.reporte.especifico');
 
     Route::get('indicador-logro/list', ListIndicadorLogro::class)->middleware('can:listar-indicador-logro')->name('indicador-logro/listar');
     Route::get('indicador-logro/create', CreateIndicadorLogro::class)->middleware('can:crear-indicador-logro')->name('indicador-logro/crear');
@@ -146,6 +147,7 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     // Rutas para Eventos
     Route::get('evento/list', ListEvento::class)->middleware('can:listar-evento')->name('evento/listar');
     Route::get('evento/create', CreateEvento::class)->middleware('can:crear-evento')->name('evento/crear');
+    Route::get('evento/update/{id}', UpdateEvento::class)->middleware('can:editar-evento')->name('evento/update');
     Route::get('evento/show/{id}', ShowEvento::class)->middleware('can:ver-evento')->name('evento/show');
 
     // Rutas para Calendario Académico

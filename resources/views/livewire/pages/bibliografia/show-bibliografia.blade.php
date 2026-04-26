@@ -34,12 +34,6 @@
                                     </p>
                                 </div>
 
-                                <div>
-                                    <x-input-label value="Fecha de Creación:" />
-                                    <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
-                                        {{ \Carbon\Carbon::parse($bibliografia->fecha_creacion)->format('d/m/Y H:i') }}
-                                    </p>
-                                </div>
                             </div>
                 @else
                     <p class="text-gray-500 dark:text-gray-400">No se ha encontrado la bibliografía...</p>

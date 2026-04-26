@@ -3,7 +3,6 @@
 namespace App\Repositories\TecnicaEvaluacion;
 
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class TecnicaEvaluacionIndexRepo
 {
@@ -30,7 +29,6 @@ class TecnicaEvaluacionIndexRepo
         if ($evaluacion) {
             return $evaluacion->update([
                 'estatus' => '3',
-                'fecha_actualizacion' => Carbon::now()
             ]);
         }
         return false;
@@ -45,7 +43,6 @@ class TecnicaEvaluacionIndexRepo
         if ($evaluacion) {
             return $evaluacion->update([
                 'estatus' => '1',
-                'fecha_actualizacion' => Carbon::now()
             ]);
         }
         return false;

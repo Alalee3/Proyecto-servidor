@@ -8,21 +8,20 @@ class EventoIndexRepo
 {
     public function listar($busqueda = '', $paginacion = 5)
     {
-        $eventos = DB::table('evento')
-            ->leftJoin('calendario_academico', 'evento.id_calendario', '=', 'calendario_academico.id_calendario_academico')
+        $eventos = DB::table('evento as e')
+            ->leftJoin('color as col', 'e.id_color', '=', 'col.id_color')
             ->select(
-                'evento.id_evento',
-                'evento.id_calendario',
-                'evento.descripcion_evento',
-                'evento.dia_inicio_evento',
-                'evento.dia_fin_evento',
-                'evento.tipo_evento',
-                'evento.estatus'
+                'e.id_evento',
+                'e.nombre_evento',
+                'col.codigo_color as color',
+                'col.nombre_color',
+                'e.tipo_evento',
+                'e.estatus'
             )
             ->when($busqueda, function ($consulta, $busqueda) {
-                $consulta->where('evento.descripcion_evento', 'LIKE', '%' . $busqueda . '%');
+                $consulta->where('e.nombre_evento', 'LIKE', '%' . $busqueda . '%');
             })
-            ->orderBy('evento.dia_inicio_evento', 'desc')
+            ->orderBy('e.id_evento', 'desc')
             ->paginate($paginacion);
 
         return $eventos;
@@ -48,5 +47,17 @@ class EventoIndexRepo
             ]);
         }
         return false;
+    }
+
+    /**
+     * Obtiene todos los eventos activos con sus colores (Biblioteca de plantillas).
+     */
+    public function obtenerBiblioteca()
+    {
+        return DB::table('evento as e')
+            ->join('color as c', 'e.id_color', '=', 'c.id_color')
+            ->where('e.estatus', 1)
+            ->select('e.id_evento', 'e.nombre_evento', 'e.tipo_evento', 'c.codigo_color')
+            ->get();
     }
 }

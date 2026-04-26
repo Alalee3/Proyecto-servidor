@@ -11,9 +11,7 @@ class RecursoCreateRepo
     {
         $recurso = \App\Models\Recurso::create([
             'nombre_recurso' => $datos['nombre'],
-            'estatus' => '1',
-            'fecha_creacion' => Carbon::now(),
-            'fecha_actualizacion' => Carbon::now()
+            'estatus' => '1'
         ]);
 
         return $recurso->id_recurso;

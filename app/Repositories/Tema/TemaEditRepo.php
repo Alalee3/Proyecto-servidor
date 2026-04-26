@@ -41,14 +41,13 @@ class TemaEditRepo
                     'id_unidad_curricular' => $data['id_unidad_curricular'],
                     'unidad_tema' => $data['unidad_tema'],
                     'titulo_tema' => $data['titulo_tema'],
-                    'fecha_actualizacion' => Carbon::now(),
                 ]);
             }
             // Manejar los objetivos (Eliminar los que ya no están y actualizar/insertar nuevos)
             // Para simplificar en este entorno, inhabilitamos los actuales y re-insertamos los que vienen del form
             DB::table('objetivo')
                 ->where('id_tema_unidad', $id)
-                ->update(['estatus' => '3', 'fecha_actualizacion' => Carbon::now()]);
+                ->update(['estatus' => '3']);
 
             foreach ($data['objetivos'] as $objetivo) {
                 // Convertir a array si es un objeto para evitar el error "Cannot use object of type stdClass as array"
@@ -58,7 +57,6 @@ class TemaEditRepo
                     DB::table('objetivo')->insert([
                         'id_tema_unidad' => $id,
                         'titulo_objetivo' => $objArray['titulo_objetivo'],
-                        'fecha_creacion' => Carbon::now(),
                         'estatus' => '1',
                     ]);
                 }

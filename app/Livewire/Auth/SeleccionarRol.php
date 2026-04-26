@@ -10,6 +10,7 @@ use Livewire\Attributes\Layout;
 use App\Repositories\Calendario\CalendarioCreateRepo;
 use App\Models\CalendarioAcademico;
 use App\Repositories\Evento\EventoCreateRepo;
+use App\Repositories\Evento\EventoIndexRepo;
 use App\Livewire\Forms\Auth\CalendarioForm;
 use App\Repositories\UsuarioRepository;
 use Carbon\Carbon;
@@ -26,6 +27,7 @@ class SeleccionarRol extends Component
     // Campos del formulario de calendario
     public CalendarioForm $form;
     public $eventosRegistrados = [];
+    public $bibliotecaEventos = [];
     public $paso = 1; // Wizard step
 
     #[Layout('layouts.guest')]
@@ -63,24 +65,37 @@ class SeleccionarRol extends Component
 
             if (!$this->tieneRol3) {
                 $this->sistemaInactivo = true;
+            } else {
+                // Si tiene rol 3, cargar la biblioteca de eventos (templates) con sus colores desde el repositorio
+                $eventoRepo = new EventoIndexRepo();
+                $this->bibliotecaEventos = $eventoRepo->obtenerBiblioteca();
             }
         }
     }
 
-    public function agregarEvento($inicio, $fin, $nombre, $tipo)
+    public function agregarEvento($inicio, $fin, $id_evento, $nombre, $tipo, $color)
     {
         // Validar el nombre y tipo usando las reglas definidas en el form
         $this->form->validarEvento($nombre, $tipo);
 
-        if (empty($nombre) || empty($tipo)) {
+        if (empty($id_evento) || empty($nombre) || empty($tipo)) {
             return;
         }
 
+        // Validación para evitar seleccionar un evento dos veces
+        foreach ($this->eventosRegistrados as $evento) {
+            if (isset($evento['id']) && $evento['id'] == $id_evento) {
+                return; // Ya está registrado
+            }
+        }
+
         $this->eventosRegistrados[] = [
+            'id' => $id_evento,
             'inicio' => $inicio,
             'fin' => $fin,
             'nombre' => $nombre,
             'tipo' => $tipo,
+            'color' => $color,
         ];
     }
 
@@ -94,7 +109,7 @@ class SeleccionarRol extends Component
 
     public function removerEvento($index)
     {
-        if(isset($this->eventosRegistrados[$index])) {
+        if (isset($this->eventosRegistrados[$index])) {
             unset($this->eventosRegistrados[$index]);
             $this->eventosRegistrados = array_values($this->eventosRegistrados);
         }
@@ -119,7 +134,8 @@ class SeleccionarRol extends Component
     {
         // Verificación de seguridad: solo rol 3
         $cedula = session('temp_cedula');
-        if (!$cedula) return;
+        if (!$cedula)
+            return;
 
         $usuarioRepo = new UsuarioRepository();
         $tieneRol3 = $usuarioRepo->tieneRol3($cedula);
@@ -145,7 +161,7 @@ class SeleccionarRol extends Component
         try {
             $this->form->validate();
             $repo = new CalendarioCreateRepo();
-            
+
             $exito = $repo->crearConEventos([
                 'dia_inicio_calendario_academico' => $this->form->dia_inicio_calendario_academico,
                 'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
@@ -169,7 +185,8 @@ class SeleccionarRol extends Component
     {
         $cedula = session('temp_cedula');
 
-        if (!$cedula) return;
+        if (!$cedula)
+            return;
 
         // Verificar que haya calendario activo antes de permitir seleccionar rol
         $repo = new CalendarioCreateRepo();

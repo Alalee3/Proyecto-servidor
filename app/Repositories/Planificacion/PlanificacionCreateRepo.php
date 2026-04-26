@@ -205,8 +205,7 @@ class PlanificacionCreateRepo
         return \App\Models\Objetivo::create([
             'titulo_objetivo' => $titulo,
             'id_tema_unidad' => $idTemaUnidad,
-            'estatus' => '1',
-            'fecha_creacion' => now(),
+            'estatus' => '1'
         ]);
     }
 
@@ -239,7 +238,6 @@ class PlanificacionCreateRepo
                     'id_planificacion' => $planificacionId,
                     'numero_unidad_corte' => $unidad['numero'],
                     'indicador_logro_unidad_corte' => $unidad['indicadores_logro'] ?? null,
-                    'fecha_creacion' => now(),
                     'estatus' => '2',
                 ]);
                 $unidadId = $unidadCorte->getKey();
@@ -250,7 +248,6 @@ class PlanificacionCreateRepo
                             \App\Models\DetalleContenido::create([
                                 'id_unidad_corte' => $unidadId,
                                 'id_contenido' => $contenido['contenido_id'],
-                                'fecha_creacion' => now(),
                                 'estatus' => '1',
                             ]);
                         }
@@ -272,7 +269,6 @@ class PlanificacionCreateRepo
                                 DB::table('detalle_recurso')->insert([
                                     'id_unidad_corte' => $unidadId,
                                     'id_recurso' => $recurso['recurso_id'],
-                                    'fecha_creacion' => now(),
                                     'estatus' => '1',
                                 ]);
                             }
@@ -291,7 +287,6 @@ class PlanificacionCreateRepo
                             'integrantes_detalle_evaluacion' => ($evaluacion['forma_participacion'] == '2') ? ($evaluacion['integrantes'] ?? null) : 1, // 1 if individual
                             'fecha_evaluacion_detalle_evaluacion' => $evaluacion['fecha_evaluacion'],
                             'forma_participacion_detalle_evaluacion' => $evaluacion['forma_participacion'],
-                            'fecha_creacion' => now(),
                             'estatus' => '2',
                         ]);
                     }
@@ -303,7 +298,6 @@ class PlanificacionCreateRepo
                         \App\Models\DetalleBibliografia::create([
                             'id_unidad_corte' => $unidadId,
                             'id_bibliografia' => $bibliografia['bibliografia_id'],
-                            'fecha_creacion' => now(),
                             'estatus' => '1',
                         ]);
                     }

@@ -48,21 +48,19 @@ class ContenidoEditRepo
             $contenidoUpdated = \App\Models\Contenido::find($id);
             if ($contenidoUpdated) {
                 $contenidoUpdated->update([
-                    'titulo_contenido' => $data['titulo_contenido'],
-                    'fecha_actualizacion' => Carbon::now(),
+                    'titulo_contenido' => $data['titulo_contenido']
                 ]);
             }
 
             // Sincronizar objetivos en tabla de detalles
             DB::table('detalle_objetivo')
                 ->where('id_contenido', $id)
-                ->update(['estatus' => '3', 'fecha_actualizacion' => Carbon::now()]);
+                ->update(['estatus' => '3']);
 
             foreach ($data['id_objetivo'] as $idObjetivo) {
                 DB::table('detalle_objetivo')->insert([
                     'id_contenido' => $id,
                     'id_objetivo' => $idObjetivo,
-                    'fecha_creacion' => Carbon::now(),
                     'estatus' => '1',
                 ]);
             }

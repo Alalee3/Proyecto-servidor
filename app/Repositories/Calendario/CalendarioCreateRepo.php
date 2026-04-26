@@ -13,7 +13,6 @@ class CalendarioCreateRepo
             'semana_calendario_academico' => $data['semana_calendario_academico'],
             'dia_inicio_calendario_academico' => $data['dia_inicio_calendario_academico'],
             'dia_fin_calendario_academico' => $data['dia_fin_calendario_academico'],
-            'fecha_creacion' => Carbon::now(),
             'estatus' => '1',
         ]);
 
@@ -52,14 +51,13 @@ class CalendarioCreateRepo
             $id = $this->crear($data);
 
             if ($id && count($eventos) > 0) {
-                $eventoRepo = new \App\Repositories\Evento\EventoCreateRepo();
                 foreach ($eventos as $evento) {
-                    $eventoRepo->crear([
-                        'id_calendario' => $id,
-                        'dia_inicio_evento' => $evento['inicio'],
-                        'dia_fin_evento' => $evento['fin'],
-                        'descripcion_evento' => $evento['nombre'],
-                        'tipo_evento' => $evento['tipo'],
+                    DB::table('detalle_evento')->insert([
+                        'id_calendario_academico' => $id,
+                        'id_evento' => $evento['id'],
+                        'dia_inicio_detalle_evento' => $evento['inicio'],
+                        'dia_fin_detalle_evento' => $evento['fin'],
+                        'estatus' => '1',
                     ]);
                 }
             }

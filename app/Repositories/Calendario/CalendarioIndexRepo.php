@@ -16,7 +16,8 @@ class CalendarioIndexRepo
             ->when($busqueda, function ($consulta, $busqueda) {
                 $consulta->where('semana_calendario_academico', 'LIKE', '%' . $busqueda . '%');
             })
-            ->orderBy('semana_calendario_academico', 'asc')
+            ->orderBy('estatus', 'asc') // Activos (1) primero, Inactivos (3) después
+            ->orderBy('id_calendario_academico', 'desc')
             ->paginate($paginacion);
 
         return $calendarios;

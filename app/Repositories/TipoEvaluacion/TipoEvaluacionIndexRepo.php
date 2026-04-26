@@ -31,7 +31,6 @@ class TipoEvaluacionIndexRepo
         if ($tipoEvaluacion) {
             return $tipoEvaluacion->update([
                 'estatus' => '3',
-                'fecha_actualizacion' => Carbon::now()
             ]);
         }
         return false;
@@ -46,7 +45,6 @@ class TipoEvaluacionIndexRepo
         if ($tipoEvaluacion) {
             return $tipoEvaluacion->update([
                 'estatus' => '1',
-                'fecha_actualizacion' => Carbon::now()
             ]);
         }
         return false;

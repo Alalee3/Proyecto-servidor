@@ -14,9 +14,7 @@ class TecnicaEvaluacionCreateRepo
     {
         $evaluacion = \App\Models\TecnicaEvaluacion::create([
             'nombre_tecnica_evaluacion' => $datos['nombre'],
-            'estatus' => '1',
-            'fecha_creacion' => Carbon::now(),
-            'fecha_actualizacion' => Carbon::now()
+            'estatus' => '1'
         ]);
 
         return $evaluacion->id_tecnica_evaluacion;

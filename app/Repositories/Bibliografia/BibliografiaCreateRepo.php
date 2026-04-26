@@ -11,7 +11,6 @@ class BibliografiaCreateRepo
     {
         $bibliografia = \App\Models\Bibliografia::create([
             'nombre_bibliografia' => $datos['nombre'],
-            'fecha_creacion' => Carbon::now(),
             'estatus' => '1'
         ]);
 
