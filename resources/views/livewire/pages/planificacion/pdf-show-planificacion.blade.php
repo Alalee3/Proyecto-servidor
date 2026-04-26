@@ -187,18 +187,18 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($planificacion->cortes as $corte)
+            @foreach($planificacion->unidades as $unidad)
                 <tr>
                     {{-- Semana --}}
                     <td class="content-cell">
-                        @foreach($corte['evaluaciones'] as $eval)
+                        @foreach($unidad['evaluaciones'] as $eval)
                             {{ \Carbon\Carbon::parse($eval['fecha_evaluacion'])->format('d/m/y') }}<br>
                         @endforeach
                     </td>
 
                     {{-- Temática --}}
                     <td>
-                        @foreach($corte['contenidos'] as $cont)
+                        @foreach($unidad['contenidos'] as $cont)
                             <strong>{{ $cont['titulo_contenido'] }}</strong><br>
                             <small>Tema: {{ $cont['titulo_tema'] ?? '' }}</small>
                             <br><br>
@@ -207,33 +207,33 @@
 
                     {{-- Estrategia --}}
                     <td>
-                        @foreach($corte['estrategias'] as $est)
+                        @foreach($unidad['estrategias'] as $est)
                             - {{ $est['titulo_tema'] ?? '' }}@if(!empty($est['actividad'])): {{ $est['actividad'] }}@endif<br>
                         @endforeach
                     </td>
 
                     {{-- Recursos --}}
                     <td>
-                        @foreach($corte['recursos'] as $rec)
+                        @foreach($unidad['recursos'] as $rec)
                             - {{ $rec['recurso'] }}<br>
                         @endforeach
                     </td>
 
                     {{-- Indicadores --}}
                     <td>
-                        {{ $corte['indicadores_logros'] ?? '' }}
+                        {{ $unidad['indicadores_logro'] ?? '' }}
                     </td>
 
                     {{-- Técnicas / Instrumentos --}}
                     <td>
-                        @foreach($corte['evaluaciones'] as $eval)
+                        @foreach($unidad['evaluaciones'] as $eval)
                             - {{ $eval['tecnica'] }} ({{ $eval['evaluacion'] }})<br>
                         @endforeach
                     </td>
 
                     {{-- Forma de Participación --}}
                     <td class="content-cell">
-                        @foreach($corte['evaluaciones'] as $eval)
+                        @foreach($unidad['evaluaciones'] as $eval)
                             @if($eval['forma_participacion'] == 1) Individual
                             @elseif($eval['forma_participacion'] == 2) Grupal ({{ $eval['integrantes'] ?? '' }})
                             @endif
@@ -243,20 +243,20 @@
 
                     {{-- Ponderación --}}
                     <td class="content-cell">
-                        @php $totalCorte = 0; @endphp
-                        @foreach($corte['evaluaciones'] as $eval)
+                        @php $totalUnidad = 0; @endphp
+                        @foreach($unidad['evaluaciones'] as $eval)
                             {{ $eval['ponderacion'] }}%<br>
-                            @php $totalCorte += $eval['ponderacion']; @endphp
+                            @php $totalUnidad += $eval['ponderacion']; @endphp
                         @endforeach
                         <hr>
-                        <strong>TOTAL {{ $totalCorte }}%</strong>
+                        <strong>TOTAL {{ $totalUnidad }}%</strong>
                     </td>
 
                     {{-- Bibliografía --}}
                     <td>
-                        @if($loop->first)
-                            @foreach($planificacion->bibliografias as $bib)
-                                {{ $bib['bibliografia'] }}<br><br>
+                        @if(!empty($unidad['bibliografias']))
+                            @foreach($unidad['bibliografias'] as $bib)
+                                - {{ $bib['bibliografia'] ?? '' }}<br>
                             @endforeach
                         @endif
                     </td>

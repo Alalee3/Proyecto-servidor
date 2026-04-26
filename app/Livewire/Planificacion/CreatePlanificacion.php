@@ -30,6 +30,9 @@ class CreatePlanificacion extends Component
     public $newObjetivoNombre = '';
     public $selectedTemaIdForObjetivo = null;
 
+    public $showBiblioModal = false;
+    public $newBiblioNombre = '';
+
     protected $listeners = [
         'itemCreated' => 'refreshMasterLists',
     ];
@@ -169,8 +172,18 @@ class CreatePlanificacion extends Component
     {
         $field = str_replace('form.', '', $propertyName);
 
-        // Si cambia la forma de participación, revalidar integrantes
-        if (str_contains($field, 'forma_participacion')) {
+        if (str_contains($field, 'ponderacion') || str_contains($field, 'forma_participacion')) {
+            // Si cambia una ponderación o forma de participación, validamos toda la unidad
+            // para que los errores de suma total (25%) se actualicen al instante.
+            if (preg_match('/unidades\.(\d+)\./', $field, $matches)) {
+                $index = $matches[1];
+                try {
+                    $this->validateOnly("form.unidades.$index.total_ponderacion_check");
+                } catch (\Illuminate\Validation\ValidationException $e) {
+                    // Ignoramos la excepción aquí para que no detenga el flujo, 
+                    // ya que solo queremos que los errores se disparen en la UI.
+                }
+            }
             $this->form->validate();
         } else {
             $this->form->validateOnly($field);
@@ -191,7 +204,8 @@ class CreatePlanificacion extends Component
             'estrategias' => [['tecnica_actividad_id' => '', 'actividad' => '', 'recursos' => [['recurso_id' => '']]]],
             'evaluaciones' => [['fecha_evaluacion' => '', 'evaluacion_id' => '', 'ponderacion' => 5, 'tecnica_id' => '', 'forma_participacion' => '', 'integrantes' => null]],
             'bibliografias' => [['bibliografia_id' => '']],
-            'indicadores_logro' => ''
+            'indicadores_logro' => '',
+            'total_ponderacion_check' => 0
         ];
     }
 
@@ -301,10 +315,7 @@ class CreatePlanificacion extends Component
             );
 
             session()->flash('message', 'Planificación guardada correctamente.');
-            $this->form->reset(['unidades', 'id_profesor_asignado', 'tipos_seccion']);
-            $this->openUnidad = 0;
-            $this->inicializarUnidades();
-            $this->dispatch('scroll-to-top');
+            return redirect()->to('/planificacion/list');
         } catch (\Exception $e) {
             session()->flash('error', 'Error al guardar la planificación: ' . $e->getMessage());
         }
@@ -312,11 +323,17 @@ class CreatePlanificacion extends Component
 
     public function validarYAvanzar($index)
     {
-        // Validar toda la forma antes de permitir avanzar para asegurar integridad total
-        // de la unidad actual que se está intentando dejar.
-        $this->form->validate();
+        $allRules = $this->form->rules();
+        $filteredRules = [];
+        foreach (['id_profesor_asignado', 'tipos_seccion'] as $globalField) {
+            if (isset($allRules[$globalField])) $filteredRules["form.$globalField"] = $allRules[$globalField];
+        }
+        $unitPrefix = "unidades.$index.";
+        foreach ($allRules as $key => $rule) {
+            if (str_starts_with($key, $unitPrefix)) $filteredRules["form.$key"] = $rule;
+        }
+        $this->validate($filteredRules);
 
-        // Si sobrevive al validate, avanzamos
         $this->openUnidad = $index + 1;
         $this->dispatch('scroll-to-top');
     }
@@ -326,6 +343,32 @@ class CreatePlanificacion extends Component
         if ($index > 0) {
             $this->openUnidad = $index - 1;
             $this->dispatch('scroll-to-top');
+        }
+    }
+
+    public function saveProgress($index)
+    {
+        // Validar datos básicos necesarios
+        if (!$this->form->id_profesor_asignado || empty($this->form->tipos_seccion)) {
+            session()->flash('error', 'Debe seleccionar una asignatura y al menos un tipo de sección antes de guardar el progreso.');
+            return;
+        }
+
+        try {
+            // Guardamos con estatus '3' (Incompleta/Borrador)
+            $this->planificacionRepository->savePlanificacionTransaccion(
+                $this->form->id_profesor_asignado,
+                $this->form->unidades,
+                $this->form->tipos_seccion,
+                '4' // Incompleta
+            );
+
+            session()->flash('message', 'Progreso de la unidad ' . ($index + 1) . ' guardado exitosamente como borrador.');
+            
+            // Redirigir al gestor de planificaciones usando el path correcto
+            return redirect()->to('/planificacion/list');
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al guardar el progreso: ' . $e->getMessage());
         }
     }
 
@@ -378,6 +421,41 @@ class CreatePlanificacion extends Component
             $this->closeObjetivoModal();
         } catch (\Exception $e) {
             session()->flash('error', 'Error al guardar el objetivo: ' . $e->getMessage());
+        }
+    }
+
+    public function openBiblioModal()
+    {
+        $this->newBiblioNombre = '';
+        $this->showBiblioModal = true;
+    }
+
+    public function closeBiblioModal()
+    {
+        $this->showBiblioModal = false;
+        $this->reset(['newBiblioNombre']);
+    }
+
+    public function saveBiblio()
+    {
+        $this->validate([
+            'newBiblioNombre' => 'required|min:3|max:1000',
+        ], [
+            'newBiblioNombre.required' => 'El nombre de la bibliografía es obligatorio.',
+            'newBiblioNombre.min' => 'El nombre debe tener al menos 3 caracteres.',
+            'newBiblioNombre.max' => 'El nombre es demasiado largo.',
+        ]);
+
+        try {
+            $this->planificacionRepository->saveNuevaBibliografia($this->newBiblioNombre);
+
+            // Recargar bibliografías
+            $this->bibliografiasMaestras = $this->planificacionRepository->select_bibliografias();
+
+            session()->flash('message', 'Bibliografía creada correctamente.');
+            $this->closeBiblioModal();
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al guardar la bibliografía: ' . $e->getMessage());
         }
     }
 }

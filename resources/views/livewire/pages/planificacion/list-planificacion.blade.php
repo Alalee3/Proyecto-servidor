@@ -77,6 +77,8 @@
                                         <span class="bg-blue-100 text-blue-600 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-200">Pendiente</span>
                                     @elseif($planificacion->estatus == 3)
                                         <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Rechazada</span>
+                                    @elseif($planificacion->estatus == 4)
+                                        <span class="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-amber-900 dark:text-amber-300">Incompleta</span>
                                     @else
                                         <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-900 dark:text-gray-300">Desconocido</span>
                                     @endif
@@ -93,13 +95,18 @@
                                             </svg>
                                             Ver
                                         </a>
-                                        <!-- Editar -->
+                                        <!-- Editar / Continuar -->
                                         <a href="{{ route('planificaciones.update', $planificacion->planificacion_id) }}"
                                             class="flex items-center gap-1 bg-[#f0f0f0] border border-[#767676] text-black text-xs font-semibold px-2.5 py-1 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
-                                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                                            </svg>
-                                            Editar
+                                            @if($planificacion->estatus == 4)
+                                                <span class="material-icons text-sm">play_arrow</span>
+                                                Continuar
+                                            @else
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
+                                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                                </svg>
+                                                Editar
+                                            @endif
                                         </a>
                                     </div>
                                 </td>
@@ -153,6 +160,8 @@
                                 <span class="bg-blue-100 text-blue-600 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-200">Pendiente</span>
                             @elseif($planificacion->estatus == 3)
                                 <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Rechazada</span>
+                            @elseif($planificacion->estatus == 4)
+                                <span class="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-amber-900 dark:text-amber-300">Incompleta</span>
                             @else
                                 <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-900 dark:text-gray-300">Desconocido</span>
                             @endif
@@ -169,10 +178,15 @@
                             </a>
                             <a href="{{ route('planificaciones.update', $planificacion->planificacion_id) }}"
                                 class="flex items-center gap-1 bg-[#f0f0f0] border border-[#767676] text-black text-xs font-semibold px-2.5 py-1 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
-                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                                </svg>
-                                Editar
+                                @if($planificacion->estatus == 4)
+                                    <span class="material-icons text-sm">play_arrow</span>
+                                    Continuar
+                                @else
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
+                                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                    </svg>
+                                    Editar
+                                @endif
                             </a>
                         </div>
                     </div>

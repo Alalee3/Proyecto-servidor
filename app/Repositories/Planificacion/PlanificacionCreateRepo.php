@@ -209,14 +209,24 @@ class PlanificacionCreateRepo
         ]);
     }
 
-    public function savePlanificacionTransaccion($idProfesorAsignado, $unidades, $tiposSeccion = [])
+    public function saveNuevaBibliografia($nombre)
+    {
+        return \App\Models\Bibliografia::create([
+            'nombre_bibliografia' => $nombre,
+            'estatus' => '1',
+            'fecha_creacion' => now(),
+        ]);
+    }
+
+    public function savePlanificacionTransaccion($idProfesorAsignado, $unidades, $tiposSeccion = [], $estatus = '2')
     {
         DB::beginTransaction();
 
         try {
             $planificacionData = [
                 'id_profesor_asignado' => $idProfesorAsignado,
-                'estatus' => '2', // Pendiente por defecto
+                'fecha_creacion' => now(),
+                'estatus' => $estatus,
                 'tipo_planificacion' => json_encode($tiposSeccion), // Almacenar los tipos de clase/sección (Regular, PER, Repitencia)
             ];
 
@@ -244,20 +254,20 @@ class PlanificacionCreateRepo
                     }
                 }
 
-                foreach ($unidad['estrategias'] as $estrategia) {
-                    if (!empty($estrategia['tecnica_actividad_id']) && !empty($estrategia['actividad'])) {
-                        $detalleEstrategia = \App\Models\DetalleEstrategia::create([
-                            'id_unidad_corte' => $unidadId,
-                            'id_tecnica_actividad' => $estrategia['tecnica_actividad_id'],
-                            'actividad' => $estrategia['actividad'],
-                            'estatus' => '1',
-                        ]);
-                        $estrategiaId = $detalleEstrategia->getKey();
+                // Guardar Estrategia (Técnica y Actividad) directamente en unidad_corte según el esquema de la DB
+                if (!empty($unidad['estrategias'])) {
+                    $estrategiaPrincipal = $unidad['estrategias'][0];
+                    $unidadCorte->update([
+                        'id_tecnica_actividad' => (isset($estrategiaPrincipal['tecnica_actividad_id']) && is_numeric($estrategiaPrincipal['tecnica_actividad_id'])) ? $estrategiaPrincipal['tecnica_actividad_id'] : null,
+                        'descripcion_actividad_unidad_corte' => $estrategiaPrincipal['actividad'] ?: null,
+                    ]);
 
+                    // Guardar Recursos asociados a la unidad en detalle_recurso
+                    foreach ($unidad['estrategias'] as $estrategia) {
                         foreach ($estrategia['recursos'] as $recurso) {
                             if (!empty($recurso['recurso_id'])) {
-                                \App\Models\DetalleEstrategiaRecurso::create([
-                                    'id_detalle_estrategia' => $estrategiaId,
+                                DB::table('detalle_recurso')->insert([
+                                    'id_unidad_corte' => $unidadId,
                                     'id_recurso' => $recurso['recurso_id'],
                                     'estatus' => '1',
                                 ]);

@@ -15,14 +15,14 @@ class PlanificacionIndexRepo
         $dbSogc = config('database.connections.emulacion_sogac_2.database');
 
         $query = DB::table('planificacion as p')
-            ->join("$dbSogc.seccion_unidad_docente as sud", 'p.id_profesor_asignado', '=', 'sud.sud_codigo')
-            ->join("$dbSogc.usuario as u", 'sud.sud_ced_docente', '=', 'u.usu_cedula')
-            ->join("$dbSogc.persona as per", 'u.usu_cedula', '=', 'per.per_cedula')
-            ->join("$dbSogc.unidad_curricular as uc", 'sud.sud_cod_unidad', '=', 'uc.ucu_codigo')
-            ->join("$dbSogc.seccion as s", 'sud.sud_cod_seccion', '=', 's.sec_codigo')
-            ->join("$dbSogc.malla as ma", 'uc.ucu_cod_malla', '=', 'ma.mal_codigo')
-            ->join("$dbSogc.programa as pr", 'ma.mal_cod_programa', '=', 'pr.pro_codigo')
-            ->join("$dbSogc.trayecto as tr", 'ma.mal_cod_trayecto', '=', 'tr.tra_codigo')
+            ->leftJoin("$dbSogc.seccion_unidad_docente as sud", 'p.id_profesor_asignado', '=', 'sud.sud_codigo')
+            ->leftJoin("$dbSogc.usuario as u", 'sud.sud_ced_docente', '=', 'u.usu_cedula')
+            ->leftJoin("$dbSogc.persona as per", 'u.usu_cedula', '=', 'per.per_cedula')
+            ->leftJoin("$dbSogc.unidad_curricular as uc", 'sud.sud_cod_unidad', '=', 'uc.ucu_codigo')
+            ->leftJoin("$dbSogc.seccion as s", 'sud.sud_cod_seccion', '=', 's.sec_codigo')
+            ->leftJoin("$dbSogc.malla as ma", 'uc.ucu_cod_malla', '=', 'ma.mal_codigo')
+            ->leftJoin("$dbSogc.programa as pr", 'ma.mal_cod_programa', '=', 'pr.pro_codigo')
+            ->leftJoin("$dbSogc.trayecto as tr", 'ma.mal_cod_trayecto', '=', 'tr.tra_codigo')
             ->select(
                 'p.id_planificacion as planificacion_id',
                 'per.per_nombres as docente_nombre',

@@ -2,29 +2,23 @@
 
 namespace App\Livewire\Planificacion;
 
-use App\Repositories\Planificacion\PlanificacionIndexRepo;
 use App\Repositories\Planificacion\PlanificacionCreateRepo;
 use App\Repositories\Planificacion\PlanificacionEditRepo;
 use App\Repositories\Planificacion\PlanificacionViewRepo;
 use Livewire\Component;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Gate;
 use App\Livewire\Forms\Planificacion\UpdatePlanificacionForm;
 
-
 class UpdatePlanificacion extends Component
 {
-
-    protected $planificacionIndexRepo;
     protected $planificacionCreateRepo;
     protected $planificacionEditRepo;
     protected $planificacionViewRepo;
 
-    // Datos principales de la planificación (NO EDITABLES, solo se muestran)
     public $planificacionId;
     public $docente_id;
     public $id_lapso_academico;
@@ -37,30 +31,37 @@ class UpdatePlanificacion extends Component
     public $nombre_malla;
     public $docente_rol;
 
-    // Datos editables que vienen del formulario
     public UpdatePlanificacionForm $form;
-    public $cortes = []; // Mantener temporalmente para la carga inicial, luego mover
+    public $openUnidad = 0;
 
+    public Collection $recursosMaestros;
+    public Collection $estrategiasDisponibles;
+    public Collection $evaluaciones;
+    public Collection $tecnica;
+    public Collection $bibliografiasMaestras;
+    public Collection $tecnicasActividad;
+    public array $temasPorUnidad = [];
+    public Collection $todosLosContenidos;
+    public Collection $todosLosObjetivos;
 
-    // Propiedades para listados de opciones
-    public $recursosDisponibles = [];
-    public $estrategiasDisponibles = [];
-    public $contenidosDisponibles = [];
-    public $indicadoresDisponibles = [];
-    public $evaluacionesDisponibles = [];
-    public $tecnicaDisponibles = [];
-    public $bibliografiasDisponibles = [];
-
-    // Fechas de lapso para validación
     public $id_unidad_curricular;
     public $lapso_fecha_inicio;
     public $lapso_fecha_fin;
 
     public $mostrarDetallesUnidad = false;
+    public $locked = false;
+    public $isCoordinador = false;
+
+    // Modal properties
+    public $showObjetivoModal = false;
+    public $newObjetivoNombre = '';
+    public $selectedTemaIdForObjetivo = null;
+
+    public $showBiblioModal = false;
+    public $newBiblioNombre = '';
 
     public function __construct()
     {
-        $this->planificacionIndexRepo = new PlanificacionIndexRepo();
         $this->planificacionCreateRepo = new PlanificacionCreateRepo();
         $this->planificacionEditRepo = new PlanificacionEditRepo();
         $this->planificacionViewRepo = new PlanificacionViewRepo();
@@ -68,27 +69,33 @@ class UpdatePlanificacion extends Component
 
     public function mount($planificacionId)
     {
-        $this->planificacionId = $planificacionId;
+        $this->recursosMaestros = collect();
+        $this->estrategiasDisponibles = collect();
+        $this->evaluaciones = collect();
+        $this->tecnica = collect();
+        $this->bibliografiasMaestras = collect();
+        $this->tecnicasActividad = collect();
+        $this->todosLosContenidos = collect();
+        $this->todosLosObjetivos = collect();
 
-        // Autorización y carga de datos inicial de la planificación usando el repositorio
+        $this->planificacionId = $planificacionId;
         $planificacion = $this->planificacionViewRepo->getDetallesPlanificacion($planificacionId);
 
         if (!$planificacion) {
             session()->flash('error', 'Planificación no encontrada.');
-            return redirect()->to('/planificacion/listar');
+            return redirect()->to('/planificacion/list');
         }
 
-        // Acceder a 'docente_id' que ahora viene del array principal
         $this->docente_id = $planificacion['docente_id'];
 
         if (Auth::id() !== $this->docente_id && Gate::denies('editar-planificacion')) {
             abort(403, 'No tienes permiso para editar esta planificación.');
         }
 
-        // Cargar las opciones estáticas primero
+        $this->isCoordinador = $this->planificacionCreateRepo->isCoordinador(Auth::id());
+
         $this->loadDropdownOptions();
 
-        // Asignar datos de la planificación desde el array devuelto por el repositorio
         $this->docente_nombre = $planificacion['docente_nombre'];
         $this->docente_apellido = $planificacion['docente_apellido'];
         $this->cedula = $planificacion['cedula'];
@@ -98,175 +105,198 @@ class UpdatePlanificacion extends Component
         $this->id_lapso_academico = $planificacion['id_lapso_academico'];
         $this->nombre_unidad_curricular = $planificacion['nombre_unidad_curricular'];
         $this->nombre_seccion = $planificacion['nombre_seccion'];
+        
+        $this->locked = $planificacion['estatus'] == 1;
         $this->nombre_lapso = $planificacion['nombre_lapso'];
         $this->docente_rol = $planificacion['docente_rol'] ?? 'Docente';
 
-        // Obtener Malla (usando el id_profesor_asignado que está en la DB o el id_detalle_profesor_asignado)
-        // El Repo viewRepo ya debería darnos esto, pero si no, lo buscamos
         $malla = $this->planificacionCreateRepo->getMallaByAsignacion($planificacion['id_detalle_profesor_asignado'] ?? null);
         $this->nombre_malla = $malla ? $malla->mal_nombre : 'No especificada';
 
-        // Cargar contenidos disponibles filtrados por unidad
         $this->loadContenidosUnidad();
 
-        // Cargar detalles dinámicos (cortes, bibliografías) desde el array del repositorio
-        $this->form->bibliografias = collect($planificacion['bibliografias'])
-            ->map(fn($item) => ['bibliografia_id' => $item['bibliografia_id']])
-            ->toArray();
+        $unidades = [];
+        $firstPendiente = 0;
+        foreach ($planificacion['unidades'] as $index => $corte) {
+            if ($corte['estatus'] == 2 && $firstPendiente === 0 && $index > 0) {
+                // Keep 0 as default if the first one is pending
+                $firstPendiente = $index;
+            } elseif ($corte['estatus'] == 2 && $index == 0) {
+                $firstPendiente = 0;
+            }
 
-        $this->form->cortes = collect($planificacion['cortes'])
-            ->map(function ($corte) {
-                // Mapear los recursos
-                $recursos = collect($corte['recursos'])
-                    ->map(fn($r) => ['recurso_id' => $r['recurso_id']])
-                    ->toArray();
-
-                // Mapear las estrategias
-                $estrategias = collect($corte['estrategias'])
-                    ->map(fn($e) => ['tema_id' => $e['tema_id'], 'actividad' => $e['actividad'] ?? ''])
-                    ->toArray();
-
-                // Mapear contenidos
-                $contenidos = collect($corte['contenidos'])
-                    ->map(function ($cont) {
-                    return [
-                        'contenido_id' => $cont['contenido_id'],
+            $objetivosDict = [];
+            foreach ($corte['contenidos'] as $cont) {
+                $objId = $cont['id_objetivo'];
+                if (!isset($objetivosDict[$objId])) {
+                    $objetivosDict[$objId] = [
+                        'tema_id' => $cont['tema_id'],
+                        'objetivo_id' => $objId,
+                        'contenidos' => []
                     ];
-                })
-                    ->toArray();
+                }
+                $objetivosDict[$objId]['contenidos'][] = ['contenido_id' => $cont['contenido_id']];
+            }
+            $objetivos = array_values($objetivosDict);
+            if (empty($objetivos)) {
+                $objetivos = [['tema_id' => '', 'objetivo_id' => '', 'contenidos' => [['contenido_id' => '']]]];
+            }
 
-                // Mapear evaluaciones
-                $evaluaciones = collect($corte['evaluaciones'])
-                    ->map(fn($eval) => [
-                        'evaluacion_id' => $eval['evaluacion_id'],
-                        'tecnica_id' => $eval['tecnica_id'],
-                        'ponderacion' => (int) $eval['ponderacion'],
-                        'fecha_evaluacion' => $eval['fecha_evaluacion'],
-                        'forma_participacion' => $eval['forma_participacion'],
-                        'integrantes' => $eval['integrantes'] ?? null,
-                    ])
-                    ->toArray();
-
-                return [
-                    'corte' => $corte['corte'],
-                    'estatus' => $corte['estatus'],
-                    'ultimo_motivo_rechazo' => $corte['ultimo_motivo_rechazo'],
-                    'recursos' => $recursos,
-                    'estrategias' => $estrategias,
-                    'contenidos' => $contenidos,
-                    'evaluaciones' => $evaluaciones,
-                    'indicadores_logro' => $corte['indicadores_logros'] ?? '',
+            $estrategiasForm = [];
+            if (!empty($corte['estrategias'])) {
+                $est = $corte['estrategias'][0]; 
+                $recursos = collect($corte['recursos'])->map(fn($r) => ['recurso_id' => $r['recurso_id']])->toArray();
+                $estrategiasForm[] = [
+                    'tecnica_actividad_id' => $est['tema_id'], 
+                    'actividad' => $est['actividad'] ?? '',
+                    'recursos' => empty($recursos) ? [['recurso_id' => '']] : $recursos
                 ];
-            })
-            ->toArray();
+            } else {
+                $estrategiasForm = [['tecnica_actividad_id' => '', 'actividad' => '', 'recursos' => [['recurso_id' => '']]]];
+            }
 
-        // Inicializa los cortes si no hay ninguno para que el formulario se muestre correctamente
-        if (empty($this->form->cortes)) {
-            $this->addCorte();
-        } else {
-            // Asegúrate de que todos los arrays anidados estén inicializados para evitar errores de null
-            foreach ($this->form->cortes as $corteIndex => $corte) {
-                $this->form->cortes[$corteIndex]['recursos'] = $corte['recursos'] ?? [];
-                $this->form->cortes[$corteIndex]['estrategias'] = $corte['estrategias'] ?? [];
-                $this->form->cortes[$corteIndex]['contenidos'] = $corte['contenidos'] ?? [];
-                $this->form->cortes[$corteIndex]['evaluaciones'] = $corte['evaluaciones'] ?? [];
+            $evaluaciones = collect($corte['evaluaciones'])
+                ->map(fn($eval) => [
+                    'evaluacion_id' => $eval['evaluacion_id'],
+                    'tecnica_id' => $eval['tecnica_id'],
+                    'ponderacion' => (int) $eval['ponderacion'],
+                    'fecha_evaluacion' => $eval['fecha_evaluacion'],
+                    'forma_participacion' => $eval['forma_participacion'],
+                    'integrantes' => $eval['integrantes'] ?? null,
+                ])
+                ->toArray();
+            if (empty($evaluaciones)) {
+                $evaluaciones = [['fecha_evaluacion' => '', 'evaluacion_id' => '', 'ponderacion' => 5, 'tecnica_id' => '', 'forma_participacion' => '', 'integrantes' => null]];
+            }
+
+            $bibliografias = collect($corte['bibliografias'] ?? [])->map(fn($b) => ['bibliografia_id' => $b['bibliografia_id']])->toArray();
+            if (empty($bibliografias)) {
+                $bibliografias = [['bibliografia_id' => '']];
+            }
+
+            $unidades[] = [
+                'numero' => $corte['numero'],
+                'estatus' => $corte['estatus'],
+                'ultimo_motivo_rechazo' => $corte['ultimo_motivo_rechazo'],
+                'objetivos' => $objetivos,
+                'estrategias' => $estrategiasForm,
+                'evaluaciones' => $evaluaciones,
+                'bibliografias' => $bibliografias,
+                'indicadores_logro' => $corte['indicadores_logro'] ?? '',
+            ];
+        }
+
+        if (empty($unidades)) {
+            foreach (range(0, 3) as $idx) {
+                $unidades[] = [
+                    'numero' => $idx + 1,
+                    'estatus' => 2,
+                    'objetivos' => [['tema_id' => '', 'objetivo_id' => '', 'contenidos' => [['contenido_id' => '']]]],
+                    'estrategias' => [['tecnica_actividad_id' => '', 'actividad' => '', 'recursos' => [['recurso_id' => '']]]],
+                    'evaluaciones' => [['fecha_evaluacion' => '', 'evaluacion_id' => '', 'ponderacion' => 5, 'tecnica_id' => '', 'forma_participacion' => '', 'integrantes' => null]],
+                    'bibliografias' => [['bibliografia_id' => '']],
+                    'indicadores_logro' => ''
+                ];
             }
         }
+
+        $this->form->unidades = $unidades;
+        $this->openUnidad = $firstPendiente;
     }
 
-    // Carga las opciones para los selects usando el repositorio
     private function loadDropdownOptions()
     {
-        $this->recursosDisponibles = $this->planificacionCreateRepo->select_recursos();
-        $this->estrategiasDisponibles = $this->planificacionCreateRepo->select_tecnica_actividad();
-        $this->evaluacionesDisponibles = $this->planificacionCreateRepo->select_evaluaciones();
-        $this->tecnicaDisponibles = $this->planificacionCreateRepo->select_tecnica();
-        $this->bibliografiasDisponibles = $this->planificacionCreateRepo->select_bibliografias();
+        $this->recursosMaestros = $this->planificacionCreateRepo->select_recursos();
+        $this->tecnicasActividad = $this->planificacionCreateRepo->select_tecnica_actividad();
+        $this->evaluaciones = $this->planificacionCreateRepo->select_evaluaciones();
+        $this->tecnica = $this->planificacionCreateRepo->select_tecnica();
+        $this->bibliografiasMaestras = $this->planificacionCreateRepo->select_bibliografias();
     }
-
-    // Métodos específicos para añadir/eliminar cortes
-    public function addCorte()
-    {
-        $this->form->cortes[] = [
-            'corte' => count($this->form->cortes) + 1,
-            'estatus' => 2, // Estatus inicial para un nuevo corte (Pendiente)
-            'recursos' => [],
-            'estrategias' => [],
-            'contenidos' => [],
-            'evaluaciones' => [],
-            'ultimo_motivo_rechazo' => null,
-            'indicadores_logro' => '',
-        ];
-        // Al añadir un nuevo corte, asegúrate de añadir al menos un contenido y una evaluación
-        $lastCorteIndex = count($this->form->cortes) - 1;
-        $this->addItem($lastCorteIndex, 'contenidos');
-        $this->addItem($lastCorteIndex, 'evaluaciones');
-    }
-
-    public function removeCorte($index)
-    {
-        unset($this->form->cortes[$index]);
-        $this->form->cortes = array_values($this->form->cortes);
-        // Reajustar los números de corte
-        foreach ($this->form->cortes as $idx => $corte) {
-            $this->form->cortes[$idx]['corte'] = $idx + 1;
-        }
-    }
-
-    // Métodos genéricos para manejo de arrays dinámicos
-    public function addItem($corteIndex, $arrayName, $contenidoIndex = null)
-    {
-        // Define templates por defecto sin el id
-        $defaultTemplates = [
-            'contenidos' => ['contenido_id' => ''],
-            'recursos' => ['recurso_id' => ''],
-            'estrategias' => ['tema_id' => '', 'actividad' => ''],
-            'evaluaciones' => [
-                'fecha_evaluacion' => '',
-                'evaluacion_id' => '',
-                'ponderacion' => 5,
-                'tecnica_id' => '',
-                'forma_participacion' => '',
-                'integrantes' => null
-            ],
-            'bibliografias' => ['bibliografia_id' => ''],
-        ];
-
-        $template = $defaultTemplates[$arrayName] ?? [];
-
-        if ($arrayName === 'bibliografias') {
-            $this->form->bibliografias[] = $template;
-        } else { // Para recursos, estrategias, evaluaciones, contenidos (dentro de un corte)
-            if (isset($this->form->cortes[$corteIndex])) { // Asegurarse de que el corte exista
-                $this->form->cortes[$corteIndex][$arrayName][] = $template;
-            }
-        }
-    }
-
-    public function removeItem($corteIndex, $arrayName, $itemIndex)
-    {
-        if ($arrayName === 'bibliografias') {
-            if (isset($this->form->bibliografias[$itemIndex])) {
-                unset($this->form->bibliografias[$itemIndex]);
-                $this->form->bibliografias = array_values($this->form->bibliografias);
-            }
-        } else { // Para contenidos, recursos, estrategias, evaluaciones (dentro de un corte)
-            if (isset($this->form->cortes[$corteIndex][$arrayName][$itemIndex])) {
-                unset($this->form->cortes[$corteIndex][$arrayName][$itemIndex]);
-                $this->form->cortes[$corteIndex][$arrayName] = array_values($this->form->cortes[$corteIndex][$arrayName]);
-            }
-        }
-    }
-
 
     protected function loadContenidosUnidad()
     {
-        $this->contenidosDisponibles = $this->planificacionCreateRepo->select_contenidos($this->id_unidad_curricular);
+        $todosLosTemas = $this->planificacionCreateRepo->select_temas_por_unidad($this->id_unidad_curricular);
+        $this->temasPorUnidad = [];
+        foreach (range(1, 4) as $num) {
+            $this->temasPorUnidad[$num] = $todosLosTemas->where('unidad_tema', (string) $num)->values();
+        }
+        $this->todosLosContenidos = $this->planificacionCreateRepo->select_contenidos($this->id_unidad_curricular);
+        $this->todosLosObjetivos = $this->planificacionCreateRepo->select_objetivos($this->id_unidad_curricular);
     }
 
-    public function toggleDetallesUnidad()
+    public function addItem($unidadIndex, $arrayName, $parentIndex = null)
     {
-        $this->mostrarDetallesUnidad = !$this->mostrarDetallesUnidad;
+        if ($arrayName === 'bibliografias') {
+            $this->form->unidades[$unidadIndex]['bibliografias'][] = ['bibliografia_id' => ''];
+        } elseif ($arrayName === 'objetivos') {
+            $this->form->unidades[$unidadIndex]['objetivos'][] = [
+                'tema_id' => '',
+                'objetivo_id' => '',
+                'contenidos' => [['contenido_id' => '']]
+            ];
+        } elseif ($arrayName === 'contenidos') {
+            $objetivoId = $this->form->unidades[$unidadIndex]['objetivos'][$parentIndex]['objetivo_id'] ?? null;
+            if (empty($objetivoId)) {
+                session()->flash('error', 'Debe seleccionar un objetivo primero.');
+                return;
+            }
+            $this->form->unidades[$unidadIndex]['objetivos'][$parentIndex]['contenidos'][] = ['contenido_id' => ''];
+        } elseif ($arrayName === 'estrategia_recursos') {
+            $this->form->unidades[$unidadIndex]['estrategias'][$parentIndex]['recursos'][] = ['recurso_id' => ''];
+        } else {
+            $defaultTemplates = [
+                'evaluaciones' => [
+                    'fecha_evaluacion' => '',
+                    'evaluacion_id' => '',
+                    'ponderacion' => 5,
+                    'tecnica_id' => '',
+                    'forma_participacion' => '',
+                    'integrantes' => null
+                ],
+                'estrategias' => ['tecnica_actividad_id' => '', 'actividad' => '', 'recursos' => [['recurso_id' => '']]],
+            ];
+            if (isset($defaultTemplates[$arrayName])) {
+                $this->form->unidades[$unidadIndex][$arrayName][] = $defaultTemplates[$arrayName];
+            }
+        }
+    }
+
+    public function removeItem($unidadIndex, $arrayName, $itemIndex, $parentIndex = null)
+    {
+        if ($arrayName === 'bibliografias') {
+            if (isset($this->form->unidades[$unidadIndex]['bibliografias'][$itemIndex])) {
+                unset($this->form->unidades[$unidadIndex]['bibliografias'][$itemIndex]);
+                $this->form->unidades[$unidadIndex]['bibliografias'] = array_values($this->form->unidades[$unidadIndex]['bibliografias']);
+            }
+        } elseif ($arrayName === 'objetivos') {
+            if (isset($this->form->unidades[$unidadIndex]['objetivos'][$itemIndex])) {
+                unset($this->form->unidades[$unidadIndex]['objetivos'][$itemIndex]);
+                $this->form->unidades[$unidadIndex]['objetivos'] = array_values($this->form->unidades[$unidadIndex]['objetivos']);
+            }
+        } elseif ($arrayName === 'contenidos') {
+            if (isset($this->form->unidades[$unidadIndex]['objetivos'][$parentIndex]['contenidos'][$itemIndex])) {
+                unset($this->form->unidades[$unidadIndex]['objetivos'][$parentIndex]['contenidos'][$itemIndex]);
+                $this->form->unidades[$unidadIndex]['objetivos'][$parentIndex]['contenidos'] = array_values($this->form->unidades[$unidadIndex]['objetivos'][$parentIndex]['contenidos']);
+            }
+        } elseif ($arrayName === 'estrategia_recursos') {
+            if (isset($this->form->unidades[$unidadIndex]['estrategias'][$parentIndex]['recursos'][$itemIndex])) {
+                unset($this->form->unidades[$unidadIndex]['estrategias'][$parentIndex]['recursos'][$itemIndex]);
+                $this->form->unidades[$unidadIndex]['estrategias'][$parentIndex]['recursos'] = array_values($this->form->unidades[$unidadIndex]['estrategias'][$parentIndex]['recursos']);
+            }
+        } else {
+            if (isset($this->form->unidades[$unidadIndex][$arrayName][$itemIndex])) {
+                unset($this->form->unidades[$unidadIndex][$arrayName][$itemIndex]);
+                $this->form->unidades[$unidadIndex][$arrayName] = array_values($this->form->unidades[$unidadIndex][$arrayName]);
+            }
+        }
+    }
+
+    public function unidadAnterior($index)
+    {
+        if ($index > 0) {
+            $this->openUnidad = $index - 1;
+            $this->dispatch('scroll-to-top');
+        }
     }
 
     public function updated($propertyName)
@@ -284,12 +314,29 @@ class UpdatePlanificacion extends Component
         }
     }
 
-    public function getTotalPonderacionForCorte($corteIndex)
+    public function getTotalPonderacionForCorte($unidadIndex)
     {
-        return $this->form->getTotalPonderacionForCorte($corteIndex);
+        return $this->form->getTotalPonderacionForUnidad($unidadIndex);
     }
 
-    // Método para guardar los cambios
+    public function saveProgress($index)
+    {
+        $this->form->lapso_fecha_inicio = $this->lapso_fecha_inicio;
+        $this->form->lapso_fecha_fin = $this->lapso_fecha_fin;
+        $this->form->id_lapso_academico = $this->id_lapso_academico;
+
+        $success = $this->planificacionEditRepo->updatePlanificacion($this->planificacionId, [
+            'unidades' => $this->form->unidades
+        ]);
+
+        if ($success) {
+            session()->flash('message', 'Progreso guardado exitosamente.');
+            return redirect()->to('/planificacion/list');
+        } else {
+            session()->flash('error', 'Error al guardar el progreso.');
+        }
+    }
+
     public function savePlanificacion()
     {
         $this->form->lapso_fecha_inicio = $this->lapso_fecha_inicio;
@@ -299,8 +346,7 @@ class UpdatePlanificacion extends Component
         $this->form->validate();
 
         $success = $this->planificacionEditRepo->updatePlanificacion($this->planificacionId, [
-            'bibliografias' => $this->form->bibliografias,
-            'cortes' => $this->form->cortes
+            'unidades' => $this->form->unidades
         ]);
 
         if ($success) {
@@ -311,8 +357,99 @@ class UpdatePlanificacion extends Component
         }
     }
 
+    public function toggleDetallesUnidad()
+    {
+        $this->mostrarDetallesUnidad = !$this->mostrarDetallesUnidad;
+    }
+
+    public function openObjetivoModal($temaId)
+    {
+        if (!$this->isCoordinador) {
+            session()->flash('error', 'Solo los coordinadores pueden añadir nuevos objetivos.');
+            return;
+        }
+
+        if (!$temaId || $temaId === '') {
+            session()->flash('error', 'Debe seleccionar un tema primero.');
+            return;
+        }
+        $this->selectedTemaIdForObjetivo = $temaId;
+        $this->newObjetivoNombre = '';
+        $this->showObjetivoModal = true;
+    }
+
+    public function closeObjetivoModal()
+    {
+        $this->showObjetivoModal = false;
+        $this->reset(['newObjetivoNombre', 'selectedTemaIdForObjetivo']);
+    }
+
+    public function saveObjetivo()
+    {
+        if (!$this->isCoordinador) {
+            session()->flash('error', 'Solo los coordinadores pueden añadir nuevos objetivos.');
+            $this->closeObjetivoModal();
+            return;
+        }
+
+        $this->validate([
+            'newObjetivoNombre' => 'required|min:3|max:255',
+            'selectedTemaIdForObjetivo' => 'required|exists:tema_unidad,id_tema_unidad',
+        ]);
+
+        try {
+            $this->planificacionCreateRepo->saveNuevoObjetivo($this->newObjetivoNombre, $this->selectedTemaIdForObjetivo);
+
+            // Recargar objetivos
+            $this->todosLosObjetivos = $this->planificacionCreateRepo->select_objetivos($this->id_unidad_curricular);
+
+            session()->flash('message', 'Objetivo creado correctamente.');
+            $this->closeObjetivoModal();
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al guardar el objetivo: ' . $e->getMessage());
+        }
+    }
+
+    public function openBiblioModal()
+    {
+        $this->newBiblioNombre = '';
+        $this->showBiblioModal = true;
+    }
+
+    public function closeBiblioModal()
+    {
+        $this->showBiblioModal = false;
+        $this->reset(['newBiblioNombre']);
+    }
+
+    public function saveBiblio()
+    {
+        $this->validate([
+            'newBiblioNombre' => 'required|min:3|max:1000',
+        ], [
+            'newBiblioNombre.required' => 'El nombre de la bibliografía es obligatorio.',
+            'newBiblioNombre.min' => 'El nombre debe tener al menos 3 caracteres.',
+            'newBiblioNombre.max' => 'El nombre es demasiado largo.',
+        ]);
+
+        try {
+            $this->planificacionCreateRepo->saveNuevaBibliografia($this->newBiblioNombre);
+
+            // Recargar bibliografías
+            $this->bibliografiasMaestras = $this->planificacionCreateRepo->select_bibliografias();
+
+            session()->flash('message', 'Bibliografía creada correctamente.');
+            $this->closeBiblioModal();
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al guardar la bibliografía: ' . $e->getMessage());
+        }
+    }
+
     public function render()
     {
-        return view('livewire.pages.planificacion.update-planificacion');
+        return view('livewire.pages.planificacion.update-planificacion', [
+            'timeSlots' => collect(range(8, 18))->map(fn($h) => sprintf('%02d:00', $h))
+        ]);
     }
 }
+

@@ -15,16 +15,16 @@ class PlanificacionViewRepo
 
         // 1. Obtener datos principales de la planificación + Docente + Sección + Unidad + Lapso
         $planificacion = DB::table('planificacion as p')
-            ->join("$dbSogc.seccion_unidad_docente as sud", 'p.id_profesor_asignado', '=', 'sud.sud_codigo')
-            ->join("$dbSogc.usuario as u", 'sud.sud_ced_docente', '=', 'u.usu_cedula')
-            ->join("$dbSogc.persona as per", 'u.usu_cedula', '=', 'per.per_cedula')
-            ->join("$dbSogc.unidad_curricular as uc", 'sud.sud_cod_unidad', '=', 'uc.ucu_codigo')
-            ->join("$dbSogc.seccion as s", 'sud.sud_cod_seccion', '=', 's.sec_codigo')
-            ->join("$dbSogc.lapso_academico as la", 's.sec_cod_lapso_academico', '=', 'la.lap_codigo')
-            ->join("$dbSogc.malla as ma", 'uc.ucu_cod_malla', '=', 'ma.mal_codigo')
-            ->join("$dbSogc.programa as pr", 'ma.mal_cod_programa', '=', 'pr.pro_codigo')
-            ->join("$dbSogc.trayecto as tr", 'uc.ucu_cod_tuc', '=', 'tr.tra_codigo')
-            ->join("$dbSogc.rol as r", 'u.usu_cod_rol', '=', 'r.rol_codigo')
+            ->leftJoin("$dbSogc.seccion_unidad_docente as sud", 'p.id_profesor_asignado', '=', 'sud.sud_codigo')
+            ->leftJoin("$dbSogc.usuario as u", 'sud.sud_ced_docente', '=', 'u.usu_cedula')
+            ->leftJoin("$dbSogc.persona as per", 'u.usu_cedula', '=', 'per.per_cedula')
+            ->leftJoin("$dbSogc.unidad_curricular as uc", 'sud.sud_cod_unidad', '=', 'uc.ucu_codigo')
+            ->leftJoin("$dbSogc.seccion as s", 'sud.sud_cod_seccion', '=', 's.sec_codigo')
+            ->leftJoin("$dbSogc.lapso_academico as la", 's.sec_cod_lapso_academico', '=', 'la.lap_codigo')
+            ->leftJoin("$dbSogc.malla as ma", 'uc.ucu_cod_malla', '=', 'ma.mal_codigo')
+            ->leftJoin("$dbSogc.programa as pr", 'ma.mal_cod_programa', '=', 'pr.pro_codigo')
+            ->leftJoin("$dbSogc.trayecto as tr", 'uc.ucu_cod_tuc', '=', 'tr.tra_codigo')
+            ->leftJoin("$dbSogc.rol as r", 'u.usu_cod_rol', '=', 'r.rol_codigo')
             ->select(
                 'p.id_planificacion as planificacion_id',
                 'p.estatus',
@@ -60,23 +60,11 @@ class PlanificacionViewRepo
 
         $resultado = (array) $planificacion;
 
-        // 2. Bibliografías (se obtienen a través de unidad_corte)
-        $resultado['bibliografias'] = DB::table('detalle_bibliografia as db')
-            ->join('bibliografia as b', 'db.id_bibliografia', '=', 'b.id_bibliografia')
-            ->join('unidad_corte as uc_bib', 'db.id_unidad_corte', '=', 'uc_bib.id_unidad_corte')
-            ->where('uc_bib.id_planificacion', $planificacionId)
-            ->where('db.estatus', '1')
-            ->select('b.id_bibliografia as bibliografia_id', 'b.nombre_bibliografia as bibliografia')
-            ->distinct()
-            ->get()
-            ->map(fn($item) => (array) $item)
-            ->toArray();
-
-        // 3. Cortes
-        $resultado['cortes'] = DB::table('unidad_corte as c')
+        // 3. Unidades
+        $resultado['unidades'] = DB::table('unidad_corte as c')
             ->where('c.id_planificacion', $planificacionId)
             // ->where('c.estatus', '!=', '3') // Comentado para mostrar rechazados
-            ->select('c.id_unidad_corte as detalle_id', 'c.numero_unidad_corte as corte', 'c.estatus', 'c.indicador_logro_unidad_corte as indicadores_logros')
+            ->select('c.id_unidad_corte as detalle_id', 'c.numero_unidad_corte as numero', 'c.estatus', 'c.indicador_logro_unidad_corte as indicadores_logro')
             ->orderBy('c.numero_unidad_corte')
             ->get()
             ->map(function ($corte) {
@@ -90,27 +78,27 @@ class PlanificacionViewRepo
 
                 $corteArray['ultimo_motivo_rechazo'] = $ultimoMotivoRechazo ? $ultimoMotivoRechazo->motivo : null;
 
-                // 3.2 Recursos
-                $resultadoDetalleRecurso = DB::table('detalle_estrategia_recurso as der')
-                    ->join('detalle_estrategia as de', 'der.id_detalle_estrategia', '=', 'de.id_detalle_estrategia')
-                    ->join('recurso as r', 'der.id_recurso', '=', 'r.id_recurso')
-                    ->where('de.id_unidad_corte', $corte->detalle_id)
-                    ->where('der.estatus', '1')
+                // 3.2 Recursos (ahora vinculados directamente a unidad_corte)
+                $resultadoDetalleRecurso = DB::table('detalle_recurso as dr')
+                    ->join('recurso as r', 'dr.id_recurso', '=', 'r.id_recurso')
+                    ->where('dr.id_unidad_corte', $corte->detalle_id)
+                    ->where('dr.estatus', '1')
                     ->select('r.id_recurso as recurso_id', 'r.nombre_recurso as recurso')
                     ->get()
                     ->map(fn($item) => (array) $item)
                     ->toArray();
                 $corteArray['recursos'] = $resultadoDetalleRecurso;
 
-                // 3.3 Estrategias
-                $corteArray['estrategias'] = DB::table('detalle_estrategia as de')
-                    ->join('tema_unidad as tu', 'de.id_tema_unidad', '=', 'tu.id_tema_unidad')
-                    ->where('de.id_unidad_corte', $corte->detalle_id)
-                    ->where('de.estatus', '1')
-                    ->select('de.id_tema_unidad as tema_id', 'tu.titulo_tema', 'de.actividad')
-                    ->get()
-                    ->map(fn($item) => (array) $item)
-                    ->toArray();
+                // 3.3 Estrategias (ahora almacenada una sola en unidad_corte según esquema DB)
+                $estrategiaDirecta = DB::table('unidad_corte as uc')
+                    ->leftJoin('tecnica_actividad as ta', 'uc.id_tecnica_actividad', '=', 'ta.id_tecnica_actividad')
+                    ->where('uc.id_unidad_corte', $corte->detalle_id)
+                    ->select('uc.id_tecnica_actividad as tecnica_actividad_id', 'ta.nombre_tecnica_actividad', 'uc.descripcion_actividad_unidad_corte as actividad')
+                    ->first();
+
+                $corteArray['estrategias'] = $estrategiaDirecta && $estrategiaDirecta->tecnica_actividad_id 
+                    ? [['tema_id' => $estrategiaDirecta->tecnica_actividad_id, 'titulo_tema' => $estrategiaDirecta->nombre_tecnica_actividad, 'actividad' => $estrategiaDirecta->actividad]]
+                    : [];
 
                 // 3.4 Contenidos (Temas -> Indicadores)
                 // OJO: En Create usamos detalle_tema, donde tema se vincula a contenido. 
@@ -163,6 +151,17 @@ class PlanificacionViewRepo
                         'dev.forma_participacion_detalle_evaluacion as forma_participacion',
                         'dev.integrantes_detalle_evaluacion as integrantes'
                     )
+                    ->get()
+                    ->map(fn($item) => (array) $item)
+                    ->toArray();
+
+                // 3.6 Bibliografías
+                $corteArray['bibliografias'] = DB::table('detalle_bibliografia as db')
+                    ->join('bibliografia as b', 'db.id_bibliografia', '=', 'b.id_bibliografia')
+                    ->where('db.id_unidad_corte', $corte->detalle_id)
+                    ->where('db.estatus', '1')
+                    ->select('b.id_bibliografia as bibliografia_id', 'b.nombre_bibliografia as bibliografia')
+                    ->distinct()
                     ->get()
                     ->map(fn($item) => (array) $item)
                     ->toArray();
