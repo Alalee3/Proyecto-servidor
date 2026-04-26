@@ -20,11 +20,11 @@ class PlanificacionEditRepo
                 ->get()
                 ->keyBy('id_unidad_corte');
 
-            $newCortes = collect($data['cortes']);
+            $newUnidades = collect($data['unidades']);
             $processedOldCorteIds = [];
 
-            foreach ($newCortes as $corteData) {
-                $corteNumero = $corteData['corte']; // 'corte' es el numero (1, 2, 3)
+            foreach ($newUnidades as $unidadData) {
+                $corteNumero = $unidadData['numero']; 
                 $foundOldCorte = null;
 
                 // Buscar orden existente por número
@@ -44,9 +44,9 @@ class PlanificacionEditRepo
                         ->first();
                 }
 
-                // NUEVO: Si el corte está Aprobado (1) o Pendiente (2), no lo tocamos.
-                // Solo guardamos su ID para no borrarlo al final.
-                if ($foundOldCorte && in_array($foundOldCorte->estatus, ['1', '2'])) {
+                // Si el corte está Aprobado (1), no lo tocamos.
+                // Pendiente (2) SÍ lo tocamos porque es un borrador.
+                if ($foundOldCorte && $foundOldCorte->estatus == '1') {
                     $processedOldCorteIds[] = $foundOldCorte->id_unidad_corte;
                     continue;
                 }
@@ -59,7 +59,7 @@ class PlanificacionEditRepo
                     $corteModel = \App\Models\UnidadCorte::find($corteId);
                     if ($corteModel) {
                         $corteModel->update([
-                            'indicador_logro_unidad_corte' => $corteData['indicadores_logro'] ?? null,
+                            'indicador_logro_unidad_corte' => $unidadData['indicadores_logro'] ?? null,
                             'estatus' => '2', // Reactivar a pendiente/guardado
                             'descripcion_motivo_rechazo_unidad_corte' => null // Limpiar motivos de rechazo previos
                         ]);
@@ -68,7 +68,7 @@ class PlanificacionEditRepo
                     $corteModel = \App\Models\UnidadCorte::create([
                         'id_planificacion' => $planificacionId,
                         'numero_unidad_corte' => $corteNumero,
-                        'indicador_logro_unidad_corte' => $corteData['indicadores_logro'] ?? null,
+                        'indicador_logro_unidad_corte' => $unidadData['indicadores_logro'] ?? null,
                         'estatus' => '2',
                         'fecha_creacion' => now(),
                     ]);
@@ -84,7 +84,7 @@ class PlanificacionEditRepo
                         'forma_participacion_detalle_evaluacion' => $eval['forma_participacion'],
                         'integrantes_detalle_evaluacion' => ($eval['forma_participacion'] == '2') ? ($eval['integrantes'] ?? null) : 1,
                     ];
-                }, $corteData['evaluaciones']);
+                }, $unidadData['evaluaciones']);
 
                 $this->syncCorteDetails(
                     'detalle_evaluacion',
@@ -95,13 +95,27 @@ class PlanificacionEditRepo
                     ['id_tecnica_evaluacion', 'ponderacion_detalle_evaluacion', 'fecha_evaluacion_detalle_evaluacion', 'forma_participacion_detalle_evaluacion', 'integrantes_detalle_evaluacion']
                 );
 
-                // --- Sincronizar Estrategias y Contenidos ---
-                // Esta parte necesita ser adaptada al nuevo esquema donde estrategias son tablas y contenidos tambien
-                $this->syncEstrategiasCorte($corteId, $corteData['estrategias']);
-                $this->syncContenidosCorte($corteId, $corteData['contenidos']);
+                // --- Sincronizar Estrategias, Recursos y Contenidos ---
+                $this->syncEstrategiasCorte($corteId, $unidadData['estrategias']);
+                
+                $recursos = [];
+                foreach ($unidadData['estrategias'] as $est) {
+                    foreach ($est['recursos'] as $rec) {
+                        $recursos[] = $rec;
+                    }
+                }
+                $this->syncRecursosCorte($corteId, $recursos);
 
+                $contenidos = [];
+                foreach ($unidadData['objetivos'] as $obj) {
+                    foreach ($obj['contenidos'] as $cont) {
+                        $contenidos[] = $cont;
+                    }
+                }
+                $this->syncContenidosCorte($corteId, $contenidos);
+ 
                 // --- Sincronizar Bibliografías por Corte ---
-                $this->syncBibliografiasCorte($corteId, $corteData['bibliografias'] ?? []);
+                $this->syncBibliografiasCorte($corteId, $unidadData['bibliografias'] ?? []);
             }
 
             // Unidades antiguas que no están en la nueva data (marcar eliminados?)
@@ -115,11 +129,9 @@ class PlanificacionEditRepo
                 }
             }
 
-            // Actualizar estatus general de la planificación a 'En Revisión' (2) si estaba Aprobada(1) o Rechazada(3)
-            // O mantener en Borrador si estaba en borrador? 
-            // Usualmente al editar se vuelve a someter.
+            // Actualizar estatus general de la planificación a 'En Revisión' (2) si estaba Aprobada(1), Rechazada(3) o Incompleta(4)
             $planificacionToUpdate = \App\Models\Planificacion::find($planificacionId);
-            if ($planificacionToUpdate && in_array($planificacionToUpdate->estatus, ['1', '3'])) {
+            if ($planificacionToUpdate && in_array($planificacionToUpdate->estatus, ['1', '3', '4'])) {
                 $planificacionToUpdate->update(['estatus' => '2']);
             }
 
@@ -134,22 +146,11 @@ class PlanificacionEditRepo
 
     private function syncCorteDetails(string $tableName, string $foreignIdColumn, int $corteId, array $newData, string $newIdKey, array $additionalColumns = [])
     {
-        // Obtener IDs actuales activos
-        $currentIds = DB::table($tableName)
+        // Desactivar todos los registros actuales para este corte antes de re-insertar
+        // Esto permite tener múltiples registros del mismo tipo (ej. varias evaluaciones sumativas)
+        DB::table($tableName)
             ->where('id_unidad_corte', $corteId)
-            ->where('estatus', '1')
-            ->pluck($foreignIdColumn)
-            ->toArray();
-
-        $newIds = collect($newData)->pluck($newIdKey)->filter()->toArray();
-
-        // Desactivar los que ya no están
-        $toDeactivate = array_diff($currentIds, $newIds);
-        if (!empty($toDeactivate)) {
-            \App\Models\DetalleEvaluacion::where('id_unidad_corte', $corteId)
-                ->whereIn($foreignIdColumn, $toDeactivate)
-                ->update(['estatus' => '2']);
-        }
+            ->update(['estatus' => '2']);
 
         foreach ($newData as $item) {
             $itemId = $item[$newIdKey] ?? null;
@@ -160,6 +161,7 @@ class PlanificacionEditRepo
                 'id_unidad_corte' => $corteId,
                 $foreignIdColumn => $itemId,
                 'estatus' => '1',
+                'fecha_creacion' => now(),
             ];
 
             foreach ($additionalColumns as $col) {
@@ -168,34 +170,38 @@ class PlanificacionEditRepo
                 }
             }
 
-            $itemToUpdate = \App\Models\DetalleEvaluacion::where('id_unidad_corte', $corteId)
-                ->where($foreignIdColumn, $itemId)
-                ->first();
-
-            if ($itemToUpdate) {
-                $itemToUpdate->update($insertData);
-            } else {
-                $insertData['fecha_creacion'] = now();
-                \App\Models\DetalleEvaluacion::create($insertData);
-            }
+            // Insertar siempre como nuevo registro para evitar colisiones de tipo
+            // Usamos el modelo para mantener la auditoría
+            \App\Models\DetalleEvaluacion::create($insertData);
         }
     }
 
     private function syncEstrategiasCorte(int $corteId, array $estrategiasData)
     {
-        // Desactivar actuales
-        \App\Models\DetalleEstrategia::where('id_unidad_corte', $corteId)
-            ->update(['estatus' => '2']);
+        if (!empty($estrategiasData)) {
+            $est = $estrategiasData[0]; // Solo una estrategia por unidad en este esquema
+            
+            DB::table('unidad_corte')
+                ->where('id_unidad_corte', $corteId)
+                ->update([
+                    'id_tecnica_actividad' => (isset($est['tecnica_actividad_id']) && is_numeric($est['tecnica_actividad_id'])) ? $est['tecnica_actividad_id'] : null,
+                    'descripcion_actividad_unidad_corte' => $est['actividad'] ?: null,
+                ]);
+        }
+    }
 
-        foreach ($estrategiasData as $est) {
-            $temaId = $est['tema_id'] ?? null;
-            if (!$temaId)
-                continue;
+    private function syncRecursosCorte(int $corteId, array $recursosData)
+    {
+        // Desactivar actuales (o eliminar y reinsertar si es más simple para esta tabla pivot)
+        DB::table('detalle_recurso')->where('id_unidad_corte', $corteId)->delete();
 
-            \App\Models\DetalleEstrategia::create([
+        foreach ($recursosData as $rec) {
+            $recursoId = $rec['recurso_id'] ?? null;
+            if (!$recursoId) continue;
+
+            DB::table('detalle_recurso')->insert([
                 'id_unidad_corte' => $corteId,
-                'id_tema_unidad' => $temaId,
-                'actividad' => $est['actividad'] ?? '',
+                'id_recurso' => $recursoId,
                 'estatus' => '1',
                 'fecha_creacion' => now(),
             ]);

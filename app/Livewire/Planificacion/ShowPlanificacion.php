@@ -42,10 +42,10 @@ class ShowPlanificacion extends Component
 
         $this->planificacion = (object) $details;
 
-        $this->planificacion->cortes = collect($this->planificacion->cortes)->map(function ($corte) {
-            $corte = (object) $corte;
-            $this->motivosRechazoCortes[$corte->detalle_id] = $corte->ultimo_motivo_rechazo ?? '';
-            return $corte;
+        $this->planificacion->unidades = collect($this->planificacion->unidades)->map(function ($unidad) {
+            $unidad = (object) $unidad;
+            $this->motivosRechazoCortes[$unidad->detalle_id] = $unidad->ultimo_motivo_rechazo ?? '';
+            return $unidad;
         })->toArray();
     }
 
@@ -141,8 +141,8 @@ class ShowPlanificacion extends Component
     {
         $mostrarBotonRechazarPlanificacion = ($this->planificacion->estatus ?? null) != 1;
         $estatusTexto = $this->mapEstatusToText($this->planificacion->estatus ?? null);
-        foreach ($this->planificacion->cortes as $key => $corte) {
-            $this->planificacion->cortes[$key]->estatus_texto = $this->mapEstatusToText($corte->estatus);
+        foreach ($this->planificacion->unidades as $key => $unidad) {
+            $this->planificacion->unidades[$key]->estatus_texto = $this->mapEstatusToText($unidad->estatus);
         }
 
         return view('livewire.pages.planificacion.show-planificacion', [

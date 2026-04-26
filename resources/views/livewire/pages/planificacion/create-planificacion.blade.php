@@ -159,19 +159,34 @@
                                     </div>
                                 </div>
 
-                                <div
-                                    class="flex items-center gap-3 px-4 py-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-                                    <span
-                                        class="text-xs font-bold text-gray-400 uppercase tracking-widest">Ponderación</span>
-                                    <div class="flex items-center gap-1">
-                                        <span
-                                            class="text-lg font-black {{ $validPonderacion ? 'text-green-600' : 'text-red-600' }}">
-                                            {{ $totalPonderacion }}%
-                                        </span>
-                                        <span class="text-xs text-gray-400 font-bold">/ 25%</span>
+                                <div class="flex flex-col items-end gap-2">
+                                    <div class="flex items-center gap-3 px-4 py-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Estado</span>
+                                        @if($validPonderacion)
+                                            <span class="px-2 py-1 bg-green-100 text-green-700 text-[10px] font-black rounded-full uppercase">Completo</span>
+                                        @else
+                                            <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full uppercase">Pendiente</span>
+                                        @endif
+                                        
+                                        <div class="h-4 w-px bg-gray-200 dark:bg-gray-700 mx-1"></div>
+
+                                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Ponderación</span>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-24 h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                <div class="h-full transition-all duration-500 {{ $validPonderacion ? 'bg-green-500' : 'bg-amber-500' }}" 
+                                                     style="width: {{ ($totalPonderacion / 25) * 100 }}%"></div>
+                                            </div>
+                                            <span class="text-sm font-black {{ $validPonderacion ? 'text-green-600' : 'text-amber-600' }}">
+                                                {{ $totalPonderacion }}%
+                                            </span>
+                                            <span class="text-[10px] text-gray-400 font-bold">/ 25%</span>
+                                        </div>
                                     </div>
+                                    @error("form.unidades.$index.total_ponderacion_check")
+                                        <span class="text-red-500 text-[10px] font-bold block animate-bounce">{{ $message }}</span>
+                                    @enderror
                                 </div>
-                                </div>
+                            </div>
 
                                 <div x-data="{ openSection: 'tematica' }" class="p-8 space-y-4 flex-grow">
 
@@ -478,21 +493,31 @@
                                         </div>
                                         <div x-show="openSection === 'bibliografias'" x-collapse class="p-4 space-y-4">
                                             @foreach ($unidad['bibliografias'] as $biblioIndex => $bibliografia)
-                                                <div class="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
-                                                    <div class="flex-grow min-w-0">
-                                                        <x-select label="Seleccionar Bibliografía" required :options="$bibliografiasMaestras" valueField="id_bibliografia" textField="nombre_bibliografia"
+                                                <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 space-y-3">
+                                                    <div class="flex items-center justify-between">
+                                                        <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Referencia Bibliográfica <span class="text-red-500">*</span></label>
+                                                        <div class="flex items-center gap-2">
+                                                            <button type="button" wire:click="openBiblioModal"
+                                                                class="inline-flex items-center gap-1 text-[10px] bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-lg font-bold hover:bg-purple-50 dark:hover:bg-purple-900 transition-colors shadow-sm uppercase">
+                                                                <span class="material-icons text-xs">add</span> NUEVA
+                                                            </button>
+                                                            @if (count($unidad['bibliografias']) > 1)
+                                                                <button type="button" wire:click="removeItem({{ $index }}, 'bibliografias', {{ $biblioIndex }})"
+                                                                    class="text-gray-400 hover:text-red-500 transition-colors" title="Eliminar referencia">
+                                                                    <span class="material-icons text-sm">delete</span>
+                                                                </button>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    <div class="w-full overflow-hidden">
+                                                        <x-select :options="$bibliografiasMaestras" valueField="id_bibliografia" textField="nombre_bibliografia"
                                                             wire:model.live.debounce.250ms="form.unidades.{{ $index }}.bibliografias.{{ $biblioIndex }}.bibliografia_id"
-                                                            placeholder="Seleccione una referencia..." />
+                                                            placeholder="Seleccione una referencia..."
+                                                            selectClass="w-full text-xs" />
                                                         @error("form.unidades.$index.bibliografias.$biblioIndex.bibliografia_id")
                                                             <span class="text-red-500 text-[10px] font-bold block mt-1">{{ $message }}</span>
                                                         @enderror
                                                     </div>
-                                                    @if (count($unidad['bibliografias']) > 1)
-                                                        <button type="button" wire:click="removeItem({{ $index }}, 'bibliografias', {{ $biblioIndex }})"
-                                                            class="text-gray-400 hover:text-red-500 transition-colors" title="Eliminar referencia">
-                                                            <span class="material-icons text-sm">delete</span>
-                                                        </button>
-                                                    @endif
                                                 </div>
                                             @endforeach
                                         </div>
@@ -501,13 +526,18 @@
 
                                 {{-- Navegación entre acordeones --}}
                                 <div class="flex justify-between items-center pt-8 mt-8 border-t border-gray-100 dark:border-gray-800">
-                                    <div>
+                                    <div class="flex items-center gap-3">
                                         @if ($index > 0)
                                             <button type="button" wire:click="unidadAnterior({{ $index }})"
                                                 class="inline-flex items-center gap-2 px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-bold shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all">
                                                 <span class="material-icons text-sm">arrow_back</span> Unidad Anterior
                                             </button>
                                         @endif
+                                        <button type="button" wire:click="saveProgress({{ $index }})"
+                                            class="inline-flex items-center gap-2 px-6 py-2.5 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800/50 rounded-xl text-sm font-bold shadow-sm hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-all"
+                                            title="Guardar progreso actual para continuar luego">
+                                            <span class="material-icons text-sm">save</span> Guardar Progreso
+                                        </button>
                                     </div>
                                     <div>
                                         @if ($index < count($form->unidades) - 1)
@@ -574,6 +604,54 @@
                         </button>
                         <button type="button" wire:click="closeObjetivoModal"
                             class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if($showBiblioModal)
+        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title-biblio" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"
+                    wire:click="closeBiblioModal"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div
+                    class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full">
+                    <div class="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <div class="flex items-center gap-3 mb-4">
+                                    <div class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                                        <span class="material-icons">library_books</span>
+                                    </div>
+                                    <h3 class="text-lg leading-6 font-bold text-gray-900 dark:text-gray-100" id="modal-title-biblio">
+                                        Registrar Nueva Bibliografía
+                                    </h3>
+                                </div>
+                                <div class="mt-4">
+                                    <label for="newBiblio"
+                                        class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-widest text-[10px]">Descripción de la Bibliografía</label>
+                                    <textarea wire:model="newBiblioNombre" id="newBiblio" rows="4"
+                                        class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 text-gray-900 dark:text-white text-sm font-medium"
+                                        placeholder="Ej: Petzold, C. (2000). Code: The Hidden Language of Computer Hardware and Software. Microsoft Press."></textarea>
+                                    @error('newBiblioNombre') <span class="text-red-500 text-xs font-bold mt-1 block">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-900/50 px-4 py-4 sm:px-8 sm:flex sm:flex-row-reverse justify-center gap-3 border-t border-gray-100 dark:border-gray-700">
+                        <button type="button" wire:click="saveBiblio"
+                            class="w-full sm:w-52 inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-800 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-all">
+                            <span class="material-icons text-base">check_circle</span>
+                            Guardar Referencia
+                        </button>
+                        <button type="button" wire:click="closeBiblioModal"
+                            class="mt-3 sm:mt-0 w-full sm:w-52 inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-800 text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-all">
+                            <span class="material-icons text-base">cancel</span>
                             Cancelar
                         </button>
                     </div>

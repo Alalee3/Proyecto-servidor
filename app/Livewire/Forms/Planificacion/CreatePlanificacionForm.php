@@ -28,7 +28,7 @@ class CreatePlanificacionForm extends Form
         foreach ($this->unidades as $index => $unidad) {
             // Validación para estrategias
             foreach ($unidad['estrategias'] as $estIndex => $estrategia) {
-                $rules["unidades.$index.estrategias.$estIndex.tema_id"] = 'required|exists:tema_unidad,id_tema_unidad';
+                $rules["unidades.$index.estrategias.$estIndex.tecnica_actividad_id"] = 'required|exists:tecnica_actividad,id_tecnica_actividad';
                 $rules["unidades.$index.estrategias.$estIndex.actividad"] = 'required|string|min:5';
 
                 foreach ($estrategia['recursos'] as $recIndex => $recurso) {
@@ -166,7 +166,7 @@ class CreatePlanificacionForm extends Form
         $messages['unidades.*.objetivos.*.objetivo_id.required'] = 'Debe seleccionar un objetivo.';
         $messages['unidades.*.objetivos.*.contenidos.*.contenido_id.required'] = 'Debe seleccionar un contenido.';
 
-        $messages['unidades.*.estrategias.*.tema_id.required'] = 'Debe seleccionar un tema para la estrategia.';
+        $messages['unidades.*.estrategias.*.tecnica_actividad_id.required'] = 'Debe seleccionar una estrategia o actividad.';
         $messages['unidades.*.estrategias.*.actividad.required'] = 'La descripción de la actividad es obligatoria.';
         $messages['unidades.*.estrategias.*.actividad.min'] = 'La actividad debe tener al menos 5 caracteres.';
         $messages['unidades.*.estrategias.*.recursos.*.recurso_id.required'] = 'Debe seleccionar un recurso.';
