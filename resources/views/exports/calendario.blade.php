@@ -89,7 +89,8 @@
                                     $cellDate = \Carbon\Carbon::create($year, $m, $diaNum)->startOfDay();
                                 }
                                 $isVigente = ($cellDate && $cellDate->between($startDate, $endDate));
-                                $eventId = ($cellDate && isset($eventDays[$cellDate->format('Y-m-d')])) ? $eventDays[$cellDate->format('Y-m-d')] : null;
+                                $eventData = ($cellDate && isset($eventDays[$cellDate->format('Y-m-d')])) ? $eventDays[$cellDate->format('Y-m-d')] : null;
+                                $eventId = $eventData ? $eventData['ids'][0] : null;
                                 
                                 // Color para fines de semana (D=0, S=6)
                                 $isWeekend = ($col == 0 || $col == 6);

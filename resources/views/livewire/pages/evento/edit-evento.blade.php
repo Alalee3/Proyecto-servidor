@@ -83,12 +83,20 @@
                 </div>
             </div>
 
+            <!-- Botones -->
             <div class="flex items-center justify-end gap-4">
-                <a href="{{ route('evento/listar') }}" wire:navigate class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-sm font-medium">
-                    {{ __('Cancelar') }}
-                </a>
+
+                <x-danger-button type="button" wire:click="cancelar">
+                    <link rel="stylesheet"
+                        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=arrow_back" />
+                    <span class="material-symbols-outlined">
+                        arrow_back
+                    </span>
+                    {{ __('Volver') }}
+                </x-danger-button>
+
                 <x-primary-button type="submit" wire:loading.attr="disabled">
-                    {{ __('Actualizar Evento') }}
+                    {{ __('Actualizar') }}
                 </x-primary-button>
             </div>
         </form>

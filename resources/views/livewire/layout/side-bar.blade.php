@@ -41,10 +41,11 @@
                 <div>
                     <button @click="openMenu === 8 ? openMenu = null : openMenu = 8" class="sogat-sidebar-item">
                         <span>Temas</span>
-                        <img :src="openMenu === 8 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                            class="w-5 h-5 ml-auto">
+                        <svg class="w-4 h-4 ml-auto transition-transform duration-200" :class="openMenu === 8 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
                     </button>
-                    <ul x-show="openMenu === 8" x-collapse class="mt-0 space-y-0">
+                    <ul x-show="openMenu === 8" x-collapse class="mt-0 space-y-0" style="display: none;">
                         @can('crear-tema')
                             <li><a href="{{ route('tema/crear') }}" class="sogat-sidebar-link">Crear Tema</a></li>
                         @endcan
@@ -58,10 +59,11 @@
                 <div>
                     <button @click="openMenu === 7 ? openMenu = null : openMenu = 7" class="sogat-sidebar-item">
                         <span>Contenidos</span>
-                        <img :src="openMenu === 7 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                            class="w-5 h-5 ml-auto">
+                        <svg class="w-4 h-4 ml-auto transition-transform duration-200" :class="openMenu === 7 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
                     </button>
-                    <ul x-show="openMenu === 7" x-collapse class="mt-0 space-y-0">
+                    <ul x-show="openMenu === 7" x-collapse class="mt-0 space-y-0" style="display: none;">
                         @can('crear-contenido')
                             <li><a href="{{ route('contenido/crear') }}" class="sogat-sidebar-link">Crear Contenido</a></li>
                         @endcan
@@ -76,11 +78,12 @@
                     <button @click="openMenu === 10 ? openMenu = null : (openMenu = 10, subMenu = null)"
                         class="sogat-sidebar-item">
                         <span>Recursos Educativos</span>
-                        <img :src="openMenu === 10 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                            class="w-5 h-5 ml-auto">
+                        <svg class="w-4 h-4 ml-auto transition-transform duration-200" :class="openMenu === 10 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
                     </button>
 
-                    <div x-show="openMenu === 10" x-collapse class="mt-0 space-y-0">
+                    <div x-show="openMenu === 10" x-collapse class="mt-0 space-y-0" style="display: none;">
 
 
                         @can('listar-recurso')
@@ -88,10 +91,11 @@
                             <div>
                                 <button @click="subMenu === 3 ? subMenu = null : subMenu = 3" class="sogat-sidebar-subitem">
                                     <span>Recursos</span>
-                                    <img :src="subMenu === 3 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                                        class="w-4 h-4 ml-auto">
+                                    <svg class="w-3 h-3 ml-auto transition-transform duration-200" :class="subMenu === 3 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
                                 </button>
-                                <ul x-show="subMenu === 3" x-collapse class="mt-0 space-y-0">
+                                <ul x-show="subMenu === 3" x-collapse class="mt-0 space-y-0" style="display: none;">
                                     @can('crear-recurso')
                                         <li><a href="{{ route('recurso/crear') }}" class="sogat-sidebar-link !text-xs">Crear Recurso</a></li>
                                     @endcan
@@ -106,10 +110,11 @@
                             <div>
                                 <button @click="subMenu === 4 ? subMenu = null : subMenu = 4" class="sogat-sidebar-subitem">
                                     <span>Estrategias Pedagógicas</span>
-                                    <img :src="subMenu === 4 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                                        class="w-4 h-4 ml-auto">
+                                    <svg class="w-3 h-3 ml-auto transition-transform duration-200" :class="subMenu === 4 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
                                 </button>
-                                <ul x-show="subMenu === 4" x-collapse class="mt-0 space-y-0">
+                                <ul x-show="subMenu === 4" x-collapse class="mt-0 space-y-0" style="display: none;">
                                     @can('crear-estrategia')
                                         <li><a href="{{ route('estrategia/crear') }}" class="sogat-sidebar-link !text-xs">Crear Estrategia</a></li>
                                     @endcan
@@ -125,10 +130,11 @@
                             <div>
                                 <button @click="subMenu === 6 ? subMenu = null : subMenu = 6" class="sogat-sidebar-subitem">
                                     <span>Técnicas de Evaluación</span>
-                                    <img :src="subMenu === 6 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                                        class="w-4 h-4 ml-auto">
+                                    <svg class="w-3 h-3 ml-auto transition-transform duration-200" :class="subMenu === 6 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
                                 </button>
-                                <ul x-show="subMenu === 6" x-collapse class="mt-0 space-y-0">
+                                <ul x-show="subMenu === 6" x-collapse class="mt-0 space-y-0" style="display: none;">
                                     @can('crear-evaluacion')
                                         <li><a href="{{ route('tecnica-evaluacion/crear') }}"
                                                 class="sogat-sidebar-link !text-xs">Crear Técnica</a></li>
@@ -145,10 +151,11 @@
                             <div>
                                 <button @click="subMenu === 7 ? subMenu = null : subMenu = 7" class="sogat-sidebar-subitem">
                                     <span>Tipos de Evaluación</span>
-                                    <img :src="subMenu === 7 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                                        class="w-4 h-4 ml-auto">
+                                    <svg class="w-3 h-3 ml-auto transition-transform duration-200" :class="subMenu === 7 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
                                 </button>
-                                <ul x-show="subMenu === 7" x-collapse class="mt-0 space-y-0">
+                                <ul x-show="subMenu === 7" x-collapse class="mt-0 space-y-0" style="display: none;">
                                     @can('crear-tipo-evaluacion')
                                         <li><a href="{{ route('tipo-evaluacion/crear') }}"
                                                 class="sogat-sidebar-link !text-xs">Crear Tipo</a></li>
@@ -165,10 +172,11 @@
                             <div>
                                 <button @click="subMenu === 2 ? subMenu = null : subMenu = 2" class="sogat-sidebar-subitem">
                                     <span>Bibliografía</span>
-                                    <img :src="subMenu === 2 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                                        class="w-4 h-4 ml-auto">
+                                    <svg class="w-3 h-3 ml-auto transition-transform duration-200" :class="subMenu === 2 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                    </svg>
                                 </button>
-                                <ul x-show="subMenu === 2" x-collapse class="mt-0 space-y-0">
+                                <ul x-show="subMenu === 2" x-collapse class="mt-0 space-y-0" style="display: none;">
                                     @can('crear-bibliografia')
                                         <li><a href="{{ route('bibliografia/crear') }}" class="sogat-sidebar-link !text-xs">Crear Bibliografía</a>
                                         </li>
@@ -186,10 +194,11 @@
                 <div>
                     <button @click="openMenu === 18 ? openMenu = null : openMenu = 18" class="sogat-sidebar-item">
                         <span>Calendario Académico</span>
-                        <img :src="openMenu === 18 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                            class="w-5 h-5 ml-auto">
+                        <svg class="w-4 h-4 ml-auto transition-transform duration-200" :class="openMenu === 18 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
                     </button>
-                    <ul x-show="openMenu === 18" x-collapse class="mt-0 space-y-0">
+                    <ul x-show="openMenu === 18" x-collapse class="mt-0 space-y-0" style="display: none;">
                         @can('crear-calendario')
                             @if(!$hayCalendarioActivo)
                             <li><a href="{{ route('calendario.create') }}" class="sogat-sidebar-link">Crear Calendario</a></li>
@@ -209,10 +218,11 @@
                 <div>
                     <button @click="openMenu === 15 ? openMenu = null : openMenu = 15" class="sogat-sidebar-item">
                         <span>Eventos</span>
-                        <img :src="openMenu === 15 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                            class="w-5 h-5 ml-auto">
+                        <svg class="w-4 h-4 ml-auto transition-transform duration-200" :class="openMenu === 15 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
                     </button>
-                    <ul x-show="openMenu === 15" x-collapse class="mt-0 space-y-0">
+                    <ul x-show="openMenu === 15" x-collapse class="mt-0 space-y-0" style="display: none;">
                         @can('crear-evento')
                             <li><a href="{{ route('evento/crear') }}" class="sogat-sidebar-link">Crear Evento</a></li>
                         @endcan
@@ -235,10 +245,11 @@
                 <div>
                     <button @click="openMenu === 6 ? openMenu = null : openMenu = 6" class="sogat-sidebar-item">
                         <span>Planificaciones</span>
-                        <img :src="openMenu === 6 ? '{{ asset('img/down.png') }}' : '{{ asset('img/left.png') }}'"
-                            class="w-5 h-5 ml-auto">
+                        <svg class="w-4 h-4 ml-auto transition-transform duration-200" :class="openMenu === 6 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
                     </button>
-                    <ul x-show="openMenu === 6" x-collapse class="mt-0 space-y-0">
+                    <ul x-show="openMenu === 6" x-collapse class="mt-0 space-y-0" style="display: none;">
                         @can('crear-planificacion')
                             <li><a href="{{ route('planificacion/crear') }}" class="sogat-sidebar-link">Crear Planificación</a></li>
                         @endcan

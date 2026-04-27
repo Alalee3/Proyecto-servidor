@@ -171,7 +171,8 @@
                                         if($cellDate && $cellDate->between($startDate, $endDate)) {
                                             $isActive = true;
                                         }
-                                        $eventId = ($cellDate && isset($eventDays[$cellDate->format('Y-m-d')])) ? $eventDays[$cellDate->format('Y-m-d')] : null;
+                                        $eventData = ($cellDate && isset($eventDays[$cellDate->format('Y-m-d')])) ? $eventDays[$cellDate->format('Y-m-d')] : null;
+                                        $eventId = is_array($eventData) ? ($eventData['ids'][0] ?? null) : $eventData;
                                     @endphp
                                     <td class="{{ $isActive ? 'active-range' : ($cellDate ? 'out-of-range' : '') }}">
                                         @if($currentDayNum >= 1 && $currentDayNum <= $daysInMonth)

@@ -14,15 +14,31 @@
 
                 @if ($evento)
                     <!-- Grid de información -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
 
                         {{-- Descripción --}}
-                        <div class="col-span-1 sm:col-span-2 lg:col-span-3">
+                        <div>
                             <x-input-label value="Nombre del Evento:" />
-                            <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold break-words overflow-hidden">
+                            <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold break-words">
                                 {{ $evento->nombre_evento }}
                             </p>
                         </div>
+
+                        {{-- Fechas --}}
+                        @if($evento->detalles->first())
+                            <div>
+                                <x-input-label value="Fecha de Inicio:" />
+                                <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
+                                    {{ \Carbon\Carbon::parse($evento->detalles->first()->dia_inicio_detalle_evento)->format('d/m/Y') }}
+                                </p>
+                            </div>
+                            <div>
+                                <x-input-label value="Fecha de Fin:" />
+                                <p class="text-gray-700 dark:text-gray-300 text-2xl font-semibold">
+                                    {{ \Carbon\Carbon::parse($evento->detalles->first()->dia_fin_detalle_evento)->format('d/m/Y') }}
+                                </p>
+                            </div>
+                        @endif
 
                         {{-- Tipo de Evento --}}
                         <div>
@@ -35,7 +51,7 @@
                         {{-- Color --}}
                         <div>
                             <x-input-label value="Color Asignado:" />
-                            <div class="flex items-center gap-3">
+                            <div class="flex items-center gap-3 mt-1">
                                 @if($evento->color_rel)
                                     <div class="w-7 h-7 rounded-full border border-gray-400 shadow-sm" style="background-color: {{ $evento->color_rel->codigo_color }}"></div>
                                     <p class="text-gray-700 dark:text-gray-300 font-semibold text-lg">{{ $evento->color_rel->nombre_color }}</p>
@@ -45,22 +61,6 @@
                                 @endif
                             </div>
                         </div>
-
-                        {{-- Fechas --}}
-                        @if($evento->detalles->first())
-                            <div>
-                                <x-input-label value="Fecha de Inicio:" />
-                                <p class="text-gray-700 dark:text-gray-300 text-lg font-medium">
-                                    {{ \Carbon\Carbon::parse($evento->detalles->first()->dia_inicio_detalle_evento)->format('d/m/Y') }}
-                                </p>
-                            </div>
-                            <div>
-                                <x-input-label value="Fecha de Fin:" />
-                                <p class="text-gray-700 dark:text-gray-300 text-lg font-medium">
-                                    {{ \Carbon\Carbon::parse($evento->detalles->first()->dia_fin_detalle_evento)->format('d/m/Y') }}
-                                </p>
-                            </div>
-                        @endif
 
                         {{-- Estatus --}}
                         <div>

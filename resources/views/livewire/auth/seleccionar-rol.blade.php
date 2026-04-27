@@ -108,194 +108,197 @@
                         <div class="max-w-2xl mx-auto mt-4 mb-4">
                         </div>
                         <div x-data="{
-                                                    picker: null,
-                                                    showEventModal: false,
-                                                    selectedEventStart: '',
-                                                    selectedEventEnd: '',
-                                                    eventoNombre: '',
-                                                    eventoTipo: '1',
-                                                    eventoColor: '',
-                                                    eventoSeleccionado: '',
-                                                    clickCount: 0,
-                                                    eventosAlpine: @entangle('eventosRegistrados'),
-                                                    tooltip: { visible: false, x: 0, y: 0, content: null },
-                                                    init() {
-                                                        const isDark = document.documentElement.classList.contains('dark');
-                                                        const start = @js($form->dia_inicio_calendario_academico);
-                                                        const end = @js($form->dia_fin_calendario_academico);
-                                                        const startYear = parseInt(start.substring(0, 4)) || new Date().getFullYear();
+                                                            picker: null,
+                                                            showEventModal: false,
+                                                            selectedEventStart: '',
+                                                            selectedEventEnd: '',
+                                                            eventoNombre: '',
+                                                            eventoTipo: '1',
+                                                            eventoColor: '',
+                                                            eventoSeleccionado: '',
+                                                            clickCount: 0,
+                                                            eventosAlpine: @entangle('eventosRegistrados'),
+                                                            tooltip: { visible: false, x: 0, y: 0, content: null },
+                                                            init() {
+                                                                const isDark = document.documentElement.classList.contains('dark');
+                                                                const start = @js($form->dia_inicio_calendario_academico);
+                                                                const end = @js($form->dia_fin_calendario_academico);
+                                                                const startYear = parseInt(start.substring(0, 4)) || new Date().getFullYear();
 
-                                                        this.picker = new VanillaCalendar($refs.calendar, {
-                                                            type: 'multiple',
-                                                            months: 12,
-                                                            displayMonthsCount: 12,
-                                                            selectedMonth: 0,
-                                                            selectedYear: startYear,
-                                                            settings: {
-                                                                lang: 'es',
-                                                                range: {
-                                                                    min: start,
-                                                                    max: end,
-                                                                    disablePast: false,
-                                                                },
-                                                                selection: {
-                                                                    day: 'multiple-ranged', // Allow select range
-                                                                },
-                                                                visibility: {
-                                                                    daysOutside: false,
-                                                                    theme: isDark ? 'dark' : 'light'
-                                                                }
-                                                            },
-                                                                actions: {
-                                                                clickDay: (e, self) => {
-                                                                    // Handle fetching the clicked date manually from DOM or Fallback
-                                                                    let btn = e.target.closest('.vanilla-calendar-day__btn');
-                                                                    let clickedDate = btn ? btn.dataset.calendarDay : null;
-
-                                                                    if (!clickedDate && self.selectedDates.length > 0) {
-                                                                        clickedDate = self.selectedDates[self.selectedDates.length - 1];
-                                                                    }
-
-                                                                    if (!clickedDate) return;
-
-                                                                    if (this.clickCount === 0) {
-                                                                        // Primer click (Inicio)
-                                                                        this.selectedEventStart = clickedDate;
-                                                                        this.selectedEventEnd = '';
-                                                                        this.clickCount = 1;
-
-                                                                        self.selectedDates = [clickedDate];
-                                                                        self.update();
-                                                                        // Re-apply event colors after calendar re-renders
-                                                                        this.$nextTick(() => this.refrescarEventosVisuales());
-                                                                    } else {
-                                                                        // Segundo click (Fin)
-                                                                        this.selectedEventEnd = clickedDate;
-
-                                                                        // Validar orden
-                                                                        let d1 = new Date(this.selectedEventStart);
-                                                                        let d2 = new Date(this.selectedEventEnd);
-
-                                                                        if (d1 > d2) {
-                                                                            let temp = this.selectedEventStart;
-                                                                            this.selectedEventStart = this.selectedEventEnd;
-                                                                            this.selectedEventEnd = temp;
+                                                                this.picker = new VanillaCalendar($refs.calendar, {
+                                                                    type: 'multiple',
+                                                                    months: 12,
+                                                                    displayMonthsCount: 12,
+                                                                    selectedMonth: 0,
+                                                                    selectedYear: startYear,
+                                                                    date: {
+                                                                        today: new Date(startYear, 0, 1), 
+                                                                    },
+                                                                    settings: {
+                                                                        lang: 'es',
+                                                                        range: {
+                                                                            min: start,
+                                                                            max: end,
+                                                                            disablePast: false,
+                                                                        },
+                                                                        selection: {
+                                                                            day: 'multiple-ranged',
+                                                                        },
+                                                                        visibility: {
+                                                                            daysOutside: false,
+                                                                            theme: isDark ? 'dark' : 'light'
                                                                         }
+                                                                    },
+                                                                        actions: {
+                                                                        clickDay: (e, self) => {
+                                                                            // Handle fetching the clicked date manually from DOM or Fallback
+                                                                            let btn = e.target.closest('.vanilla-calendar-day__btn');
+                                                                            let clickedDate = btn ? btn.dataset.calendarDay : null;
 
-                                                                        // Si es el mismo día
-                                                                        if (d1.getTime() === d2.getTime()) {
-                                                                            self.selectedDates = [this.selectedEventStart];
-                                                                            self.update();
-                                                                            // Re-apply event colors after calendar re-renders
-                                                                            this.$nextTick(() => this.refrescarEventosVisuales());
+                                                                            if (!clickedDate && self.selectedDates.length > 0) {
+                                                                                clickedDate = self.selectedDates[self.selectedDates.length - 1];
+                                                                            }
+
+                                                                            if (!clickedDate) return;
+
+                                                                            if (this.clickCount === 0) {
+                                                                                // Primer click (Inicio)
+                                                                                this.selectedEventStart = clickedDate;
+                                                                                this.selectedEventEnd = '';
+                                                                                this.clickCount = 1;
+
+                                                                                self.selectedDates = [clickedDate];
+                                                                                self.update();
+                                                                                // Re-apply event colors after calendar re-renders
+                                                                                this.$nextTick(() => this.refrescarEventosVisuales());
+                                                                            } else {
+                                                                                // Segundo click (Fin)
+                                                                                this.selectedEventEnd = clickedDate;
+
+                                                                                // Validar orden
+                                                                                let d1 = new Date(this.selectedEventStart);
+                                                                                let d2 = new Date(this.selectedEventEnd);
+
+                                                                                if (d1 > d2) {
+                                                                                    let temp = this.selectedEventStart;
+                                                                                    this.selectedEventStart = this.selectedEventEnd;
+                                                                                    this.selectedEventEnd = temp;
+                                                                                }
+
+                                                                                // Si es el mismo día
+                                                                                if (d1.getTime() === d2.getTime()) {
+                                                                                    self.selectedDates = [this.selectedEventStart];
+                                                                                    self.update();
+                                                                                    // Re-apply event colors after calendar re-renders
+                                                                                    this.$nextTick(() => this.refrescarEventosVisuales());
+                                                                                }
+
+                                                                                this.showEventModal = true;
+                                                                                this.clickCount = 0;
+                                                                            }
                                                                         }
-
-                                                                        this.showEventModal = true;
-                                                                        this.clickCount = 0;
-                                                                    }
-                                                                }
-                                                            }
-                                                        });
-                                                        this.picker.init();
-                                                        this.$nextTick(() => this.refrescarEventosVisuales());
-
-                                                        this.$watch('eventosAlpine', () => {
-                                                            this.picker.update();
-                                                            this.$nextTick(() => this.refrescarEventosVisuales());
-                                                        });
-                                                    },
-                                                        refrescarEventosVisuales() {
-                                                            if (!this.picker) return;
-
-                                                            // Mapear cada día al color del ÚLTIMO evento registrado que lo cubra
-                                                            let dayColors = {};
-
-                                                            if (this.eventosAlpine && this.eventosAlpine.length > 0) {
-                                                                this.eventosAlpine.forEach(ev => {
-                                                                    let startD = new Date(ev.inicio + 'T00:00:00');
-                                                                    let endD   = new Date(ev.fin   + 'T00:00:00');
-
-                                                                    while (startD <= endD) {
-                                                                        let y = startD.getFullYear();
-                                                                        let m = String(startD.getMonth() + 1).padStart(2, '0');
-                                                                        let d = String(startD.getDate()).padStart(2, '0');
-                                                                        let dateStr = `${y}-${m}-${d}`;
-
-                                                                        // Al sobreescribir, el último evento registrado gana el color del día
-                                                                        dayColors[dateStr] = ev.color;
-
-                                                                        startD.setDate(startD.getDate() + 1);
                                                                     }
                                                                 });
-                                                            }
+                                                                this.picker.init();
+                                                                this.$nextTick(() => this.refrescarEventosVisuales());
 
-                                                            const calendarEl = this.$refs.calendar;
-                                                            if (!calendarEl) return;
+                                                                this.$watch('eventosAlpine', () => {
+                                                                    this.picker.update();
+                                                                    this.$nextTick(() => this.refrescarEventosVisuales());
+                                                                });
+                                                            },
+                                                                refrescarEventosVisuales() {
+                                                                    if (!this.picker) return;
 
-                                                            calendarEl.querySelectorAll('[data-calendar-day]').forEach(btn => {
-                                                                const day = btn.dataset.calendarDay;
+                                                                    // Mapear cada día al color del ÚLTIMO evento registrado que lo cubra
+                                                                    let dayColors = {};
 
-                                                                // Limpiar estilos previos
-                                                                btn.style.backgroundColor = '';
-                                                                btn.style.color = '';
-                                                                btn.style.border = '';
-                                                                btn.classList.remove('sogat-evento-registrado');
+                                                                    if (this.eventosAlpine && this.eventosAlpine.length > 0) {
+                                                                        this.eventosAlpine.forEach(ev => {
+                                                                            let startD = new Date(ev.inicio + 'T00:00:00');
+                                                                            let endD   = new Date(ev.fin   + 'T00:00:00');
 
-                                                                if (dayColors[day]) {
-                                                                    btn.classList.add('sogat-evento-registrado');
-                                                                    // Aplicar el color del último evento registrado
-                                                                    btn.style.setProperty('background-color', dayColors[day] + '26', 'important'); // 15% opacidad para el fondo
-                                                                    btn.style.setProperty('color', dayColors[day], 'important');
-                                                                    btn.style.setProperty('border', '2px solid ' + dayColors[day], 'important');
-                                                                    btn.style.setProperty('font-weight', '900', 'important');
+                                                                            while (startD <= endD) {
+                                                                                let y = startD.getFullYear();
+                                                                                let m = String(startD.getMonth() + 1).padStart(2, '0');
+                                                                                let d = String(startD.getDate()).padStart(2, '0');
+                                                                                let dateStr = `${y}-${m}-${d}`;
 
-                                                                    const matchingEvents = this.eventosAlpine.filter(ev => {
-                                                                        let s = new Date(ev.inicio + 'T00:00:00');
-                                                                        let e = new Date(ev.fin   + 'T00:00:00');
-                                                                        let d = new Date(day      + 'T00:00:00');
-                                                                        return d >= s && d <= e;
+                                                                                // Al sobreescribir, el último evento registrado gana el color del día
+                                                                                dayColors[dateStr] = ev.color;
+
+                                                                                startD.setDate(startD.getDate() + 1);
+                                                                            }
+                                                                        });
+                                                                    }
+
+                                                                    const calendarEl = this.$refs.calendar;
+                                                                    if (!calendarEl) return;
+
+                                                                    calendarEl.querySelectorAll('[data-calendar-day]').forEach(btn => {
+                                                                        const day = btn.dataset.calendarDay;
+
+                                                                        // Limpiar estilos previos
+                                                                        btn.style.backgroundColor = '';
+                                                                        btn.style.color = '';
+                                                                        btn.style.border = '';
+                                                                        btn.classList.remove('sogat-evento-registrado');
+
+                                                                        if (dayColors[day]) {
+                                                                            btn.classList.add('sogat-evento-registrado');
+                                                                            // Aplicar el color del último evento registrado
+                                                                            btn.style.setProperty('background-color', dayColors[day] + '26', 'important'); // 15% opacidad para el fondo
+                                                                            btn.style.setProperty('color', dayColors[day], 'important');
+                                                                            btn.style.setProperty('border', '2px solid ' + dayColors[day], 'important');
+                                                                            btn.style.setProperty('font-weight', '900', 'important');
+
+                                                                            const matchingEvents = this.eventosAlpine.filter(ev => {
+                                                                                let s = new Date(ev.inicio + 'T00:00:00');
+                                                                                let e = new Date(ev.fin   + 'T00:00:00');
+                                                                                let d = new Date(day      + 'T00:00:00');
+                                                                                return d >= s && d <= e;
+                                                                            });
+
+                                                                            btn.addEventListener('mouseenter', () => {
+                                                                                this.tooltip.content = matchingEvents;
+                                                                                this.tooltip.visible = true;
+                                                                            });
+                                                                            btn.addEventListener('mousemove', (e) => {
+                                                                                this.tooltip.x = e.clientX;
+                                                                                this.tooltip.y = e.clientY;
+                                                                            });
+                                                                            btn.addEventListener('mouseleave', () => {
+                                                                                this.tooltip.visible = false;
+                                                                                this.tooltip.content = null;
+                                                                            });
+                                                                        }
                                                                     });
-
-                                                                    btn.addEventListener('mouseenter', () => {
-                                                                        this.tooltip.content = matchingEvents;
-                                                                        this.tooltip.visible = true;
-                                                                    });
-                                                                    btn.addEventListener('mousemove', (e) => {
-                                                                        this.tooltip.x = e.clientX;
-                                                                        this.tooltip.y = e.clientY;
-                                                                    });
-                                                                    btn.addEventListener('mouseleave', () => {
-                                                                        this.tooltip.visible = false;
-                                                                        this.tooltip.content = null;
-                                                                    });
+                                                                },
+                                                            closeModal() {
+                                                                this.showEventModal = false;
+                                                                if(this.picker) {
+                                                                    this.picker.selectedDates = [];
+                                                                    this.picker.update();
+                                                                    // Re-apply event colors after picker resets the DOM
+                                                                    this.$nextTick(() => this.refrescarEventosVisuales());
                                                                 }
-                                                            });
-                                                        },
-                                                    closeModal() {
-                                                        this.showEventModal = false;
-                                                        if(this.picker) {
-                                                            this.picker.selectedDates = [];
-                                                            this.picker.update();
-                                                            // Re-apply event colors after picker resets the DOM
-                                                            this.$nextTick(() => this.refrescarEventosVisuales());
-                                                        }
-                                                        this.selectedEventStart = '';
-                                                        this.selectedEventEnd = '';
-                                                        this.eventoNombre = '';
-                                                        this.eventoTipo = '1';
-                                                        this.eventoColor = '';
-                                                        this.eventoSeleccionado = '';
-                                                        this.clickCount = 0;
-                                                    },
-                                                    guardarEvento() {
-                                                        if(!this.eventoNombre.trim()) {
-                                                            alert('Debe ingresar un nombre para el evento.');
-                                                            return;
-                                                        }
-                                                        $wire.agregarEvento(this.selectedEventStart, this.selectedEventEnd, this.eventoSeleccionado, this.eventoNombre, this.eventoTipo, this.eventoColor);
-                                                        this.closeModal();
-                                                    }
-                                                }" class="space-y-6 mt-4 pt-4">
+                                                                this.selectedEventStart = '';
+                                                                this.selectedEventEnd = '';
+                                                                this.eventoNombre = '';
+                                                                this.eventoTipo = '1';
+                                                                this.eventoColor = '';
+                                                                this.eventoSeleccionado = '';
+                                                                this.clickCount = 0;
+                                                            },
+                                                            guardarEvento() {
+                                                                if(!this.eventoNombre.trim()) {
+                                                                    alert('Debe ingresar un nombre para el evento.');
+                                                                    return;
+                                                                }
+                                                                $wire.agregarEvento(this.selectedEventStart, this.selectedEventEnd, this.eventoSeleccionado, this.eventoNombre, this.eventoTipo, this.eventoColor);
+                                                                this.closeModal();
+                                                            }
+                                                        }" class="space-y-6 mt-4 pt-4">
 
                             {{-- Floating Tooltip --}}
                             <div x-show="tooltip.visible" x-cloak
@@ -368,11 +371,11 @@
                                                 class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Seleccionar
                                                 Evento</label>
                                             <select x-model="eventoSeleccionado" x-on:change="
-                                                            let opt = $event.target.options[$event.target.selectedIndex];
-                                                            eventoNombre = opt.text; 
-                                                            eventoTipo = opt.dataset.tipo;
-                                                            eventoColor = opt.dataset.color;
-                                                        "
+                                                                    let opt = $event.target.options[$event.target.selectedIndex];
+                                                                    eventoNombre = opt.text; 
+                                                                    eventoTipo = opt.dataset.tipo;
+                                                                    eventoColor = opt.dataset.color;
+                                                                "
                                                 class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 shadow-sm">
                                                 <option value="" disabled selected>-- Seleccione un Evento --</option>
                                                 @php
