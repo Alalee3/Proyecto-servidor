@@ -29,10 +29,12 @@ class SeleccionarRol extends Component
     public $eventosRegistrados = [];
     public $bibliotecaEventos = [];
     public $paso = 1; // Wizard step
+    public $currentYear;
 
     #[Layout('layouts.guest')]
     public function mount()
     {
+        $this->currentYear = date('Y');
         // Revisamos si ya está autenticado
         if (Auth::check()) {
             return redirect()->route('dashboard');
