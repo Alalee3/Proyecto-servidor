@@ -52,6 +52,11 @@ class UpdateEvento extends Component
         }
     }
 
+    public function cancelar()
+    {
+        return redirect()->route('evento/listar');
+    }
+
     public function render()
     {
         return view('livewire.pages.evento.edit-evento');
