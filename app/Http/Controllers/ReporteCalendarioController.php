@@ -79,7 +79,14 @@ class ReporteCalendarioController extends Controller
 
             while ($start <= $end) {
                 if ($start->year == $year) {
-                    $eventDays[$start->format('Y-m-d')] = $eventoItem->id_evento;
+                    if (!isset($eventDays[$start->format('Y-m-d')])) {
+                        $eventDays[$start->format('Y-m-d')] = [
+                            'ids' => [],
+                            'nombres' => []
+                        ];
+                    }
+                    $eventDays[$start->format('Y-m-d')]['ids'][] = $eventoItem->id_evento;
+                    $eventDays[$start->format('Y-m-d')]['nombres'][] = $eventoItem->descripcion_evento;
                 }
                 $start->addDay();
             }
