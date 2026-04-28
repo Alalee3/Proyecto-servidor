@@ -99,15 +99,7 @@
                     @endif
 
                     @if($paso == 2 && $form->dia_inicio_calendario_academico && $form->dia_fin_calendario_academico)
-                        <div class="text-center mb-6">
-                            <h2 class="text-6xl md:text-[8rem] leading-none font-extrabold text-gray-800 dark:text-gray-100 drop-shadow-md mb-2 transition-all duration-300"
-                                style="font-family: 'Verdana', sans-serif; letter-spacing: -0.03em;">
-                                {{ date('Y') }}
-                            </h2>
-                        </div>
-                        <div class="max-w-2xl mx-auto mt-4 mb-4">
-                        </div>
-                        <div x-data="{
+                         <div x-data="{
                                                             picker: null,
                                                             showEventModal: false,
                                                             selectedEventStart: '',
@@ -119,93 +111,124 @@
                                                             clickCount: 0,
                                                             eventosAlpine: @entangle('eventosRegistrados'),
                                                             tooltip: { visible: false, x: 0, y: 0, content: null },
-                                                            init() {
+                                                            currentYear: null,
+                                                            calStart: '',
+                                                            calEnd: '',
+                                                            calStartYear: null,
+                                                            calEndYear: null,
+                                                            _savedStart: '',
+                                                            _savedCount: 0,
+                                                            _clickLock: false,
+                                                            inicializarPicker(year) {
                                                                 const isDark = document.documentElement.classList.contains('dark');
-                                                                const start = @js($form->dia_inicio_calendario_academico);
-                                                                const end = @js($form->dia_fin_calendario_academico);
-                                                                const startYear = parseInt(start.substring(0, 4)) || new Date().getFullYear();
 
-                                                                this.picker = new VanillaCalendar($refs.calendar, {
+                                                                // Persistir estado de selección antes de limpiar
+                                                                this._savedStart = this.selectedEventStart;
+                                                                this._savedCount = this.clickCount;
+
+                                                                // Limpiar y reconstruir
+                                                                this.$refs.calendar.innerHTML = '';
+
+                                                                this.picker = new VanillaCalendar(this.$refs.calendar, {
                                                                     type: 'multiple',
                                                                     months: 12,
                                                                     displayMonthsCount: 12,
                                                                     selectedMonth: 0,
-                                                                    selectedYear: startYear,
+                                                                    selectedYear: year,
                                                                     date: {
-                                                                        today: new Date(startYear, 0, 1), 
+                                                                        today: new Date(year, 0, 1),
                                                                     },
                                                                     settings: {
                                                                         lang: 'es',
                                                                         range: {
-                                                                            min: start,
-                                                                            max: end,
+                                                                            min: this.calStart,
+                                                                            max: this.calEnd,
                                                                             disablePast: false,
                                                                         },
                                                                         selection: {
-                                                                            day: 'multiple-ranged',
+                                                                            day: 'single',
                                                                         },
                                                                         visibility: {
                                                                             daysOutside: false,
                                                                             theme: isDark ? 'dark' : 'light'
                                                                         }
                                                                     },
-                                                                        actions: {
+                                                                    actions: {
                                                                         clickDay: (e, self) => {
-                                                                            // Handle fetching the clicked date manually from DOM or Fallback
+                                                                            // Evitar doble disparo de VanillaCalendar
+                                                                            if (this._clickLock) return;
+                                                                            this._clickLock = true;
+                                                                            setTimeout(() => { this._clickLock = false; }, 200);
+
                                                                             let btn = e.target.closest('.vanilla-calendar-day__btn');
                                                                             let clickedDate = btn ? btn.dataset.calendarDay : null;
-
-                                                                            if (!clickedDate && self.selectedDates.length > 0) {
-                                                                                clickedDate = self.selectedDates[self.selectedDates.length - 1];
-                                                                            }
-
                                                                             if (!clickedDate) return;
 
                                                                             if (this.clickCount === 0) {
-                                                                                // Primer click (Inicio)
+                                                                                // PRIMER CLICK
                                                                                 this.selectedEventStart = clickedDate;
-                                                                                this.selectedEventEnd = '';
-                                                                                this.clickCount = 1;
-
-                                                                                self.selectedDates = [clickedDate];
-                                                                                self.update();
-                                                                                // Re-apply event colors after calendar re-renders
+                                                                                this.selectedEventEnd   = '';
+                                                                                this.clickCount  = 1;
+                                                                                this._savedStart = clickedDate;
+                                                                                this._savedCount = 1;
                                                                                 this.$nextTick(() => this.refrescarEventosVisuales());
                                                                             } else {
-                                                                                // Segundo click (Fin)
+                                                                                // SEGUNDO CLICK
                                                                                 this.selectedEventEnd = clickedDate;
-
-                                                                                // Validar orden
-                                                                                let d1 = new Date(this.selectedEventStart);
-                                                                                let d2 = new Date(this.selectedEventEnd);
-
+                                                                                let d1 = new Date(this.selectedEventStart + 'T00:00:00');
+                                                                                let d2 = new Date(this.selectedEventEnd   + 'T00:00:00');
                                                                                 if (d1 > d2) {
-                                                                                    let temp = this.selectedEventStart;
+                                                                                    let tmp = this.selectedEventStart;
                                                                                     this.selectedEventStart = this.selectedEventEnd;
-                                                                                    this.selectedEventEnd = temp;
+                                                                                    this.selectedEventEnd   = tmp;
                                                                                 }
-
-                                                                                // Si es el mismo día
-                                                                                if (d1.getTime() === d2.getTime()) {
-                                                                                    self.selectedDates = [this.selectedEventStart];
-                                                                                    self.update();
-                                                                                    // Re-apply event colors after calendar re-renders
-                                                                                    this.$nextTick(() => this.refrescarEventosVisuales());
-                                                                                }
-
+                                                                                this.clickCount  = 0;
+                                                                                this._savedStart = '';
+                                                                                this._savedCount = 0;
                                                                                 this.showEventModal = true;
-                                                                                this.clickCount = 0;
+                                                                                this.$nextTick(() => this.refrescarEventosVisuales());
                                                                             }
                                                                         }
                                                                     }
                                                                 });
+
                                                                 this.picker.init();
-                                                                this.$nextTick(() => this.refrescarEventosVisuales());
+
+                                                                // Restaurar estado DESPUÉS de que el picker esté listo
+                                                                this.$nextTick(() => {
+                                                                    this.selectedEventStart = this._savedStart;
+                                                                    this.clickCount         = this._savedCount;
+                                                                    this.refrescarEventosVisuales();
+                                                                });
+                                                            },
+                                                            init() {
+                                                                this.clickCount         = 0;
+                                                                this.selectedEventStart = '';
+                                                                this.selectedEventEnd   = '';
+                                                                this._savedStart        = '';
+                                                                this._savedCount        = 0;
+
+                                                                this.calStart     = @js($form->dia_inicio_calendario_academico);
+                                                                this.calEnd       = @js($form->dia_fin_calendario_academico);
+                                                                this.calStartYear = parseInt(this.calStart.substring(0, 4));
+                                                                this.calEndYear   = parseInt(this.calEnd.substring(0, 4));
+                                                                this.currentYear  = this.calStartYear;
+
+                                                                this.inicializarPicker(this.currentYear);
 
                                                                 this.$watch('eventosAlpine', () => {
-                                                                    this.picker.update();
-                                                                    this.$nextTick(() => this.refrescarEventosVisuales());
+                                                                    if (this.picker) {
+                                                                        this.picker.update();
+                                                                        this.$nextTick(() => this.refrescarEventosVisuales());
+                                                                    }
                                                                 });
+                                                            },
+                                                            cambiarAnio(dir) {
+                                                                const nuevoAnio = parseInt(this.currentYear) + dir;
+                                                                if (nuevoAnio >= this.calStartYear && nuevoAnio <= this.calEndYear) {
+                                                                    this.currentYear = nuevoAnio;
+                                                                    this.inicializarPicker(nuevoAnio);
+                                                                }
                                                             },
                                                                 refrescarEventosVisuales() {
                                                                     if (!this.picker) return;
@@ -289,6 +312,8 @@
                                                                 this.eventoColor = '';
                                                                 this.eventoSeleccionado = '';
                                                                 this.clickCount = 0;
+                                                                sessionStorage.removeItem('sogat_event_start');
+                                                                sessionStorage.removeItem('sogat_click_count');
                                                             },
                                                             guardarEvento() {
                                                                 if(!this.eventoNombre.trim()) {
@@ -331,7 +356,63 @@
                                     Asignación de Eventos</h4>
                             </div>
 
+                            {{-- Navegación de Año --}}
+                            <template x-if="calStartYear && calEndYear && calStartYear < calEndYear">
+                                <div class="flex items-center justify-center gap-6 mb-8 mt-2">
+                                    <button type="button"
+                                        @click="cambiarAnio(-1)"
+                                        :disabled="currentYear <= calStartYear"
+                                        :class="currentYear <= calStartYear ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer'"
+                                        class="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm transition-all duration-200">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                                        </svg>
+                                    </button>
+                                    
+                                    <div class="flex flex-col items-center">
+                                        <span x-text="currentYear"
+                                            class="text-7xl font-black text-gray-800 dark:text-gray-100 min-w-[150px] text-center drop-shadow-sm"
+                                            style="font-family: 'Verdana', sans-serif; letter-spacing: -0.05em;"></span>
+                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Año Escolar</span>
+                                    </div>
+
+                                    <button type="button"
+                                        @click="cambiarAnio(1)"
+                                        :disabled="currentYear >= calEndYear"
+                                        :class="currentYear >= calEndYear ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer'"
+                                        class="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 shadow-sm transition-all duration-200">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </template>
+
+                            {{-- Caso de un solo año --}}
+                            <template x-if="calStartYear && calEndYear && calStartYear >= calEndYear">
+                                <div class="text-center mb-8 mt-2">
+                                    <span x-text="currentYear"
+                                        class="text-7xl font-black text-gray-800 dark:text-gray-100 drop-shadow-sm"
+                                        style="font-family: 'Verdana', sans-serif; letter-spacing: -0.05em;"></span>
+                                </div>
+                            </template>
+
                             <div class="flex justify-center flex-col items-center">
+
+                                {{-- Indicador de fecha de inicio seleccionada (visible solo al esperar segundo clic) --}}
+                                <template x-if="clickCount === 1 && selectedEventStart">
+                                    <div class="mb-4 flex items-center gap-3 px-5 py-3 rounded-2xl bg-blue-50 dark:bg-blue-900/30 border-2 border-blue-400 dark:border-blue-500 shadow-sm animate-pulse">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                                        </svg>
+                                        <span class="text-sm font-bold text-blue-700 dark:text-blue-300">
+                                            Inicio guardado: <span x-text="selectedEventStart" class="font-mono"></span>
+                                        </span>
+                                        <span class="text-xs text-blue-500 dark:text-blue-400">— Ahora haz clic en la fecha de fin</span>
+                                        <button @click="clickCount = 0; selectedEventStart = '';" class="ml-auto text-blue-400 hover:text-blue-600 text-xs underline">Cancelar</button>
+                                    </div>
+                                </template>
+
                                 <div wire:ignore x-ref="calendar" class="sogat-datepicker-container w-full"></div>
                             </div>
 

@@ -44,14 +44,14 @@ class ReporteCalendarioController extends Controller
     }
 
     /**
-     * Lógica compartida para generar el archivo Excel.
+     * Lógica compartida para generar el archivo Excel multi-año.
      */
     private function generarExcel($calendario)
     {
-        // Determinar el año a mostrar (el año del inicio del calendario)
-        $year = Carbon::parse($calendario->dia_inicio_calendario_academico)->year;
+        $startYear = Carbon::parse($calendario->dia_inicio_calendario_academico)->year;
+        $endYear   = Carbon::parse($calendario->dia_fin_calendario_academico)->year;
 
-        // Obtener días con eventos para este año
+        // Obtener TODOS los eventos del calendario
         $eventosRaw = DB::table('evento')
             ->join('detalle_evento', 'evento.id_evento', '=', 'detalle_evento.id_evento')
             ->leftJoin('color', 'evento.id_color', '=', 'color.id_color')
@@ -66,38 +66,52 @@ class ReporteCalendarioController extends Controller
             ->where('evento.estatus', 1)
             ->get();
 
-        $eventDays = [];
+        // Construir paleta de colores por evento
         $eventColors = [];
         $palette = ['#007BFF', '#28A745', '#DC3545', '#FD7E14', '#6610F2'];
-
         foreach ($eventosRaw as $index => $eventoItem) {
             $color = $eventoItem->codigo_color ?? $palette[$index % count($palette)];
             $eventColors[$eventoItem->id_evento] = $color;
+        }
 
+        // Construir mapa de días con eventos por AÑO
+        // eventDaysByYear[2025]['2025-03-10'] = ['ids'=>[...], 'nombres'=>[...]]
+        $eventDaysByYear = [];
+        for ($y = $startYear; $y <= $endYear; $y++) {
+            $eventDaysByYear[$y] = [];
+        }
+
+        foreach ($eventosRaw as $eventoItem) {
             $start = Carbon::parse($eventoItem->dia_inicio_evento);
-            $end = Carbon::parse($eventoItem->dia_fin_evento);
+            $end   = Carbon::parse($eventoItem->dia_fin_evento);
 
             while ($start <= $end) {
-                if ($start->year == $year) {
-                    if (!isset($eventDays[$start->format('Y-m-d')])) {
-                        $eventDays[$start->format('Y-m-d')] = [
-                            'ids' => [],
-                            'nombres' => []
-                        ];
+                $y = $start->year;
+                if (isset($eventDaysByYear[$y])) {
+                    $dateStr = $start->format('Y-m-d');
+                    if (!isset($eventDaysByYear[$y][$dateStr])) {
+                        $eventDaysByYear[$y][$dateStr] = ['ids' => [], 'nombres' => []];
                     }
-                    $eventDays[$start->format('Y-m-d')]['ids'][] = $eventoItem->id_evento;
-                    $eventDays[$start->format('Y-m-d')]['nombres'][] = $eventoItem->descripcion_evento;
+                    $eventDaysByYear[$y][$dateStr]['ids'][]     = $eventoItem->id_evento;
+                    $eventDaysByYear[$y][$dateStr]['nombres'][] = $eventoItem->descripcion_evento;
                 }
                 $start->addDay();
             }
         }
 
+        $years = range($startYear, $endYear);
+
         return Excel::download(new CalendarioExport([
-            'calendario' => $calendario,
-            'year' => $year,
-            'eventDays' => $eventDays,
-            'eventColors' => $eventColors,
-            'eventos' => $eventosRaw
-        ]), 'calendario_academico_' . $year . '.xlsx');
+            'calendario'      => $calendario,
+            'years'           => $years,
+            'startYear'       => $startYear,
+            'endYear'         => $endYear,
+            'eventDaysByYear' => $eventDaysByYear,
+            'eventColors'     => $eventColors,
+            'eventos'         => $eventosRaw,
+            // Compatibilidad con código legacy que use $year y $eventDays
+            'year'            => $startYear,
+            'eventDays'       => $eventDaysByYear[$startYear] ?? [],
+        ]), 'calendario_academico_' . $startYear . '-' . $endYear . '.xlsx');
     }
 }

@@ -40,8 +40,21 @@
             text-align: center;
             font-weight: bold;
             font-size: 14pt;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             text-transform: uppercase;
+        }
+        .subtitle {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 9pt;
+        }
+        .year-section {
+            page-break-before: always;
+            margin-top: 20px;
+        }
+        .year-section:first-child {
+            page-break-before: avoid;
+            margin-top: 0;
         }
         .info-table {
             width: 100%;
@@ -112,6 +125,14 @@
             font-weight: bold;
             margin: 1px auto;
         }
+        .year-separator {
+            text-align: left;
+            font-weight: bold;
+            font-size: 11pt;
+            border-bottom: 1px solid #000;
+            margin: 15px 0 10px 0;
+            color: #555;
+        }
     </style>
 </head>
 <body>
@@ -127,78 +148,99 @@
         <div class="footer-text">{{ now()->format('d/m/Y h:i a') }} - Reporte de Calendario</div>
     </footer>
 
-    <div class="title">CALENDARIO ACADÉMICO {{ $year }}</div>
-    <div style="text-align: center; margin-bottom: 20px;">
-        <strong>Vigencia:</strong> {{ \Carbon\Carbon::parse($calendario->dia_inicio_calendario_academico)->format('d/m/Y') }} 
-        hasta {{ \Carbon\Carbon::parse($calendario->dia_fin_calendario_academico)->format('d/m/Y') }}
-    </div>
-
     @php
         $startDate = \Carbon\Carbon::parse($calendario->dia_inicio_calendario_academico)->startOfDay();
-        $endDate = \Carbon\Carbon::parse($calendario->dia_fin_calendario_academico)->endOfDay();
-        $meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        $endDate   = \Carbon\Carbon::parse($calendario->dia_fin_calendario_academico)->endOfDay();
+        $meses     = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
     @endphp
 
-    <div class="calendar-container">
-        @foreach(range(1, 12) as $m)
-            @php
-                $currentMonth = \Carbon\Carbon::create($year, $m, 1);
-                $daysInMonth = $currentMonth->daysInMonth;
-                $startDayOfWeek = $currentMonth->dayOfWeek; // 0 (Sun) to 6 (Sat)
-                // Convert to Monday start if preferred, but Sunday is common. 
-                // Let's use Sunday start for simplicity (0=Sun, 1=Mon, ..., 6=Sat)
-            @endphp
-            <div class="month-box">
-                <div class="month-name">{{ $meses[$m-1] }}</div>
-                <table class="month-table">
-                    <thead>
-                        <tr>
-                            <th>D</th><th>L</th><th>M</th><th>M</th><th>j</th><th>V</th><th>S</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php $dayCounter = 1; @endphp
-                        @for($row = 0; $row < 6; $row++)
-                            <tr>
-                                @for($col = 0; $col < 7; $col++)
-                                    @php
-                                        $currentDayNum = ($row * 7 + $col) - $startDayOfWeek + 1;
-                                        $cellDate = null;
-                                        if($currentDayNum >= 1 && $currentDayNum <= $daysInMonth) {
-                                            $cellDate = \Carbon\Carbon::create($year, $m, $currentDayNum)->startOfDay();
-                                        }
-                                        $isActive = false;
-                                        if($cellDate && $cellDate->between($startDate, $endDate)) {
-                                            $isActive = true;
-                                        }
-                                        $eventData = ($cellDate && isset($eventDays[$cellDate->format('Y-m-d')])) ? $eventDays[$cellDate->format('Y-m-d')] : null;
-                                        $eventId = is_array($eventData) ? ($eventData['ids'][0] ?? null) : $eventData;
-                                    @endphp
-                                    <td class="{{ $isActive ? 'active-range' : ($cellDate ? 'out-of-range' : '') }}">
-                                        @if($currentDayNum >= 1 && $currentDayNum <= $daysInMonth)
-                                            @if($eventId)
-                                                <div class="event-circle" style="border-color: {{ $eventColors[$eventId] }}; color: {{ $eventColors[$eventId] }};">
-                                                    {{ $currentDayNum }}
-                                                </div>
-                                            @else
-                                                {{ $currentDayNum }}
-                                            @endif
-                                        @endif
-                                    </td>
-                                @endfor
-                            </tr>
-                            @if($currentDayNum >= $daysInMonth) @break @endif
-                        @endfor
-                    </tbody>
-                </table>
-            </div>
-        @endforeach
+    <div class="title">CALENDARIO ACADÉMICO {{ $startYear }} - {{ $endYear }}</div>
+    <div class="subtitle">
+        <strong>Vigencia:</strong>
+        {{ \Carbon\Carbon::parse($calendario->dia_inicio_calendario_academico)->format('d/m/Y') }}
+        hasta
+        {{ \Carbon\Carbon::parse($calendario->dia_fin_calendario_academico)->format('d/m/Y') }}
     </div>
 
+    {{-- Una sección por cada año del calendario --}}
+    @foreach($years as $loopIndex => $yearLoop)
+        @php
+            $eventDaysYear = $eventDaysByYear[$yearLoop] ?? [];
+
+            // Solo los meses de este año que se solapan con la vigencia
+            $mesesValidos = [];
+            foreach (range(1, 12) as $mes) {
+                $primerDia = \Carbon\Carbon::create($yearLoop, $mes, 1)->startOfDay();
+                $ultimoDia = $primerDia->copy()->endOfMonth()->endOfDay();
+                if ($primerDia <= $endDate && $ultimoDia >= $startDate) {
+                    $mesesValidos[] = $mes;
+                }
+            }
+        @endphp
+
+        <div class="{{ $loopIndex > 0 ? 'year-section' : '' }}">
+            {{-- Identificador sutil de año si es multianual --}}
+            @if(count($years) > 1)
+                <div class="year-separator">AÑO {{ $yearLoop }}</div>
+            @endif
+
+            <div class="calendar-container">
+                @foreach($mesesValidos as $m)
+                    @php
+                        $currentMonth   = \Carbon\Carbon::create($yearLoop, $m, 1);
+                        $daysInMonth    = $currentMonth->daysInMonth;
+                        $startDayOfWeek = $currentMonth->dayOfWeek;
+                    @endphp
+                    <div class="month-box">
+                        <div class="month-name">{{ $meses[$m-1] }}</div>
+                        <table class="month-table">
+                            <thead>
+                                <tr>
+                                    <th>D</th><th>L</th><th>M</th><th>M</th><th>j</th><th>V</th><th>S</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for($row = 0; $row < 6; $row++)
+                                    <tr>
+                                        @for($col = 0; $col < 7; $col++)
+                                            @php
+                                                $currentDayNum = ($row * 7 + $col) - $startDayOfWeek + 1;
+                                                $cellDate = null;
+                                                if ($currentDayNum >= 1 && $currentDayNum <= $daysInMonth) {
+                                                    $cellDate = \Carbon\Carbon::create($yearLoop, $m, $currentDayNum)->startOfDay();
+                                                }
+                                                $isActive  = ($cellDate && $cellDate->between($startDate, $endDate));
+                                                $eventData = ($cellDate && isset($eventDaysYear[$cellDate->format('Y-m-d')])) ? $eventDaysYear[$cellDate->format('Y-m-d')] : null;
+                                                $eventId   = is_array($eventData) ? ($eventData['ids'][0] ?? null) : $eventData;
+                                            @endphp
+                                            <td class="{{ $isActive ? 'active-range' : ($cellDate ? 'out-of-range' : '') }}">
+                                                @if($currentDayNum >= 1 && $currentDayNum <= $daysInMonth)
+                                                    @if($eventId)
+                                                        <div class="event-circle" style="border-color: {{ $eventColors[$eventId] }}; color: {{ $eventColors[$eventId] }};">
+                                                            {{ $currentDayNum }}
+                                                        </div>
+                                                    @else
+                                                        {{ $currentDayNum }}
+                                                    @endif
+                                                @endif
+                                            </td>
+                                        @endfor
+                                    </tr>
+                                    @if($currentDayNum >= $daysInMonth) @break @endif
+                                @endfor
+                            </tbody>
+                        </table>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endforeach
+
+    {{-- Página de eventos --}}
     <div style="page-break-before: always;"></div>
 
-    <div class="title">EVENTOS DEL CALENDARIO ACADÉMICO {{ $year }}</div>
-    
+    <div class="title">EVENTOS DEL CALENDARIO ACADÉMICO {{ $startYear }} - {{ $endYear }}</div>
+
     <table class="info-table">
         <thead>
             <tr style="background-color: #f2f2f2;">
@@ -213,9 +255,7 @@
             @foreach($eventos->sortBy('dia_inicio_evento') as $evento)
                 <tr>
                     <td style="background-color: {{ $eventColors[$evento->id_evento] }}; padding: 0; border: 1px solid #000;"></td>
-                    <td>
-                        {{ $evento->descripcion_evento }}
-                    </td>
+                    <td>{{ $evento->descripcion_evento }}</td>
                     <td>{{ \Carbon\Carbon::parse($evento->dia_inicio_evento)->format('d/m/Y') }}</td>
                     <td>{{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}</td>
                     <td>

@@ -54,71 +54,81 @@ class CalendarioExport implements FromView, ShouldAutoSize, WithStyles, WithDraw
     {
         return [
             AfterSheet::class => function(AfterSheet $event) {
-                $sheet = $event->sheet->getDelegate();
-                $data = $this->data;
-                $year = $data['year'];
-                $eventDays = $data['eventDays'] ?? [];
+                $sheet      = $event->sheet->getDelegate();
+                $data       = $this->data;
                 $calendario = $data['calendario'];
+                $years      = $data['years'] ?? [$data['year']];
+                $eventDaysByYear = $data['eventDaysByYear'] ?? [$data['year'] => ($data['eventDays'] ?? [])];
+                $eventColors = $data['eventColors'] ?? [];
+
                 $startDate = \Carbon\Carbon::parse($calendario->dia_inicio_calendario_academico)->startOfDay();
-                $endDate = \Carbon\Carbon::parse($calendario->dia_fin_calendario_academico)->endOfDay();
+                $endDate   = \Carbon\Carbon::parse($calendario->dia_fin_calendario_academico)->endOfDay();
 
-                // Replicar lógica de meses chunks igual que en la vista blade
-                $mesesValidos = [];
-                foreach (range(1, 12) as $mes) {
-                    $primerDiaMes = \Carbon\Carbon::create($year, $mes, 1)->startOfDay();
-                    $ultimoDiaMes = $primerDiaMes->copy()->endOfMonth()->endOfDay();
-                    if ($primerDiaMes <= $endDate && $ultimoDiaMes >= $startDate) {
-                        $mesesValidos[] = $mes;
+                // La fila 15 es donde comienza el primer bloque de meses (tras las 9 filas vacías + 2 de título + 1 subtítulo + 2 separadores)
+                $currentBaseRow = 15;
+
+                foreach ($years as $year) {
+                    $eventDays = $eventDaysByYear[$year] ?? [];
+
+                    // Calcular meses válidos para este año
+                    $mesesValidos = [];
+                    foreach (range(1, 12) as $mes) {
+                        $primerDiaMes = \Carbon\Carbon::create($year, $mes, 1)->startOfDay();
+                        $ultimoDiaMes = $primerDiaMes->copy()->endOfMonth()->endOfDay();
+                        if ($primerDiaMes <= $endDate && $ultimoDiaMes >= $startDate) {
+                            $mesesValidos[] = $mes;
+                        }
                     }
-                }
-                $mesesChunks = array_chunk($mesesValidos, 3);
+                    $mesesChunks = array_chunk($mesesValidos, 3);
 
-                foreach($mesesChunks as $chunkIndex => $chunk) {
-                    // BaseRow: Fila 15 es la primera semana del primer chunk (index 0)
-                    // Cada bloque de meses (chunk) ocupa exactamente 9 filas
-                    $baseRow = 15 + ($chunkIndex * 9); 
-                    
-                    foreach($chunk as $mPos => $m) {
-                        $currentMonth = \Carbon\Carbon::create($year, $m, 1);
-                        $daysInMonth = $currentMonth->daysInMonth;
-                        $startDayOfWeek = $currentMonth->dayOfWeek; // 0 (Dom) a 6 (Sab)
-                        
-                        // BaseCol: A=1, I=9, Q=17. Cada mes tiene 7 cols + 1 col de espacio
-                        $baseCol = 1 + ($mPos * 8); 
+                    foreach ($mesesChunks as $chunkIndex => $chunk) {
+                        // Cada chunk ocupa: 1 fila separadora + 1 nombre mes + 1 cabecera días + 6 filas semanas = 9 filas
+                        $baseRow = $currentBaseRow + ($chunkIndex * 9);
 
-                        for($numFila = 0; $numFila < 6; $numFila++) {
-                            for($col = 0; $col < 7; $col++) {
-                                $diaNum = ($numFila * 7 + $col) - $startDayOfWeek + 1;
-                                
-                                if($diaNum >= 1 && $diaNum <= $daysInMonth) {
-                                    $cellDate = \Carbon\Carbon::create($year, $m, $diaNum)->startOfDay();
-                                    $dateStr = $cellDate->format('Y-m-d');
-                                    
-                                    if (isset($eventDays[$dateStr])) {
-                                        $eventNames = $eventDays[$dateStr]['nombres'];
-                                        $commentText = "Eventos:\n\n";
-                                        foreach ($eventNames as $i => $name) {
-                                            $commentText .= ($i + 1) . ".- " . $name . "\n";
+                        foreach ($chunk as $mPos => $m) {
+                            $currentMonth   = \Carbon\Carbon::create($year, $m, 1);
+                            $daysInMonth    = $currentMonth->daysInMonth;
+                            $startDayOfWeek = $currentMonth->dayOfWeek;
+
+                            // BaseCol: A=1, I=9, Q=17
+                            $baseCol = 1 + ($mPos * 8);
+
+                            for ($numFila = 0; $numFila < 6; $numFila++) {
+                                for ($col = 0; $col < 7; $col++) {
+                                    $diaNum = ($numFila * 7 + $col) - $startDayOfWeek + 1;
+
+                                    if ($diaNum >= 1 && $diaNum <= $daysInMonth) {
+                                        $cellDate = \Carbon\Carbon::create($year, $m, $diaNum)->startOfDay();
+                                        $dateStr  = $cellDate->format('Y-m-d');
+
+                                        if (isset($eventDays[$dateStr])) {
+                                            $eventNames  = $eventDays[$dateStr]['nombres'];
+                                            $commentText = "Eventos:\n\n";
+                                            foreach ($eventNames as $i => $name) {
+                                                $commentText .= ($i + 1) . ".- " . $name . "\n";
+                                            }
+
+                                            $excelRow  = $baseRow + $numFila;
+                                            $excelCol  = $baseCol + $col;
+                                            $cellCoord = Coordinate::stringFromColumnIndex($excelCol) . $excelRow;
+
+                                            $sheet->getComment($cellCoord)
+                                                  ->getText()
+                                                  ->createTextRun($commentText);
+
+                                            $height = 40 + (count($eventNames) * 15);
+                                            $sheet->getComment($cellCoord)->setWidth('200pt');
+                                            $sheet->getComment($cellCoord)->setHeight($height . 'pt');
                                         }
-
-                                        $excelRow = $baseRow + $numFila;
-                                        $excelCol = $baseCol + $col;
-                                        $cellCoord = Coordinate::stringFromColumnIndex($excelCol) . $excelRow;
-                                        
-                                        // Agregar comentario a la celda
-                                        $sheet->getComment($cellCoord)
-                                              ->getText()
-                                              ->createTextRun($commentText);
-                                        
-                                        // Ajustar el tamaño del cuadro del comentario según la cantidad de eventos
-                                        $height = 40 + (count($eventNames) * 15);
-                                        $sheet->getComment($cellCoord)->setWidth('200pt');
-                                        $sheet->getComment($cellCoord)->setHeight($height . 'pt');
                                     }
                                 }
                             }
                         }
                     }
+
+                    // Avanzar el baseRow para el próximo año:
+                    // Se avanza exactamente por el número de filas de los chunks procesados
+                    $currentBaseRow += (count($mesesChunks) * 9);
                 }
             },
         ];
