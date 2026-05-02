@@ -28,7 +28,7 @@ class BitacoraViewRepo
             // Buscar datos del usuario en la BD externa
             $usuarioExterno = DB::connection('external_db')
                 ->table('usuario')
-                ->where('usu_codigo', $registro->id_usuario)
+                ->where(DB::raw('TRIM(usu_cedula)'), trim($registro->id_usuario))
                 ->first();
 
             if ($usuarioExterno) {

@@ -39,8 +39,9 @@ class BitacoraIndexRepo
             // Consultar nombres en la BD externa (emulacion_sogac_2)
             $usuariosExternos = DB::connection('external_db')
                 ->table('usuario')
-                ->whereIn('usu_codigo', $userIds)
-                ->pluck('usu_nombre', 'usu_codigo');
+                ->whereIn(DB::raw('TRIM(usu_cedula)'), $userIds)
+                ->select(DB::raw('TRIM(usu_cedula) as usu_cedula'), 'usu_nombre')
+                ->pluck('usu_nombre', 'usu_cedula');
 
             // Adjuntar el nombre al resultado
             $bitacora->getCollection()->transform(function ($item) use ($usuariosExternos) {

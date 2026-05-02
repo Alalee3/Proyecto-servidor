@@ -14,7 +14,7 @@ class AuditSessionActivity
      */
     public function handleLogin(Login $event)
     {
-        $this->log($event->user->getAuthIdentifier(), 'LOGIN');
+        $this->log($event->user, 'LOGIN');
     }
 
     /**
@@ -23,17 +23,19 @@ class AuditSessionActivity
     public function handleLogout(Logout $event)
     {
         if ($event->user) {
-            $this->log($event->user->getAuthIdentifier(), 'LOGOUT');
+            $this->log($event->user, 'LOGOUT');
         }
     }
 
     /**
      * Inserta el registro de sesión en la Bitácora.
      */
-    protected function log($userId, $accion)
+    protected function log($user, $accion)
     {
+        $userId = is_object($user) ? ($user->usu_cedula ?? $user->getAuthIdentifier()) : $user;
+
         Bitacora::create([
-            'id_users' => $userId,
+            'id_usuario' => $userId,
             'modulo_afectado_bitacora' => 'Seguridad',
             'tabla_afectada_bitacora' => 'users',
             'id_registro_afectado_bitacora' => (string) $userId,
