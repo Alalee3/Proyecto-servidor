@@ -14,7 +14,7 @@ class PermisoIndexRepo
     {
         return DB::connection('external_db')->table('rol')
             ->select('rol_codigo', 'rol_nombre')
-            ->whereIn('rol_codigo', [4, 3, 11])
+            ->whereIn('rol_codigo', [4, 3, 11, 31])
             ->when($busqueda, function ($consulta, $busqueda) {
                 // Compatible con Postgres e ILIKE para búsqueda insensible a mayúsculas
                 $consulta->where('rol_nombre', /*'ILIKE'*/ 'LIKE', '%' . $busqueda . '%');

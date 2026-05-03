@@ -20,7 +20,7 @@
 
 
 
-    <nav class="flex flex-col flex-1 min-h-full px-0 space-y-0" x-data="{ openMenu: null, subMenu: null }">
+    <nav class="flex flex-col flex-1 min-h-full px-0 space-y-0 pb-60" x-data="{ openMenu: null, subMenu: null }">
         @auth
             <!-- Dashboard -->
             <a href="/dashboard" class="sogat-sidebar-item">
@@ -232,12 +232,14 @@
             @endcan
 
 
-            <!-- Permisos (DAECE) -->
-            <div>
-                <a href="{{ route('permiso/listar') }}" class="sogat-sidebar-item">
-                    Permisos
-                </a>
-            </div>
+            @if(!in_array(auth()->user()->usu_cod_rol, [3, 4]) || $roleCount > 1)
+                <!-- Permisos (DAECE) -->
+                <div>
+                    <a href="{{ route('permiso/listar') }}" class="sogat-sidebar-item">
+                        Permisos
+                    </a>
+                </div>
+            @endif
 
 
             @can('listar-planificacion')
@@ -282,7 +284,7 @@
                             {{ auth()->user()->rol->rol_nombre}}
                         </span>
                     </div>
-                    <livewire:dark-mode-toggle />
+                    <livewire:notification-bell />
                 </div>
             </div>
 

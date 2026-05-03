@@ -4,6 +4,10 @@ namespace App\Repositories\Planificacion;
 
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\{Facades\DB, Facades\Auth, Facades\Log};
+use Illuminate\Support\Facades\Mail;
+use App\Mail\PlanificacionAceptada;
+use App\Mail\PlanificacionRechazada;
+use App\Models\Notification; // Not actually using DB notifications, maybe just send email. Wait, the user asked for a notification icon in the UI. I'll handle that via an event or database table if they have one. Or simply send the email.
 
 class PlanificacionIndexRepo
 {
@@ -108,6 +112,40 @@ class PlanificacionIndexRepo
                 }
             }
 
+            // Enviar correo de rechazo
+            try {
+                $dbSogc = config('database.connections.emulacion_sogac_2.database');
+                $profesor = DB::table("$dbSogc.usuario as u")
+                    ->join("$dbSogc.seccion_unidad_docente as sud", 'u.usu_cedula', '=', 'sud.sud_ced_docente')
+                    ->join("$dbSogc.persona as p", 'u.usu_cedula', '=', 'p.per_cedula')
+                    ->where('sud.sud_codigo', $planificacion->id_profesor_asignado)
+                    ->select('u.usu_nombre', 'p.per_email', 'p.per_nombres', 'p.per_apellidos')
+                    ->first();
+
+                $planificacionDetalles = DB::table('planificacion as p')
+                    ->join("$dbSogc.seccion_unidad_docente as sud", 'p.id_profesor_asignado', '=', 'sud.sud_codigo')
+                    ->join("$dbSogc.unidad_curricular as uc", 'sud.sud_cod_unidad', '=', 'uc.ucu_codigo')
+                    ->join("$dbSogc.seccion as s", 'sud.sud_cod_seccion', '=', 's.sec_codigo')
+                    ->where('p.id_planificacion', $planificacionId)
+                    ->select('uc.ucu_nombre as nombre_unidad_curricular', 's.sec_nombre as nombre_seccion')
+                    ->first();
+
+                $motivosFormat = [];
+                foreach ($cortesRechazados as $r) {
+                    $corteObj = \App\Models\UnidadCorte::find($r['detalle_id']);
+                    $motivosFormat[] = [
+                        'numero' => $corteObj->numero_unidad_corte ?? '?',
+                        'motivo' => $r['motivo']
+                    ];
+                }
+
+                if ($profesor && !empty($profesor->per_email)) {
+                    Mail::to($profesor->per_email)->send(new PlanificacionRechazada($profesor, $planificacionDetalles, $motivosFormat));
+                }
+            } catch (\Exception $e) {
+                Log::error("Error al enviar correo de rechazo: " . $e->getMessage());
+            }
+
             DB::commit();
             return true;
         } catch (\Exception $e) {
@@ -166,6 +204,32 @@ class PlanificacionIndexRepo
                     $planificacion = \App\Models\Planificacion::find($planificacionId);
                     if ($planificacion) {
                         $planificacion->update(['estatus' => 1]);
+
+                        // Enviar correo electrónico al profesor
+                        try {
+                            $dbSogc = config('database.connections.emulacion_sogac_2.database');
+                            $profesor = DB::table("$dbSogc.usuario as u")
+                                ->join("$dbSogc.seccion_unidad_docente as sud", 'u.usu_cedula', '=', 'sud.sud_ced_docente')
+                                ->join("$dbSogc.persona as p", 'u.usu_cedula', '=', 'p.per_cedula')
+                                ->where('sud.sud_codigo', $planificacion->id_profesor_asignado)
+                                ->select('u.usu_nombre', 'p.per_email', 'p.per_nombres', 'p.per_apellidos')
+                                ->first();
+
+                            // Buscar detalles extra de la planificación (seccion y uc)
+                            $planificacionDetalles = DB::table('planificacion as p')
+                                ->join("$dbSogc.seccion_unidad_docente as sud", 'p.id_profesor_asignado', '=', 'sud.sud_codigo')
+                                ->join("$dbSogc.unidad_curricular as uc", 'sud.sud_cod_unidad', '=', 'uc.ucu_codigo')
+                                ->join("$dbSogc.seccion as s", 'sud.sud_cod_seccion', '=', 's.sec_codigo')
+                                ->where('p.id_planificacion', $planificacionId)
+                                ->select('uc.ucu_nombre as nombre_unidad_curricular', 's.sec_nombre as nombre_seccion')
+                                ->first();
+
+                            if ($profesor && !empty($profesor->per_email)) {
+                                Mail::to($profesor->per_email)->send(new PlanificacionAceptada($profesor, $planificacionDetalles));
+                            }
+                        } catch (\Exception $e) {
+                            Log::error("Error al enviar correo de planificación aceptada: " . $e->getMessage());
+                        }
                     }
                 }
             }
