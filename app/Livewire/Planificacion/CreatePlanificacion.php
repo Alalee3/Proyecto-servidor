@@ -123,8 +123,8 @@ class CreatePlanificacion extends Component
         $this->bibliografiasMaestras = $this->planificacionRepository->select_bibliografias();
         $this->tecnicasActividad = $this->planificacionRepository->select_tecnica_actividad();
 
-        // Cargar asignaciones: Si tiene permiso de edición (como un coordinador) ve todas, si es docente solo las suyas
-        if (Gate::allows('editar-planificacion')) {
+        // Cargar asignaciones: Si es coordinador ve todas, si es docente solo las suyas
+        if ($this->isCoordinador) {
             $this->asignaciones = $this->planificacionRepository->getAsignacionesDocente();
         } else {
             $this->asignaciones = $this->planificacionRepository->getAsignacionesDocente($this->docente_id);
