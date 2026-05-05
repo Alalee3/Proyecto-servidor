@@ -75,7 +75,7 @@
 
                 {{-- Área de Contenido Principal --}}
                 <div id="main-content-wrapper"
-                    class="flex-1 min-w-0 transition-all duration-300 ease-in-out bg-white dark:bg-gray-900 min-h-[600px] relative z-0"
+                    class="flex-1 min-w-0 transition-all duration-300 ease-in-out bg-white dark:bg-gray-900 min-h-[600px] relative"
                     :class="{ 
                         'ml-[234px] lg:ml-0': alpineSidebarOpen, 
                         'ml-0': !alpineSidebarOpen 

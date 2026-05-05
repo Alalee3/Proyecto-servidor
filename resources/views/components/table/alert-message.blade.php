@@ -1,32 +1,57 @@
 @props(['type' => 'success', 'message' => ''])
 
-@php
-    $isSuccess = in_array($type, ['success', 'exitoso', 'exito']);
-    $bgColor = $isSuccess ? 'bg-green-50' : 'bg-red-50';
-    $textColor = $isSuccess ? 'text-green-800' : 'text-red-800';
-    $borderColor = $isSuccess ? 'border-green-200' : 'border-red-200';
-    $title = $isSuccess ? '¡ÉXITO!' : '¡ERROR!';
-@endphp
-
-@if($message)
-    <div class="p-4 mb-4 text-sm rounded-lg relative border {{ $bgColor }} {{ $textColor }} {{ $borderColor }} dark:bg-gray-800 dark:border-gray-700"
-        role="alert" x-data="{ show: true }" x-show="show" x-transition:leave="transition ease-in duration-300"
-        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-        <div class="flex items-start">
-            <div class="flex-1">
-                <strong class="block font-bold">{{ $title }}</strong>
-                <span class="block mt-1">{{ $message }}</span>
+<div x-data="{ 
+    show: false,
+    alertType: '{{ $type }}',
+    alertMessage: {!! json_encode((string)$message) !!},
+    isSuccess() { return ['success', 'exitoso', 'exito'].includes(this.alertType) }
+}"
+x-init="
+    if (alertMessage && alertMessage.length > 0) {
+        show = true;
+    }
+"
+x-on:show-alert.window="
+    let detail = $event.detail;
+    if (Array.isArray(detail) && detail.length > 0) detail = detail[0];
+    
+    show = true; 
+    alertType = detail.type || 'success'; 
+    alertMessage = detail.message || 'Operación completada';
+"
+wire:ignore
+class="fixed inset-0 flex items-center justify-center p-4 bg-gray-900/90 backdrop-blur-md"
+style="z-index: 9999999;"
+x-cloak
+x-show="show">
+    
+    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-md w-full border-4"
+         :class="isSuccess() ? 'border-green-500' : 'border-red-500'"
+         @click.away="show = false">
+        <div class="p-8 text-center">
+            <div class="mb-4">
+                <span class="material-icons text-6xl" 
+                      :class="isSuccess() ? 'text-green-500' : 'text-red-500'"
+                      x-text="isSuccess() ? 'check_circle' : 'error'"></span>
             </div>
-
-            <button type="button"
-                class="ml-auto -mx-1.5 -my-1.5 p-1.5 inline-flex items-center justify-center h-8 w-8 text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 dark:hover:text-white"
-                @click="show = false">
-                <span class="sr-only">Cerrar</span>
-                <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                </svg>
+            
+            <h3 class="text-2xl font-black mb-2 dark:text-white" 
+                x-text="isSuccess() ? '¡GUARDADO!' : '¡HAY ERRORES!'"></h3>
+            
+            <div class="mt-4 mb-6 max-h-[60vh] overflow-y-auto px-2 text-left">
+                <p class="text-sm font-bold text-gray-700 dark:text-gray-300 whitespace-pre-line" 
+                   x-text="alertMessage"></p>
+            </div>
+            
+            <button type="button" @click="show = false"
+                    class="w-full py-4 px-6 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
+                    :class="isSuccess() ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'">
+                ENTENDIDO (OK)
             </button>
         </div>
     </div>
-@endif
+    
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</div>

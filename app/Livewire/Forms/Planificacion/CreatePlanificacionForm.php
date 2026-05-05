@@ -14,8 +14,79 @@ class CreatePlanificacionForm extends Form
 
     public function getTotalPonderacionForUnidad($unidadIndex)
     {
-        return collect($this->unidades[$unidadIndex]['evaluaciones'])
+        return collect($this->unidades[$unidadIndex]['evaluaciones'] ?? [])
             ->sum(fn($e) => (float) ($e['ponderacion'] ?? 0));
+    }
+
+    public function isUnidadComplete($index)
+    {
+        return $this->isTematicaComplete($index) &&
+               $this->isEstrategiasComplete($index) &&
+               $this->isIndicadoresComplete($index) &&
+               $this->isEvaluacionComplete($index) &&
+               $this->isBibliografiasComplete($index);
+    }
+
+    public function isTematicaComplete($index)
+    {
+        if (!isset($this->unidades[$index])) return false;
+        $u = $this->unidades[$index];
+        if (empty($u['objetivos'])) return false;
+        foreach ($u['objetivos'] as $obj) {
+            if (empty($obj['tema_id']) || empty($obj['objetivo_id'])) return false;
+            if (empty($obj['contenidos'])) return false;
+            foreach ($obj['contenidos'] as $cont) {
+                if (empty($cont['contenido_id'])) return false;
+            }
+        }
+        return true;
+    }
+
+    public function isEstrategiasComplete($index)
+    {
+        if (!isset($this->unidades[$index])) return false;
+        $u = $this->unidades[$index];
+        if (empty($u['estrategias'])) return false;
+        foreach ($u['estrategias'] as $est) {
+            if (empty($est['tecnica_actividad_id']) || empty($est['actividad'])) return false;
+            if (empty($est['recursos'])) return false;
+            foreach ($est['recursos'] as $rec) {
+                if (empty($rec['recurso_id'])) return false;
+            }
+        }
+        return true;
+    }
+
+    public function isIndicadoresComplete($index)
+    {
+        if (!isset($this->unidades[$index])) return false;
+        $u = $this->unidades[$index];
+        return !empty($u['indicadores_logro']) && strlen($u['indicadores_logro']) >= 5;
+    }
+
+    public function isEvaluacionComplete($index)
+    {
+        if (!isset($this->unidades[$index])) return false;
+        $u = $this->unidades[$index];
+        if (abs($this->getTotalPonderacionForUnidad($index) - 25) > 0.01) return false;
+        if (empty($u['evaluaciones'])) return false;
+        foreach ($u['evaluaciones'] as $eval) {
+            if (empty($eval['fecha_evaluacion']) || empty($eval['evaluacion_id']) || 
+                empty($eval['tecnica_id']) || empty($eval['forma_participacion'])) return false;
+            if ($eval['forma_participacion'] == '2' && empty($eval['integrantes'])) return false;
+        }
+        return true;
+    }
+
+    public function isBibliografiasComplete($index)
+    {
+        if (!isset($this->unidades[$index])) return false;
+        $u = $this->unidades[$index];
+        if (empty($u['bibliografias'])) return false;
+        foreach ($u['bibliografias'] as $bib) {
+            if (empty($bib['bibliografia_id'])) return false;
+        }
+        return true;
     }
 
     public function rules()
@@ -107,12 +178,6 @@ class CreatePlanificacionForm extends Form
                     'integer',
                     'min:5',
                     'max:25',
-                    function ($attribute, $value, $fail) use ($index, $unidad, $evaluacionIndex) {
-                        $totalEvaluaciones = count($unidad['evaluaciones']);
-                        if ($totalEvaluaciones === 1 && (int) $value !== 25) {
-                            $fail('La única evaluación debe tener exactamente 25% de ponderación.');
-                        }
-                    },
                     function ($attribute, $value, $fail) use ($index) {
                         $total = $this->getTotalPonderacionForUnidad($index);
                         if ($total > 25) {
@@ -193,6 +258,56 @@ class CreatePlanificacionForm extends Form
         $messages['*.exists'] = 'El valor seleccionado no existe en la base de datos.';
 
         return $messages;
+    }
+
+    public function validationAttributes()
+    {
+        $attributes = [
+            'id_profesor_asignado' => 'Unidad Curricular',
+            'tipos_seccion' => 'Tipo de Sección',
+        ];
+
+        foreach ($this->unidades as $index => $unidad) {
+            $uNum = $index + 1;
+            $attributes["unidades.$index.indicadores_logro"] = "Indicadores de Logro (Unidad $uNum)";
+            
+            foreach ($unidad['objetivos'] as $objIndex => $obj) {
+                $oNum = $objIndex + 1;
+                $attributes["unidades.$index.objetivos.$objIndex.tema_id"] = "Tema $oNum (Unidad $uNum)";
+                $attributes["unidades.$index.objetivos.$objIndex.objetivo_id"] = "Objetivo $oNum (Unidad $uNum)";
+                foreach ($obj['contenidos'] as $contIndex => $cont) {
+                    $cNum = $contIndex + 1;
+                    $attributes["unidades.$index.objetivos.$objIndex.contenidos.$contIndex.contenido_id"] = "Contenido $cNum del Objetivo $oNum (Unidad $uNum)";
+                }
+            }
+
+            foreach ($unidad['estrategias'] as $estIndex => $est) {
+                $eNum = $estIndex + 1;
+                $attributes["unidades.$index.estrategias.$estIndex.tecnica_actividad_id"] = "Técnica de la Estrategia $eNum (Unidad $uNum)";
+                $attributes["unidades.$index.estrategias.$estIndex.actividad"] = "Descripción de la Actividad $eNum (Unidad $uNum)";
+                foreach ($est['recursos'] as $recIndex => $rec) {
+                    $rNum = $recIndex + 1;
+                    $attributes["unidades.$index.estrategias.$estIndex.recursos.$recIndex.recurso_id"] = "Recurso $rNum de la Estrategia $eNum (Unidad $uNum)";
+                }
+            }
+
+            foreach ($unidad['evaluaciones'] as $evalIndex => $eval) {
+                $evNum = $evalIndex + 1;
+                $attributes["unidades.$index.evaluaciones.$evalIndex.fecha_evaluacion"] = "Fecha de la Evaluación $evNum (Unidad $uNum)";
+                $attributes["unidades.$index.evaluaciones.$evalIndex.evaluacion_id"] = "Tipo de la Evaluación $evNum (Unidad $uNum)";
+                $attributes["unidades.$index.evaluaciones.$evalIndex.tecnica_id"] = "Técnica de la Evaluación $evNum (Unidad $uNum)";
+                $attributes["unidades.$index.evaluaciones.$evalIndex.ponderacion"] = "Ponderación de la Evaluación $evNum (Unidad $uNum)";
+                $attributes["unidades.$index.evaluaciones.$evalIndex.forma_participacion"] = "Forma de Participación $evNum (Unidad $uNum)";
+                $attributes["unidades.$index.evaluaciones.$evalIndex.integrantes"] = "N° de Integrantes $evNum (Unidad $uNum)";
+            }
+
+            foreach ($unidad['bibliografias'] as $bibIndex => $bib) {
+                $bNum = $bibIndex + 1;
+                $attributes["unidades.$index.bibliografias.$bibIndex.bibliografia_id"] = "Referencia Bibliográfica $bNum (Unidad $uNum)";
+            }
+        }
+
+        return $attributes;
     }
 }
 

@@ -305,45 +305,98 @@ class CreatePlanificacion extends Component
 
     public function savePlanificacion()
     {
-        $this->form->validate();
-
         try {
+            $this->form->validate();
+
             $this->planificacionRepository->savePlanificacionTransaccion(
                 $this->form->id_profesor_asignado,
                 $this->form->unidades,
                 $this->form->tipos_seccion
             );
 
-            session()->flash('message', 'Planificación guardada correctamente.');
+            session()->flash('message', '¡Guardado!, en espera que lo aprueben (puede verlo en la campana de notificaciones)');
+            $this->dispatch('show-alert', type: 'success', message: '¡Guardado!, en espera que lo aprueben (puede verlo en la campana de notificaciones)');
             return redirect()->to('/planificacion/list');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors()->all();
+            $msg = "No se puede guardar. Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
+            $this->dispatch('show-alert', type: 'error', message: $msg);
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al guardar la planificación: ' . $e->getMessage());
+            $this->dispatch('show-alert', type: 'error', message: 'Error al guardar la planificación: ' . $e->getMessage());
         }
+    }
+
+    public function irAUnidad($targetIndex)
+    {
+        if ($targetIndex <= $this->openUnidad) {
+            $this->openUnidad = $targetIndex;
+            $this->dispatch('scroll-to-top');
+            return;
+        }
+
+        $allErrors = [];
+        for ($i = 0; $i < $targetIndex; $i++) {
+            $validator = $this->getUnidadValidator($i);
+            if ($validator->fails()) {
+                $allErrors = array_merge($allErrors, $validator->errors()->all());
+            }
+        }
+
+        if (!empty($allErrors)) {
+            $msg = "No puedes avanzar. Faltan completar campos obligatorios:\n\n• " . implode("\n• ", $allErrors);
+            $this->dispatch('show-alert', type: 'error', message: $msg);
+            return;
+        }
+
+        $this->openUnidad = $targetIndex;
+        $this->dispatch('scroll-to-top');
+    }
+
+    protected function getUnidadValidator($index)
+    {
+        $allRules = $this->form->rules();
+        $rules = [];
+        $messages = [];
+        $attributes = [];
+
+        // Mapear mensajes y atributos con prefijo 'form.'
+        foreach ($this->form->messages() as $key => $msg) {
+            $messages["form.$key"] = $msg;
+        }
+        foreach ($this->form->validationAttributes() as $key => $attr) {
+            $attributes["form.$key"] = $attr;
+        }
+
+        // Reglas globales
+        foreach (['id_profesor_asignado', 'tipos_seccion'] as $globalField) {
+            if (isset($allRules[$globalField])) $rules["form.$globalField"] = $allRules[$globalField];
+        }
+
+        // Reglas de la unidad
+        $unitPrefix = "unidades.$index.";
+        foreach ($allRules as $key => $rule) {
+            if (str_starts_with($key, $unitPrefix)) {
+                $rules["form.$key"] = $rule;
+            }
+        }
+        $rules["form.unidades.$index.total_ponderacion_check"] = $allRules["unidades.$index.total_ponderacion_check"] ?? [];
+
+        return \Illuminate\Support\Facades\Validator::make(
+            ['form' => $this->form->all()], 
+            $rules, 
+            $messages, 
+            $attributes
+        );
     }
 
     public function validarYAvanzar($index)
     {
-        $allRules = $this->form->rules();
-        $filteredRules = [];
-        foreach (['id_profesor_asignado', 'tipos_seccion'] as $globalField) {
-            if (isset($allRules[$globalField])) $filteredRules["form.$globalField"] = $allRules[$globalField];
-        }
-        $unitPrefix = "unidades.$index.";
-        foreach ($allRules as $key => $rule) {
-            if (str_starts_with($key, $unitPrefix)) $filteredRules["form.$key"] = $rule;
-        }
-        $this->validate($filteredRules);
-
-        $this->openUnidad = $index + 1;
-        $this->dispatch('scroll-to-top');
+        $this->irAUnidad($index + 1);
     }
 
     public function unidadAnterior($index)
     {
-        if ($index > 0) {
-            $this->openUnidad = $index - 1;
-            $this->dispatch('scroll-to-top');
-        }
+        $this->irAUnidad($index - 1);
     }
 
     public function saveProgress($index)

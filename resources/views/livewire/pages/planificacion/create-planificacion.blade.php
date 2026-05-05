@@ -6,13 +6,7 @@
     </x-slot>
 
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 sm:rounded-lg">
-        <x-table.alert-message type="exitoso" :message="session('message')" />
-        <x-table.alert-message type="error" :message="session('error')" />
-
-        @if ($errors->any())
-            <x-table.alert-message type="error"
-                message="La planificación no pudo ser guardada. Por favor, revise todos los campos requeridos en cada unidad." />
-        @endif
+        <x-table.alert-message />
     </div>
 
     <div class="sogat-card planificacion-module">
@@ -108,7 +102,18 @@
                         </div>
                         <div class="flex items-center gap-3 bg-gray-100 dark:bg-gray-900 p-2 rounded-2xl shadow-inner">
                             @foreach ($form->unidades as $idx => $u)
-                                <button type="button" @click="openUnidad = {{ $idx }}"
+                                @php
+                                    $isClickable = true;
+                                    for ($i = 0; $i < $idx; $i++) {
+                                        if (!$form->isUnidadComplete($i)) {
+                                            $isClickable = false;
+                                            break;
+                                        }
+                                    }
+                                @endphp
+                                <button type="button" 
+                                    wire:key="unit-circle-{{ $idx }}"
+                                    wire:click="irAUnidad({{ $idx }})"
                                     class="relative group focus:outline-none">
                                     <div :class="openUnidad === {{ $idx }} ? 'bg-blue-600 dark:bg-blue-500 text-white scale-110 shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-blue-400'"
                                         class="w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 text-sm">
@@ -136,7 +141,9 @@
                             ]);
                         @endphp
 
-                        <div x-show="openUnidad === {{ $index }}" x-transition:enter="transition ease-out duration-300"
+                        <div x-show="openUnidad === {{ $index }}" 
+                            wire:key="unit-content-{{ $index }}"
+                            x-transition:enter="transition ease-out duration-300"
                             x-transition:enter-start="opacity-0 transform translate-x-8"
                             x-transition:enter-end="opacity-100 transform translate-x-0"
                             class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden min-h-[500px] flex flex-col">
@@ -151,7 +158,7 @@
                                     </div>
                                     <div>
                                         <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100">
-                                            Contenido de la Unidad {{ $unidad['numero'] }}
+                                            Formulario de la Unidad {{ $unidad['numero'] }}
                                         </h3>
                                         <p
                                             class="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider">
@@ -188,10 +195,23 @@
                                 </div>
                             </div>
 
-                                <div x-data="{ openSection: 'tematica' }" class="p-8 space-y-4 flex-grow">
+                                @php
+                                    $isTematicaDone = $form->isTematicaComplete($index);
+                                    $isEstrategiasDone = $form->isEstrategiasComplete($index);
+                                    $isIndicadoresDone = $form->isIndicadoresComplete($index);
+                                    $isEvaluacionDone = $form->isEvaluacionComplete($index);
+                                    $isBibliografiasDone = $form->isBibliografiasComplete($index);
+
+                                    $canShowEstrategias = $isTematicaDone;
+                                    $canShowIndicadores = $isEstrategiasDone;
+                                    $canShowEvaluacion = $isIndicadoresDone;
+                                    $canShowBibliografias = $isEvaluacionDone;
+                                @endphp
+
+                                <div x-data="{ openSection: 'tematica' }" class="p-8 space-y-6 flex-grow">
 
                                     {{-- Contenidos agrupados por tematica --}}
-                                    <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+                                    <div class="border-2 {{ $isTematicaDone ? 'border-green-500' : 'border-red-500' }} rounded-xl overflow-hidden shadow-sm transition-all duration-300">
                                         <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" @click="openSection = openSection === 'tematica' ? '' : 'tematica'">
                                             <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                                 <span class="material-icons text-blue-500">menu_book</span>
@@ -284,11 +304,18 @@
                                                     </div>
                                                 </div>
                                             @endforeach
+                                                <div class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
+                                                    <button type="button" @click="openSection = 'estrategias'" 
+                                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all {{ !$isTematicaDone ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                        {{ !$isTematicaDone ? 'disabled' : '' }}>
+                                                        SIGUIENTE: ESTRATEGIAS <span class="material-icons text-sm">arrow_forward</span>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
 
                                     {{-- Estrategias Pedagógicas Section --}}
-                                    <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+                                    <div class="border-2 {{ $isEstrategiasDone ? 'border-green-500' : ($canShowEstrategias ? 'border-red-500' : 'border-gray-200 dark:border-gray-700') }} rounded-xl overflow-hidden shadow-sm transition-all duration-300 {{ !$canShowEstrategias ? 'opacity-50 pointer-events-none' : '' }}">
                                         <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" @click="openSection = openSection === 'estrategias' ? '' : 'estrategias'">
                                             <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                                 <span class="material-icons text-green-500">psychology</span>
@@ -363,11 +390,18 @@
                                                     </div>
                                                 </div>
                                             @endforeach
+                                                <div class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
+                                                    <button type="button" @click="openSection = 'indicadores'" 
+                                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all {{ !$isEstrategiasDone ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                        {{ !$isEstrategiasDone ? 'disabled' : '' }}>
+                                                        SIGUIENTE: INDICADORES <span class="material-icons text-sm">arrow_forward</span>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
 
                                     {{-- Indicadores de Logros Section --}}
-                                    <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+                                    <div class="border-2 {{ $isIndicadoresDone ? 'border-green-500' : ($canShowIndicadores ? 'border-red-500' : 'border-gray-200 dark:border-gray-700') }} rounded-xl overflow-hidden shadow-sm transition-all duration-300 {{ !$canShowIndicadores ? 'opacity-50 pointer-events-none' : '' }}">
                                         <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" @click="openSection = openSection === 'indicadores' ? '' : 'indicadores'">
                                             <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                                 <span class="material-icons text-orange-500">assignment_turned_in</span>
@@ -384,11 +418,19 @@
                                                     <span class="text-red-500 text-xs font-bold block mt-1">{{ $message }}</span>
                                                 @enderror
                                             </div>
+
+                                                <div class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
+                                                    <button type="button" @click="openSection = 'evaluacion'" 
+                                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all {{ !$isIndicadoresDone ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                        {{ !$isIndicadoresDone ? 'disabled' : '' }}>
+                                                        SIGUIENTE: PLAN DE EVALUACIÓN <span class="material-icons text-sm">arrow_forward</span>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
 
                                     {{-- Plan de Evaluación Section --}}
-                                    <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+                                    <div class="border-2 {{ $isEvaluacionDone ? 'border-green-500' : ($canShowEvaluacion ? 'border-red-500' : 'border-gray-200 dark:border-gray-700') }} rounded-xl overflow-hidden shadow-sm transition-all duration-300 {{ !$canShowEvaluacion ? 'opacity-50 pointer-events-none' : '' }}">
                                         <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" @click="openSection = openSection === 'evaluacion' ? '' : 'evaluacion'">
                                             <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                                 <span class="material-icons text-red-500">event_available</span>
@@ -463,7 +505,9 @@
                                                         <div class="space-y-1">
                                                             <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase text-center block">Pond. (%) <span class="text-red-500">*</span></label>
                                                             <div class="flex justify-center">
-                                                                <input type="number" step="1" min="5" max="25" onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                                                 <input type="number" step="1" min="5" max="25" onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                                                    x-on:input="if($el.value > 25) $el.value = 25"
+                                                                    x-on:blur="if($el.value !== '' && $el.value < 5) { $el.value = 5; $dispatch('input'); }"
                                                                     wire:model.live="form.unidades.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.ponderacion"
                                                                     class="w-20 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-blue-500 p-1.5 text-gray-700 dark:text-gray-300 text-sm font-bold text-center">
                                                             </div>
@@ -474,9 +518,16 @@
                                                     </div>
                                                 </div>
                                             @endforeach
-                                        </div>
-                                    </div>                                            {{-- Referencias Bibliográficas Section --}}
-                                    <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm">
+                                                <div class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
+                                                    <button type="button" @click="openSection = 'bibliografias'" 
+                                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all {{ !$isEvaluacionDone ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                        {{ !$isEvaluacionDone ? 'disabled' : '' }}>
+                                                        SIGUIENTE: BIBLIOGRAFÍAS <span class="material-icons text-sm">arrow_forward</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>                                            {{-- Referencias Bibliográficas Section --}}
+                                    <div class="border-2 {{ $isBibliografiasDone ? 'border-green-500' : ($canShowBibliografias ? 'border-red-500' : 'border-gray-200 dark:border-gray-700') }} rounded-xl overflow-hidden shadow-sm transition-all duration-300 {{ !$canShowBibliografias ? 'opacity-50 pointer-events-none' : '' }}">
                                         <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" @click="openSection = openSection === 'bibliografias' ? '' : 'bibliografias'">
                                             <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                                 <span class="material-icons text-purple-500">library_books</span>
@@ -541,7 +592,7 @@
                                     </div>
                                     <div>
                                         @if ($index < count($form->unidades) - 1)
-                                            <button type="button" wire:click="validarYAvanzar({{ $index }})"
+                                            <button type="button" wire:click="irAUnidad({{ $index + 1 }})"
                                                 class="inline-flex items-center gap-2 px-8 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg hover:bg-blue-700 transition-all hover:-translate-y-0.5 active:translate-y-0">
                                                 Siguiente Unidad <span class="material-icons text-sm">arrow_forward</span>
                                             </button>
@@ -561,7 +612,7 @@
                     <div class="flex justify-end pt-4" x-show="openUnidad === {{ count($form->unidades) - 1 }}">
                         <button type="submit"
                             class="group inline-flex items-center gap-3 px-8 py-4 bg-green-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-green-700 focus:outline-none transition-all duration-300 shadow-xl hover:shadow-green-500/20 hover:-translate-y-1 active:scale-95">
-                            <i class="fas fa-save text-lg transition-transform group-hover:rotate-12"></i>
+                            <span class="material-icons text-lg transition-transform group-hover:rotate-12">save</span>
                             GUARDAR PLANIFICACIÓN COMPLETA
                         </button>
                     </div>

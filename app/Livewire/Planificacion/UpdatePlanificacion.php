@@ -314,6 +314,67 @@ class UpdatePlanificacion extends Component
         }
     }
 
+    public function irAUnidad($targetIndex)
+    {
+        if ($targetIndex <= $this->openUnidad) {
+            $this->openUnidad = $targetIndex;
+            $this->dispatch('scroll-to-top');
+            return;
+        }
+
+        $allErrors = [];
+        for ($i = 0; $i < $targetIndex; $i++) {
+            $validator = $this->getUnidadValidator($i);
+            if ($validator->fails()) {
+                $allErrors = array_merge($allErrors, $validator->errors()->all());
+            }
+        }
+
+        if (!empty($allErrors)) {
+            $msg = "No puedes avanzar. Faltan completar campos obligatorios:\n\n• " . implode("\n• ", $allErrors);
+            $this->dispatch('show-alert', type: 'error', message: $msg);
+            return;
+        }
+
+        $this->openUnidad = $targetIndex;
+        $this->dispatch('scroll-to-top');
+    }
+
+    protected function getUnidadValidator($index)
+    {
+        // Aseguramos que los campos de lapso estén en el form
+        $this->form->lapso_fecha_inicio = $this->lapso_fecha_inicio;
+        $this->form->lapso_fecha_fin = $this->lapso_fecha_fin;
+        $this->form->id_lapso_academico = $this->id_lapso_academico;
+
+        $allRules = $this->form->rules();
+        $rules = [];
+        $messages = [];
+        $attributes = [];
+
+        foreach ($this->form->messages() as $key => $msg) {
+            $messages["form.$key"] = $msg;
+        }
+        foreach ($this->form->validationAttributes() as $key => $attr) {
+            $attributes["form.$key"] = $attr;
+        }
+        
+        $unitPrefix = "unidades.$index.";
+        foreach ($allRules as $key => $rule) {
+            if (str_starts_with($key, $unitPrefix)) {
+                $rules["form.$key"] = $rule;
+            }
+        }
+        $rules["form.unidades.$index.total_ponderacion_check"] = $allRules["unidades.$index.total_ponderacion_check"] ?? [];
+
+        return \Illuminate\Support\Facades\Validator::make(
+            ['form' => $this->form->all()], 
+            $rules, 
+            $messages, 
+            $attributes
+        );
+    }
+
     public function getTotalPonderacionForCorte($unidadIndex)
     {
         return $this->form->getTotalPonderacionForUnidad($unidadIndex);
@@ -339,21 +400,28 @@ class UpdatePlanificacion extends Component
 
     public function savePlanificacion()
     {
-        $this->form->lapso_fecha_inicio = $this->lapso_fecha_inicio;
-        $this->form->lapso_fecha_fin = $this->lapso_fecha_fin;
-        $this->form->id_lapso_academico = $this->id_lapso_academico;
+        try {
+            $this->form->lapso_fecha_inicio = $this->lapso_fecha_inicio;
+            $this->form->lapso_fecha_fin = $this->lapso_fecha_fin;
+            $this->form->id_lapso_academico = $this->id_lapso_academico;
 
-        $this->form->validate();
+            $this->form->validate();
 
-        $success = $this->planificacionEditRepo->updatePlanificacion($this->planificacionId, [
-            'unidades' => $this->form->unidades
-        ]);
+            $success = $this->planificacionEditRepo->updatePlanificacion($this->planificacionId, [
+                'unidades' => $this->form->unidades
+            ]);
 
-        if ($success) {
-            session()->flash('message', 'Planificación actualizada exitosamente.');
-            return redirect()->to('/planificacion/list');
-        } else {
-            session()->flash('error', 'Error al actualizar la planificación.');
+            if ($success) {
+                session()->flash('message', '¡Guardado!, en espera que lo aprueben (puede verlo en la campana de notificaciones)');
+                $this->dispatch('show-alert', type: 'success', message: '¡Guardado!, en espera que lo aprueben (puede verlo en la campana de notificaciones)');
+                return redirect()->to('/planificacion/list');
+            } else {
+                $this->dispatch('show-alert', type: 'error', message: 'Error al actualizar la planificación.');
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors()->all();
+            $msg = "No se puede guardar. Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
+            $this->dispatch('show-alert', type: 'error', message: $msg);
         }
     }
 
