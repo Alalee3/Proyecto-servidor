@@ -65,20 +65,20 @@
                         <div class="flex items-center gap-3 bg-gray-100 dark:bg-gray-900 p-2 rounded-2xl shadow-inner">
                             @foreach ($form->unidades as $idx => $u)
                                 @php
-                                    $isClickable = true;
-                                    for ($i = 0; $i < $idx; $i++) {
-                                        if (!$form->isUnidadComplete($i)) {
-                                            $isClickable = false;
-                                            break;
-                                        }
-                                    }
+                                    $isReachable = $idx <= $maxUnidadAlcanzada;
+                                    $isComplete = $form->isUnidadComplete($idx);
                                 @endphp
                                 <button type="button" 
                                     wire:click="irAUnidad({{ $idx }})"
                                     class="relative group focus:outline-none">
-                                    <div :class="openUnidad === {{ $idx }} ? 'bg-blue-600 dark:bg-blue-500 text-white scale-110 shadow-lg' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-blue-400'"
-                                        class="w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 text-sm">
+                                    <div :class="openUnidad === {{ $idx }} ? 'bg-blue-600 dark:bg-blue-500 text-white scale-110 shadow-lg' : '{{ $isReachable ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200' : 'bg-white dark:bg-gray-800 text-gray-400 border-gray-200 dark:border-gray-700' }} border hover:border-blue-400'"
+                                        class="w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300 text-sm relative">
                                         {{ $idx + 1 }}
+                                        @if($isComplete)
+                                            <span class="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center">
+                                                <span class="material-icons text-[10px] text-white">check</span>
+                                            </span>
+                                        @endif
                                     </div>
                                     <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                                         :class="openUnidad === {{ $idx }} ? 'hidden' : ''"></div>
@@ -105,7 +105,7 @@
                         <div x-show="openUnidad === {{ $index }}" x-transition:enter="transition ease-out duration-300"
                             x-transition:enter-start="opacity-0 transform translate-x-8"
                             x-transition:enter-end="opacity-100 transform translate-x-0"
-                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl overflow-hidden min-h-[500px] flex flex-col">
+                            class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl min-h-[500px] flex flex-col">
 
                             {{-- Cabecera de la Página de Unidad --}}
                             <div
@@ -155,7 +155,7 @@
                                 <div x-data="{ openSection: 'tematica' }" class="p-8 space-y-6 flex-grow">
 
                                     {{-- Contenidos agrupados por tematica --}}
-                                    <div class="border-2 {{ $isTematicaDone ? 'border-green-500' : 'border-red-500' }} rounded-xl overflow-hidden shadow-sm transition-all duration-300">
+                                    <div class="border-2 {{ $isTematicaDone ? 'border-green-500' : 'border-red-500' }} rounded-xl shadow-sm transition-all duration-300">
                                         <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" @click="openSection = openSection === 'tematica' ? '' : 'tematica'">
                                             <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                                 <span class="material-icons text-blue-500">menu_book</span>
@@ -259,7 +259,7 @@
                                         </div>
 
                                     {{-- Estrategias Pedagógicas Section --}}
-                                    <div class="border-2 {{ $isEstrategiasDone ? 'border-green-500' : ($canShowEstrategias ? 'border-red-500' : 'border-gray-200 dark:border-gray-700') }} rounded-xl overflow-hidden shadow-sm transition-all duration-300 {{ !$canShowEstrategias ? 'opacity-50 pointer-events-none' : '' }}">
+                                    <div class="border-2 {{ $isEstrategiasDone ? 'border-green-500' : ($canShowEstrategias ? 'border-red-500' : 'border-gray-200 dark:border-gray-700') }} rounded-xl shadow-sm transition-all duration-300 {{ !$canShowEstrategias ? 'opacity-50 pointer-events-none' : '' }}">
                                         <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" @click="openSection = openSection === 'estrategias' ? '' : 'estrategias'">
                                             <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                                 <span class="material-icons text-green-500">psychology</span>
@@ -288,9 +288,9 @@
                                                     <div class="grid grid-cols-1 gap-4">
                                                         <div class="space-y-2">
                                                             <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Estrategia o Actividad</label>
-                                                            <x-select :options="$tecnicasActividad" valueField="id_tecnica_actividad" textField="nombre_tecnica_actividad"
+                                                            <x-datalist :options="$tecnicasActividad" textField="nombre_tecnica_actividad"
                                                                 wire:model.live.debounce.250ms="form.unidades.{{ $index }}.estrategias.{{ $estrategiaIndex }}.tecnica_actividad_id"
-                                                                placeholder="Seleccione..." class="text-sm w-full" required />
+                                                                placeholder="Escriba o seleccione..." class="text-sm w-full" required />
                                                             @error("form.unidades.$index.estrategias.$estrategiaIndex.tecnica_actividad_id")
                                                                 <span class="text-red-500 text-[10px] font-bold block mt-1">{{ $message }}</span>
                                                             @enderror
@@ -315,9 +315,9 @@
                                                             @foreach ($estrategia['recursos'] as $recursoIndex => $recurso)
                                                                 <div class="flex items-center gap-2">
                                                                     <div class="flex-grow">
-                                                                        <x-select :options="$recursosMaestros" valueField="id_recurso" textField="nombre_recurso"
+                                                                        <x-datalist :options="$recursosMaestros" textField="nombre_recurso"
                                                                             wire:model.live.debounce.250ms="form.unidades.{{ $index }}.estrategias.{{ $estrategiaIndex }}.recursos.{{ $recursoIndex }}.recurso_id"
-                                                                            placeholder="Seleccione un recurso" class="text-sm w-full" required />
+                                                                            placeholder="Escriba o seleccione..." class="text-sm w-full" required />
                                                                         @error("form.unidades.$index.estrategias.$estrategiaIndex.recursos.$recursoIndex.recurso_id")
                                                                             <span class="text-red-500 text-[10px] font-bold block mt-1">{{ $message }}</span>
                                                                         @enderror
@@ -345,7 +345,7 @@
                                         </div>
 
                                     {{-- Indicadores de Logros Section --}}
-                                    <div class="border-2 {{ $isIndicadoresDone ? 'border-green-500' : ($canShowIndicadores ? 'border-red-500' : 'border-gray-200 dark:border-gray-700') }} rounded-xl overflow-hidden shadow-sm transition-all duration-300 {{ !$canShowIndicadores ? 'opacity-50 pointer-events-none' : '' }}">
+                                    <div class="border-2 {{ $isIndicadoresDone ? 'border-green-500' : ($canShowIndicadores ? 'border-red-500' : 'border-gray-200 dark:border-gray-700') }} rounded-xl shadow-sm transition-all duration-300 {{ !$canShowIndicadores ? 'opacity-50 pointer-events-none' : '' }}">
                                         <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" @click="openSection = openSection === 'indicadores' ? '' : 'indicadores'">
                                             <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                                 <span class="material-icons text-orange-500">assignment_turned_in</span>
@@ -374,7 +374,7 @@
                                         </div>
 
                                     {{-- Plan de Evaluación Section --}}
-                                    <div class="border-2 {{ $isEvaluacionDone ? 'border-green-500' : ($canShowEvaluacion ? 'border-red-500' : 'border-gray-200 dark:border-gray-700') }} rounded-xl overflow-hidden shadow-sm transition-all duration-300 {{ !$canShowEvaluacion ? 'opacity-50 pointer-events-none' : '' }}">
+                                    <div class="border-2 {{ $isEvaluacionDone ? 'border-green-500' : ($canShowEvaluacion ? 'border-red-500' : 'border-gray-200 dark:border-gray-700') }} rounded-xl shadow-sm transition-all duration-300 {{ !$canShowEvaluacion ? 'opacity-50 pointer-events-none' : '' }}">
                                         <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" @click="openSection = openSection === 'evaluacion' ? '' : 'evaluacion'">
                                             <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                                 <span class="material-icons text-red-500">event_available</span>
@@ -408,18 +408,18 @@
                                                         </div>
                                                         <div class="space-y-1">
                                                             <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Evaluación <span class="text-red-500">*</span></label>
-                                                            <x-select :options="$evaluaciones" valueField="id_tipo_evaluacion" textField="nombre_tipo_evaluacion"
+                                                            <x-datalist :options="$evaluaciones" textField="nombre_tipo_evaluacion"
                                                                 wire:model.live.debounce.250ms="form.unidades.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.evaluacion_id"
-                                                                placeholder="Seleccione" class="text-xs w-full" required />
+                                                                placeholder="Escriba o seleccione..." class="text-xs w-full" required />
                                                             @error("form.unidades.$index.evaluaciones.$evaluacionIndex.evaluacion_id")
                                                                 <span class="text-red-500 text-[10px] font-bold block mt-1">{{ $message }}</span>
                                                             @enderror
                                                         </div>
                                                         <div class="space-y-1">
                                                             <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Técnica <span class="text-red-500">*</span></label>
-                                                            <x-select :options="$tecnica" valueField="id_tecnica_evaluacion" textField="nombre_tecnica_evaluacion"
+                                                            <x-datalist :options="$tecnica" textField="nombre_tecnica_evaluacion"
                                                                 wire:model.live.debounce.250ms="form.unidades.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.tecnica_id"
-                                                                placeholder="Seleccione" class="text-xs w-full" required />
+                                                                placeholder="Escriba o seleccione..." class="text-xs w-full" required />
                                                             @error("form.unidades.$index.evaluaciones.$evaluacionIndex.tecnica_id")
                                                                 <span class="text-red-500 text-[10px] font-bold block mt-1">{{ $message }}</span>
                                                             @enderror
@@ -471,7 +471,7 @@
                                                 </div>
                                             </div>
                                         </div>                                            {{-- Referencias Bibliográficas Section --}}
-                                    <div class="border-2 {{ $isBibliografiasDone ? 'border-green-500' : ($canShowBibliografias ? 'border-red-500' : 'border-gray-200 dark:border-gray-700') }} rounded-xl overflow-hidden shadow-sm transition-all duration-300 {{ !$canShowBibliografias ? 'opacity-50 pointer-events-none' : '' }}">
+                                    <div class="border-2 {{ $isBibliografiasDone ? 'border-green-500' : ($canShowBibliografias ? 'border-red-500' : 'border-gray-200 dark:border-gray-700') }} rounded-xl shadow-sm transition-all duration-300 {{ !$canShowBibliografias ? 'opacity-50 pointer-events-none' : '' }}">
                                         <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" @click="openSection = openSection === 'bibliografias' ? '' : 'bibliografias'">
                                             <h4 class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
                                                 <span class="material-icons text-purple-500">library_books</span>
@@ -504,11 +504,11 @@
                                                             @endif
                                                         </div>
                                                     </div>
-                                                    <div class="w-full overflow-hidden">
-                                                        <x-select :options="$bibliografiasMaestras" valueField="id_bibliografia" textField="nombre_bibliografia"
+                                                    <div class="w-full">
+                                                        <x-datalist :options="$bibliografiasMaestras" textField="nombre_bibliografia"
                                                             wire:model.live.debounce.250ms="form.unidades.{{ $index }}.bibliografias.{{ $biblioIndex }}.bibliografia_id"
-                                                            placeholder="Seleccione una referencia..."
-                                                            selectClass="w-full text-xs" />
+                                                            placeholder="Escriba o seleccione..."
+                                                            class="w-full text-xs" />
                                                         @error("form.unidades.$index.bibliografias.$biblioIndex.bibliografia_id")
                                                             <span class="text-red-500 text-[10px] font-bold block mt-1">{{ $message }}</span>
                                                         @enderror

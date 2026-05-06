@@ -11,6 +11,9 @@ class UpdatePlanificacionForm extends Form
     public $lapso_fecha_fin;
     public $id_lapso_academico;
 
+    // Cache for performance
+    protected $cachedEventos = null;
+
     public function getTotalPonderacionForUnidad($unidadIndex)
     {
         return collect($this->unidades[$unidadIndex]['evaluaciones'] ?? [])
@@ -88,21 +91,23 @@ class UpdatePlanificacionForm extends Form
         return true;
     }
 
-    public function rules()
+    public function rules($unitIndex = null)
     {
         $rules = [
             'unidades' => 'required|array|min:1',
         ];
 
-        foreach ($this->unidades as $index => $unidad) {
+        $unidadesToValidate = ($unitIndex !== null) ? [$unitIndex => $this->unidades[$unitIndex]] : $this->unidades;
+
+        foreach ($unidadesToValidate as $index => $unidad) {
             // Validación para estrategias
             foreach ($unidad['estrategias'] as $estIndex => $estrategia) {
                 $rules["unidades.$index.estrategias.$estIndex.tema_id"] = 'nullable|exists:tema_unidad,id_tema_unidad'; // Ajustado porque esquema db usa tecnica_actividad
-                $rules["unidades.$index.estrategias.$estIndex.tecnica_actividad_id"] = 'required|exists:tecnica_actividad,id_tecnica_actividad';
+                $rules["unidades.$index.estrategias.$estIndex.tecnica_actividad_id"] = 'required|string';
                 $rules["unidades.$index.estrategias.$estIndex.actividad"] = 'nullable|string|min:5';
 
                 foreach ($estrategia['recursos'] as $recIndex => $recurso) {
-                    $rules["unidades.$index.estrategias.$estIndex.recursos.$recIndex.recurso_id"] = 'required|exists:recurso,id_recurso';
+                    $rules["unidades.$index.estrategias.$estIndex.recursos.$recIndex.recurso_id"] = 'required|string';
                 }
             }
 
@@ -139,29 +144,30 @@ class UpdatePlanificacionForm extends Form
                     function ($attribute, $value, $fail) {
                         if ($this->lapso_fecha_inicio && $this->lapso_fecha_fin) {
                             if ($value < $this->lapso_fecha_inicio || $value > $this->lapso_fecha_fin) {
-                                $fail("La fecha de evaluación debe estar dentro del lapso académico ({$this->lapso_fecha_inicio} al {$this->lapso_fecha_fin}).");
+                                $fail("La fecha debe estar dentro del lapso ({$this->lapso_fecha_inicio} al {$this->lapso_fecha_fin}).");
                             }
                         }
 
                         if ($this->id_lapso_academico) {
-                            $evento = \Illuminate\Support\Facades\DB::table('evento as e')
-                                ->where('e.estatus', '!=', '3')
-                                ->where(function ($q) use ($value) {
-                                    $q->whereDate('e.dia_inicio_evento', '<=', $value)
-                                        ->whereDate('e.dia_fin_evento', '>=', $value);
-                                })
-                                ->select('e.descripcion_evento')
-                                ->first();
+                            if ($this->cachedEventos === null) {
+                                $this->cachedEventos = \Illuminate\Support\Facades\DB::table('evento')
+                                    ->where('estatus', '!=', '3')
+                                    ->get();
+                            }
+
+                            $evento = $this->cachedEventos->first(function($e) use ($value) {
+                                return $value >= $e->dia_inicio_evento && $value <= $e->dia_fin_evento;
+                            });
 
                             if ($evento) {
-                                $fail("No se puede asignar una evaluación en esta fecha debido al evento: {$evento->descripcion_evento}.");
+                                $fail("Fecha bloqueada por evento: {$evento->descripcion_evento}.");
                             }
                         }
                     }
                 ];
                 $rules["unidades.$index.evaluaciones.$evaluacionIndex.fecha_evaluacion"] = $fechaEvaluacionRules;
-                $rules["unidades.$index.evaluaciones.$evaluacionIndex.evaluacion_id"] = 'required|exists:tipo_evaluacion,id_tipo_evaluacion';
-                $rules["unidades.$index.evaluaciones.$evaluacionIndex.tecnica_id"] = 'required|exists:tecnica_evaluacion,id_tecnica_evaluacion';
+                $rules["unidades.$index.evaluaciones.$evaluacionIndex.evaluacion_id"] = 'required|string';
+                $rules["unidades.$index.evaluaciones.$evaluacionIndex.tecnica_id"] = 'required|string';
                 $rules["unidades.$index.evaluaciones.$evaluacionIndex.ponderacion"] = [
                     'bail',
                     'required',
@@ -185,7 +191,7 @@ class UpdatePlanificacionForm extends Form
 
             // Validación para bibliografías
             foreach ($unidad['bibliografias'] as $bibIndex => $biblio) {
-                $rules["unidades.$index.bibliografias.$bibIndex.bibliografia_id"] = 'required|exists:bibliografia,id_bibliografia';
+                $rules["unidades.$index.bibliografias.$bibIndex.bibliografia_id"] = 'required|string';
             }
 
             $rules["unidades.$index.indicadores_logro"] = 'nullable|string|min:5';

@@ -33,6 +33,7 @@ class UpdatePlanificacion extends Component
 
     public UpdatePlanificacionForm $form;
     public $openUnidad = 0;
+    public $maxUnidadAlcanzada = 3; // En edición, permitimos navegar libremente por las unidades cargadas
 
     public Collection $recursosMaestros;
     public Collection $estrategiasDisponibles;
@@ -145,11 +146,11 @@ class UpdatePlanificacion extends Component
             $estrategiasForm = [];
             if (!empty($corte['estrategias'])) {
                 $est = $corte['estrategias'][0]; 
-                $recursos = collect($corte['recursos'])->map(fn($r) => ['recurso_id' => $r['recurso_id']])->toArray();
+                $recursosNames = collect($corte['recursos'])->map(fn($r) => ['recurso_id' => $r['recurso']])->toArray();
                 $estrategiasForm[] = [
-                    'tecnica_actividad_id' => $est['tema_id'], 
+                    'tecnica_actividad_id' => $est['titulo_tema'] ?? '', 
                     'actividad' => $est['actividad'] ?? '',
-                    'recursos' => empty($recursos) ? [['recurso_id' => '']] : $recursos
+                    'recursos' => empty($recursosNames) ? [['recurso_id' => '']] : $recursosNames
                 ];
             } else {
                 $estrategiasForm = [['tecnica_actividad_id' => '', 'actividad' => '', 'recursos' => [['recurso_id' => '']]]];
@@ -157,8 +158,8 @@ class UpdatePlanificacion extends Component
 
             $evaluaciones = collect($corte['evaluaciones'])
                 ->map(fn($eval) => [
-                    'evaluacion_id' => $eval['evaluacion_id'],
-                    'tecnica_id' => $eval['tecnica_id'],
+                    'evaluacion_id' => $eval['evaluacion'],
+                    'tecnica_id' => $eval['tecnica'],
                     'ponderacion' => (int) $eval['ponderacion'],
                     'fecha_evaluacion' => $eval['fecha_evaluacion'],
                     'forma_participacion' => $eval['forma_participacion'],
@@ -169,7 +170,7 @@ class UpdatePlanificacion extends Component
                 $evaluaciones = [['fecha_evaluacion' => '', 'evaluacion_id' => '', 'ponderacion' => 5, 'tecnica_id' => '', 'forma_participacion' => '', 'integrantes' => null]];
             }
 
-            $bibliografias = collect($corte['bibliografias'] ?? [])->map(fn($b) => ['bibliografia_id' => $b['bibliografia_id']])->toArray();
+            $bibliografias = collect($corte['bibliografias'] ?? [])->map(fn($b) => ['bibliografia_id' => $b['bibliografia']])->toArray();
             if (empty($bibliografias)) {
                 $bibliografias = [['bibliografia_id' => '']];
             }
@@ -316,24 +317,27 @@ class UpdatePlanificacion extends Component
 
     public function irAUnidad($targetIndex)
     {
-        if ($targetIndex <= $this->openUnidad) {
+        // Siempre permitir ir atrás o a unidades ya alcanzadas
+        if ($targetIndex <= $this->openUnidad || $targetIndex <= $this->maxUnidadAlcanzada) {
             $this->openUnidad = $targetIndex;
             $this->dispatch('scroll-to-top');
             return;
         }
 
-        $allErrors = [];
-        for ($i = 0; $i < $targetIndex; $i++) {
-            $validator = $this->getUnidadValidator($i);
-            if ($validator->fails()) {
-                $allErrors = array_merge($allErrors, $validator->errors()->all());
-            }
-        }
-
-        if (!empty($allErrors)) {
-            $msg = "No puedes avanzar. Faltan completar campos obligatorios:\n\n• " . implode("\n• ", $allErrors);
+        // Si intenta ir adelante, solo validamos la unidad ACTUAL para permitir el avance
+        // No necesitamos re-validar todas las anteriores si ya estamos en una posición avanzada
+        $validator = $this->getUnidadValidator($this->openUnidad);
+        
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            $msg = "No puedes avanzar. Hay campos pendientes en la unidad actual:\n\n• " . implode("\n• ", $errors);
             $this->dispatch('show-alert', type: 'error', message: $msg);
             return;
+        }
+
+        // Si pasó, actualizamos progreso
+        if ($targetIndex > $this->maxUnidadAlcanzada) {
+            $this->maxUnidadAlcanzada = $targetIndex;
         }
 
         $this->openUnidad = $targetIndex;
@@ -347,7 +351,8 @@ class UpdatePlanificacion extends Component
         $this->form->lapso_fecha_fin = $this->lapso_fecha_fin;
         $this->form->id_lapso_academico = $this->id_lapso_academico;
 
-        $allRules = $this->form->rules();
+        // Pedimos solo las reglas de esta unidad específica
+        $allRules = $this->form->rules($index);
         $rules = [];
         $messages = [];
         $attributes = [];

@@ -12,6 +12,7 @@ class CreatePlanificacion extends Component
     public $docente_id, $docenteNombre, $docenteRol, $proposito, $mallaNombre, $lapsoNombre;
     public $isCoordinador = false;
     public $openUnidad = 0;
+    public $maxUnidadAlcanzada = 0;
     public Collection $tecnica, $recursosMaestros, $evaluaciones, $bibliografiasMaestras, $asignaciones, $tecnicasActividad;
     public \App\Livewire\Forms\Planificacion\CreatePlanificacionForm $form;
     public array $temasPorUnidad = [];
@@ -328,24 +329,26 @@ class CreatePlanificacion extends Component
 
     public function irAUnidad($targetIndex)
     {
-        if ($targetIndex <= $this->openUnidad) {
+        // Siempre permitir ir atrás o a unidades ya alcanzadas
+        if ($targetIndex <= $this->openUnidad || $targetIndex <= $this->maxUnidadAlcanzada) {
             $this->openUnidad = $targetIndex;
             $this->dispatch('scroll-to-top');
             return;
         }
 
-        $allErrors = [];
-        for ($i = 0; $i < $targetIndex; $i++) {
-            $validator = $this->getUnidadValidator($i);
-            if ($validator->fails()) {
-                $allErrors = array_merge($allErrors, $validator->errors()->all());
-            }
-        }
-
-        if (!empty($allErrors)) {
-            $msg = "No puedes avanzar. Faltan completar campos obligatorios:\n\n• " . implode("\n• ", $allErrors);
+        // Solo validamos la unidad ACTUAL para permitir el avance a la siguiente
+        $validator = $this->getUnidadValidator($this->openUnidad);
+        
+        if ($validator->fails()) {
+            $errors = $validator->errors()->all();
+            $msg = "No puedes avanzar. Hay campos pendientes en la unidad actual:\n\n• " . implode("\n• ", $errors);
             $this->dispatch('show-alert', type: 'error', message: $msg);
             return;
+        }
+
+        // Si pasó la validación, actualizamos el máximo alcanzado
+        if ($targetIndex > $this->maxUnidadAlcanzada) {
+            $this->maxUnidadAlcanzada = $targetIndex;
         }
 
         $this->openUnidad = $targetIndex;
@@ -354,7 +357,8 @@ class CreatePlanificacion extends Component
 
     protected function getUnidadValidator($index)
     {
-        $allRules = $this->form->rules();
+        // Pedimos solo las reglas de esta unidad específica
+        $allRules = $this->form->rules($index);
         $rules = [];
         $messages = [];
         $attributes = [];

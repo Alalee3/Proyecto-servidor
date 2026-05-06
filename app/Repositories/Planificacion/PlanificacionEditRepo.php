@@ -9,6 +9,13 @@ class PlanificacionEditRepo
     /**
      * Guarda (actualiza) una planificación existente y sus detalles.
      */
+    protected $createRepo;
+
+    public function __construct()
+    {
+        $this->createRepo = new \App\Repositories\Planificacion\PlanificacionCreateRepo();
+    }
+
     public function updatePlanificacion(int $planificacionId, array $data): bool
     {
         DB::beginTransaction();
@@ -75,9 +82,12 @@ class PlanificacionEditRepo
                 }
 
                 $evaluacionesData = array_map(function ($eval) {
+                    $tipoEvalId = $this->createRepo->findOrCreateTipoEvaluacion($eval['evaluacion_id']);
+                    $tecnicaEvalId = $this->createRepo->findOrCreateTecnicaEvaluacion($eval['tecnica_id']);
+                    
                     return [
-                        'id_tipo_evaluacion' => $eval['evaluacion_id'],
-                        'id_tecnica_evaluacion' => $eval['tecnica_id'],
+                        'id_tipo_evaluacion' => $tipoEvalId,
+                        'id_tecnica_evaluacion' => $tecnicaEvalId,
                         'ponderacion_detalle_evaluacion' => $eval['ponderacion'],
                         'fecha_evaluacion_detalle_evaluacion' => $eval['fecha_evaluacion'],
                         'forma_participacion_detalle_evaluacion' => $eval['forma_participacion'],
@@ -180,10 +190,14 @@ class PlanificacionEditRepo
         if (!empty($estrategiasData)) {
             $est = $estrategiasData[0]; // Solo una estrategia por unidad en este esquema
             
+            $tecnicaActividadId = !empty($est['tecnica_actividad_id']) 
+                ? $this->createRepo->findOrCreateTecnicaActividad($est['tecnica_actividad_id']) 
+                : null;
+
             DB::table('unidad_corte')
                 ->where('id_unidad_corte', $corteId)
                 ->update([
-                    'id_tecnica_actividad' => (isset($est['tecnica_actividad_id']) && is_numeric($est['tecnica_actividad_id'])) ? $est['tecnica_actividad_id'] : null,
+                    'id_tecnica_actividad' => $tecnicaActividadId,
                     'descripcion_actividad_unidad_corte' => $est['actividad'] ?: null,
                 ]);
         }
@@ -195,8 +209,10 @@ class PlanificacionEditRepo
         DB::table('detalle_recurso')->where('id_unidad_corte', $corteId)->delete();
 
         foreach ($recursosData as $rec) {
-            $recursoId = $rec['recurso_id'] ?? null;
-            if (!$recursoId) continue;
+            $recursoName = $rec['recurso_id'] ?? null;
+            if (!$recursoName) continue;
+
+            $recursoId = $this->createRepo->findOrCreateRecurso($recursoName);
 
             DB::table('detalle_recurso')->insert([
                 'id_unidad_corte' => $corteId,
@@ -232,9 +248,11 @@ class PlanificacionEditRepo
             ->update(['estatus' => '2']);
 
         foreach ($bibliografiasData as $bib) {
-            $bibId = $bib['bibliografia_id'] ?? null;
-            if (!$bibId)
+            $bibName = $bib['bibliografia_id'] ?? null;
+            if (!$bibName)
                 continue;
+
+            $bibId = $this->createRepo->findOrCreateBibliografia($bibName);
 
             \App\Models\DetalleBibliografia::create([
                 'id_unidad_corte' => $corteId,

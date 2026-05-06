@@ -211,11 +211,47 @@ class PlanificacionCreateRepo
 
     public function saveNuevaBibliografia($nombre)
     {
-        return \App\Models\Bibliografia::create([
-            'nombre_bibliografia' => $nombre,
-            'estatus' => '1',
-            'fecha_creacion' => now(),
-        ]);
+        return \App\Models\Bibliografia::firstOrCreate(
+            ['nombre_bibliografia' => $nombre],
+            ['estatus' => '1', 'fecha_creacion' => now()]
+        );
+    }
+
+    public function findOrCreateTecnicaActividad($nombre)
+    {
+        return \App\Models\Estrategia::firstOrCreate(
+            ['nombre_tecnica_actividad' => $nombre],
+            ['estatus' => '1']
+        )->id_tecnica_actividad;
+    }
+
+    public function findOrCreateRecurso($nombre)
+    {
+        return \App\Models\Recurso::firstOrCreate(
+            ['nombre_recurso' => $nombre],
+            ['estatus' => '1']
+        )->id_recurso;
+    }
+
+    public function findOrCreateTipoEvaluacion($nombre)
+    {
+        return \App\Models\TipoEvaluacion::firstOrCreate(
+            ['nombre_tipo_evaluacion' => $nombre],
+            ['estatus' => '1']
+        )->id_tipo_evaluacion;
+    }
+
+    public function findOrCreateTecnicaEvaluacion($nombre)
+    {
+        return \App\Models\TecnicaEvaluacion::firstOrCreate(
+            ['nombre_tecnica_evaluacion' => $nombre],
+            ['estatus' => '1']
+        )->id_tecnica_evaluacion;
+    }
+
+    public function findOrCreateBibliografia($nombre)
+    {
+        return $this->saveNuevaBibliografia($nombre)->id_bibliografia;
     }
 
     public function savePlanificacionTransaccion($idProfesorAsignado, $unidades, $tiposSeccion = [], $estatus = '2')
@@ -257,8 +293,12 @@ class PlanificacionCreateRepo
                 // Guardar Estrategia (Técnica y Actividad) directamente en unidad_corte según el esquema de la DB
                 if (!empty($unidad['estrategias'])) {
                     $estrategiaPrincipal = $unidad['estrategias'][0];
+                    $tecnicaActividadId = !empty($estrategiaPrincipal['tecnica_actividad_id']) 
+                        ? $this->findOrCreateTecnicaActividad($estrategiaPrincipal['tecnica_actividad_id']) 
+                        : null;
+
                     $unidadCorte->update([
-                        'id_tecnica_actividad' => (isset($estrategiaPrincipal['tecnica_actividad_id']) && is_numeric($estrategiaPrincipal['tecnica_actividad_id'])) ? $estrategiaPrincipal['tecnica_actividad_id'] : null,
+                        'id_tecnica_actividad' => $tecnicaActividadId,
                         'descripcion_actividad_unidad_corte' => $estrategiaPrincipal['actividad'] ?: null,
                     ]);
 
@@ -266,9 +306,10 @@ class PlanificacionCreateRepo
                     foreach ($unidad['estrategias'] as $estrategia) {
                         foreach ($estrategia['recursos'] as $recurso) {
                             if (!empty($recurso['recurso_id'])) {
+                                $recursoId = $this->findOrCreateRecurso($recurso['recurso_id']);
                                 DB::table('detalle_recurso')->insert([
                                     'id_unidad_corte' => $unidadId,
-                                    'id_recurso' => $recurso['recurso_id'],
+                                    'id_recurso' => $recursoId,
                                     'estatus' => '1',
                                 ]);
                             }
@@ -278,10 +319,13 @@ class PlanificacionCreateRepo
 
                 foreach ($unidad['evaluaciones'] as $evaluacion) {
                     if (!empty($evaluacion['evaluacion_id'])) {
+                        $tipoEvalId = $this->findOrCreateTipoEvaluacion($evaluacion['evaluacion_id']);
+                        $tecnicaEvalId = $this->findOrCreateTecnicaEvaluacion($evaluacion['tecnica_id']);
+
                         \App\Models\DetalleEvaluacion::create([
                             'id_unidad_corte' => $unidadId,
-                            'id_tipo_evaluacion' => $evaluacion['evaluacion_id'],
-                            'id_tecnica_evaluacion' => $evaluacion['tecnica_id'],
+                            'id_tipo_evaluacion' => $tipoEvalId,
+                            'id_tecnica_evaluacion' => $tecnicaEvalId,
                             'id_instrumento' => null, // null for now as per schema
                             'ponderacion_detalle_evaluacion' => $evaluacion['ponderacion'],
                             'integrantes_detalle_evaluacion' => ($evaluacion['forma_participacion'] == '2') ? ($evaluacion['integrantes'] ?? null) : 1, // 1 if individual
@@ -295,9 +339,10 @@ class PlanificacionCreateRepo
                 // Save bibliographies for this unit
                 foreach ($unidad['bibliografias'] as $bibliografia) {
                     if (!empty($bibliografia['bibliografia_id'])) {
+                        $biblioId = $this->findOrCreateBibliografia($bibliografia['bibliografia_id']);
                         \App\Models\DetalleBibliografia::create([
                             'id_unidad_corte' => $unidadId,
-                            'id_bibliografia' => $bibliografia['bibliografia_id'],
+                            'id_bibliografia' => $biblioId,
                             'estatus' => '1',
                         ]);
                     }
