@@ -350,7 +350,7 @@ class PlanificacionCreateRepo
             }
 
             DB::commit();
-            return true;
+            return $planificacionId;
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;

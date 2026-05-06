@@ -1,57 +1,65 @@
 @props(['type' => 'success', 'message' => ''])
 
-<div x-data="{ 
+<div x-data="{
     show: false,
-    alertType: '{{ $type }}',
-    alertMessage: {!! json_encode((string)$message) !!},
-    isSuccess() { return ['success', 'exitoso', 'exito'].includes(this.alertType) }
-}"
-x-init="
-    if (alertMessage && alertMessage.length > 0) {
-        show = true;
+    alertType: 'success',
+    alertMessage: '',
+    redirectUrl: null,
+    isSuccess() { return this.alertType === 'success' },
+    showAlert(data) {
+        this.alertType = data.type || 'success';
+        this.alertMessage = data.message || 'Operación completada';
+        this.redirectUrl = data.redirect || null;
+        this.show = true;
+    },
+    handleOk() {
+        this.show = false;
+        if (this.redirectUrl) {
+            setTimeout(() => { window.location.href = this.redirectUrl; }, 100);
+        }
     }
-"
-x-on:show-alert.window="
-    let detail = $event.detail;
-    if (Array.isArray(detail) && detail.length > 0) detail = detail[0];
-    
-    show = true; 
-    alertType = detail.type || 'success'; 
-    alertMessage = detail.message || 'Operación completada';
-"
+}"
+x-on:show-alert.window="showAlert($event.detail)"
 wire:ignore
-class="fixed inset-0 flex items-center justify-center p-4 bg-gray-900/90 backdrop-blur-md"
+class="fixed inset-0 flex items-center justify-center p-4 bg-gray-950/80 backdrop-blur-sm"
 style="z-index: 9999999;"
 x-cloak
-x-show="show">
+x-show="show"
+x-transition:enter="transition ease-out duration-100"
+x-transition:enter-start="opacity-0 scale-95"
+x-transition:enter-end="opacity-100 scale-100"
+x-transition:leave="transition ease-in duration-75"
+x-transition:leave-start="opacity-100 scale-100"
+x-transition:leave-end="opacity-0 scale-95">
     
-    <div class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-md w-full border-4"
-         :class="isSuccess() ? 'border-green-500' : 'border-red-500'"
-         @click.away="show = false">
-        <div class="p-8 text-center">
-            <div class="mb-4">
-                <span class="material-icons text-6xl" 
-                      :class="isSuccess() ? 'text-green-500' : 'text-red-500'"
-                      x-text="isSuccess() ? 'check_circle' : 'error'"></span>
+    <div class="relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border-2"
+         :class="isSuccess() ? 'border-green-500' : 'border-red-500'">
+        
+        <div class="h-24 flex items-center justify-center"
+             :class="isSuccess() ? 'bg-gradient-to-br from-green-400 to-emerald-600' : 'bg-gradient-to-br from-red-400 to-rose-600'">
+            <div class="bg-white/20 backdrop-blur-md rounded-full p-3">
+                <span class="material-icons text-white text-5xl" 
+                      x-text="isSuccess() ? 'check_circle' : 'report_problem'"></span>
             </div>
+        </div>
+
+        <div class="p-6 text-center">
+            <h3 class="text-2xl font-black mb-3 tracking-tight" 
+                :class="isSuccess() ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
+                x-text="isSuccess() ? '¡GUARDADO EXITOSAMENTE!' : '¡HAY ERRORES!'"></h3>
             
-            <h3 class="text-2xl font-black mb-2 dark:text-white" 
-                x-text="isSuccess() ? '¡GUARDADO!' : '¡HAY ERRORES!'"></h3>
-            
-            <div class="mt-4 mb-6 max-h-[60vh] overflow-y-auto px-2 text-left">
-                <p class="text-sm font-bold text-gray-700 dark:text-gray-300 whitespace-pre-line" 
+            <div class="mt-3 mb-6 max-h-[40vh] overflow-y-auto px-3 py-3 text-left bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed" 
                    x-text="alertMessage"></p>
             </div>
             
-            <button type="button" @click="show = false"
-                    class="w-full py-4 px-6 text-white rounded-2xl font-black uppercase tracking-widest transition-all shadow-lg active:scale-95"
+            <button type="button" @click="handleOk()"
+                    class="w-full py-4 px-6 text-white rounded-xl font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 text-base"
                     :class="isSuccess() ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'">
-                ENTENDIDO (OK)
+                OK
             </button>
         </div>
     </div>
     
-    <style>
-        [x-cloak] { display: none !important; }
-    </style>
+    <style>[x-cloak] { display: none !important; }</style>
 </div>

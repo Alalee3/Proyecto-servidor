@@ -58,7 +58,4 @@
         @endif
     </div>
 
-    @error($finalErrorField)
-        <p class="mt-2 text-sm text-red-600 {{ $errorClasses }}">{{ $message }}</p>
-    @enderror
 </div>

@@ -104,7 +104,7 @@
                             @foreach ($form->unidades as $idx => $u)
                                 @php
                                     $isReachable = $idx <= $maxUnidadAlcanzada;
-                                    $isComplete = $form->isUnidadComplete($idx);
+                                    $isComplete = ($idx == $openUnidad) ? $form->isUnidadComplete($idx) : ($idx < $openUnidad && $form->isUnidadComplete($idx));
                                 @endphp
                                 <button type="button" 
                                     wire:key="unit-circle-{{ $idx }}"
@@ -196,11 +196,19 @@
                             </div>
 
                                 @php
-                                    $isTematicaDone = $form->isTematicaComplete($index);
-                                    $isEstrategiasDone = $form->isEstrategiasComplete($index);
-                                    $isIndicadoresDone = $form->isIndicadoresComplete($index);
-                                    $isEvaluacionDone = $form->isEvaluacionComplete($index);
-                                    $isBibliografiasDone = $form->isBibliografiasComplete($index);
+                                    if ($openUnidad == $index) {
+                                        $isTematicaDone = $form->isTematicaComplete($index);
+                                        $isEstrategiasDone = $form->isEstrategiasComplete($index);
+                                        $isIndicadoresDone = $form->isIndicadoresComplete($index);
+                                        $isEvaluacionDone = $form->isEvaluacionComplete($index);
+                                        $isBibliografiasDone = $form->isBibliografiasComplete($index);
+                                    } else {
+                                        $isTematicaDone = false;
+                                        $isEstrategiasDone = false;
+                                        $isIndicadoresDone = false;
+                                        $isEvaluacionDone = false;
+                                        $isBibliografiasDone = false;
+                                    }
 
                                     $canShowEstrategias = $isTematicaDone;
                                     $canShowIndicadores = $isEstrategiasDone;
@@ -241,7 +249,7 @@
                                                                 @endif
                                                             </div>
                                                             <x-select :options="$temasUnidad" valueField="id_tema_unidad" textField="titulo_tema"
-                                                                wire:model.live.debounce.250ms="form.unidades.{{ $index }}.objetivos.{{ $objetivoIndex }}.tema_id"
+                                                                wire:model.live="form.unidades.{{ $index }}.objetivos.{{ $objetivoIndex }}.tema_id"
                                                                 placeholder="Seleccione un tema" class="text-sm w-full" required />
                                                             @error("form.unidades.$index.objetivos.$objetivoIndex.tema_id")
                                                                 <span class="text-red-500 text-[10px] font-bold block mt-1">{{ $message }}</span>
@@ -260,7 +268,7 @@
                                                             </div>
                                                             @php $opcionesObjetivo = $todosLosObjetivos->where('id_tema_unidad', $selectedTemaId); @endphp
                                                             <x-select :options="$opcionesObjetivo" valueField="id_objetivo" textField="titulo_objetivo"
-                                                                wire:model.live.debounce.250ms="form.unidades.{{ $index }}.objetivos.{{ $objetivoIndex }}.objetivo_id"
+                                                                wire:model.live="form.unidades.{{ $index }}.objetivos.{{ $objetivoIndex }}.objetivo_id"
                                                                 placeholder="Seleccione un objetivo" class="text-sm w-full" :disabled="empty($selectedTemaId)" required />
                                                             @error("form.unidades.$index.objetivos.$objetivoIndex.objetivo_id")
                                                                 <span class="text-red-500 text-[10px] font-bold block mt-1">{{ $message }}</span>
@@ -286,7 +294,7 @@
                                                                             $opcionesContenido = $todosLosContenidos->where('id_objetivo', $selectedObjetivoId);
                                                                         @endphp
                                                                         <x-select :options="$opcionesContenido" valueField="id_contenido" textField="titulo_contenido"
-                                                                            wire:model.live.debounce.250ms="form.unidades.{{ $index }}.objetivos.{{ $objetivoIndex }}.contenidos.{{ $contenidoIndex }}.contenido_id"
+                                                                            wire:model.live="form.unidades.{{ $index }}.objetivos.{{ $objetivoIndex }}.contenidos.{{ $contenidoIndex }}.contenido_id"
                                                                             placeholder="Seleccione un contenido" class="text-sm w-full" :disabled="empty($selectedObjetivoId)" required />
                                                                         @error("form.unidades.$index.objetivos.$objetivoIndex.contenidos.$contenidoIndex.contenido_id")
                                                                             <span class="text-red-500 text-[10px] font-bold block mt-1">{{ $message }}</span>
@@ -305,7 +313,7 @@
                                                 </div>
                                             @endforeach
                                                 <div class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
-                                                    <button type="button" @click="openSection = 'estrategias'" 
+                                                    <button type="button" @click="openSection = 'estrategias'" wire:click="autoSaveSection"
                                                         class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all {{ !$isTematicaDone ? 'opacity-50 cursor-not-allowed' : '' }}"
                                                         {{ !$isTematicaDone ? 'disabled' : '' }}>
                                                         SIGUIENTE: ESTRATEGIAS <span class="material-icons text-sm">arrow_forward</span>
@@ -345,7 +353,7 @@
                                                         <div class="space-y-2">
                                                             <label class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">Estrategia o Actividad</label>
                                                             <x-datalist :options="$tecnicasActividad" textField="nombre_tecnica_actividad"
-                                                                wire:model.live.debounce.250ms="form.unidades.{{ $index }}.estrategias.{{ $estrategiaIndex }}.tecnica_actividad_id"
+                                                                wire:model.live="form.unidades.{{ $index }}.estrategias.{{ $estrategiaIndex }}.tecnica_actividad_id"
                                                                 placeholder="Escriba o seleccione..." class="text-sm w-full" required />
                                                             @error("form.unidades.$index.estrategias.$estrategiaIndex.tecnica_actividad_id")
                                                                 <span class="text-red-500 text-[10px] font-bold block mt-1">{{ $message }}</span>
@@ -372,7 +380,7 @@
                                                                 <div class="flex items-center gap-2">
                                                                     <div class="flex-grow">
                                                                         <x-datalist :options="$recursosMaestros" textField="nombre_recurso"
-                                                                            wire:model.live.debounce.250ms="form.unidades.{{ $index }}.estrategias.{{ $estrategiaIndex }}.recursos.{{ $recursoIndex }}.recurso_id"
+                                                                            wire:model.live="form.unidades.{{ $index }}.estrategias.{{ $estrategiaIndex }}.recursos.{{ $recursoIndex }}.recurso_id"
                                                                             placeholder="Escriba o seleccione..." class="text-sm w-full" required />
                                                                         @error("form.unidades.$index.estrategias.$estrategiaIndex.recursos.$recursoIndex.recurso_id")
                                                                             <span class="text-red-500 text-[10px] font-bold block mt-1">{{ $message }}</span>
@@ -391,7 +399,7 @@
                                                 </div>
                                             @endforeach
                                                 <div class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
-                                                    <button type="button" @click="openSection = 'indicadores'" 
+                                                    <button type="button" @click="openSection = 'indicadores'" wire:click="autoSaveSection"
                                                         class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all {{ !$isEstrategiasDone ? 'opacity-50 cursor-not-allowed' : '' }}"
                                                         {{ !$isEstrategiasDone ? 'disabled' : '' }}>
                                                         SIGUIENTE: INDICADORES <span class="material-icons text-sm">arrow_forward</span>
@@ -420,7 +428,7 @@
                                             </div>
 
                                                 <div class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
-                                                    <button type="button" @click="openSection = 'evaluacion'" 
+                                                    <button type="button" @click="openSection = 'evaluacion'" wire:click="autoSaveSection"
                                                         class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all {{ !$isIndicadoresDone ? 'opacity-50 cursor-not-allowed' : '' }}"
                                                         {{ !$isIndicadoresDone ? 'disabled' : '' }}>
                                                         SIGUIENTE: PLAN DE EVALUACIÓN <span class="material-icons text-sm">arrow_forward</span>
@@ -457,7 +465,7 @@
                                                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                         <div class="space-y-1">
                                                             <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Fecha <span class="text-red-500">*</span></label>
-                                                            <x-text-input type="date" wire:model.live.debounce.250ms="form.unidades.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.fecha_evaluacion" class="w-full text-xs" required />
+                                                            <x-text-input type="date" wire:model.live="form.unidades.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.fecha_evaluacion" class="w-full text-xs" required />
                                                             @error("form.unidades.$index.evaluaciones.$evaluacionIndex.fecha_evaluacion")
                                                                 <span class="text-red-500 text-[10px] font-bold block">{{ $message }}</span>
                                                             @enderror
@@ -465,7 +473,7 @@
                                                         <div class="space-y-1">
                                                             <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Evaluación <span class="text-red-500">*</span></label>
                                                             <x-datalist :options="$evaluaciones" textField="nombre_tipo_evaluacion"
-                                                                wire:model.live.debounce.250ms="form.unidades.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.evaluacion_id"
+                                                                wire:model.live="form.unidades.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.evaluacion_id"
                                                                 placeholder="Escriba o seleccione..." class="text-xs w-full" required />
                                                             @error("form.unidades.$index.evaluaciones.$evaluacionIndex.evaluacion_id")
                                                                 <span class="text-red-500 text-[10px] font-bold block mt-1">{{ $message }}</span>
@@ -474,7 +482,7 @@
                                                         <div class="space-y-1">
                                                             <label class="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Técnica <span class="text-red-500">*</span></label>
                                                             <x-datalist :options="$tecnica" textField="nombre_tecnica_evaluacion"
-                                                                wire:model.live.debounce.250ms="form.unidades.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.tecnica_id"
+                                                                wire:model.live="form.unidades.{{ $index }}.evaluaciones.{{ $evaluacionIndex }}.tecnica_id"
                                                                 placeholder="Escriba o seleccione..." class="text-xs w-full" required />
                                                             @error("form.unidades.$index.evaluaciones.$evaluacionIndex.tecnica_id")
                                                                 <span class="text-red-500 text-[10px] font-bold block mt-1">{{ $message }}</span>
@@ -519,7 +527,7 @@
                                                 </div>
                                             @endforeach
                                                 <div class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
-                                                    <button type="button" @click="openSection = 'bibliografias'" 
+                                                    <button type="button" @click="openSection = 'bibliografias'" wire:click="autoSaveSection"
                                                         class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all {{ !$isEvaluacionDone ? 'opacity-50 cursor-not-allowed' : '' }}"
                                                         {{ !$isEvaluacionDone ? 'disabled' : '' }}>
                                                         SIGUIENTE: BIBLIOGRAFÍAS <span class="material-icons text-sm">arrow_forward</span>
@@ -562,7 +570,7 @@
                                                     </div>
                                                     <div class="w-full">
                                                         <x-datalist :options="$bibliografiasMaestras" textField="nombre_bibliografia"
-                                                            wire:model.live.debounce.250ms="form.unidades.{{ $index }}.bibliografias.{{ $biblioIndex }}.bibliografia_id"
+                                                            wire:model.live="form.unidades.{{ $index }}.bibliografias.{{ $biblioIndex }}.bibliografia_id"
                                                             placeholder="Escriba o seleccione..."
                                                             class="w-full text-xs" />
                                                         @error("form.unidades.$index.bibliografias.$biblioIndex.bibliografia_id")

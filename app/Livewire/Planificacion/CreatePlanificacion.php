@@ -13,6 +13,7 @@ class CreatePlanificacion extends Component
     public $isCoordinador = false;
     public $openUnidad = 0;
     public $maxUnidadAlcanzada = 0;
+    public $planificacionDraftId = null;
     public Collection $tecnica, $recursosMaestros, $evaluaciones, $bibliografiasMaestras, $asignaciones, $tecnicasActividad;
     public \App\Livewire\Forms\Planificacion\CreatePlanificacionForm $form;
     public array $temasPorUnidad = [];
@@ -304,26 +305,72 @@ class CreatePlanificacion extends Component
         return collect(range(8, 18))->map(fn($h) => sprintf('%02d:00', $h));
     }
 
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
+    }
+
+    public function autoSaveSection()
+    {
+        if (!$this->form->id_profesor_asignado || empty($this->form->tipos_seccion)) {
+            return;
+        }
+
+        try {
+            if ($this->planificacionDraftId) {
+                // Ya existe un borrador, actualizamos
+                $repo = new \App\Repositories\Planificacion\PlanificacionEditRepo();
+                $repo->updatePlanificacion($this->planificacionDraftId, [
+                    'unidades' => $this->form->unidades
+                ]);
+            } else {
+                // Primera vez, creamos borrador
+                $id = $this->planificacionRepository->savePlanificacionTransaccion(
+                    $this->form->id_profesor_asignado,
+                    $this->form->unidades,
+                    $this->form->tipos_seccion,
+                    '4'
+                );
+                if ($id) {
+                    $this->planificacionDraftId = $id;
+                }
+            }
+        } catch (\Exception $e) {
+            // Silencioso - no interrumpir al usuario
+        }
+    }
+
     public function savePlanificacion()
     {
         try {
             $this->form->validate();
 
-            $this->planificacionRepository->savePlanificacionTransaccion(
-                $this->form->id_profesor_asignado,
-                $this->form->unidades,
-                $this->form->tipos_seccion
-            );
+            if ($this->planificacionDraftId) {
+                // Actualizar borrador existente a estatus final
+                $repo = new \App\Repositories\Planificacion\PlanificacionEditRepo();
+                $repo->updatePlanificacion($this->planificacionDraftId, [
+                    'unidades' => $this->form->unidades
+                ]);
+                // Cambiar estatus a '2' (enviada para aprobación)
+                \App\Models\Planificacion::where('id_planificacion', $this->planificacionDraftId)
+                    ->update(['estatus' => '2']);
+            } else {
+                $this->planificacionRepository->savePlanificacionTransaccion(
+                    $this->form->id_profesor_asignado,
+                    $this->form->unidades,
+                    $this->form->tipos_seccion
+                );
+            }
 
-            session()->flash('message', '¡Guardado!, en espera que lo aprueben (puede verlo en la campana de notificaciones)');
-            $this->dispatch('show-alert', type: 'success', message: '¡Guardado!, en espera que lo aprueben (puede verlo en la campana de notificaciones)');
-            return redirect()->to('/planificacion/list');
+            $this->showAlert('success', '¡Guardado!, en espera que lo aprueben (puede verlo en la campana de notificaciones)', '/planificacion/list');
         } catch (\Illuminate\Validation\ValidationException $e) {
             $errors = $e->validator->errors()->all();
             $msg = "No se puede guardar. Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
-            $this->dispatch('show-alert', type: 'error', message: $msg);
+            $this->showAlert('error', $msg);
+            throw $e;
         } catch (\Exception $e) {
-            $this->dispatch('show-alert', type: 'error', message: 'Error al guardar la planificación: ' . $e->getMessage());
+            $this->showAlert('error', 'Error al guardar la planificación: ' . $e->getMessage());
         }
     }
 
@@ -340,9 +387,10 @@ class CreatePlanificacion extends Component
         $validator = $this->getUnidadValidator($this->openUnidad);
         
         if ($validator->fails()) {
+            $this->setErrorBag($validator->errors());
             $errors = $validator->errors()->all();
             $msg = "No puedes avanzar. Hay campos pendientes en la unidad actual:\n\n• " . implode("\n• ", $errors);
-            $this->dispatch('show-alert', type: 'error', message: $msg);
+            $this->showAlert('error', $msg);
             return;
         }
 
@@ -405,27 +453,22 @@ class CreatePlanificacion extends Component
 
     public function saveProgress($index)
     {
-        // Validar datos básicos necesarios
         if (!$this->form->id_profesor_asignado || empty($this->form->tipos_seccion)) {
-            session()->flash('error', 'Debe seleccionar una asignatura y al menos un tipo de sección antes de guardar el progreso.');
+            $this->showAlert('error', 'Debe seleccionar una asignatura y al menos un tipo de sección antes de guardar el progreso.');
             return;
         }
 
         try {
-            // Guardamos con estatus '3' (Incompleta/Borrador)
             $this->planificacionRepository->savePlanificacionTransaccion(
                 $this->form->id_profesor_asignado,
                 $this->form->unidades,
                 $this->form->tipos_seccion,
-                '4' // Incompleta
+                '4'
             );
 
-            session()->flash('message', 'Progreso de la unidad ' . ($index + 1) . ' guardado exitosamente como borrador.');
-            
-            // Redirigir al gestor de planificaciones usando el path correcto
-            return redirect()->to('/planificacion/list');
+            $this->showAlert('success', 'Progreso de la unidad ' . ($index + 1) . ' guardado exitosamente como borrador.', '/planificacion/list');
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al guardar el progreso: ' . $e->getMessage());
+            $this->showAlert('error', 'Error al guardar el progreso: ' . $e->getMessage());
         }
     }
 

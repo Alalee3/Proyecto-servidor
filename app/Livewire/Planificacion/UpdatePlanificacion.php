@@ -305,13 +305,26 @@ class UpdatePlanificacion extends Component
         $this->form->lapso_fecha_inicio = $this->lapso_fecha_inicio;
         $this->form->lapso_fecha_fin = $this->lapso_fecha_fin;
         $this->form->id_lapso_academico = $this->id_lapso_academico;
+    }
 
-        $field = str_replace('form.', '', $propertyName);
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
+    }
 
-        if (str_contains($field, 'forma_participacion')) {
-            $this->form->validate();
-        } else {
-            $this->form->validateOnly($field);
+    public function autoSaveSection()
+    {
+        try {
+            $this->form->lapso_fecha_inicio = $this->lapso_fecha_inicio;
+            $this->form->lapso_fecha_fin = $this->lapso_fecha_fin;
+            $this->form->id_lapso_academico = $this->id_lapso_academico;
+
+            $this->planificacionEditRepo->updatePlanificacion($this->planificacionId, [
+                'unidades' => $this->form->unidades
+            ]);
+        } catch (\Exception $e) {
+            // Silencioso - no interrumpir al usuario
         }
     }
 
@@ -329,9 +342,10 @@ class UpdatePlanificacion extends Component
         $validator = $this->getUnidadValidator($this->openUnidad);
         
         if ($validator->fails()) {
+            $this->setErrorBag($validator->errors());
             $errors = $validator->errors()->all();
             $msg = "No puedes avanzar. Hay campos pendientes en la unidad actual:\n\n• " . implode("\n• ", $errors);
-            $this->dispatch('show-alert', type: 'error', message: $msg);
+            $this->showAlert('error', $msg);
             return;
         }
 
@@ -396,10 +410,9 @@ class UpdatePlanificacion extends Component
         ]);
 
         if ($success) {
-            session()->flash('message', 'Progreso guardado exitosamente.');
-            return redirect()->to('/planificacion/list');
+            $this->showAlert('success', 'Progreso guardado exitosamente como borrador.', '/planificacion/list');
         } else {
-            session()->flash('error', 'Error al guardar el progreso.');
+            $this->showAlert('error', 'Error al guardar el progreso.');
         }
     }
 
@@ -417,16 +430,15 @@ class UpdatePlanificacion extends Component
             ]);
 
             if ($success) {
-                session()->flash('message', '¡Guardado!, en espera que lo aprueben (puede verlo en la campana de notificaciones)');
-                $this->dispatch('show-alert', type: 'success', message: '¡Guardado!, en espera que lo aprueben (puede verlo en la campana de notificaciones)');
-                return redirect()->to('/planificacion/list');
+                $this->showAlert('success', '¡Guardado!, en espera que lo aprueben (puede verlo en la campana de notificaciones)', '/planificacion/list');
             } else {
-                $this->dispatch('show-alert', type: 'error', message: 'Error al actualizar la planificación.');
+                $this->showAlert('error', 'Error al actualizar la planificación.');
             }
         } catch (\Illuminate\Validation\ValidationException $e) {
             $errors = $e->validator->errors()->all();
             $msg = "No se puede guardar. Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
-            $this->dispatch('show-alert', type: 'error', message: $msg);
+            $this->showAlert('error', $msg);
+            throw $e; // Re-throw para que Livewire ponga las letras rojas
         }
     }
 
