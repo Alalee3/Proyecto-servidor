@@ -262,6 +262,7 @@ class PlanificacionCreateRepo
             $planificacionData = [
                 'id_profesor_asignado' => $idProfesorAsignado,
                 'estatus' => $estatus,
+                'tipo_planificacion' => json_encode($tiposSeccion),
             ];
 
             $planificacion = \App\Models\Planificacion::create($planificacionData);
@@ -291,8 +292,8 @@ class PlanificacionCreateRepo
                 // Guardar Estrategia (Técnica y Actividad) directamente en unidad_corte según el esquema de la DB
                 if (!empty($unidad['estrategias'])) {
                     $estrategiaPrincipal = $unidad['estrategias'][0];
-                    $tecnicaActividadId = !empty($estrategiaPrincipal['tecnica_actividad_id']) 
-                        ? $this->findOrCreateTecnicaActividad($estrategiaPrincipal['tecnica_actividad_id']) 
+                    $tecnicaActividadId = !empty($estrategiaPrincipal['tecnica_actividad_id'])
+                        ? $this->findOrCreateTecnicaActividad($estrategiaPrincipal['tecnica_actividad_id'])
                         : null;
 
                     $unidadCorte->update([
