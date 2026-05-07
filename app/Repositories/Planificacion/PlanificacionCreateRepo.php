@@ -261,9 +261,7 @@ class PlanificacionCreateRepo
         try {
             $planificacionData = [
                 'id_profesor_asignado' => $idProfesorAsignado,
-                'fecha_creacion' => now(),
                 'estatus' => $estatus,
-                'tipo_planificacion' => json_encode($tiposSeccion), // Almacenar los tipos de clase/sección (Regular, PER, Repitencia)
             ];
 
             $planificacion = \App\Models\Planificacion::create($planificacionData);

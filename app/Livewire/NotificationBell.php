@@ -29,7 +29,7 @@ class NotificationBell extends Component
                 ->join("$dbSogc.seccion as s", 'sud.sud_cod_seccion', '=', 's.sec_codigo')
                 ->where('u.usu_codigo', $userId)
                 ->whereIn('p.estatus', [1, 3]) // 1 = Aceptada, 3 = Rechazada
-                ->select('uc.ucu_nombre', 's.sec_nombre', 'p.fecha_creacion', 'p.estatus')
+                ->select('uc.ucu_nombre', 's.sec_nombre', 'p.estatus')
                 ->orderBy('p.id_planificacion', 'desc')
                 ->limit(5)
                 ->get()

@@ -31,7 +31,7 @@ class PlanificacionEditRepo
             $processedOldCorteIds = [];
 
             foreach ($newUnidades as $unidadData) {
-                $corteNumero = $unidadData['numero']; 
+                $corteNumero = $unidadData['numero'];
                 $foundOldCorte = null;
 
                 // Buscar orden existente por número
@@ -84,7 +84,7 @@ class PlanificacionEditRepo
                 $evaluacionesData = array_map(function ($eval) {
                     $tipoEvalId = $this->createRepo->findOrCreateTipoEvaluacion($eval['evaluacion_id']);
                     $tecnicaEvalId = $this->createRepo->findOrCreateTecnicaEvaluacion($eval['tecnica_id']);
-                    
+
                     return [
                         'id_tipo_evaluacion' => $tipoEvalId,
                         'id_tecnica_evaluacion' => $tecnicaEvalId,
@@ -106,7 +106,7 @@ class PlanificacionEditRepo
 
                 // --- Sincronizar Estrategias, Recursos y Contenidos ---
                 $this->syncEstrategiasCorte($corteId, $unidadData['estrategias']);
-                
+
                 $recursos = [];
                 foreach ($unidadData['estrategias'] as $est) {
                     foreach ($est['recursos'] as $rec) {
@@ -122,7 +122,7 @@ class PlanificacionEditRepo
                     }
                 }
                 $this->syncContenidosCorte($corteId, $contenidos);
- 
+
                 // --- Sincronizar Bibliografías por Corte ---
                 $this->syncBibliografiasCorte($corteId, $unidadData['bibliografias'] ?? []);
             }
@@ -170,7 +170,7 @@ class PlanificacionEditRepo
                 'id_unidad_corte' => $corteId,
                 $foreignIdColumn => $itemId,
                 'estatus' => '1',
-                'fecha_creacion' => now(),
+                //'fecha_creacion' => now(),
             ];
 
             foreach ($additionalColumns as $col) {
@@ -189,9 +189,9 @@ class PlanificacionEditRepo
     {
         if (!empty($estrategiasData)) {
             $est = $estrategiasData[0]; // Solo una estrategia por unidad en este esquema
-            
-            $tecnicaActividadId = !empty($est['tecnica_actividad_id']) 
-                ? $this->createRepo->findOrCreateTecnicaActividad($est['tecnica_actividad_id']) 
+
+            $tecnicaActividadId = !empty($est['tecnica_actividad_id'])
+                ? $this->createRepo->findOrCreateTecnicaActividad($est['tecnica_actividad_id'])
                 : null;
 
             DB::table('unidad_corte')
@@ -210,7 +210,8 @@ class PlanificacionEditRepo
 
         foreach ($recursosData as $rec) {
             $recursoName = $rec['recurso_id'] ?? null;
-            if (!$recursoName) continue;
+            if (!$recursoName)
+                continue;
 
             $recursoId = $this->createRepo->findOrCreateRecurso($recursoName);
 
