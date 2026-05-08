@@ -46,9 +46,11 @@
 
                     <div class="max-w-2xl mx-auto mt-12 flex justify-end gap-4">
                         <a href="{{ route('calendario.list') }}" wire:navigate>
-                            <x-secondary-button type="button">{{ __('Cancelar') }}</x-secondary-button>
+                            <x-primary-button type="button" class="w-32 justify-center">
+                                {{ __('Cancelar') }}
+                            </x-primary-button>
                         </a>
-                        <x-primary-button wire:click="avanzarPaso2" type="button">
+                        <x-primary-button wire:click="avanzarPaso2" type="button" class="w-32 justify-center">
                             {{ __('Siguiente') }}
                         </x-primary-button>
                     </div>
@@ -305,8 +307,10 @@
                         @endif
 
                         <div class="max-w-2xl mx-auto mt-12 flex justify-end gap-4">
-                            <x-secondary-button wire:click="retrocederPaso1" type="button">{{ __('Volver') }}</x-secondary-button>
-                            <x-primary-button wire:click="save" type="button">
+                            <x-primary-button wire:click="retrocederPaso1" type="button" class="w-32 justify-center">
+                                {{ __('Volver') }}
+                            </x-primary-button>
+                            <x-primary-button wire:click="save" type="button" class="w-32 justify-center">
                                 <span wire:loading.remove wire:target="save">Finalizar</span>
                                 <span wire:loading wire:target="save">Procesando...</span>
                             </x-primary-button>
