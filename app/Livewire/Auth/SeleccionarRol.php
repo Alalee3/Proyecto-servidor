@@ -13,6 +13,7 @@ use App\Repositories\UsuarioRepository;
 class SeleccionarRol extends Component
 {
     public $misRoles = [];
+    public $nombreUsuario = '';
     public bool $hayCalendarioActivo = false;
 
     protected $usuarioRepository;
@@ -39,6 +40,19 @@ class SeleccionarRol extends Component
 
         if (count($this->misRoles) === 0) {
             return redirect()->route('login');
+        }
+
+        // Obtener el nombre del usuario (de cualquier perfil ya que comparten cédula)
+        $userProfile = User::on('emulacion_sogac_2')
+            ->where('usu_cedula', $cedula)
+            ->first();
+
+        if ($userProfile && $userProfile->persona) {
+            $primerNombre = explode(' ', trim($userProfile->persona->per_nombres))[0];
+            $primerApellido = explode(' ', trim($userProfile->persona->per_apellidos))[0];
+            $this->nombreUsuario = $primerNombre . ' ' . $primerApellido;
+        } else {
+            $this->nombreUsuario = $userProfile ? $userProfile->name : 'Usuario';
         }
 
         // Verificar si existe calendario activo

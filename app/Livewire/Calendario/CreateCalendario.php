@@ -16,7 +16,6 @@ class CreateCalendario extends Component
 
     public $eventosRegistrados = [];
     public $bibliotecaEventos = [];
-    public $paso = 1; // Wizard step
     public $currentYear;
 
     public function boot()
@@ -65,18 +64,6 @@ class CreateCalendario extends Component
             unset($this->eventosRegistrados[$index]);
             $this->eventosRegistrados = array_values($this->eventosRegistrados);
         }
-    }
-
-    public function avanzarPaso2()
-    {
-        $this->form->validate();
-        $this->paso = 2;
-    }
-
-    public function retrocederPaso1()
-    {
-        $this->paso = 1;
-        $this->eventosRegistrados = []; // Opcional: limpiar eventos al volver
     }
 
     public function save()
