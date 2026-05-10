@@ -13,8 +13,8 @@
     </div>
 </x-slot>
 
-<div class="flex items-center justify-center py-8">
-    <div class="max-w-2xl w-full space-y-8">
+<div class="flex items-center justify-center pt-1 pb-4 -mt-8">
+    <div class="max-w-2xl w-full space-y-4">
         <div class="text-center">
             <h2 class="text-2xl font-black text-black dark:text-white mb-2 uppercase tracking-[0.1em] leading-tight">
                 ¡BIENVENIDO AL SISTEMA DE PLANIFICACIÓN ACADÉMICA {{ $nombreUsuario }}!

@@ -23,6 +23,11 @@ class CreateCalendario extends Component
         $this->calendarioRepository = new CalendarioCreateRepo();
     }
 
+    public function updated($propertyName)
+    {
+        $this->validateOnly($propertyName);
+    }
+
     public function mount()
     {
         $this->currentYear = date('Y');
@@ -66,6 +71,12 @@ class CreateCalendario extends Component
         }
     }
 
+    public function validarSeccionFechas()
+    {
+        $this->form->validate();
+        $this->dispatch('seccion-fechas-validada');
+    }
+
     public function save()
     {
         if (!Gate::allows('crear-calendario')) {
@@ -73,7 +84,7 @@ class CreateCalendario extends Component
         }
 
         if (count($this->eventosRegistrados) === 0) {
-            session()->flash('error', 'Debe registrar al menos un evento antes de guardar el calendario.');
+            $this->addError('eventosRegistrados', 'Debe registrar al menos un evento antes de guardar el calendario.');
             return;
         }
 
@@ -94,6 +105,11 @@ class CreateCalendario extends Component
         } catch (Exception $e) {
             session()->flash('error', $e->getMessage());
         }
+    }
+
+    public function cancelar()
+    {
+        return redirect()->route('calendario.list');
     }
 
     public function render()
