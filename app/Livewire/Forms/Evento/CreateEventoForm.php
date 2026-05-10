@@ -3,7 +3,6 @@
 namespace App\Livewire\Forms\Evento;
 
 use Livewire\Form;
-use Illuminate\Support\Facades\DB;
 
 class CreateEventoForm extends Form
 {
@@ -19,10 +18,8 @@ class CreateEventoForm extends Form
                 'string',
                 'max:100',
                 function ($attribute, $value, $fail) {
-                    $exists = DB::table('evento')
-                        ->where('nombre_evento', $value)
-                        ->exists();
-                    if ($exists) {
+                    $repo = new \App\Repositories\Evento\EventoCreateRepo();
+                    if ($repo->existeEventoConDescripcion($value)) {
                         $fail('Ya existe un evento con esta descripción.');
                     }
                 },
@@ -36,10 +33,8 @@ class CreateEventoForm extends Form
                 'required',
                 'exists:color,id_color',
                 function ($attribute, $value, $fail) {
-                    $exists = DB::table('evento')
-                        ->where('id_color', $value)
-                        ->exists();
-                    if ($exists) {
+                    $repo = new \App\Repositories\Evento\EventoCreateRepo();
+                    if ($repo->existeColor($value)) {
                         $fail('Este color ya está asignado a otro evento activo.');
                     }
                 }

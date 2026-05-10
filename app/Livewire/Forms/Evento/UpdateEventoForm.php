@@ -3,7 +3,6 @@
 namespace App\Livewire\Forms\Evento;
 
 use Livewire\Form;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Locked;
 
 class UpdateEventoForm extends Form
@@ -31,11 +30,8 @@ class UpdateEventoForm extends Form
                 'string',
                 'max:100',
                 function ($attribute, $value, $fail) {
-                    $exists = DB::table('evento')
-                        ->where('nombre_evento', $value)
-                        ->where('id_evento', '!=', $this->id_evento)
-                        ->exists();
-                    if ($exists) {
+                    $repo = new \App\Repositories\Evento\EventoUpdateRepo();
+                    if ($repo->existeEventoConDescripcion($value, $this->id_evento)) {
                         $fail('Ya existe otro evento con esta descripción.');
                     }
                 },
@@ -46,11 +42,8 @@ class UpdateEventoForm extends Form
                 'required',
                 'exists:color,id_color',
                 function ($attribute, $value, $fail) {
-                    $exists = DB::table('evento')
-                        ->where('id_color', $value)
-                        ->where('id_evento', '!=', $this->id_evento)
-                        ->exists();
-                    if ($exists) {
+                    $repo = new \App\Repositories\Evento\EventoUpdateRepo();
+                    if ($repo->existeColor($value, $this->id_evento)) {
                         $fail('Este color ya está asignado a otro evento activo.');
                     }
                 }

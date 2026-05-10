@@ -35,17 +35,7 @@ class UpdateEvento extends Component
 
     public function cargarColores()
     {
-        $id = $this->form->id_evento;
-        $this->colores = DB::table('color')
-            ->where('estatus', '1')
-            ->whereNotIn('id_color', function ($query) use ($id) {
-                $query->select('id_color')
-                    ->from('evento')
-                    ->where('id_evento', '!=', $id)
-                    ->whereNotNull('id_color')
-                    ->where('estatus', '!=', '3');
-            })
-            ->get();
+        $this->colores = $this->eventoRepository->getColoresDisponibles($this->form->id_evento);
     }
 
     public function updated($propertyName)
