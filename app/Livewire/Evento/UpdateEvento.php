@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Evento;
 
-use App\Livewire\Forms\Evento\EditEventoForm;
+use App\Livewire\Forms\Evento\UpdateEventoForm;
 use Livewire\Component;
 use App\Repositories\Evento\EventoUpdateRepo;
 use App\Repositories\Evento\EventoViewRepo;
@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class UpdateEvento extends Component
 {
-    public EditEventoForm $form;
+    public UpdateEventoForm $form;
     public $colores = [];
     protected $eventoRepository;
     protected $viewRepository;

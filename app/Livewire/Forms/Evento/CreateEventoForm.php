@@ -3,6 +3,7 @@
 namespace App\Livewire\Forms\Evento;
 
 use Livewire\Form;
+use Illuminate\Support\Facades\DB;
 
 class CreateEventoForm extends Form
 {
@@ -18,9 +19,8 @@ class CreateEventoForm extends Form
                 'string',
                 'max:100',
                 function ($attribute, $value, $fail) {
-                    $exists = \Illuminate\Support\Facades\DB::table('evento')
+                    $exists = DB::table('evento')
                         ->where('nombre_evento', $value)
-                        ->where('estatus', '!=', '3')
                         ->exists();
                     if ($exists) {
                         $fail('Ya existe un evento con esta descripción.');
@@ -36,9 +36,8 @@ class CreateEventoForm extends Form
                 'required',
                 'exists:color,id_color',
                 function ($attribute, $value, $fail) {
-                    $exists = \Illuminate\Support\Facades\DB::table('evento')
+                    $exists = DB::table('evento')
                         ->where('id_color', $value)
-                        ->where('estatus', '!=', '3')
                         ->exists();
                     if ($exists) {
                         $fail('Este color ya está asignado a otro evento activo.');
@@ -51,18 +50,14 @@ class CreateEventoForm extends Form
     protected function messages()
     {
         return [
-            'id_calendario.integer' => 'El calendario debe ser un número entero.',
-            'dia_inicio_evento.required' => 'La fecha de inicio es obligatoria.',
-            'dia_inicio_evento.date' => 'La fecha de inicio debe ser válida.',
-            'dia_fin_evento.required' => 'La fecha de fin es obligatoria.',
-            'dia_fin_evento.date' => 'La fecha de fin debe ser válida.',
-            'dia_fin_evento.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la de inicio.',
             'descripcion_evento.required' => 'La descripción es obligatoria.',
             'descripcion_evento.string' => 'La descripción debe ser texto.',
             'descripcion_evento.max' => 'La descripción no debe exceder 100 caracteres.',
             'descripcion_evento.regex' => 'Formato inválido en la descripción.',
             'tipo_evento.required' => 'El tipo de evento es obligatorio.',
             'tipo_evento.in' => 'El tipo de evento no es válido.',
+            'id_color.required' => 'El color es obligatorio.',
+            'id_color.exists' => 'El color seleccionado no es válido.',
         ];
     }
 }
