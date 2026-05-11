@@ -57,4 +57,61 @@ class ReportePlanificacionController extends Controller
 
         return $pdf->stream('planificacion_' . $id . '.pdf');
     }
+
+    /**
+     * Genera el Acuerdo de Aprendizaje en PDF.
+     */
+    public function acuerdoAprendizaje($id)
+    {
+        $details = $this->planificacionViewRepo->getDetallesPlanificacion($id);
+
+        if (!$details) {
+            abort(404, 'Planificación no encontrada');
+        }
+
+        $planificacion = (object) $details;
+
+        // Obtener el tipo de planificación (Regular, Repitencia)
+        $tipoPlanificacionJson = \Illuminate\Support\Facades\DB::table('planificacion')
+            ->where('id_planificacion', $id)
+            ->value('tipo_planificacion');
+            
+        $tipos = json_decode($tipoPlanificacionJson, true) ?? [];
+        $esRegular = in_array('Regular', $tipos);
+        $esRepitencia = in_array('Repitencia', $tipos);
+
+        // Obtener sud_codigo (id_profesor_asignado)
+        $sud_codigo = \Illuminate\Support\Facades\DB::table('planificacion')
+            ->where('id_planificacion', $id)
+            ->value('id_profesor_asignado');
+
+        $dbSogc = config('database.connections.emulacion_sogac_2.database');
+        
+        $queryEstudiantes = \Illuminate\Support\Facades\DB::table("$dbSogc.inscripcion as ins")
+            ->join("$dbSogc.persona as per", 'ins.ins_cedula', '=', 'per.per_cedula')
+            ->where('ins.ins_cod_seccion_unidad_docente', $sud_codigo)
+            ->where('ins.ins_estatus', 'A')
+            ->select('per.per_cedula', 'per.per_nombres', 'per.per_apellidos', 'per.per_email', 'per.per_telefono_movil as per_telefono', 'ins.ins_tipo', 'ins.ins_cod_condicion_inscrito');
+
+        // Filtro rudimentario de tipos
+        if ($esRegular && !$esRepitencia) {
+            $queryEstudiantes->where(function($q) {
+                $q->where('ins.ins_tipo', 'N')->orWhere('ins.ins_cod_condicion_inscrito', '!=', 2);
+            });
+        } elseif (!$esRegular && $esRepitencia) {
+            $queryEstudiantes->where(function($q) {
+                $q->where('ins.ins_tipo', 'R')->orWhere('ins.ins_cod_condicion_inscrito', 2);
+            });
+        }
+        // Si tiene ambos, trae todos
+
+        $estudiantes = $queryEstudiantes->orderBy('per.per_apellidos')->orderBy('per.per_nombres')->get();
+
+        $pdf = Pdf::loadView('livewire.pages.planificacion.pdf-acuerdo-aprendizaje', [
+            'planificacion' => $planificacion,
+            'estudiantes' => $estudiantes
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->stream('acuerdo_aprendizaje_' . $id . '.pdf');
+    }
 }

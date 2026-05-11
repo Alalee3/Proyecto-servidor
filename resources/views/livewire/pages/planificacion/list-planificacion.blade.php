@@ -92,7 +92,7 @@
                                             </svg>
                                             Ver
                                         </a>
-                                        <!-- Editar / Continuar -->
+                                        @if($planificacion->estatus != 1)
                                         <a href="{{ route('planificaciones.update', $planificacion->planificacion_id) }}"
                                             class="flex items-center gap-1 bg-[#f0f0f0] border border-[#767676] text-black text-xs font-semibold px-2.5 py-1 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500">
                                             @if($planificacion->estatus == 4)
@@ -105,6 +105,7 @@
                                                 Editar
                                             @endif
                                         </a>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -173,6 +174,7 @@
                                 </svg>
                                 Ver
                             </a>
+                            @if($planificacion->estatus != 1)
                             <a href="{{ route('planificaciones.update', $planificacion->planificacion_id) }}"
                                 class="flex items-center gap-1 bg-[#f0f0f0] border border-[#767676] text-black text-xs font-semibold px-2.5 py-1 rounded hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500">
                                 @if($planificacion->estatus == 4)
@@ -185,6 +187,7 @@
                                     Editar
                                 @endif
                             </a>
+                            @endif
                         </div>
                     </div>
                 @endforeach
