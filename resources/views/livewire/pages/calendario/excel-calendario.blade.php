@@ -81,7 +81,7 @@
                                 {{ \Carbon\Carbon::parse($evento->dia_inicio_evento)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}
                             </td>
                             <td colspan="2" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
-                                {{ $evento->is_laborable ? 'Laborable' : 'No Laborable' }}
+                                {{ $evento->is_laborable_evento ? 'Laborable' : 'No Laborable' }}
                             </td>
                         @endif
                         @php $eventoIndex++; @endphp
@@ -118,7 +118,7 @@
                                 {{ \Carbon\Carbon::parse($evento->dia_inicio_evento)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}
                             </td>
                             <td colspan="2" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
-                                {{ $evento->is_laborable ? 'Laborable' : 'No Laborable' }}
+                                {{ $evento->is_laborable_evento ? 'Laborable' : 'No Laborable' }}
                             </td>
                         @endif
                         @php $eventoIndex++; @endphp
@@ -156,7 +156,7 @@
                                 {{ \Carbon\Carbon::parse($evento->dia_inicio_evento)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}
                             </td>
                             <td colspan="2" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
-                                {{ $evento->is_laborable ? 'Laborable' : 'No Laborable' }}
+                                {{ $evento->is_laborable_evento ? 'Laborable' : 'No Laborable' }}
                             </td>
                         @endif
                         @php $eventoIndex++; @endphp
@@ -224,7 +224,7 @@
                                 {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}
                             </td>
                             <td colspan="2" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
-                                {{ $evento->is_laborable ? 'Laborable' : 'No Laborable' }}
+                                {{ $evento->is_laborable_evento ? 'Laborable' : 'No Laborable' }}
                             </td>
                         @endif
                         @php $eventoIndex++; @endphp
@@ -252,7 +252,7 @@
                         {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}
                     </td>
                     <td colspan="2" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
-                        {{ $evento->is_laborable ? 'Laborable' : 'No Laborable' }}
+                        {{ $evento->is_laborable_evento ? 'Laborable' : 'No Laborable' }}
                     </td>
                 @endif
                 @php $eventoIndex++; @endphp

@@ -16,8 +16,8 @@ class EventoUpdateRepo
                 'nombre_evento' => $data['descripcion_evento'],
                 'tipo_evento'   => $data['tipo_evento'],
                 'id_color'      => $data['id_color'],
-                'is_laborable'  => $data['is_laborable'],
-                'is_repetible'  => $data['is_repetible'],
+                'is_laborable_evento'  => $data['is_laborable'],
+                'is_repetible_evento'  => $data['is_repetible'],
             ]);
 
             return $evento;

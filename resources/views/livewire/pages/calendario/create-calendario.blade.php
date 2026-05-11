@@ -578,7 +578,7 @@
                                                 class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 shadow-sm">
                                                 <option value="" disabled selected>-- Seleccione un Evento --</option>
                                                 @foreach($bibliotecaEventos as $evento)
-                                                    @if($evento->is_repetible || !collect($eventosRegistrados)->contains('id', $evento->id_evento))
+                                                    @if($evento->is_repetible_evento || !collect($eventosRegistrados)->contains('id', $evento->id_evento))
                                                         <option value="{{ $evento->id_evento }}"
                                                             data-tipo="{{ $evento->tipo_evento }}"
                                                             data-color="{{ $evento->codigo_color }}">

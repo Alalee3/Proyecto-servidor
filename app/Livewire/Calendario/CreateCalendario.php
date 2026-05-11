@@ -51,7 +51,7 @@ class CreateCalendario extends Component
             if (isset($evento['id']) && $evento['id'] == $id_evento) {
                 // Buscar si es repetible en la biblioteca
                 $eventoInfo = collect($this->bibliotecaEventos)->firstWhere('id_evento', $id_evento);
-                if (!$eventoInfo || !$eventoInfo->is_repetible) {
+                if (!$eventoInfo || !$eventoInfo->is_repetible_evento) {
                     return; // Ya está registrado y no es repetible
                 }
             }

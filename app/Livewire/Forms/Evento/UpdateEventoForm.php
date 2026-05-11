@@ -22,8 +22,8 @@ class UpdateEventoForm extends Form
         $this->descripcion_evento = $evento->nombre_evento;
         $this->tipo_evento = $evento->tipo_evento;
         $this->id_color = $evento->id_color;
-        $this->is_laborable = (bool)$evento->is_laborable;
-        $this->is_repetible = (bool)$evento->is_repetible;
+        $this->is_laborable = (bool)$evento->is_laborable_evento;
+        $this->is_repetible = (bool)$evento->is_repetible_evento;
     }
 
     protected function rules()

@@ -47,7 +47,7 @@ class EventoIndexRepo
         return DB::table('evento as e')
             ->join('color as c', 'e.id_color', '=', 'c.id_color')
             ->where('e.estatus', 1)
-            ->select('e.id_evento', 'e.nombre_evento', 'e.tipo_evento', 'e.is_laborable', 'e.is_repetible', 'c.codigo_color')
+            ->select('e.id_evento', 'e.nombre_evento', 'e.tipo_evento', 'e.is_laborable_evento', 'e.is_repetible_evento', 'c.codigo_color')
             ->get();
     }
 }
