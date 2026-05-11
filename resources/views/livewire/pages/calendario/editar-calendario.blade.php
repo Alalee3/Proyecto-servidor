@@ -316,10 +316,11 @@
                                                 });
                                                 btn.addEventListener('mouseenter', (e) => { 
                                                     clearTimeout(this.tooltipTimeout); 
+                                                    const rect = btn.getBoundingClientRect();
                                                     this.tooltip.content = matchingEvents; 
                                                     this.tooltip.visible = true; 
-                                                    this.tooltip.x = e.clientX; 
-                                                    this.tooltip.y = e.clientY; 
+                                                    this.tooltip.x = rect.left + (rect.width / 2); 
+                                                    this.tooltip.y = rect.top; 
                                                 });
                                                 btn.addEventListener('mouseleave', () => { 
                                                     this.tooltipTimeout = setTimeout(() => {
@@ -371,7 +372,7 @@
                             {{-- Tooltip --}}
                             <div x-show="tooltip.visible" x-cloak @mouseenter="clearTimeout(tooltipTimeout)"
                                 @mouseleave="tooltipTimeout = setTimeout(() => { tooltip.visible = false; tooltip.content = null; }, 300)"
-                                :style="`position: fixed; top: ${tooltip.y - 10}px; left: ${tooltip.x + 16}px; z-index: 9999; transform: translateY(-100%); pointer-events: auto;`"
+                                :style="`position: fixed; top: ${tooltip.y - 8}px; left: ${tooltip.x}px; z-index: 9999; transform: translate(-50%, -100%); pointer-events: auto;`"
                                 class="sogat-tooltip-card bg-white dark:bg-gray-800 shadow-xl rounded-xl border border-gray-200 dark:border-gray-700 p-4 min-w-[250px]">
                                 <template x-if="tooltip.content && tooltip.content.length > 0">
                                     <div>
