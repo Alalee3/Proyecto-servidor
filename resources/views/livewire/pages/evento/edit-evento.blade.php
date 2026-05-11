@@ -10,7 +10,7 @@
 
     <div class="sogat-card">
         <form wire:submit.prevent="guardar" class="w-full space-y-6" novalidate>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div class="w-full">
                     <x-input-label for="descripcion" :value="__('Nombre del Evento')" />
                     <x-text-input id="descripcion" wire:model.live="form.descripcion_evento" class="w-full" type="text"
@@ -23,9 +23,8 @@
                     <select id="tipo" wire:model.live="form.tipo_evento"
                         class="w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm">
                         <option value="1">Feriado Nacional</option>
-                        <option value="2">Administrativo/Académico - Laborable</option>
-                        <option value="3">Administrativo/Académico - No Laborable</option>
-                        <option value="4">Otros</option>
+                        <option value="2">Administrativo/Académico</option>
+                        <option value="3">Otros</option>
                     </select>
                     <x-input-error :messages="$errors->first('form.tipo_evento')" class="mt-2" />
                 </div>
@@ -33,10 +32,7 @@
 
 
                 <div class="w-full">
-                    <div class="flex items-center mb-2">
-                        <x-input-label for="id_color" :value="__('Color del Evento')" />
-                        <span class="text-red-500 ml-1">*</span>
-                    </div>
+                    <x-input-label for="id_color" :value="__('Color del Evento *')" />
                     <div x-data="{ 
                             open: false, 
                             selectedId: @entangle('form.id_color'),
@@ -82,6 +78,19 @@
                     </div>
                     <x-input-error :messages="$errors->first('form.id_color')" class="mt-2" />
                 </div>
+                @if($form->tipo_evento != '1')
+                <x-toggle-switch 
+                    id="is_laborable_edit" 
+                    :label="__('¿Es Laborable?')" 
+                    model="form.is_laborable" 
+                />
+
+                <x-toggle-switch 
+                    id="is_repetible_edit" 
+                    :label="__('¿Es Repetible?')" 
+                    model="form.is_repetible" 
+                />
+                @endif
             </div>
 
             <!-- Botones -->

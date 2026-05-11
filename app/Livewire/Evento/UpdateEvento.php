@@ -42,6 +42,14 @@ class UpdateEvento extends Component
     {
         $field = str_replace('form.', '', $propertyName);
         $this->form->validateOnly($field);
+
+        // Si cambia el tipo de evento
+        if ($propertyName === 'form.tipo_evento') {
+            if ($this->form->tipo_evento == '1') {
+                $this->form->is_laborable = false;
+                $this->form->is_repetible = false;
+            }
+        }
     }
 
     public function guardar()

@@ -9,6 +9,8 @@ class CreateEventoForm extends Form
     public $id_color = '';
     public $descripcion_evento = '';
     public $tipo_evento = '1';
+    public $is_laborable = false;
+    public $is_repetible = false;
 
     protected function rules()
     {
@@ -27,8 +29,10 @@ class CreateEventoForm extends Form
             ],
             'tipo_evento' => [
                 'required',
-                'in:1,2,3,4'
+                'in:1,2,3'
             ],
+            'is_laborable' => ['required', 'boolean'],
+            'is_repetible' => ['required', 'boolean'],
             'id_color' => [
                 'required',
                 'exists:color,id_color',
@@ -53,6 +57,8 @@ class CreateEventoForm extends Form
             'tipo_evento.in' => 'El tipo de evento no es válido.',
             'id_color.required' => 'El color es obligatorio.',
             'id_color.exists' => 'El color seleccionado no es válido.',
+            'is_laborable.boolean' => 'El valor de laborable debe ser booleano.',
+            'is_repetible.boolean' => 'El valor de repetible debe ser booleano.',
         ];
     }
 }
