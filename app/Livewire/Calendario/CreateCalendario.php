@@ -26,6 +26,25 @@ class CreateCalendario extends Component
     public function updated($propertyName)
     {
         $this->validateOnly($propertyName);
+
+        if ($propertyName == 'form.dia_inicio_calendario_academico' || $propertyName == 'form.dia_fin_calendario_academico') {
+            $this->filtrarEventosFueraDeRango();
+        }
+    }
+
+    protected function filtrarEventosFueraDeRango()
+    {
+        $inicio = $this->form->dia_inicio_calendario_academico;
+        $fin = $this->form->dia_fin_calendario_academico;
+
+        if (!$inicio || !$fin) return;
+
+        $this->eventosRegistrados = array_filter($this->eventosRegistrados, function($evento) use ($inicio, $fin) {
+            return ($evento['inicio'] >= $inicio && $evento['inicio'] <= $fin) &&
+                   ($evento['fin'] >= $inicio && $evento['fin'] <= $fin);
+        });
+
+        $this->eventosRegistrados = array_values($this->eventosRegistrados);
     }
 
     public function mount()
