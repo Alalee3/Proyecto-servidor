@@ -157,7 +157,7 @@
                 <strong>{{ $planificacion->unidades_credito_unidad_curricular ?? '' }}</strong></td>
         </tr>
         <tr>
-            <td colspan="6" class="content-cell">Profesores que administran la unidad curricular:
+            <td colspan="6" class="content-cell">Profesor(a) que administra la unidad curricular:
                 <strong>{{ $planificacion->docente_nombre }} {{ $planificacion->docente_apellido }}</strong></td>
         </tr>
         <tr>

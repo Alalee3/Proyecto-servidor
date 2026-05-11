@@ -1,7 +1,7 @@
 <div>
     <x-slot name="header">
         <h2 class="font-bold text-xl text-gray-800 dark:text-gray-500 leading-tight uppercase text-center">
-            {{ __('Perfil de Usuario') }}
+            {{ __('Rol del Usuario') }}
         </h2>
     </x-slot>
 

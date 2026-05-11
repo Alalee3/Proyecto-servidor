@@ -26,7 +26,8 @@ class PlanificacionIndexRepo
             ->leftJoin("$dbSogc.seccion as s", 'sud.sud_cod_seccion', '=', 's.sec_codigo')
             ->leftJoin("$dbSogc.malla as ma", 'uc.ucu_cod_malla', '=', 'ma.mal_codigo')
             ->leftJoin("$dbSogc.programa as pr", 'ma.mal_cod_programa', '=', 'pr.pro_codigo')
-            ->leftJoin("$dbSogc.trayecto as tr", 'ma.mal_cod_trayecto', '=', 'tr.tra_codigo')
+            ->leftJoin("$dbSogc.semestre as sem", 's.sec_cod_semestre', '=', 'sem.sem_codigo')
+            ->leftJoin("$dbSogc.trayecto as tr", 'sem.sem_cod_trayecto', '=', 'tr.tra_codigo')
             ->select(
                 'p.id_planificacion as planificacion_id',
                 'per.per_nombres as docente_nombre',

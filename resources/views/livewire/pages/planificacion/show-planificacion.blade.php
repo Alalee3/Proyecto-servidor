@@ -38,18 +38,20 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2">
-                        <a href="{{ route('planificacion.reporte.detalle', $planificacionId) }}" target="_blank"
-                            class="flex items-center gap-2 bg-[#f0f0f0] border border-[#767676] text-black text-xs font-bold py-1.5 px-3 rounded shadow transition-all duration-200 hover:bg-gray-200 whitespace-nowrap"
-                            title="Ver Plan de Curso en PDF (Nueva pestaña)">
-                            <span class="material-icons text-black text-base">picture_as_pdf</span>
-                            PDF
-                        </a>
-                        <a href="{{ asset('documentos/acuerdo_aprendizaje.pdf') }}" target="_blank"
-                            class="flex items-center gap-2 bg-[#f0f0f0] border border-[#767676] text-black text-xs font-bold py-1.5 px-3 rounded shadow transition-all duration-200 hover:bg-gray-200 whitespace-nowrap"
-                            title="Ver Acuerdo de Aprendizaje (Nueva pestaña)">
-                            <span class="material-icons text-black text-base">assignment</span>
-                            ACUERDO DE APRENDIZAJE
-                        </a>
+                        @if (($planificacion->estatus ?? 0) == 1)
+                            <a href="{{ route('planificacion.reporte.detalle', $planificacionId) }}" target="_blank"
+                                class="flex items-center gap-2 bg-[#f0f0f0] border border-[#767676] text-black text-xs font-bold py-1.5 px-3 rounded shadow transition-all duration-200 hover:bg-gray-200 whitespace-nowrap"
+                                title="Ver Plan de Curso en PDF (Nueva pestaña)">
+                                <span class="material-icons text-black text-base">picture_as_pdf</span>
+                                PDF
+                            </a>
+                            <a href="{{ route('planificacion.acuerdo', $planificacionId) }}" target="_blank"
+                                class="flex items-center gap-2 bg-[#f0f0f0] border border-[#767676] text-black text-xs font-bold py-1.5 px-3 rounded shadow transition-all duration-200 hover:bg-gray-200 whitespace-nowrap"
+                                title="Ver Acuerdo de Aprendizaje (Nueva pestaña)">
+                                <span class="material-icons text-black text-base">assignment</span>
+                                ACUERDO DE APRENDIZAJE
+                            </a>
+                        @endif
                         <span class="px-3 py-1 rounded-full text-sm font-semibold
                             @if (($planificacion->estatus ?? 0) == 1) bg-green-100 text-green-800
                             @elseif(($planificacion->estatus ?? 0) == 2) bg-yellow-100 text-yellow-800
@@ -335,12 +337,13 @@
                                 </div>
                                 <div>
                                     <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 uppercase tracking-tight">
-                                        Contrato de los Estudiantes
+                                        Contrato Estudiantil
                                     </h3>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">Cargue aquí el contrato firmado por los estudiantes (PDF o Imagen).</p>
                                 </div>
                             </div>
 
+                            @if(Auth::id() == ($planificacion->docente_id ?? null))
                             <form wire:submit.prevent="saveContrato" class="space-y-4">
                                 <div class="flex flex-col sm:flex-row items-center gap-4">
                                     <div class="flex-1 w-full">
@@ -375,6 +378,7 @@
                                     </span>
                                 </div>
                             </form>
+                            @endif
 
                             @if ($contratoPath)
                                 <div class="mt-6 flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">

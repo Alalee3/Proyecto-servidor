@@ -48,10 +48,7 @@
                                                     <input type="checkbox" wire:model.live="form.tipos_seccion" value="Regular" class="w-4 h-4 text-indigo-600 bg-white border-gray-300 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                                                     <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Regular</span>
                                                 </label>
-                                                <label class="flex items-center gap-2 cursor-pointer group">
-                                                    <input type="checkbox" wire:model.live="form.tipos_seccion" value="PER" class="w-4 h-4 text-indigo-600 bg-white border-gray-300 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                                                    <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">PER</span>
-                                                </label>
+
                                                 <label class="flex items-center gap-2 cursor-pointer group">
                                                     <input type="checkbox" wire:model.live="form.tipos_seccion" value="Repitencia" class="w-4 h-4 text-indigo-600 bg-white border-gray-300 rounded focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                                                     <span class="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Repitencia</span>
