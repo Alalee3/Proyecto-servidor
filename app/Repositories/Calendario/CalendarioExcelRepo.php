@@ -47,7 +47,9 @@ class CalendarioExcelRepo
                 'evento.nombre_evento as descripcion_evento',
                 'detalle_evento.dia_inicio_detalle_evento as dia_inicio_evento',
                 'detalle_evento.dia_fin_detalle_evento as dia_fin_evento',
-                'color.codigo_color'
+                'color.codigo_color',
+                'evento.is_laborable',
+                'evento.tipo_evento'
             )
             ->where('detalle_evento.id_calendario_academico', $calendario->id_calendario_academico)
             ->where('evento.estatus', 1)

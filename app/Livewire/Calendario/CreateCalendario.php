@@ -46,10 +46,14 @@ class CreateCalendario extends Component
             return;
         }
 
-        // Validación para evitar seleccionar un evento dos veces
+        // Validación para evitar seleccionar un evento dos veces (solo si NO es repetible)
         foreach ($this->eventosRegistrados as $evento) {
             if (isset($evento['id']) && $evento['id'] == $id_evento) {
-                return; // Ya está registrado
+                // Buscar si es repetible en la biblioteca
+                $eventoInfo = collect($this->bibliotecaEventos)->firstWhere('id_evento', $id_evento);
+                if (!$eventoInfo || !$eventoInfo->is_repetible) {
+                    return; // Ya está registrado y no es repetible
+                }
             }
         }
 
