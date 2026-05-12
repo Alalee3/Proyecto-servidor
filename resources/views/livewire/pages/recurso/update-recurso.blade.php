@@ -15,12 +15,12 @@
                         <!-- Nombre -->
                         <div class="w-full">
                             <x-datalist 
-                                wire:key="datalist-recursos-update-{{ md5($recursosExistentes->pluck('nombre_recurso')->join(',')) }}"
+                                wire:key="datalist-recursos-{{ md5($recursosExistentes->pluck('nombre_recurso')->join(',')) }}"
                                 label="Nombre del Recurso" 
                                 :options="$recursosExistentes" 
                                 textField="nombre_recurso"
                                 wire:model.live="form.nombre"
-                                placeholder="Ingrese el nombre del recurso"
+                                placeholder="Ej: Proyector, Marcadores, etc."
                                 required 
                             />
                         </div>

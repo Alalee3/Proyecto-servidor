@@ -12,10 +12,15 @@
         <form wire:submit.prevent="guardar" class="w-full space-y-6" novalidate>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div class="w-full">
-                    <x-input-label for="descripcion" :value="__('Nombre del Evento')" />
-                    <x-text-input id="descripcion" wire:model.live="form.descripcion_evento" class="w-full" type="text"
-                        placeholder="Ej: Congreso Nacional" required />
-                    <x-input-error :messages="$errors->first('form.descripcion_evento')" class="mt-2" />
+                    <x-datalist 
+                        wire:key="datalist-eventos-{{ md5($eventosExistentes->pluck('nombre_evento')->join(',')) }}"
+                        label="Nombre del Evento" 
+                        :options="$eventosExistentes" 
+                        textField="nombre_evento"
+                        wire:model.live="form.descripcion_evento"
+                        placeholder="Ej: Congreso Nacional"
+                        required 
+                    />
                 </div>
 
                 <div class="w-full">

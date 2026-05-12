@@ -10,6 +10,7 @@ use Exception;
 class UpdateTecnicaEvaluacion extends Component
 {
     public UpdateTecnicaEvaluacionForm $form;
+    public $tecnicasExistentes;
     protected $evaluacionesRepository;
 
     public function __construct()
@@ -25,9 +26,17 @@ class UpdateTecnicaEvaluacion extends Component
                 return redirect()->route('tecnica-evaluacion/listar')->with('error', 'Técnica de evaluación no encontrada.');
             }
             $this->form->setForm($evaluacion);
+            $this->refreshTecnicas();
         } catch (Exception $e) {
             return redirect()->route('tecnica-evaluacion/listar')->with('error', 'Error al cargar la técnica de evaluación.');
         }
+    }
+
+    public function refreshTecnicas()
+    {
+        $this->tecnicasExistentes = \App\Models\TecnicaEvaluacion::where('estatus', '1')
+            ->orderBy('nombre_tecnica_evaluacion')
+            ->get();
     }
 
     public function actualizar()

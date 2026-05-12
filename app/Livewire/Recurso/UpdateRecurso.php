@@ -29,7 +29,6 @@ class UpdateRecurso extends Component
     public function refreshRecursos()
     {
         $this->recursosExistentes = \App\Models\Recurso::where('estatus', '1')
-            ->where('id_recurso', '!=', $this->recursoId) // Excluir el que estamos editando
             ->orderBy('nombre_recurso')
             ->get();
     }

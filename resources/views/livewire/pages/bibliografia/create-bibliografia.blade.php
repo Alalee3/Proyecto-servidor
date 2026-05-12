@@ -14,10 +14,15 @@
             <div class="flex flex-col gap-4 w-full md:flex-row">
                 <!-- Nombre -->
                 <div class="w-full">
-                    <x-input-label for="nombre" :value="__('Nombre de la Bibliografía / Referencia')" />
-                    <x-text-input id="nombre" wire:model.live="form.nombre" class="w-full" type="text"
-                        placeholder="Ej: Chiavenato, I. (2019). Introducción a la Teoría General de la Administración." required />
-                    <x-input-error :messages="$errors->first('form.nombre')" class="mt-2" />
+                    <x-datalist 
+                        wire:key="datalist-bibliografias-{{ md5($bibliografiasExistentes->pluck('nombre_bibliografia')->join(',')) }}"
+                        label="Nombre de la Bibliografía / Referencia" 
+                        :options="$bibliografiasExistentes" 
+                        textField="nombre_bibliografia"
+                        wire:model.live="form.nombre"
+                        placeholder="Ej: Chiavenato, I. (2019). Introducción a la Teoría General de la Administración."
+                        required 
+                    />
                 </div>
             </div>
 

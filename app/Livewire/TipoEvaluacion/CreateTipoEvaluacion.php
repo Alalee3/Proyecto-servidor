@@ -10,11 +10,24 @@ use Exception;
 class CreateTipoEvaluacion extends Component
 {
     public CreateTipoEvaluacionForm $form;
+    public $tiposExistentes;
     protected $tipoEvaluacionRepository;
 
     public function __construct()
     {
         $this->tipoEvaluacionRepository = new TipoEvaluacionCreateRepo();
+    }
+
+    public function mount()
+    {
+        $this->refreshTipos();
+    }
+
+    public function refreshTipos()
+    {
+        $this->tiposExistentes = \App\Models\TipoEvaluacion::where('estatus', '1')
+            ->orderBy('nombre_tipo_evaluacion')
+            ->get();
     }
 
     public function guardar()
@@ -24,6 +37,7 @@ class CreateTipoEvaluacion extends Component
         try {
             $this->tipoEvaluacionRepository->crear($this->form->all());
             $this->reset('form.nombre');
+            $this->refreshTipos();
             session()->flash('message', 'Tipo de evaluación creado correctamente.');
         } catch (Exception $e) {
             session()->flash('error', 'Error al crear el tipo de evaluación. Inténtelo de nuevo.');

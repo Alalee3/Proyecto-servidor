@@ -14,10 +14,15 @@
                     <div class="flex flex-col gap-4 w-full md:flex-row">
                         <!-- Nombre -->
                         <div class="w-full">
-                            <x-input-label for="nombre" :value="__('Nombre del Tipo')" />
-                            <x-text-input id="nombre" wire:model.live="form.nombre" class="w-full"
-                                placeholder="Ingrese el nombre del tipo" required />
-                            <x-input-error :messages="$errors->first('form.nombre')" class="mt-2" />
+                            <x-datalist 
+                                wire:key="datalist-tipos-{{ md5($tiposExistentes->pluck('nombre_tipo_evaluacion')->join(',')) }}"
+                                label="Nombre del Tipo" 
+                                :options="$tiposExistentes" 
+                                textField="nombre_tipo_evaluacion"
+                                wire:model.live="form.nombre"
+                                placeholder="Ej: Formativa, Sumativa, Diagnóstica, etc."
+                                required 
+                            />
                         </div>
                     </div>
 

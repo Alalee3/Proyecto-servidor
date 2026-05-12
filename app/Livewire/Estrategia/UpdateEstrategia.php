@@ -10,6 +10,7 @@ use Exception;
 class UpdateEstrategia extends Component
 {
     public UpdateEstrategiaForm $form;
+    public $estrategiasExistentes;
     protected $estrategiasRepository;
 
     public function __construct()
@@ -25,9 +26,17 @@ class UpdateEstrategia extends Component
                 return redirect()->route('estrategia/listar')->with('error', 'Estrategia no encontrada.');
             }
             $this->form->setForm($estrategia);
+            $this->refreshEstrategias();
         } catch (Exception $e) {
             return redirect()->route('estrategia/listar')->with('error', 'Error al cargar la estrategia.');
         }
+    }
+
+    public function refreshEstrategias()
+    {
+        $this->estrategiasExistentes = \App\Models\Estrategia::where('estatus', '1')
+            ->orderBy('nombre_tecnica_actividad')
+            ->get();
     }
 
     public function actualizar()

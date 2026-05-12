@@ -9,8 +9,9 @@ use Exception;
 
 class UpdateBibliografia extends Component
 {
-    protected $bibliografiasRepository;
     public UpdateBibliografiaForm $form;
+    public $bibliografiasExistentes;
+    protected $bibliografiasRepository;
 
     public function __construct()
     {
@@ -25,9 +26,17 @@ class UpdateBibliografia extends Component
                 return redirect()->route('bibliografia/listar')->with('error', 'Bibliografía no encontrada.');
             }
             $this->form->setForm($bibliografia);
+            $this->refreshBibliografias();
         } catch (Exception $e) {
             return redirect()->route('bibliografia/listar')->with('error', 'Error al cargar la bibliografía.');
         }
+    }
+
+    public function refreshBibliografias()
+    {
+        $this->bibliografiasExistentes = \App\Models\Bibliografia::where('estatus', '1')
+            ->orderBy('nombre_bibliografia')
+            ->get();
     }
 
     public function updated($propertyName)

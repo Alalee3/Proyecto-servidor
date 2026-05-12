@@ -13,6 +13,7 @@ class UpdateEvento extends Component
 {
     public UpdateEventoForm $form;
     public $colores = [];
+    public $eventosExistentes = [];
     protected $eventoRepository;
     protected $viewRepository;
 
@@ -31,6 +32,12 @@ class UpdateEvento extends Component
 
         $this->form->setEvento($evento);
         $this->cargarColores();
+        $this->refreshEventos();
+    }
+
+    public function refreshEventos()
+    {
+        $this->eventosExistentes = \App\Models\Evento::orderBy('nombre_evento')->get();
     }
 
     public function cargarColores()

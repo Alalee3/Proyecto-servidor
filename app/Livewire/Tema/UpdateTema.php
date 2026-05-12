@@ -12,6 +12,8 @@ class UpdateTema extends Component
     public UpdateTemaForm $form;
     public $unidadesCurriculares = [];
     public $cortes = [];
+    public $temasExistentes = [];
+    public $objetivosExistentes = [];
 
     protected $temaRepo;
     protected $temaEditRepo;
@@ -37,6 +39,18 @@ class UpdateTema extends Component
             (object) ['id' => '3', 'nombre' => 'Corte 3'],
             (object) ['id' => '4', 'nombre' => 'Corte 4'],
         ];
+        $this->refreshExistentes();
+    }
+
+    public function refreshExistentes()
+    {
+        $this->temasExistentes = \App\Models\Tema::where('estatus', '1')
+            ->orderBy('titulo_tema')
+            ->get();
+        
+        $this->objetivosExistentes = \App\Models\Objetivo::where('estatus', '1')
+            ->orderBy('titulo_objetivo')
+            ->get();
     }
 
     public function addObjetivo()

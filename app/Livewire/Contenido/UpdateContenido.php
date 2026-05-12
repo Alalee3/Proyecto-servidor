@@ -12,6 +12,7 @@ class UpdateContenido extends Component
     public UpdateContenidoForm $form;
     public $temas = [];
     public $objetivos = [];
+    public $contenidosExistentes = [];
 
     protected $contenidoRepo;
     protected $contenidoEditRepo;
@@ -36,6 +37,15 @@ class UpdateContenido extends Component
         if ($this->form->id_tema) {
             $this->objetivos = $this->contenidoRepo->select_objetivos_por_tema($this->form->id_tema);
         }
+
+        $this->refreshContenidos();
+    }
+
+    public function refreshContenidos()
+    {
+        $this->contenidosExistentes = \App\Models\Contenido::where('estatus', '1')
+            ->orderBy('titulo_contenido')
+            ->get();
     }
 
     public function updated($propertyName)

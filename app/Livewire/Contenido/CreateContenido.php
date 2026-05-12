@@ -11,6 +11,7 @@ class CreateContenido extends Component
     public CreateContenidoForm $form;
     public $temas = [];
     public $objetivos = [];
+    public $contenidosExistentes = [];
 
     protected $contenidoRepo;
 
@@ -22,6 +23,14 @@ class CreateContenido extends Component
     public function mount()
     {
         $this->temas = $this->contenidoRepo->select_temas();
+        $this->refreshContenidos();
+    }
+
+    public function refreshContenidos()
+    {
+        $this->contenidosExistentes = \App\Models\Contenido::where('estatus', '1')
+            ->orderBy('titulo_contenido')
+            ->get();
     }
 
     public function updated($propertyName)
@@ -58,6 +67,7 @@ class CreateContenido extends Component
             $this->contenidoRepo->crear($this->form->values());
             $this->form->reset(); // Resets public properties in the form object
             $this->objetivos = []; // Limpiar la lista de objetivos
+            $this->refreshContenidos();
             session()->flash('message', 'Contenido creado correctamente.');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Error al crear contenido: " . $e->getMessage());

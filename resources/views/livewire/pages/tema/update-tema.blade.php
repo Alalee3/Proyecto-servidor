@@ -34,10 +34,15 @@
 
                         <!-- Título -->
                         <div class="w-full md:col-span-2">
-                            <x-input-label for="titulo" :value="__('Título del Tema')" class="text-gray-600 font-bold mb-1" />
-                            <x-text-input id="titulo" wire:model.live="form.titulo_tema" class="w-full" type="text"
-                                placeholder="EJ: TEMA 1: HARDWARE Y SOFTWARE" required />
-                            <x-input-error :messages="$errors->first('form.titulo_tema')" class="mt-2" />
+                            <x-datalist 
+                                wire:key="datalist-temas-{{ md5($temasExistentes->pluck('titulo_tema')->join(',')) }}"
+                                label="Título del Tema" 
+                                :options="$temasExistentes" 
+                                textField="titulo_tema"
+                                wire:model.live="form.titulo_tema"
+                                placeholder="EJ: TEMA 1: HARDWARE Y SOFTWARE"
+                                required 
+                            />
                         </div>
                     </div>
 
@@ -58,9 +63,14 @@
                             @foreach ($form->objetivos as $index => $objetivo)
                                 <div class="flex items-center gap-3 group">
                                     <div class="flex-grow">
-                                        <x-text-input wire:model.live="form.objetivos.{{ $index }}.titulo_objetivo"
-                                            class="w-full text-sm" placeholder="DESCRIBA EL OBJETIVO..." required />
-                                        <x-input-error :messages="$errors->first('form.objetivos.' . $index . '.titulo_objetivo')" class="mt-1" />
+                                        <x-datalist 
+                                            wire:key="datalist-objetivos-{{ $index }}-{{ md5($objetivosExistentes->pluck('titulo_objetivo')->join(',')) }}"
+                                            :options="$objetivosExistentes" 
+                                            textField="titulo_objetivo"
+                                            wire:model.live="form.objetivos.{{ $index }}.titulo_objetivo"
+                                            placeholder="DESCRIBA EL OBJETIVO..."
+                                            required 
+                                        />
                                     </div>
                                     @if (count($form->objetivos) > 1)
                                         <button type="button" wire:click="removeObjetivo({{ $index }})"

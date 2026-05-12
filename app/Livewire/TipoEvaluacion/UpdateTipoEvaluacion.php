@@ -10,6 +10,7 @@ use Exception;
 class UpdateTipoEvaluacion extends Component
 {
     public UpdateTipoEvaluacionForm $form;
+    public $tiposExistentes;
     protected $tipoEvaluacionRepository;
 
     public function __construct()
@@ -25,9 +26,17 @@ class UpdateTipoEvaluacion extends Component
                 return redirect()->route('tipo-evaluacion/listar')->with('error', 'Tipo de evaluación no encontrado.');
             }
             $this->form->setForm($tipoEvaluacion);
+            $this->refreshTipos();
         } catch (Exception $e) {
             return redirect()->route('tipo-evaluacion/listar')->with('error', 'Error al cargar el tipo de evaluación.');
         }
+    }
+
+    public function refreshTipos()
+    {
+        $this->tiposExistentes = \App\Models\TipoEvaluacion::where('estatus', '1')
+            ->orderBy('nombre_tipo_evaluacion')
+            ->get();
     }
 
     public function actualizar()

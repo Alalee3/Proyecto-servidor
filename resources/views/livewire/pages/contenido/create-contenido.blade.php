@@ -58,10 +58,15 @@
 
                         <!-- Título -->
                         <div class="w-full md:col-span-2">
-                            <x-input-label for="titulo" :value="__('Título del Contenido')" class="text-gray-600 font-bold mb-1" />
-                            <x-text-input id="titulo" wire:model.live="form.titulo_contenido" class="w-full"
-                                type="text" placeholder="EJ: INVOCACIÓN DE MÉTODOS Y PASO DE PARÁMETROS" required />
-                            <x-input-error :messages="$errors->first('form.titulo_contenido')" class="mt-2" />
+                            <x-datalist 
+                                wire:key="datalist-contenidos-{{ md5($contenidosExistentes->pluck('titulo_contenido')->join(',')) }}"
+                                label="Título del Contenido" 
+                                :options="$contenidosExistentes" 
+                                textField="titulo_contenido"
+                                wire:model.live="form.titulo_contenido"
+                                placeholder="EJ: INVOCACIÓN DE MÉTODOS Y PASO DE PARÁMETROS"
+                                required 
+                            />
                         </div>
                     </div>
 

@@ -11,6 +11,7 @@ class CreateEvento extends Component
 {
     public CreateEventoForm $form;
     public $colores = [];
+    public $eventosExistentes = [];
     protected $eventoRepository;
 
     public function boot()
@@ -21,6 +22,12 @@ class CreateEvento extends Component
     public function mount()
     {
         $this->cargarColores();
+        $this->refreshEventos();
+    }
+
+    public function refreshEventos()
+    {
+        $this->eventosExistentes = \App\Models\Evento::orderBy('nombre_evento')->get();
     }
 
     public function cargarColores()
@@ -54,6 +61,7 @@ class CreateEvento extends Component
             $id_repo = $this->eventoRepository->crear($this->form->all());
 
             $this->reset('form.descripcion_evento', 'form.tipo_evento', 'form.id_color');
+            $this->refreshEventos();
             session()->flash('message', 'Evento creado correctamente.');
         } catch (Exception $e) {
             session()->flash('error', 'Error al crear evento: ' . $e->getMessage());
