@@ -41,15 +41,24 @@ class UpdateEstrategia extends Component
 
     public function actualizar()
     {
-        $this->form->validate();
-
         try {
+            $this->form->validate();
             $this->estrategiasRepository->actualizar($this->form->id_estrategia_pedagogica, $this->form->all());
-            session()->flash('message', 'Estrategia actualizada correctamente.');
-            return redirect()->route('estrategia/listar');
+            $this->showAlert('success', 'Estrategia actualizada correctamente.', '/estrategia/list');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors()->all();
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
+            $this->showAlert('error', $msg);
+            throw $e;
         } catch (Exception $e) {
-            session()->flash('error', 'Error al actualizar la estrategia.');
+            $this->showAlert('error', 'Error al actualizar la estrategia.');
         }
+    }
+
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
     }
 
     public function cancelar()

@@ -8,8 +8,7 @@
     <div class="pt-2 pb-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <!-- Alertas -->
-            <x-table.alert-message type="success" :message="session('message')" />
-            <x-table.alert-message type="error" :message="session('error')" />
+            <x-table.alert-message />
 
             <div class="sogat-card">
                 <form wire:submit.prevent="save" class="w-full space-y-6" novalidate>

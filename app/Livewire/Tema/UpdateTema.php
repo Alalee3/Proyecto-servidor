@@ -68,14 +68,24 @@ class UpdateTema extends Component
 
     public function save()
     {
-        $this->form->validate();
         try {
+            $this->form->validate();
             $this->temaEditRepo->editar($this->form->id, $this->form->values());
-            session()->flash('message', 'Tema actualizado con éxito.');
-            return redirect()->route('tema/listar');
+            $this->showAlert('success', 'Tema actualizado con éxito.', '/tema/list');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors()->all();
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
+            $this->showAlert('error', $msg);
+            throw $e;
         } catch (\Exception $e) {
-            session()->flash('error', 'Error inténtelo de nuevo.');
+            $this->showAlert('error', 'Error inténtelo de nuevo.');
         }
+    }
+
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
     }
 
     public function render()

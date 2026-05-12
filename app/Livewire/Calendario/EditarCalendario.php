@@ -176,10 +176,9 @@ class EditarCalendario extends Component
                 }
             });
 
-            session()->flash('message', 'Calendario aprobado y activado correctamente.');
-            return redirect()->route('calendario.list');
+            $this->showAlert('success', 'Calendario aprobado y activado correctamente.', '/calendario/list');
         } catch (Exception $e) {
-            session()->flash('error', 'Error al aprobar el calendario: ' . $e->getMessage());
+            $this->showAlert('error', 'Error al aprobar el calendario: ' . $e->getMessage());
         }
     }
 
@@ -215,11 +214,16 @@ class EditarCalendario extends Component
                 }
             });
 
-            session()->flash('message', 'Calendario actualizado (guardado como revisión).');
-            return redirect()->route('calendario.list');
+            $this->showAlert('success', 'Calendario actualizado (guardado como revisión).', '/calendario/list');
         } catch (Exception $e) {
-            session()->flash('error', 'Error al actualizar el calendario: ' . $e->getMessage());
+            $this->showAlert('error', 'Error al actualizar el calendario: ' . $e->getMessage());
         }
+    }
+
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
     }
 
     public function cancelar()

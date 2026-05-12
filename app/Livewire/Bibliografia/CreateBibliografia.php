@@ -38,16 +38,26 @@ class CreateBibliografia extends Component
 
     public function guardar()
     {
-        $this->form->validate();
-
         try {
+            $this->form->validate();
             $this->bibliografiasRepository->crear($this->form->all());
             $this->reset('form.nombre');
             $this->refreshBibliografias();
-            session()->flash('message', 'Bibliografía creada correctamente.');
+            $this->showAlert('success', 'Bibliografía creada correctamente.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors()->all();
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
+            $this->showAlert('error', $msg);
+            throw $e;
         } catch (Exception $e) {
-            session()->flash('error', 'Error al crear la bibliografía. Inténtelo de nuevo.');
+            $this->showAlert('error', 'Error al crear la bibliografía. Inténtelo de nuevo.');
         }
+    }
+
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
     }
 
     public function render()

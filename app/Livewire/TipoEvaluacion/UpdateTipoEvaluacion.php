@@ -41,15 +41,24 @@ class UpdateTipoEvaluacion extends Component
 
     public function actualizar()
     {
-        $this->form->validate();
-
         try {
+            $this->form->validate();
             $this->tipoEvaluacionRepository->actualizar($this->form->id_tipo_evaluacion, $this->form->all());
-            session()->flash('message', 'Tipo de evaluación actualizado correctamente.');
-            return redirect()->route('tipo-evaluacion/listar');
+            $this->showAlert('success', 'Tipo de evaluación actualizado correctamente.', '/tipo-evaluacion/list');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors()->all();
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
+            $this->showAlert('error', $msg);
+            throw $e;
         } catch (Exception $e) {
-            session()->flash('error', 'Error al actualizar el tipo de evaluación.');
+            $this->showAlert('error', 'Error al actualizar el tipo de evaluación.');
         }
+    }
+
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
     }
 
     public function cancelar()

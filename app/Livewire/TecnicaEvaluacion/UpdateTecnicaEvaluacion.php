@@ -41,15 +41,24 @@ class UpdateTecnicaEvaluacion extends Component
 
     public function actualizar()
     {
-        $this->form->validate();
-
         try {
+            $this->form->validate();
             $this->evaluacionesRepository->actualizar($this->form->id_tecnica_evaluacion, $this->form->all());
-            session()->flash('message', 'Técnica de evaluación actualizada correctamente.');
-            return redirect()->route('tecnica-evaluacion/listar');
+            $this->showAlert('success', 'Técnica de evaluación actualizada correctamente.', '/tecnica-evaluacion/list');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors()->all();
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
+            $this->showAlert('error', $msg);
+            throw $e;
         } catch (Exception $e) {
-            session()->flash('error', 'Error al actualizar la técnica de evaluación.');
+            $this->showAlert('error', 'Error al actualizar la técnica de evaluación.');
         }
+    }
+
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
     }
 
     public function cancelar()

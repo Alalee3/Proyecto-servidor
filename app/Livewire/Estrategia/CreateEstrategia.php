@@ -32,16 +32,26 @@ class CreateEstrategia extends Component
 
     public function guardar()
     {
-        $this->form->validate();
-
         try {
+            $this->form->validate();
             $this->estrategiasRepository->crear($this->form->all());
             $this->reset('form.nombre');
             $this->refreshEstrategias();
-            session()->flash('message', 'Estrategia pedagógica creada correctamente.');
+            $this->showAlert('success', 'Estrategia pedagógica creada correctamente.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors()->all();
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
+            $this->showAlert('error', $msg);
+            throw $e;
         } catch (Exception $e) {
-            session()->flash('error', 'Error al crear la estrategia pedagógica. Inténtelo de nuevo.');
+            $this->showAlert('error', 'Error al crear la estrategia pedagógica. Inténtelo de nuevo.');
         }
+    }
+
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
     }
 
     public function render()

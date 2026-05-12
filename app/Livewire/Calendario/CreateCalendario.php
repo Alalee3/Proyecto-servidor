@@ -210,16 +210,20 @@ class CreateCalendario extends Component
         );
 
         $hayErrorValidacion = false;
+        $erroresValidacion = [];
 
         if ($validador->fails()) {
             foreach ($validador->errors()->messages() as $campo => $mensajes) {
                 $this->addError("form.$campo", $mensajes[0]);
+                $erroresValidacion[] = $mensajes[0];
             }
             $hayErrorValidacion = true;
         }
 
         if (count($this->eventosRegistrados) === 0) {
-            $this->addError('eventosRegistrados', 'Debe registrar al menos un evento antes de guardar el calendario.');
+            $msgEvento = 'Debe registrar al menos un evento antes de guardar el calendario.';
+            $this->addError('eventosRegistrados', $msgEvento);
+            $erroresValidacion[] = $msgEvento;
             $hayErrorValidacion = true;
         }
 
@@ -229,6 +233,9 @@ class CreateCalendario extends Component
             } else {
                 $this->dispatch('abrir-seccion', section: 'eventos');
             }
+
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $erroresValidacion);
+            $this->showAlert('error', $msg);
             return;
         }
 
@@ -239,14 +246,19 @@ class CreateCalendario extends Component
             ], $this->eventosRegistrados, $this->id_calendario_borrador);
 
             if ($id) {
-                session()->flash('message', 'Calendario guardado exitosamente.');
-                return redirect()->route('calendario.list');
+                $this->showAlert('success', 'Calendario guardado exitosamente.', '/calendario/list');
             } else {
-                session()->flash('error', 'No se pudo guardar el calendario.');
+                $this->showAlert('error', 'No se pudo guardar el calendario.');
             }
         } catch (Exception $e) {
-            session()->flash('error', $e->getMessage());
+            $this->showAlert('error', $e->getMessage());
         }
+    }
+
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
     }
 
     public function cancelar()

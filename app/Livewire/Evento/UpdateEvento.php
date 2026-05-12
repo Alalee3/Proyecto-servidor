@@ -61,15 +61,24 @@ class UpdateEvento extends Component
 
     public function guardar()
     {
-        $this->form->validate();
-
         try {
+            $this->form->validate();
             $this->eventoRepository->actualizar($this->form->id_evento, $this->form->all());
-            session()->flash('message', 'Evento actualizado correctamente.');
-            return redirect()->route('evento/listar');
+            $this->showAlert('success', 'Evento actualizado correctamente.', '/evento/list');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors()->all();
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
+            $this->showAlert('error', $msg);
+            throw $e;
         } catch (Exception $e) {
-            session()->flash('error', 'Error al actualizar evento: ' . $e->getMessage());
+            $this->showAlert('error', 'Error al actualizar evento: ' . $e->getMessage());
         }
+    }
+
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
     }
 
     public function cancelar()

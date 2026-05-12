@@ -77,14 +77,24 @@ class UpdateContenido extends Component
 
     public function save()
     {
-        $this->form->validate();
         try {
+            $this->form->validate();
             $this->contenidoEditRepo->editar($this->form->id, $this->form->values());
-            session()->flash('message', 'Contenido actualizado con éxito.');
-            return redirect()->route('contenido/listar');
+            $this->showAlert('success', 'Contenido actualizado con éxito.', '/contenido/list');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors()->all();
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
+            $this->showAlert('error', $msg);
+            throw $e;
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al actualizar el contenido.');
+            $this->showAlert('error', 'Error al actualizar el contenido.');
         }
+    }
+
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
     }
 
     public function render()

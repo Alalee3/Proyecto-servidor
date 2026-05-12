@@ -62,17 +62,28 @@ class CreateContenido extends Component
 
     public function save()
     {
-        $this->form->validate();
         try {
+            $this->form->validate();
             $this->contenidoRepo->crear($this->form->values());
             $this->form->reset(); // Resets public properties in the form object
             $this->objetivos = []; // Limpiar la lista de objetivos
             $this->refreshContenidos();
-            session()->flash('message', 'Contenido creado correctamente.');
+            $this->showAlert('success', 'Contenido creado correctamente.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors()->all();
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
+            $this->showAlert('error', $msg);
+            throw $e;
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("Error al crear contenido: " . $e->getMessage());
-            session()->flash('error', 'Error inténtelo de nuevo: ' . $e->getMessage());
+            $this->showAlert('error', 'Error inténtelo de nuevo: ' . $e->getMessage());
         }
+    }
+
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
     }
 
     public function render()

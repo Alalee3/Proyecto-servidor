@@ -52,16 +52,27 @@ class CreateTema extends Component
 
     public function save()
     {
-        $this->form->validate();
         try {
+            $this->form->validate();
             $this->temaRepo->crear($this->form->values());
             $this->form->reset();
             $this->form->objetivos = [['titulo_objetivo' => '']]; // Reiniciar con uno vacío
             $this->refreshExistentes();
-            session()->flash('message', 'Tema creado correctamente.');
+            $this->showAlert('success', 'Tema creado correctamente.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors()->all();
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
+            $this->showAlert('error', $msg);
+            throw $e;
         } catch (\Exception $e) {
-            session()->flash('error', 'Error: ' . $e->getMessage());
+            $this->showAlert('error', 'Error: ' . $e->getMessage());
         }
+    }
+
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
     }
 
     public function addObjetivo()

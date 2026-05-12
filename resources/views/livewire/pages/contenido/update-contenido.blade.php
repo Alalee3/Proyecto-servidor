@@ -7,6 +7,7 @@
 
     <div class="pt-2 pb-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <x-table.alert-message />
             <div class="sogat-card">
                 <form wire:submit="save" class="w-full space-y-6">
 
@@ -24,9 +25,10 @@
                         <div class="w-full md:col-span-2">
                             <div class="flex items-center justify-between mb-2">
                                 <x-input-label :value="__('Objetivos Específicos')" class="text-gray-600 font-bold" />
-                                <button type="button" wire:click="addObjetivo" 
-                                    class="text-xs bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-md font-bold transition-colors uppercase">
-                                    + Agregar Objetivo
+                                <button type="button" wire:click="addObjetivo"
+                                    class="inline-flex items-center gap-1 text-[11px] bg-[#f0f0f0] border-2 border-[#767676] text-black px-4 py-2 rounded-lg font-bold hover:bg-gray-200 transition-colors shadow-sm uppercase">
+                                    <span class="material-icons text-sm">add</span>
+                                    {{ __('AÑADIR OBJETIVO') }}
                                 </button>
                             </div>
                             
@@ -80,9 +82,8 @@
                             </x-danger-button>
                         </a>
 
-                        <x-primary-button type="submit" wire:loading.attr="disabled"
-                            class="bg-gray-600 hover:bg-gray-700 text-white border-none transition-all shadow-lg active:scale-95">
-                            {{ __('Actualizar Contenido') }}
+                        <x-primary-button type="submit" wire:loading.attr="disabled" class="px-10 py-3 text-base">
+                            {{ __('ACTUALIZAR CONTENIDO') }}
                         </x-primary-button>
                     </div>
                 </form>

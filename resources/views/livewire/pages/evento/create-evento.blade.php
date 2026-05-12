@@ -5,8 +5,7 @@
         </h2>
     </x-slot>
 
-    <x-table.alert-message type="success" :message="session('message')" />
-    <x-table.alert-message type="error" :message="session('error')" />
+    <x-table.alert-message />
 
     <div class="sogat-card">
         <form wire:submit.prevent="guardar" class="w-full space-y-6" novalidate>
