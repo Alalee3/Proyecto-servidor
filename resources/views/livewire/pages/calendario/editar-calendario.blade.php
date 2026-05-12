@@ -196,6 +196,32 @@
                                         // Hay solapamiento si (trimStart <= calFin) && (trimEnd >= calInicio)
                                         return (trimStart <= calFin) && (trimEnd >= calInicio);
                                     },
+
+                                    handleMouseEnterDay(btn, day) {
+                                        clearTimeout(this.tooltipTimeout);
+                                        const matchingEvents = this.eventosAlpine.filter(ev => {
+                                            let s = new Date(ev.inicio + 'T00:00:00');
+                                            let e = new Date(ev.fin + 'T00:00:00');
+                                            let d = new Date(day + 'T00:00:00');
+                                            return d >= s && d <= e;
+                                        });
+                                        if (matchingEvents.length === 0) {
+                                            this.tooltip.visible = false;
+                                            return;
+                                        }
+                                        const rect = btn.getBoundingClientRect();
+                                        this.tooltip.content = matchingEvents;
+                                        this.tooltip.visible = true;
+                                        this.tooltip.x = rect.left + (rect.width / 2);
+                                        this.tooltip.y = rect.top;
+                                    },
+
+                                    handleMouseLeaveDay() {
+                                        this.tooltipTimeout = setTimeout(() => {
+                                            this.tooltip.visible = false;
+                                            this.tooltip.content = null;
+                                        }, 300);
+                                    },
                                     
                                     abrirPrimerTrimestreValido() {
                                          for (let i = 1; i <= 4; i++) {
@@ -279,8 +305,30 @@
                                         this.$watch('inicio', (val) => { if(val && fin) this.setupCalendar(); });
                                         this.$watch('fin', (val) => { if(val && inicio) this.setupCalendar(); });
                                         this.$watch('eventosAlpine', () => {
-                                            this.refrescarEventosVisuales();
+                                            if (this.picker1) this.picker1.update();
+                                            if (this.picker2) this.picker2.update();
+                                            if (this.picker3) this.picker3.update();
+                                            if (this.picker4) this.picker4.update();
+                                            this.$nextTick(() => this.refrescarEventosVisuales());
                                         });
+
+                                        // Delegación de eventos para tooltips
+                                        this.$nextTick(() => {
+                                            [this.$refs.calendar1, this.$refs.calendar2, this.$refs.calendar3, this.$refs.calendar4].forEach(calendarEl => {
+                                                if (!calendarEl) return;
+                                                calendarEl.addEventListener('mouseover', (e) => {
+                                                    const btn = e.target.closest('[data-calendar-day]');
+                                                    if (btn && btn.classList.contains('sogat-evento-registrado')) {
+                                                        this.handleMouseEnterDay(btn, btn.dataset.calendarDay);
+                                                    }
+                                                });
+                                                calendarEl.addEventListener('mouseout', (e) => {
+                                                    const btn = e.target.closest('[data-calendar-day]');
+                                                    if (btn) this.handleMouseLeaveDay();
+                                                });
+                                            });
+                                        });
+
                                         if(inicio && fin) this.setupCalendar();
                                     },
                                     setupCalendar() {
@@ -323,6 +371,8 @@
                                             calendarEl.querySelectorAll('[data-calendar-day]').forEach(btn => {
                                             const day = btn.dataset.calendarDay;
                                             btn.style.backgroundColor = ''; btn.style.color = ''; btn.style.border = '';
+                                            btn.style.fontWeight = '';
+                                            btn.style.position = '';
                                             btn.classList.remove('sogat-evento-registrado');
                                             
                                             const existingBadge = btn.querySelector('.sogat-event-counter');
@@ -342,26 +392,6 @@
                                                     btn.style.position = 'relative';
                                                     btn.appendChild(badge);
                                                 }
-                                                const matchingEvents = this.eventosAlpine.filter(ev => {
-                                                    let s = new Date(ev.inicio + 'T00:00:00');
-                                                    let e = new Date(ev.fin + 'T00:00:00');
-                                                    let d = new Date(day + 'T00:00:00');
-                                                    return d >= s && d <= e;
-                                                });
-                                                btn.addEventListener('mouseenter', (e) => { 
-                                                    clearTimeout(this.tooltipTimeout); 
-                                                    const rect = btn.getBoundingClientRect();
-                                                    this.tooltip.content = matchingEvents; 
-                                                    this.tooltip.visible = true; 
-                                                    this.tooltip.x = rect.left + (rect.width / 2); 
-                                                    this.tooltip.y = rect.top; 
-                                                });
-                                                btn.addEventListener('mouseleave', () => { 
-                                                    this.tooltipTimeout = setTimeout(() => {
-                                                        this.tooltip.visible = false; 
-                                                        this.tooltip.content = null; 
-                                                    }, 300);
-                                                });
                                             }
                                             });
                                         });
@@ -670,10 +700,9 @@
                 </x-secondary-button>
 
                 <!-- Botón Aprobar -->
-                <x-primary-button type="button" wire:click="aprobar" wire:loading.attr="disabled"
-                    class="bg-green-600 hover:bg-green-700 focus:ring-green-500">
+                <x-secondary-button type="button" wire:click="aprobar" wire:loading.attr="disabled">
                     {{ __('Aceptar Calendario') }}
-                </x-primary-button>
+                </x-secondary-button>
             </div>
         </div>
     </div>
