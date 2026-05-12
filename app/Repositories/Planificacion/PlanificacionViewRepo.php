@@ -23,7 +23,8 @@ class PlanificacionViewRepo
             ->leftJoin("$dbSogc.lapso_academico as la", 's.sec_cod_lapso_academico', '=', 'la.lap_codigo')
             ->leftJoin("$dbSogc.malla as ma", 'uc.ucu_cod_malla', '=', 'ma.mal_codigo')
             ->leftJoin("$dbSogc.programa as pr", 'ma.mal_cod_programa', '=', 'pr.pro_codigo')
-            ->leftJoin("$dbSogc.trayecto as tr", 'uc.ucu_cod_tuc', '=', 'tr.tra_codigo')
+            ->leftJoin("$dbSogc.semestre as sem", 's.sec_cod_semestre', '=', 'sem.sem_codigo')
+            ->leftJoin("$dbSogc.trayecto as tr", 'sem.sem_cod_trayecto', '=', 'tr.tra_codigo')
             ->leftJoin("$dbSogc.rol as r", 'u.usu_cod_rol', '=', 'r.rol_codigo')
             ->select(
                 'p.id_planificacion as planificacion_id',
@@ -44,6 +45,7 @@ class PlanificacionViewRepo
                 'la.lap_fecha_fin as lapso_fecha_fin',
                 'pr.pro_nombre as nombre_pnf',
                 'tr.tra_nombre as trayecto_unidad_curricular',
+                'sem.sem_nombre as duracion_unidad_curricular',
                 'p.archivo_contrato'
             )
             ->where('p.id_planificacion', $planificacionId)

@@ -76,6 +76,7 @@ Route::get('/', function () {
 });
 
 Route::view('dashboard', 'dashboard')
+    ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
 Route::get('/perfil', \App\Livewire\Perfil\ShowPerfil::class)
@@ -108,8 +109,12 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     // Rutas para Reportes PDF (Abrir en pestaña)
     Route::get('planificacion/reporte-general', [\App\Http\Controllers\ReportePlanificacionController::class, 'reporteGeneral'])->middleware(['can:listar-planificacion', 'log.activity:REPORTE'])->name('planificacion.reporte.general');
     Route::get('planificacion/reporte-detalle/{id}', [\App\Http\Controllers\ReportePlanificacionController::class, 'reporteDetalle'])->middleware(['can:ver-planificacion', 'log.activity:REPORTE'])->name('planificacion.reporte.detalle');
+
     Route::get('calendario/reporte', fn() => ExcelCalendarioExport::descargar())->middleware(['can:listar-calendario', 'log.activity:REPORTE'])->name('calendario.reporte');
     Route::get('calendario/reporte/{id}', fn($id) => ExcelCalendarioExport::descargar($id))->middleware(['can:listar-calendario', 'log.activity:REPORTE'])->name('calendario.reporte.especifico');
+
+    Route::get('planificacion/acuerdo-aprendizaje/{id}', [\App\Http\Controllers\ReportePlanificacionController::class, 'acuerdoAprendizaje'])->middleware(['can:ver-planificacion', 'log.activity:REPORTE'])->name('planificacion.acuerdo');
+
 
     Route::get('indicador-logro/list', ListIndicadorLogro::class)->middleware('can:listar-indicador-logro')->name('indicador-logro/listar');
     Route::get('indicador-logro/create', CreateIndicadorLogro::class)->middleware('can:crear-indicador-logro')->name('indicador-logro/crear');
