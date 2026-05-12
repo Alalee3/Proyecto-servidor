@@ -28,19 +28,13 @@ class ListPlanificacion extends Component
     }
 
     // Define los eventos que este componente va a escuchar.
-    // Todos estos eventos harán que se recarguen las planificaciones.
     protected $listeners = [
-        'planificacionGuardada' => 'recargarPlanificaciones',   // Para cuando se guarda una nueva planificación
-        'planificacionAprobada' => 'recargarPlanificaciones',   // Nuevo: Para cuando una planificación es aprobada
-        'planificacionRechazada' => 'recargarPlanificaciones',  // Nuevo: Para cuando una planificación es rechazada
-        'refreshDatatable' => 'recargarPlanificaciones',       // Para refrescar la tabla de datos
+        'planificacionGuardada' => 'recargarPlanificaciones',
+        'planificacionAprobada' => 'recargarPlanificaciones',
+        'planificacionRechazada' => 'recargarPlanificaciones',
+        'refreshDatatable' => 'recargarPlanificaciones',
     ];
 
-    /**
-     * Este método se ejecuta cuando se dispara uno de los eventos definidos en $listeners.
-     * Simplemente resetea la paginación a la primera página para forzar una recarga completa
-     * de los datos en el método render().
-     */
     public function recargarPlanificaciones()
     {
         $this->resetPage();

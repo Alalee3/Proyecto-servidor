@@ -34,6 +34,15 @@ class UpdateRecursoForm extends Form
         ];
     }
 
+    public function setRecurso($id)
+    {
+        $recurso = \App\Models\Recurso::find($id);
+        if ($recurso) {
+            $this->id_recurso = $recurso->id_recurso;
+            $this->nombre = $recurso->nombre_recurso;
+        }
+    }
+
     public function setForm($recurso)
     {
         $this->id_recurso = $recurso->id_recurso;

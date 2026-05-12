@@ -14,7 +14,7 @@
         <div
             class="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between p-4 bg-white dark:bg-gray-800">
             <!-- Búsqueda -->
-            <input type="text" wire:model.live.debounce.300ms="busqueda"
+            <input type="text" wire:model.live.debounce.300ms="search"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
                 placeholder="Buscar planificación...">
         </div>

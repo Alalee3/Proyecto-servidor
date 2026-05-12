@@ -33,7 +33,7 @@ class UpdatePlanificacion extends Component
 
     public UpdatePlanificacionForm $form;
     public $openUnidad = 0;
-    public $maxUnidadAlcanzada = 3; // En edición, permitimos navegar libremente por las unidades cargadas
+    public $maxUnidadAlcanzada = 0; // Se actualizará según el progreso real
 
     public Collection $recursosMaestros;
     public Collection $estrategiasDisponibles;
@@ -203,6 +203,18 @@ class UpdatePlanificacion extends Component
 
         $this->form->unidades = $unidades;
         $this->openUnidad = $firstPendiente;
+
+        // Calcular progreso inicial para maxUnidadAlcanzada
+        $this->maxUnidadAlcanzada = 0;
+        foreach (range(0, 3) as $i) {
+            if ($this->form->isUnidadComplete($i)) {
+                $this->maxUnidadAlcanzada = $i + 1;
+            } else {
+                break;
+            }
+        }
+        // Asegurarnos que maxUnidadAlcanzada no exceda 3 (índice máximo)
+        $this->maxUnidadAlcanzada = min($this->maxUnidadAlcanzada, 3);
     }
 
     private function loadDropdownOptions()
@@ -330,26 +342,45 @@ class UpdatePlanificacion extends Component
 
     public function irAUnidad($targetIndex)
     {
-        // Siempre permitir ir atrás o a unidades ya alcanzadas
-        if ($targetIndex <= $this->openUnidad || $targetIndex <= $this->maxUnidadAlcanzada) {
-            $this->openUnidad = $targetIndex;
-            $this->dispatch('scroll-to-top');
-            return;
+        // Guardar progreso automáticamente antes de cambiar de unidad
+        $this->autoSaveSection();
+
+        // Si intentamos avanzar a una unidad futura
+        if ($targetIndex > $this->openUnidad) {
+            // Contar cuántas unidades están completas actualmente
+            $unidadesCompletas = 0;
+            foreach (range(0, 3) as $i) {
+                if ($this->form->isUnidadComplete($i)) {
+                    $unidadesCompletas++;
+                }
+            }
+
+            // REGLA: Si ya tiene más de un corte completo (2 o más), permitimos movimiento más libre
+            if ($unidadesCompletas <= 1) {
+                // Validación estricta para los primeros pasos
+                $validator = $this->getUnidadValidator($this->openUnidad);
+                
+                if ($validator->fails()) {
+                    $errors = $validator->errors()->all();
+                    $msg = "No puedes avanzar a la Unidad " . ($targetIndex + 1) . " aún. Debes completar la Unidad " . ($this->openUnidad + 1) . ":\n\n• " . implode("\n• ", $errors);
+                    $this->showAlert('error', $msg);
+                    return;
+                }
+            } else {
+                // Si ya tiene buen progreso, solo validamos si intenta ir a una unidad "nueva" (no alcanzada antes)
+                if ($targetIndex > $this->maxUnidadAlcanzada) {
+                    $validator = $this->getUnidadValidator($this->openUnidad);
+                    if ($validator->fails()) {
+                        $errors = $validator->errors()->all();
+                        $msg = "Para avanzar a nuevas unidades, completa primero la actual:\n\n• " . implode("\n• ", $errors);
+                        $this->showAlert('error', $msg);
+                        return;
+                    }
+                }
+            }
         }
 
-        // Si intenta ir adelante, solo validamos la unidad ACTUAL para permitir el avance
-        // No necesitamos re-validar todas las anteriores si ya estamos en una posición avanzada
-        $validator = $this->getUnidadValidator($this->openUnidad);
-        
-        if ($validator->fails()) {
-            $this->setErrorBag($validator->errors());
-            $errors = $validator->errors()->all();
-            $msg = "No puedes avanzar. Hay campos pendientes en la unidad actual:\n\n• " . implode("\n• ", $errors);
-            $this->showAlert('error', $msg);
-            return;
-        }
-
-        // Si pasó, actualizamos progreso
+        // Si la validación pasó o si vamos hacia atrás, permitimos el cambio
         if ($targetIndex > $this->maxUnidadAlcanzada) {
             $this->maxUnidadAlcanzada = $targetIndex;
         }

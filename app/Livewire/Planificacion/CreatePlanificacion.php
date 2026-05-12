@@ -174,6 +174,24 @@ class CreatePlanificacion extends Component
     {
         $field = str_replace('form.', '', $propertyName);
 
+        // Si cambia el profesor asignado (la asignatura), debemos resetear el ID de borrador
+        // y buscar si ya existe una planificación para esta nueva asignatura.
+        if ($field === 'id_profesor_asignado') {
+            $this->planificacionDraftId = null;
+            if ($this->form->id_profesor_asignado) {
+                $existing = \App\Models\Planificacion::where('id_profesor_asignado', $this->form->id_profesor_asignado)
+                    ->whereIn('estatus', ['1', '2', '3', '4'])
+                    ->latest('id_planificacion')
+                    ->first();
+                if ($existing) {
+                    $this->planificacionDraftId = $existing->id_planificacion;
+                }
+            }
+        }
+        if (str_contains($field, 'unidades') || str_contains($field, 'id_profesor_asignado') || str_contains($field, 'tipos_seccion')) {
+            $this->autoSaveSection();
+        }
+
         if (str_contains($field, 'ponderacion') || str_contains($field, 'forma_participacion')) {
             // Si cambia una ponderación o forma de participación, validamos toda la unidad
             // para que los errores de suma total (25%) se actualicen al instante.
@@ -313,7 +331,8 @@ class CreatePlanificacion extends Component
 
     public function autoSaveSection()
     {
-        if (!$this->form->id_profesor_asignado || empty($this->form->tipos_seccion)) {
+        // Solo requerimos el profesor asignado para crear el registro inicial
+        if (!$this->form->id_profesor_asignado) {
             return;
         }
 
@@ -329,15 +348,15 @@ class CreatePlanificacion extends Component
                 $id = $this->planificacionRepository->savePlanificacionTransaccion(
                     $this->form->id_profesor_asignado,
                     $this->form->unidades,
-                    $this->form->tipos_seccion,
-                    '4'
+                    $this->form->tipos_seccion ?? [],
+                    '4' // Estatus Borrador (Incompleta)
                 );
                 if ($id) {
                     $this->planificacionDraftId = $id;
                 }
             }
         } catch (\Exception $e) {
-            // Silencioso - no interrumpir al usuario
+            \Illuminate\Support\Facades\Log::warning("Auto-save failed: " . $e->getMessage());
         }
     }
 
@@ -376,25 +395,48 @@ class CreatePlanificacion extends Component
 
     public function irAUnidad($targetIndex)
     {
-        // Siempre permitir ir atrás o a unidades ya alcanzadas
-        if ($targetIndex <= $this->openUnidad || $targetIndex <= $this->maxUnidadAlcanzada) {
-            $this->openUnidad = $targetIndex;
-            $this->dispatch('scroll-to-top');
-            return;
+        // Guardar progreso automáticamente antes de cambiar de unidad
+        $this->autoSaveSection();
+
+        // Si intentamos avanzar a una unidad futura
+        if ($targetIndex > $this->openUnidad) {
+            // Contar cuántas unidades están completas actualmente
+            $unidadesCompletas = 0;
+            foreach (range(0, 3) as $i) {
+                if ($this->form->isUnidadComplete($i)) {
+                    $unidadesCompletas++;
+                }
+            }
+
+            // REGLA: Si ya tiene más de un corte completo (2 o más), permitimos movimiento más libre
+            // Pero si intenta ir más allá de lo que ha completado secuencialmente, validamos.
+            if ($unidadesCompletas <= 1) {
+                // Si tiene 1 o menos cortes completos, la validación es estricta:
+                // Debe completar la unidad actual para poder ver la siguiente.
+                $validator = $this->getUnidadValidator($this->openUnidad);
+                
+                if ($validator->fails()) {
+                    $errors = $validator->errors()->all();
+                    $msg = "No puedes avanzar a la Unidad " . ($targetIndex + 1) . " aún. Debes completar la Unidad " . ($this->openUnidad + 1) . ":\n\n• " . implode("\n• ", $errors);
+                    $this->showAlert('error', $msg);
+                    return;
+                }
+            } else {
+                // Si tiene más de un corte completo, permitimos moverte "tranquilamente" entre lo ya alcanzado
+                // Pero si intenta ir a una unidad que nunca ha sido validada, forzamos validación de la actual.
+                if ($targetIndex > $this->maxUnidadAlcanzada) {
+                    $validator = $this->getUnidadValidator($this->openUnidad);
+                    if ($validator->fails()) {
+                        $errors = $validator->errors()->all();
+                        $msg = "Para avanzar a nuevas unidades, completa primero la actual:\n\n• " . implode("\n• ", $errors);
+                        $this->showAlert('error', $msg);
+                        return;
+                    }
+                }
+            }
         }
 
-        // Solo validamos la unidad ACTUAL para permitir el avance a la siguiente
-        $validator = $this->getUnidadValidator($this->openUnidad);
-        
-        if ($validator->fails()) {
-            $this->setErrorBag($validator->errors());
-            $errors = $validator->errors()->all();
-            $msg = "No puedes avanzar. Hay campos pendientes en la unidad actual:\n\n• " . implode("\n• ", $errors);
-            $this->showAlert('error', $msg);
-            return;
-        }
-
-        // Si pasó la validación, actualizamos el máximo alcanzado
+        // Si la validación pasó o si vamos hacia atrás, permitimos el cambio
         if ($targetIndex > $this->maxUnidadAlcanzada) {
             $this->maxUnidadAlcanzada = $targetIndex;
         }

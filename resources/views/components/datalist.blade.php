@@ -29,7 +29,7 @@
     ]);
 @endphp
 
-<div class="w-full relative" 
+<div {{ $attributes->merge(['class' => 'w-full relative']) }} 
      x-data="{ 
         open: false, 
         search: @entangle($finalWireModel), 
@@ -100,7 +100,8 @@
             @input="open = true"
             placeholder="{{ $placeholder }}"
             @disabled($disabled)
-            {{ $attributes->class([$inputClasses])->merge(['autocomplete' => 'off']) }}
+            class="{{ $inputClasses }}"
+            autocomplete="off"
         >
         
         <!-- Icono de dropdown que también hace toggle -->

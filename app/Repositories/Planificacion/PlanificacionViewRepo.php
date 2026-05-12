@@ -118,21 +118,15 @@ class PlanificacionViewRepo
                     ->where('dc.estatus', '1')
                     ->select(
                         'c.id_contenido as contenido_id',
-                        'dc.id_detalle_contenido as detalle_contenido_id',
                         'c.titulo_contenido as titulo_contenido',
-                        'do.id_objetivo',
-                        'o.titulo_objetivo',
-                        'tu.id_tema_unidad as tema_id',
-                        'tu.titulo_tema as titulo_tema'
+                        DB::raw('MIN(o.titulo_objetivo) as titulo_objetivo'),
+                        DB::raw('MIN(tu.titulo_tema) as titulo_tema')
                     )
+                    ->groupBy('c.id_contenido', 'c.titulo_contenido')
                     ->get()
-                    ->map(function ($contenidoItem) { // Rename $tema to $contenidoItem
+                    ->map(function ($contenidoItem) {
                         $contenidoArray = (array) $contenidoItem;
-
-                        // 3.4.1 Indicadores - No hay tabla detalle_indicador en este esquema, se usa el campo en unidad_corte o se omite si no aplica.
-                        $indicadores = []; // Schema uses a text field in unidad_corte for indicators
-        
-                        $contenidoArray['indicadores_logros'] = $indicadores;
+                        $contenidoArray['indicadores_logros'] = [];
                         return $contenidoArray;
                     })
                     ->toArray();
@@ -155,7 +149,15 @@ class PlanificacionViewRepo
                         'dev.integrantes_detalle_evaluacion as integrantes'
                     )
                     ->get()
+                    ->filter(function ($item) {
+                        // Filtrar evaluaciones vacas o con datos por defecto
+                        return !empty($item->evaluacion) && 
+                               !empty($item->tecnica) && 
+                               $item->fecha_evaluacion != '0000-00-00' &&
+                               $item->fecha_evaluacion != null;
+                    })
                     ->map(fn($item) => (array) $item)
+                    ->values()
                     ->toArray();
 
                 // 3.6 Bibliografías

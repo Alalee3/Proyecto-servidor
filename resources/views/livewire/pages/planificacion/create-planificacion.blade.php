@@ -311,8 +311,7 @@
                                             @endforeach
                                                 <div class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
                                                     <button type="button" @click="openSection = 'estrategias'" wire:click="autoSaveSection"
-                                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all {{ !$isTematicaDone ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                                        {{ !$isTematicaDone ? 'disabled' : '' }}>
+                                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all">
                                                         SIGUIENTE: ESTRATEGIAS <span class="material-icons text-sm">arrow_forward</span>
                                                     </button>
                                                 </div>
@@ -397,8 +396,7 @@
                                             @endforeach
                                                 <div class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
                                                     <button type="button" @click="openSection = 'indicadores'" wire:click="autoSaveSection"
-                                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all {{ !$isEstrategiasDone ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                                        {{ !$isEstrategiasDone ? 'disabled' : '' }}>
+                                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all">
                                                         SIGUIENTE: INDICADORES <span class="material-icons text-sm">arrow_forward</span>
                                                     </button>
                                                 </div>
@@ -426,8 +424,7 @@
 
                                                 <div class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
                                                     <button type="button" @click="openSection = 'evaluacion'" wire:click="autoSaveSection"
-                                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all {{ !$isIndicadoresDone ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                                        {{ !$isIndicadoresDone ? 'disabled' : '' }}>
+                                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all">
                                                         SIGUIENTE: PLAN DE EVALUACIÓN <span class="material-icons text-sm">arrow_forward</span>
                                                     </button>
                                                 </div>
@@ -525,8 +522,7 @@
                                             @endforeach
                                                 <div class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
                                                     <button type="button" @click="openSection = 'bibliografias'" wire:click="autoSaveSection"
-                                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all {{ !$isEvaluacionDone ? 'opacity-50 cursor-not-allowed' : '' }}"
-                                                        {{ !$isEvaluacionDone ? 'disabled' : '' }}>
+                                                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold shadow-md hover:bg-blue-700 transition-all">
                                                         SIGUIENTE: BIBLIOGRAFÍAS <span class="material-icons text-sm">arrow_forward</span>
                                                     </button>
                                                 </div>

@@ -277,14 +277,16 @@ class PlanificacionCreateRepo
                 ]);
                 $unidadId = $unidadCorte->getKey();
 
+                $processedContenidos = [];
                 foreach ($unidad['objetivos'] as $objetivo) {
                     foreach ($objetivo['contenidos'] as $contenido) {
-                        if (!empty($contenido['contenido_id'])) {
+                        if (!empty($contenido['contenido_id']) && !in_array($contenido['contenido_id'], $processedContenidos)) {
                             \App\Models\DetalleContenido::create([
                                 'id_unidad_corte' => $unidadId,
                                 'id_contenido' => $contenido['contenido_id'],
                                 'estatus' => '1',
                             ]);
+                            $processedContenidos[] = $contenido['contenido_id'];
                         }
                     }
                 }
@@ -302,15 +304,17 @@ class PlanificacionCreateRepo
                     ]);
 
                     // Guardar Recursos asociados a la unidad en detalle_recurso
+                    $processedRecursos = [];
                     foreach ($unidad['estrategias'] as $estrategia) {
                         foreach ($estrategia['recursos'] as $recurso) {
-                            if (!empty($recurso['recurso_id'])) {
+                            if (!empty($recurso['recurso_id']) && !in_array($recurso['recurso_id'], $processedRecursos)) {
                                 $recursoId = $this->findOrCreateRecurso($recurso['recurso_id']);
                                 DB::table('detalle_recurso')->insert([
                                     'id_unidad_corte' => $unidadId,
                                     'id_recurso' => $recursoId,
                                     'estatus' => '1',
                                 ]);
+                                $processedRecursos[] = $recurso['recurso_id'];
                             }
                         }
                     }

@@ -11,23 +11,27 @@ class UpdateRecurso extends Component
 {
     protected $recursosRepository;
     public UpdateRecursoForm $form;
+    public $recursoId;
+    public $recursosExistentes;
 
     public function __construct()
     {
         $this->recursosRepository = new RecursoEditRepo();
     }
 
-    public function mount($id)
+    public function mount($recursoId)
     {
-        try {
-            $recurso = $this->recursosRepository->obtenerPorId($id);
-            if (!$recurso) {
-                return redirect()->route('recurso/listar')->with('error', 'Recurso no encontrado.');
-            }
-            $this->form->setForm($recurso);
-        } catch (Exception $e) {
-            return redirect()->route('recurso/listar')->with('error', 'Error al cargar el recurso.');
-        }
+        $this->recursoId = $recursoId;
+        $this->form->setRecurso($recursoId);
+        $this->refreshRecursos();
+    }
+
+    public function refreshRecursos()
+    {
+        $this->recursosExistentes = \App\Models\Recurso::where('estatus', '1')
+            ->where('id_recurso', '!=', $this->recursoId) // Excluir el que estamos editando
+            ->orderBy('nombre_recurso')
+            ->get();
     }
 
     public function updated($propertyName)
@@ -41,17 +45,17 @@ class UpdateRecurso extends Component
         $this->form->validate();
 
         try {
-            $this->recursosRepository->actualizar($this->form->id_recurso, $this->form->all());
+            $this->recursosRepository->actualizar($this->recursoId, $this->form->all());
             session()->flash('message', 'Recurso actualizado correctamente.');
-            return redirect()->route('recurso/listar');
+            return redirect()->to('/recurso/list');
         } catch (Exception $e) {
-            session()->flash('error', 'Error al actualizar el recurso.');
+            session()->flash('error', 'Error al actualizar el recurso. Inténtelo de nuevo.');
         }
     }
 
     public function cancelar()
     {
-        return redirect()->route('recurso/listar');
+        return redirect()->to('/recurso/list');
     }
 
     public function render()

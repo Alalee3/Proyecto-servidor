@@ -14,10 +14,15 @@
                     <div class="flex flex-col gap-4 w-full md:flex-row">
                         <!-- Nombre -->
                         <div class="w-full">
-                            <x-input-label for="nombre" :value="__('Nombre del Recurso')" />
-                            <x-text-input id="nombre" wire:model.live="form.nombre" class="w-full"
-                                placeholder="Ingrese el nombre del recurso" required />
-                            <x-input-error :messages="$errors->first('form.nombre')" class="mt-2" />
+                            <x-datalist 
+                                wire:key="datalist-recursos-update-{{ md5($recursosExistentes->pluck('nombre_recurso')->join(',')) }}"
+                                label="Nombre del Recurso" 
+                                :options="$recursosExistentes" 
+                                textField="nombre_recurso"
+                                wire:model.live="form.nombre"
+                                placeholder="Ingrese el nombre del recurso"
+                                required 
+                            />
                         </div>
                     </div>
 

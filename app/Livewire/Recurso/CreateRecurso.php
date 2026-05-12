@@ -11,10 +11,23 @@ class CreateRecurso extends Component
 {
     protected $recursosRepository;
     public CreateRecursoForm $form;
+    public $recursosExistentes;
 
     public function __construct()
     {
         $this->recursosRepository = new RecursoCreateRepo();
+    }
+
+    public function mount()
+    {
+        $this->refreshRecursos();
+    }
+
+    public function refreshRecursos()
+    {
+        $this->recursosExistentes = \App\Models\Recurso::where('estatus', '1')
+            ->orderBy('nombre_recurso')
+            ->get();
     }
 
     public function updated($propertyName)
@@ -30,6 +43,7 @@ class CreateRecurso extends Component
         try {
             $this->recursosRepository->crear($this->form->all());
             $this->reset('form.nombre');
+            $this->refreshRecursos();
             session()->flash('message', 'Recurso creado correctamente.');
         } catch (Exception $e) {
             session()->flash('error', 'Error al crear el recurso. Inténtelo de nuevo.');

@@ -155,11 +155,11 @@ class PlanificacionEditRepo
 
     private function syncCorteDetails(string $tableName, string $foreignIdColumn, int $corteId, array $newData, string $newIdKey, array $additionalColumns = [])
     {
-        // Desactivar todos los registros actuales para este corte antes de re-insertar
-        // Esto permite tener múltiples registros del mismo tipo (ej. varias evaluaciones sumativas)
+        // Eliminar registros actuales para este corte antes de re-insertar
+        // Esto evita la multiplicación de registros durante el auto-guardado
         DB::table($tableName)
             ->where('id_unidad_corte', $corteId)
-            ->update(['estatus' => '2']);
+            ->delete();
 
         foreach ($newData as $item) {
             $itemId = $item[$newIdKey] ?? null;
@@ -225,14 +225,16 @@ class PlanificacionEditRepo
 
     private function syncContenidosCorte(int $corteId, array $contenidosData)
     {
-        // Desactivar actuales
-        \App\Models\DetalleContenido::where('id_unidad_corte', $corteId)
-            ->update(['estatus' => '2']);
+        // Eliminar actuales para evitar duplicados
+        \App\Models\DetalleContenido::where('id_unidad_corte', $corteId)->delete();
 
+        $processedIds = [];
         foreach ($contenidosData as $cont) {
             $contenidoId = $cont['contenido_id'] ?? null;
-            if (!$contenidoId)
+            if (!$contenidoId || in_array($contenidoId, $processedIds))
                 continue;
+
+            $processedIds[] = $contenidoId;
 
             \App\Models\DetalleContenido::create([
                 'id_unidad_corte' => $corteId,
@@ -244,14 +246,16 @@ class PlanificacionEditRepo
 
     private function syncBibliografiasCorte(int $corteId, array $bibliografiasData)
     {
-        // Desactivar actuales
-        \App\Models\DetalleBibliografia::where('id_unidad_corte', $corteId)
-            ->update(['estatus' => '2']);
+        // Eliminar actuales
+        \App\Models\DetalleBibliografia::where('id_unidad_corte', $corteId)->delete();
 
+        $processedIds = [];
         foreach ($bibliografiasData as $bib) {
             $bibName = $bib['bibliografia_id'] ?? null;
-            if (!$bibName)
+            if (!$bibName || in_array($bibName, $processedIds))
                 continue;
+
+            $processedIds[] = $bibName;
 
             $bibId = $this->createRepo->findOrCreateBibliografia($bibName);
 

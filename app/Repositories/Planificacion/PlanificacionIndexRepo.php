@@ -32,12 +32,13 @@ class PlanificacionIndexRepo
                 'p.id_planificacion as planificacion_id',
                 'per.per_nombres as docente_nombre',
                 'per.per_apellidos as docente_apellido',
-                'p.estatus',
                 'uc.ucu_nombre as nombre_unidad_curricular',
                 's.sec_nombre as nombre_seccion',
+                'p.estatus',
                 'pr.pro_nombre as nombre_pnf',
                 'tr.tra_nombre as trayecto_unidad_curricular'
-            );
+            )
+            ->distinct();
 
         if (isset($filters['search_term']) && !empty($filters['search_term'])) {
             $query->where(function ($q) use ($filters) {
@@ -55,10 +56,15 @@ class PlanificacionIndexRepo
         $query->orderByDesc('p.id_planificacion');
 
         if ($perPage > 0) {
-            return $query->paginate($perPage);
+            $results = $query->paginate($perPage);
+        } else {
+            $results = $query->get();
         }
 
-        return $query->get();
+        // \Illuminate\Support\Facades\Log::info("Listar Planificaciones SQL: " . $query->toSql());
+        // \Illuminate\Support\Facades\Log::info("Listar Planificaciones Count: " . $results->count());
+
+        return $results;
     }
 
     /**

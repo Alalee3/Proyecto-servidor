@@ -124,7 +124,7 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     // Rutas para Recursos
     Route::get('recurso/list', ListRecurso::class)->middleware('can:listar-recurso')->name('recurso/listar');
     Route::get('recurso/create', CreateRecurso::class)->middleware('can:crear-recurso')->name('recurso/crear');
-    Route::get('recurso/update/{id}', UpdateRecurso::class)->middleware('can:editar-recurso')->name('recurso/update');
+    Route::get('recurso/update/{recursoId}', UpdateRecurso::class)->middleware('can:editar-recurso')->name('recurso/update');
     Route::get('recurso/show/{id}', ShowRecurso::class)->middleware('can:ver-recurso')->name('recurso/show');
 
     // Rutas para Estrategias Pedagógicas
