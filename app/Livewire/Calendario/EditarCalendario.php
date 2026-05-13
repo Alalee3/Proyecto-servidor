@@ -235,7 +235,15 @@ class EditarCalendario extends Component
 
     public function validarSeccionFechas()
     {
-        $this->form->validate();
+        $this->validate([
+            'form.dia_inicio_calendario_academico' => 'required|date',
+            'form.dia_fin_calendario_academico' => 'required|date|after_or_equal:form.dia_inicio_calendario_academico',
+        ], [
+            'form.dia_inicio_calendario_academico.required' => 'La fecha de inicio es obligatoria.',
+            'form.dia_fin_calendario_academico.required' => 'La fecha de fin es obligatoria.',
+            'form.dia_fin_calendario_academico.after_or_equal' => 'La fecha de fin debe ser posterior o igual a la de inicio.',
+        ]);
+        
         $this->dispatch('seccion-fechas-validada');
     }
 
