@@ -84,6 +84,7 @@ class EditarCalendario extends Component
 
         if ($propertyName == 'form.dia_inicio_calendario_academico' || $propertyName == 'form.dia_fin_calendario_academico') {
             $this->filtrarEventosFueraDeRango();
+            $this->guardarBorrador();
         }
     }
 
@@ -127,6 +128,8 @@ class EditarCalendario extends Component
             'tipo' => $tipo,
             'color' => $color,
         ];
+
+        $this->guardarBorrador();
     }
 
     public function removerEvento($index)
@@ -134,6 +137,48 @@ class EditarCalendario extends Component
         if (isset($this->eventosRegistrados[$index])) {
             unset($this->eventosRegistrados[$index]);
             $this->eventosRegistrados = array_values($this->eventosRegistrados);
+            $this->guardarBorrador();
+        }
+    }
+
+    protected function guardarBorrador()
+    {
+        if (!$this->id_calendario) return;
+
+        try {
+            DB::transaction(function () {
+                $data = [
+                    'dia_inicio_calendario_academico' => $this->form->dia_inicio_calendario_academico,
+                    'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
+                ];
+
+                if ($this->form->dia_inicio_calendario_academico && $this->form->dia_fin_calendario_academico) {
+                    $inicio = \Carbon\Carbon::parse($this->form->dia_inicio_calendario_academico);
+                    $fin = \Carbon\Carbon::parse($this->form->dia_fin_calendario_academico);
+                    $data['semana_calendario_academico'] = ceil(($inicio->diffInDays($fin) + 1) / 7);
+                }
+
+                DB::table('calendario_academico')
+                    ->where('id_calendario_academico', $this->id_calendario)
+                    ->update($data);
+
+                // Sincronizar eventos
+                DB::table('detalle_evento')
+                    ->where('id_calendario_academico', $this->id_calendario)
+                    ->delete();
+
+                foreach ($this->eventosRegistrados as $evento) {
+                    DB::table('detalle_evento')->insert([
+                        'id_calendario_academico' => $this->id_calendario,
+                        'id_evento' => $evento['id'],
+                        'dia_inicio_detalle_evento' => $evento['inicio'],
+                        'dia_fin_detalle_evento' => $evento['fin'],
+                        'estatus' => '1'
+                    ]);
+                }
+            });
+        } catch (Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error guardando borrador en edición: ' . $e->getMessage());
         }
     }
 
