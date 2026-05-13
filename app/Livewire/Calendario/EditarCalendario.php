@@ -10,6 +10,7 @@ use App\Repositories\Evento\EventoIndexRepo;
 use Exception;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
 
 class EditarCalendario extends Component
 {
@@ -278,8 +279,24 @@ class EditarCalendario extends Component
         return redirect()->route('calendario.list');
     }
 
+    #[Computed]
+    public function bibliotecaFiltrada()
+    {
+        $eventoRepo = new EventoIndexRepo();
+        $biblioteca = $eventoRepo->obtenerBiblioteca();
+        $idsAsignados = collect($this->eventosRegistrados)->pluck('id')->filter()->toArray();
+
+        return $biblioteca->filter(function ($evento) use ($idsAsignados) {
+            // Si el evento es repetible, siempre aparece.
+            // Si NO es repetible, solo aparece si NO ha sido asignado aún.
+            return $evento->is_repetible_evento || !in_array($evento->id_evento, $idsAsignados);
+        })->values();
+    }
+
     public function render()
     {
-        return view('livewire.pages.calendario.editar-calendario');
+        return view('livewire.pages.calendario.editar-calendario', [
+            'bibliotecaFiltrada' => $this->bibliotecaFiltrada()
+        ]);
     }
 }

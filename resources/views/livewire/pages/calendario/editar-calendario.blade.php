@@ -165,7 +165,10 @@
                                     eventoSeleccionado: '',
                                     clickCount: 0,
                                     eventosAlpine: @entangle('eventosRegistrados'),
-                                    bibliotecaAlpine: @js($bibliotecaEventos),
+                                                                                                                                                   bibliotecaAlpine: @js($bibliotecaEventos),
+
+
+
                                     tooltip: { visible: false, x: 0, y: 0, content: null },
                                     tooltipTimeout: null,
                                     currentYear: null,
@@ -684,8 +687,9 @@
                                     <div class="space-y-5">
                                          <div>
                                              <x-datalist 
+                                                 wire:key="datalist-edit-{{ count($bibliotecaFiltrada) }}"
                                                  label="Nombre del Evento"
-                                                 :options="collect($bibliotecaEventos)"
+                                                 :options="$bibliotecaFiltrada"
                                                  textField="nombre_evento"
                                                  wire:model.live="form.nombreEventoTemporal"
                                                  placeholder="ESCRIBA O SELECCIONE UN EVENTO"
