@@ -3,8 +3,8 @@
 namespace App\Livewire\Calendario;
 
 use Livewire\Component;
-use App\Livewire\Forms\Calendario\CreateCalendarioForm;
-use App\Repositories\Calendario\CalendarioCreateRepo;
+use App\Livewire\Forms\Calendario\UpdateCalendarioForm;
+use App\Repositories\Calendario\CalendarioUpdateRepo;
 use App\Repositories\Calendario\CalendarioViewRepo;
 use App\Repositories\Evento\EventoIndexRepo;
 use Exception;
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 
 class EditarCalendario extends Component
 {
-    public CreateCalendarioForm $form;
+    public UpdateCalendarioForm $form;
     protected $calendarioRepository;
     protected $viewRepository;
 
@@ -25,7 +25,7 @@ class EditarCalendario extends Component
 
     public function boot()
     {
-        $this->calendarioRepository = new CalendarioCreateRepo();
+        $this->calendarioRepository = new CalendarioUpdateRepo();
         $this->viewRepository = new CalendarioViewRepo();
     }
 
@@ -43,25 +43,12 @@ class EditarCalendario extends Component
         }
 
         // Cargar datos en el formulario
-        $this->form->dia_inicio_calendario_academico = $calendario->dia_inicio_calendario_academico;
-        $this->form->dia_fin_calendario_academico = $calendario->dia_fin_calendario_academico;
+        $this->form->setCalendario($calendario);
         
         $this->currentYear = date('Y', strtotime($calendario->dia_inicio_calendario_academico));
 
         // Cargar eventos registrados
-        $eventos = DB::table('detalle_evento')
-            ->join('evento', 'detalle_evento.id_evento', '=', 'evento.id_evento')
-            ->leftJoin('color', 'evento.id_color', '=', 'color.id_color')
-            ->where('detalle_evento.id_calendario_academico', $id)
-            ->select(
-                'evento.id_evento as id',
-                'detalle_evento.dia_inicio_detalle_evento as inicio',
-                'detalle_evento.dia_fin_detalle_evento as fin',
-                'evento.nombre_evento as nombre',
-                'evento.tipo_evento as tipo',
-                'color.codigo_color as color'
-            )
-            ->get();
+        $eventos = $this->calendarioRepository->obtenerEventosDetalle($id);
 
         foreach ($eventos as $ev) {
             $this->eventosRegistrados[] = [
@@ -82,15 +69,8 @@ class EditarCalendario extends Component
 
     public function cargarColoresDisponibles()
     {
-        $this->colores = DB::table('color')
-            ->where('estatus', '1')
-            ->whereNotIn('id_color', function ($query) {
-                $query->select('id_color')
-                    ->from('evento')
-                    ->whereNotNull('id_color')
-                    ->where('estatus', '!=', '3');
-            })
-            ->get();
+        $eventoRepo = new EventoIndexRepo();
+        $this->colores = $eventoRepo->obtenerColoresDisponibles();
     }
 
     public function updated($propertyName)
@@ -165,16 +145,16 @@ class EditarCalendario extends Component
     public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $id_color, $is_laborable, $is_repetible)
     {
         try {
-            $id_evento = DB::table('evento')->insertGetId([
+            $eventoRepo = new EventoIndexRepo();
+            $id_evento = $eventoRepo->crearTemplate([
                 'id_color' => $id_color,
-                'nombre_evento' => mb_strtoupper($nombre),
-                'tipo_evento' => $tipo,
-                'is_laborable_evento' => $is_laborable,
-                'is_repetible_evento' => $is_repetible,
-                'estatus' => '1',
+                'nombre' => $nombre,
+                'tipo' => $tipo,
+                'is_laborable' => $is_laborable,
+                'is_repetible' => $is_repetible,
             ]);
 
-            $colorObj = DB::table('color')->where('id_color', $id_color)->first();
+            $colorObj = $eventoRepo->obtenerColorPorId($id_color);
             $colorHex = $colorObj ? $colorObj->codigo_color : '#808080';
 
             // Actualizar biblioteca local
@@ -197,37 +177,11 @@ class EditarCalendario extends Component
         if (!$this->id_calendario) return;
 
         try {
-            DB::transaction(function () {
-                $data = [
-                    'dia_inicio_calendario_academico' => $this->form->dia_inicio_calendario_academico,
-                    'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
-                ];
-
-                if ($this->form->dia_inicio_calendario_academico && $this->form->dia_fin_calendario_academico) {
-                    $inicio = \Carbon\Carbon::parse($this->form->dia_inicio_calendario_academico);
-                    $fin = \Carbon\Carbon::parse($this->form->dia_fin_calendario_academico);
-                    $data['semana_calendario_academico'] = ceil(($inicio->diffInDays($fin) + 1) / 7);
-                }
-
-                DB::table('calendario_academico')
-                    ->where('id_calendario_academico', $this->id_calendario)
-                    ->update($data);
-
-                // Sincronizar eventos
-                DB::table('detalle_evento')
-                    ->where('id_calendario_academico', $this->id_calendario)
-                    ->delete();
-
-                foreach ($this->eventosRegistrados as $evento) {
-                    DB::table('detalle_evento')->insert([
-                        'id_calendario_academico' => $this->id_calendario,
-                        'id_evento' => $evento['id'],
-                        'dia_inicio_detalle_evento' => $evento['inicio'],
-                        'dia_fin_detalle_evento' => $evento['fin'],
-                        'estatus' => '1'
-                    ]);
-                }
-            });
+            $this->calendarioRepository->guardarBorrador([
+                'dia_inicio_calendario_academico' => $this->form->dia_inicio_calendario_academico,
+                'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
+                'estatus' => '2' // Sigue en revisión
+            ], $this->eventosRegistrados, $this->id_calendario);
         } catch (Exception $e) {
             \Illuminate\Support\Facades\Log::error('Error guardando borrador en edición: ' . $e->getMessage());
         }
@@ -235,15 +189,7 @@ class EditarCalendario extends Component
 
     public function validarSeccionFechas()
     {
-        $this->validate([
-            'form.dia_inicio_calendario_academico' => 'required|date',
-            'form.dia_fin_calendario_academico' => 'required|date|after_or_equal:form.dia_inicio_calendario_academico',
-        ], [
-            'form.dia_inicio_calendario_academico.required' => 'La fecha de inicio es obligatoria.',
-            'form.dia_fin_calendario_academico.required' => 'La fecha de fin es obligatoria.',
-            'form.dia_fin_calendario_academico.after_or_equal' => 'La fecha de fin debe ser posterior o igual a la de inicio.',
-        ]);
-        
+        $this->form->validarSeccionFechas();
         $this->dispatch('seccion-fechas-validada');
     }
 
@@ -253,31 +199,29 @@ class EditarCalendario extends Component
             abort(403);
         }
 
+        $this->resetErrorBag();
+        $validacion = $this->form->validarFormularioCompleto($this->eventosRegistrados);
+
+        if (!$validacion['valido']) {
+            if ($this->getErrorBag()->hasAny(['form.dia_inicio_calendario_academico', 'form.dia_fin_calendario_academico'])) {
+                $this->dispatch('abrir-seccion', section: 'fechas');
+            } else {
+                $this->dispatch('abrir-seccion', section: 'eventos');
+            }
+
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $validacion['errores']);
+            $this->showAlert('error', $msg);
+            return;
+        }
+
         try {
             DB::transaction(function () {
-                // 1. Actualizar estatus del calendario y posibles cambios de fechas
-                DB::table('calendario_academico')
-                    ->where('id_calendario_academico', $this->id_calendario)
-                    ->update([
-                        'dia_inicio_calendario_academico' => $this->form->dia_inicio_calendario_academico,
-                        'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
-                        'estatus' => '1'
-                    ]);
+                $this->calendarioRepository->actualizarEstatus($this->id_calendario, '1', [
+                    'dia_inicio_calendario_academico' => $this->form->dia_inicio_calendario_academico,
+                    'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
+                ]);
 
-                // 2. Limpiar eventos previos y guardar los actuales (por si hubo cambios en la revisión)
-                DB::table('detalle_evento')
-                    ->where('id_calendario_academico', $this->id_calendario)
-                    ->delete();
-
-                foreach ($this->eventosRegistrados as $evento) {
-                    DB::table('detalle_evento')->insert([
-                        'id_calendario_academico' => $this->id_calendario,
-                        'id_evento' => $evento['id'],
-                        'dia_inicio_detalle_evento' => $evento['inicio'],
-                        'dia_fin_detalle_evento' => $evento['fin'],
-                        'estatus' => '1',
-                    ]);
-                }
+                $this->calendarioRepository->sincronizarEventos($this->id_calendario, $this->eventosRegistrados);
             });
 
             $this->showAlert('success', 'Calendario aprobado y activado correctamente.', '/calendario/list');
@@ -292,30 +236,29 @@ class EditarCalendario extends Component
             abort(403);
         }
 
+        $this->resetErrorBag();
+        $validacion = $this->form->validarFormularioCompleto($this->eventosRegistrados);
+
+        if (!$validacion['valido']) {
+            if ($this->getErrorBag()->hasAny(['form.dia_inicio_calendario_academico', 'form.dia_fin_calendario_academico'])) {
+                $this->dispatch('abrir-seccion', section: 'fechas');
+            } else {
+                $this->dispatch('abrir-seccion', section: 'eventos');
+            }
+
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $validacion['errores']);
+            $this->showAlert('error', $msg);
+            return;
+        }
+
         try {
             DB::transaction(function () {
-                // 1. Actualizar fechas del calendario (estatus sigue en 2)
-                DB::table('calendario_academico')
-                    ->where('id_calendario_academico', $this->id_calendario)
-                    ->update([
-                        'dia_inicio_calendario_academico' => $this->form->dia_inicio_calendario_academico,
-                        'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
-                    ]);
+                $this->calendarioRepository->actualizarEstatus($this->id_calendario, '2', [
+                    'dia_inicio_calendario_academico' => $this->form->dia_inicio_calendario_academico,
+                    'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
+                ]);
 
-                // 2. Limpiar eventos previos y guardar los actuales
-                DB::table('detalle_evento')
-                    ->where('id_calendario_academico', $this->id_calendario)
-                    ->delete();
-
-                foreach ($this->eventosRegistrados as $evento) {
-                    DB::table('detalle_evento')->insert([
-                        'id_calendario_academico' => $this->id_calendario,
-                        'id_evento' => $evento['id'],
-                        'dia_inicio_detalle_evento' => $evento['inicio'],
-                        'dia_fin_detalle_evento' => $evento['fin'],
-                        'estatus' => '1',
-                    ]);
-                }
+                $this->calendarioRepository->sincronizarEventos($this->id_calendario, $this->eventosRegistrados);
             });
 
             $this->showAlert('success', 'Calendario actualizado (guardado como revisión).', '/calendario/list');

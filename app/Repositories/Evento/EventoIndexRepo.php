@@ -50,4 +50,43 @@ class EventoIndexRepo
             ->select('e.id_evento', 'e.nombre_evento', 'e.tipo_evento', 'e.is_laborable_evento', 'e.is_repetible_evento', 'c.codigo_color')
             ->get();
     }
+
+    /**
+     * Obtiene los colores que aún no están asignados a ningún evento activo.
+     */
+    public function obtenerColoresDisponibles()
+    {
+        return DB::table('color')
+            ->where('estatus', '1')
+            ->whereNotIn('id_color', function ($query) {
+                $query->select('id_color')
+                    ->from('evento')
+                    ->whereNotNull('id_color')
+                    ->where('estatus', '!=', '3');
+            })
+            ->get();
+    }
+
+    /**
+     * Registra un nuevo evento (plantilla) en la base de datos.
+     */
+    public function crearTemplate($data)
+    {
+        return DB::table('evento')->insertGetId([
+            'id_color' => $data['id_color'],
+            'nombre_evento' => mb_strtoupper($data['nombre']),
+            'tipo_evento' => $data['tipo'],
+            'is_laborable_evento' => $data['is_laborable'],
+            'is_repetible_evento' => $data['is_repetible'],
+            'estatus' => '1',
+        ]);
+    }
+
+    /**
+     * Obtiene un color específico por su ID.
+     */
+    public function obtenerColorPorId($id)
+    {
+        return DB::table('color')->where('id_color', $id)->first();
+    }
 }

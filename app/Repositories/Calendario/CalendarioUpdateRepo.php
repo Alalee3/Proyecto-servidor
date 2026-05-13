@@ -5,71 +5,8 @@ namespace App\Repositories\Calendario;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-class CalendarioCreateRepo
+class CalendarioUpdateRepo
 {
-    public function crear(array $data)
-    {
-        $calendario = \App\Models\CalendarioAcademico::create([
-            'semana_calendario_academico' => $data['semana_calendario_academico'],
-            'dia_inicio_calendario_academico' => $data['dia_inicio_calendario_academico'],
-            'dia_fin_calendario_academico' => $data['dia_fin_calendario_academico'],
-            'estatus' => '2', // En revisión
-        ]);
-
-        return $calendario->getKey();
-    }
-
-    public function existeCalendarioEnSemana(int $semana): bool
-    {
-        return DB::table('calendario_academico')
-            ->where('semana_calendario_academico', $semana)
-            ->where('estatus', '!=', '3')
-            ->exists();
-    }
-
-    public function hayCalendarioActivo(): bool
-    {
-        \App\Models\CalendarioAcademico::inactivarVencidos();
-        return DB::table('calendario_academico')
-            ->where('estatus', '1')
-            ->exists();
-    }
-
-    /**
-     * Crea un calendario académico junto con todos sus eventos en una transacción.
-     */
-    public function crearConEventos(array $data, array $eventos, $id = null)
-    {
-        return DB::transaction(function () use ($data, $eventos, $id) {
-            // Calcular semanas si no vienen calculadas
-            if (!isset($data['semana_calendario_academico'])) {
-                $inicio = Carbon::parse($data['dia_inicio_calendario_academico']);
-                $fin = Carbon::parse($data['dia_fin_calendario_academico']);
-                $data['semana_calendario_academico'] = ceil(($inicio->diffInDays($fin) + 1) / 7);
-            }
-
-            if ($id) {
-                DB::table('calendario_academico')
-                    ->where('id_calendario_academico', $id)
-                    ->update([
-                        'semana_calendario_academico' => $data['semana_calendario_academico'],
-                        'dia_inicio_calendario_academico' => $data['dia_inicio_calendario_academico'],
-                        'dia_fin_calendario_academico' => $data['dia_fin_calendario_academico'],
-                        'estatus' => '2', // Al confirmar, pasa a En revisión
-                    ]);
-                $finalId = $id;
-            } else {
-                $finalId = $this->crear($data);
-            }
-
-            if ($finalId) {
-                $this->sincronizarEventos($finalId, $eventos);
-            }
-
-            return $finalId;
-        });
-    }
-
     /**
      * Obtiene un calendario académico por su ID.
      */
@@ -101,9 +38,9 @@ class CalendarioCreateRepo
     }
 
     /**
-     * Guarda o actualiza un borrador del calendario.
+     * Guarda o actualiza un borrador del calendario (específico para el flujo de actualización).
      */
-    public function guardarBorrador($data, $eventos, $id = null)
+    public function guardarBorrador($data, $eventos, $id)
     {
         return DB::transaction(function () use ($data, $eventos, $id) {
             $inicioDate = $data['dia_inicio_calendario_academico'] ? Carbon::parse($data['dia_inicio_calendario_academico']) : null;
@@ -115,21 +52,16 @@ class CalendarioCreateRepo
                 'dia_inicio_calendario_academico' => $data['dia_inicio_calendario_academico'],
                 'dia_fin_calendario_academico' => $data['dia_fin_calendario_academico'],
                 'semana_calendario_academico' => $semanas,
-                'estatus' => $data['estatus'] ?? '4' // Por defecto incompleto
+                'estatus' => $data['estatus'] ?? '2' // En revisión por defecto en update
             ];
 
-            if ($id) {
-                DB::table('calendario_academico')
-                    ->where('id_calendario_academico', $id)
-                    ->update($record);
-                $finalId = $id;
-            } else {
-                $finalId = DB::table('calendario_academico')->insertGetId($record);
-            }
+            DB::table('calendario_academico')
+                ->where('id_calendario_academico', $id)
+                ->update($record);
 
-            $this->sincronizarEventos($finalId, $eventos);
+            $this->sincronizarEventos($id, $eventos);
 
-            return $finalId;
+            return $id;
         });
     }
 
@@ -162,7 +94,7 @@ class CalendarioCreateRepo
     }
 
     /**
-     * Verifica si existe un evento con el mismo nombre (excluyendo inactivos).
+     * Verifica si existe un evento con el mismo nombre (específico para Update).
      */
     public function existeEventoConNombre($nombre, $excluirId = null)
     {
@@ -176,7 +108,7 @@ class CalendarioCreateRepo
     }
 
     /**
-     * Verifica si existe un evento con el mismo color (excluyendo inactivos).
+     * Verifica si existe un evento con el mismo color (específico para Update).
      */
     public function existeEventoConColor($id_color, $excluirId = null)
     {

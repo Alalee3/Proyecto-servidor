@@ -65,28 +65,14 @@ class CreateCalendario extends Component
 
         if ($id) {
             $this->id_calendario_borrador = $id;
-            $calendario = DB::table('calendario_academico')
-                ->where('id_calendario_academico', $id)
-                ->first();
+            $calendario = $this->calendarioRepository->obtenerPorId($id);
 
             if ($calendario) {
                 $this->form->dia_inicio_calendario_academico = $calendario->dia_inicio_calendario_academico;
                 $this->form->dia_fin_calendario_academico = $calendario->dia_fin_calendario_academico;
                 
-                // Cargar eventos registrados
-                $eventos = DB::table('detalle_evento')
-                    ->join('evento', 'detalle_evento.id_evento', '=', 'evento.id_evento')
-                    ->leftJoin('color', 'evento.id_color', '=', 'color.id_color')
-                    ->where('detalle_evento.id_calendario_academico', $id)
-                    ->select(
-                        'evento.id_evento as id',
-                        'detalle_evento.dia_inicio_detalle_evento as inicio',
-                        'detalle_evento.dia_fin_detalle_evento as fin',
-                        'evento.nombre_evento as nombre',
-                        'evento.tipo_evento as tipo',
-                        'color.codigo_color as color'
-                    )
-                    ->get();
+                // Cargar eventos registrados desde el repositorio
+                $eventos = $this->calendarioRepository->obtenerEventosDetalle($id);
 
                 foreach ($eventos as $ev) {
                     $this->eventosRegistrados[] = [
@@ -109,15 +95,8 @@ class CreateCalendario extends Component
 
     public function cargarColoresDisponibles()
     {
-        $this->colores = DB::table('color')
-            ->where('estatus', '1')
-            ->whereNotIn('id_color', function ($query) {
-                $query->select('id_color')
-                    ->from('evento')
-                    ->whereNotNull('id_color')
-                    ->where('estatus', '!=', '3');
-            })
-            ->get();
+        $eventoRepo = new EventoIndexRepo();
+        $this->colores = $eventoRepo->obtenerColoresDisponibles();
     }
 
     public function agregarEvento($inicio, $fin, $id_evento, $nombre, $tipo, $color)
@@ -180,16 +159,16 @@ class CreateCalendario extends Component
                 return false;
             }
 
-            $id_evento = DB::table('evento')->insertGetId([
+            $eventoRepo = new EventoIndexRepo();
+            $id_evento = $eventoRepo->crearTemplate([
                 'id_color' => $id_color,
-                'nombre_evento' => mb_strtoupper($nombre),
-                'tipo_evento' => $tipo,
-                'is_laborable_evento' => $is_laborable,
-                'is_repetible_evento' => $is_repetible,
-                'estatus' => '1',
+                'nombre' => $nombre,
+                'tipo' => $tipo,
+                'is_laborable' => $is_laborable,
+                'is_repetible' => $is_repetible,
             ]);
 
-            $colorObj = DB::table('color')->where('id_color', $id_color)->first();
+            $colorObj = $eventoRepo->obtenerColorPorId($id_color);
             $colorHex = $colorObj ? $colorObj->codigo_color : '#808080';
 
             // Actualizar biblioteca local
@@ -217,43 +196,10 @@ class CreateCalendario extends Component
         }
 
         try {
-            DB::transaction(function () {
-                $data = [
-                    'dia_inicio_calendario_academico' => $this->form->dia_inicio_calendario_academico,
-                    'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
-                    'semana_calendario_academico' => 0,
-                    'estatus' => '4' // Incompleto
-                ];
-
-                if ($this->form->dia_inicio_calendario_academico && $this->form->dia_fin_calendario_academico) {
-                    $inicio = \Carbon\Carbon::parse($this->form->dia_inicio_calendario_academico);
-                    $fin = \Carbon\Carbon::parse($this->form->dia_fin_calendario_academico);
-                    $data['semana_calendario_academico'] = ceil(($inicio->diffInDays($fin) + 1) / 7);
-                }
-
-                if ($this->id_calendario_borrador) {
-                    DB::table('calendario_academico')
-                        ->where('id_calendario_academico', $this->id_calendario_borrador)
-                        ->update($data);
-                } else {
-                    $this->id_calendario_borrador = DB::table('calendario_academico')->insertGetId($data);
-                }
-
-                // Guardar eventos
-                DB::table('detalle_evento')
-                    ->where('id_calendario_academico', $this->id_calendario_borrador)
-                    ->delete();
-
-                foreach ($this->eventosRegistrados as $evento) {
-                    DB::table('detalle_evento')->insert([
-                        'id_calendario_academico' => $this->id_calendario_borrador,
-                        'id_evento' => $evento['id'],
-                        'dia_inicio_detalle_evento' => $evento['inicio'],
-                        'dia_fin_detalle_evento' => $evento['fin'],
-                        'estatus' => '1'
-                    ]);
-                }
-            });
+            $this->id_calendario_borrador = $this->calendarioRepository->guardarBorrador([
+                'dia_inicio_calendario_academico' => $this->form->dia_inicio_calendario_academico,
+                'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
+            ], $this->eventosRegistrados, $this->id_calendario_borrador);
         } catch (Exception $e) {
             \Illuminate\Support\Facades\Log::error('Error guardando borrador: ' . $e->getMessage());
         }
@@ -261,15 +207,7 @@ class CreateCalendario extends Component
 
     public function validarSeccionFechas()
     {
-        $this->validate([
-            'form.dia_inicio_calendario_academico' => 'required|date',
-            'form.dia_fin_calendario_academico' => 'required|date|after_or_equal:form.dia_inicio_calendario_academico',
-        ], [
-            'form.dia_inicio_calendario_academico.required' => 'La fecha de inicio es obligatoria.',
-            'form.dia_fin_calendario_academico.required' => 'La fecha de fin es obligatoria.',
-            'form.dia_fin_calendario_academico.after_or_equal' => 'La fecha de fin debe ser posterior o igual a la de inicio.',
-        ]);
-        
+        $this->form->validarSeccionFechas();
         $this->dispatch('seccion-fechas-validada');
     }
 
@@ -281,38 +219,16 @@ class CreateCalendario extends Component
 
         $this->resetErrorBag();
 
-        $validador = \Illuminate\Support\Facades\Validator::make(
-            $this->form->all(),
-            $this->form->rules(),
-            $this->form->messages()
-        );
+        $validacion = $this->form->validarFormularioCompleto($this->eventosRegistrados);
 
-        $hayErrorValidacion = false;
-        $erroresValidacion = [];
-
-        if ($validador->fails()) {
-            foreach ($validador->errors()->messages() as $campo => $mensajes) {
-                $this->addError("form.$campo", $mensajes[0]);
-                $erroresValidacion[] = $mensajes[0];
-            }
-            $hayErrorValidacion = true;
-        }
-
-        if (count($this->eventosRegistrados) === 0) {
-            $msgEvento = 'Debe registrar al menos un evento antes de guardar el calendario.';
-            $this->addError('eventosRegistrados', $msgEvento);
-            $erroresValidacion[] = $msgEvento;
-            $hayErrorValidacion = true;
-        }
-
-        if ($hayErrorValidacion) {
+        if (!$validacion['valido']) {
             if ($this->getErrorBag()->hasAny(['form.dia_inicio_calendario_academico', 'form.dia_fin_calendario_academico'])) {
                 $this->dispatch('abrir-seccion', section: 'fechas');
             } else {
                 $this->dispatch('abrir-seccion', section: 'eventos');
             }
 
-            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $erroresValidacion);
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $validacion['errores']);
             $this->showAlert('error', $msg);
             return;
         }

@@ -22,16 +22,10 @@ class CreateCalendarioForm extends Form
 
     public function rules()
     {
-        return [
+        $rules = [
             'dia_inicio_calendario_academico' => [
                 'required',
                 'date',
-                /* function ($attribute, $value, $fail) {
-                    $repo = new \App\Repositories\Calendario\CalendarioCreateRepo();
-                    if ($repo->hayCalendarioActivo()) {
-                        $fail('Ya existe un calendario activo configurado.');
-                    }
-                } */
             ],
             'dia_fin_calendario_academico' => [
                 'required',
@@ -42,18 +36,11 @@ class CreateCalendarioForm extends Form
 
         if ($this->isCreatingEvento) {
             $eventRules = [
-                // Reglas para registro rápido
                 'nombreEventoTemporal' => [
                     'required', 'string', 'max:100',
                     function ($attribute, $value, $fail) {
-                        $exists = DB::table('evento')
-                            ->where('nombre_evento', $value)
-                            ->where('estatus', '!=', '3')
-                            ->when($this->idEventoTemporal, function ($q) {
-                                $q->where('id_evento', '!=', $this->idEventoTemporal);
-                            })
-                            ->exists();
-                        if ($exists) {
+                        $repo = new \App\Repositories\Calendario\CalendarioCreateRepo();
+                        if ($repo->existeEventoConNombre($value, $this->idEventoTemporal)) {
                             $fail($this->idEventoTemporal ? 'Ya existe otro evento con esta descripción.' : 'Ya existe un evento con esta descripción.');
                         }
                     },
@@ -65,14 +52,8 @@ class CreateCalendarioForm extends Form
                 'nuevoColorId' => [
                     'required', 'exists:color,id_color',
                     function ($attribute, $value, $fail) {
-                        $exists = DB::table('evento')
-                            ->where('id_color', $value)
-                            ->where('estatus', '!=', '3')
-                            ->when($this->idEventoTemporal, function ($q) {
-                                $q->where('id_evento', '!=', $this->idEventoTemporal);
-                            })
-                            ->exists();
-                        if ($exists) {
+                        $repo = new \App\Repositories\Calendario\CalendarioCreateRepo();
+                        if ($repo->existeEventoConColor($value, $this->idEventoTemporal)) {
                             $fail('Este color ya está asignado a otro evento activo.');
                         }
                     }
@@ -131,5 +112,53 @@ class CreateCalendarioForm extends Form
             $reglas,
             $mensajes
         )->validate();
+    }
+
+    /**
+     * Valida únicamente la sección de fechas del período.
+     */
+    public function validarSeccionFechas()
+    {
+        $this->validate([
+            'dia_inicio_calendario_academico' => 'required|date',
+            'dia_fin_calendario_academico' => 'required|date|after_or_equal:dia_inicio_calendario_academico',
+        ]);
+    }
+
+    /**
+     * Realiza la validación completa del formulario incluyendo la lógica de eventos.
+     */
+    public function validarFormularioCompleto($eventosRegistrados)
+    {
+        $errores = [];
+        
+        // 1. Validar reglas básicas del objeto Form
+        try {
+            $this->validate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errores = array_merge($errores, array_values($e->errors()));
+        }
+
+        // 2. Validar que exista al menos un evento
+        if (count($eventosRegistrados) === 0) {
+            $msg = 'Debe registrar al menos un evento antes de guardar el calendario.';
+            $this->addError('eventosRegistrados', $msg);
+            $errores[] = [$msg];
+        }
+
+        if (count($errores) > 0) {
+            // Aplanar array de errores si es necesario
+            $todosLosErrores = [];
+            foreach ($errores as $err) {
+                if (is_array($err)) {
+                    foreach ($err as $e) $todosLosErrores[] = $e;
+                } else {
+                    $todosLosErrores[] = $err;
+                }
+            }
+            return ['valido' => false, 'errores' => $todosLosErrores];
+        }
+
+        return ['valido' => true, 'errores' => []];
     }
 }
