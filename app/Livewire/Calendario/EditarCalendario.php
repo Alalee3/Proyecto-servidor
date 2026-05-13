@@ -21,6 +21,7 @@ class EditarCalendario extends Component
     public $bibliotecaEventos = [];
     public $currentYear;
     public $id_calendario;
+    public $colores = [];
 
     public function boot()
     {
@@ -76,6 +77,20 @@ class EditarCalendario extends Component
         // Cargar la biblioteca de eventos (templates)
         $eventoRepo = new EventoIndexRepo();
         $this->bibliotecaEventos = $eventoRepo->obtenerBiblioteca();
+        $this->cargarColoresDisponibles();
+    }
+
+    public function cargarColoresDisponibles()
+    {
+        $this->colores = DB::table('color')
+            ->where('estatus', '1')
+            ->whereNotIn('id_color', function ($query) {
+                $query->select('id_color')
+                    ->from('evento')
+                    ->whereNotNull('id_color')
+                    ->where('estatus', '!=', '3');
+            })
+            ->get();
     }
 
     public function updated($propertyName)
@@ -83,8 +98,14 @@ class EditarCalendario extends Component
         $this->validateOnly($propertyName);
 
         if ($propertyName == 'form.dia_inicio_calendario_academico' || $propertyName == 'form.dia_fin_calendario_academico') {
-            $this->filtrarEventosFueraDeRango();
             $this->guardarBorrador();
+        }
+
+        if ($propertyName === 'form.nuevoTipo') {
+            if ($this->form->nuevoTipo == '1') {
+                $this->form->nuevoLaborable = false;
+                $this->form->nuevoRepetible = false;
+            }
         }
     }
 
@@ -138,6 +159,36 @@ class EditarCalendario extends Component
             unset($this->eventosRegistrados[$index]);
             $this->eventosRegistrados = array_values($this->eventosRegistrados);
             $this->guardarBorrador();
+        }
+    }
+
+    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $id_color, $is_laborable, $is_repetible)
+    {
+        try {
+            $id_evento = DB::table('evento')->insertGetId([
+                'id_color' => $id_color,
+                'nombre_evento' => mb_strtoupper($nombre),
+                'tipo_evento' => $tipo,
+                'is_laborable_evento' => $is_laborable,
+                'is_repetible_evento' => $is_repetible,
+                'estatus' => '1',
+            ]);
+
+            $colorObj = DB::table('color')->where('id_color', $id_color)->first();
+            $colorHex = $colorObj ? $colorObj->codigo_color : '#808080';
+
+            // Actualizar biblioteca local
+            $eventoRepo = new EventoIndexRepo();
+            $this->bibliotecaEventos = $eventoRepo->obtenerBiblioteca();
+            $this->cargarColoresDisponibles();
+
+            // Agregar al calendario (esto llamará a guardarBorrador)
+            $this->agregarEvento($inicio, $fin, $id_evento, $nombre, $tipo, $colorHex);
+
+            return true;
+        } catch (Exception $e) {
+            $this->js("alert('Error al crear el nuevo evento: " . addslashes($e->getMessage()) . "')");
+            return false;
         }
     }
 

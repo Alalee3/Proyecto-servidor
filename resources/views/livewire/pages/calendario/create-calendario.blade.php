@@ -173,12 +173,13 @@
                                     showEventModal: false,
                                     selectedEventStart: '',
                                     selectedEventEnd: '',
-                                    eventoNombre: '',
+                                    eventoNombre: @entangle('form.nombreEventoTemporal'),
                                     eventoTipo: '1',
                                     eventoColor: '',
                                     eventoSeleccionado: '',
                                     clickCount: 0,
                                     eventosAlpine: @entangle('eventosRegistrados'),
+                                    bibliotecaAlpine: @js($bibliotecaEventos),
                                     tooltip: { visible: false, x: 0, y: 0, content: null },
                                     tooltipTimeout: null,
                                     currentYear: null,
@@ -187,6 +188,11 @@
                                     _savedStart: '',
                                     _savedCount: 0,
                                     _clickLock: false,
+                                    showQuickModal: false,
+                                    nuevoColorId: @entangle('form.nuevoColorId'),
+                                    nuevoTipo: @entangle('form.nuevoTipo'),
+                                    nuevoLaborable: @entangle('form.nuevoLaborable'),
+                                    nuevoRepetible: @entangle('form.nuevoRepetible'),
 
                                     formatDate(dateStr) {
                                         if (!dateStr) return '';
@@ -387,23 +393,58 @@
                                             });
                                         });
                                     },
-                                    closeModal() {
-                                        this.showEventModal = false;
-                                        if(this.picker1) {
-                                            this.picker1.selectedDates = []; this.picker1.update();
-                                            this.picker2.selectedDates = []; this.picker2.update();
-                                            this.picker3.selectedDates = []; this.picker3.update();
-                                            this.picker4.selectedDates = []; this.picker4.update();
-                                            this.$nextTick(() => this.refrescarEventosVisuales());
-                                        }
-                                        this.selectedEventStart = ''; this.selectedEventEnd = ''; this.eventoNombre = '';
-                                        this.eventoTipo = '1'; this.eventoColor = ''; this.eventoSeleccionado = ''; this.clickCount = 0;
-                                    },
                                     guardarEvento() {
-                                        if(!this.eventoNombre.trim()) { alert('Debe ingresar un nombre para el evento.'); return; }
-                                        $wire.agregarEvento(this.selectedEventStart, this.selectedEventEnd, this.eventoSeleccionado, this.eventoNombre, this.eventoTipo, this.eventoColor);
-                                        this.closeModal();
-                                    },
+                                         if(!this.eventoNombre || !this.eventoNombre.trim()) { alert('Debe ingresar un nombre para el evento.'); return; }
+                                         
+                                         // Buscar si el nombre existe en la biblioteca
+                                         const existing = this.bibliotecaAlpine.find(o => o.nombre_evento.toUpperCase() === this.eventoNombre.trim().toUpperCase());
+                                         
+                                         if (existing) {
+                                             this.eventoSeleccionado = existing.id_evento;
+                                             this.eventoTipo = existing.tipo_evento;
+                                             this.eventoColor = existing.codigo_color;
+                                             $wire.agregarEvento(this.selectedEventStart, this.selectedEventEnd, this.eventoSeleccionado, this.eventoNombre, this.eventoTipo, this.eventoColor);
+                                             this.closeModal();
+                                         } else {
+                                             // No existe, abrir el modal de registro rápido
+                                             this.showEventModal = false;
+                                             this.showQuickModal = true;
+                                         }
+                                     },
+
+                                     confirmarNuevoEvento() {
+                                         if (!this.nuevoColorId) { alert('Debe seleccionar un color para el nuevo evento.'); return; }
+                                         
+                                         $wire.crearYAgregarEvento(
+                                             this.selectedEventStart, 
+                                             this.selectedEventEnd, 
+                                             this.eventoNombre, 
+                                             this.nuevoTipo, 
+                                             this.nuevoColorId, 
+                                             this.nuevoLaborable, 
+                                             this.nuevoRepetible
+                                         ).then(success => {
+                                             if (success) {
+                                                 this.showQuickModal = false;
+                                                 this.closeModal();
+                                             }
+                                         });
+                                     },
+
+                                     closeModal() {
+                                         this.showEventModal = false;
+                                         this.showQuickModal = false;
+                                         if(this.picker1) {
+                                             this.picker1.selectedDates = []; this.picker1.update();
+                                             this.picker2.selectedDates = []; this.picker2.update();
+                                             this.picker3.selectedDates = []; this.picker3.update();
+                                             this.picker4.selectedDates = []; this.picker4.update();
+                                             this.$nextTick(() => this.refrescarEventosVisuales());
+                                         }
+                                         this.selectedEventStart = ''; this.selectedEventEnd = ''; this.eventoNombre = '';
+                                         this.eventoSeleccionado = ''; this.clickCount = 0;
+                                         this.nuevoColorId = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false;
+                                     },
                                     eliminarEventoDesdeTooltip(ev) {
                                         let index = this.eventosAlpine.findIndex(e => e.id === ev.id && e.inicio === ev.inicio && e.fin === ev.fin);
                                         if (index !== -1) {
@@ -606,6 +647,95 @@
                                 </div>
                             </div>
 
+                             {{-- Modal Registro Rápido (Nuevo Evento) --}}
+                             <div x-show="showQuickModal" style="display: none;"
+                                 class="fixed inset-0 z-50 flex items-center justify-center px-4">
+                                 <div @click.away="closeModal()" x-transition:enter="ease-out duration-300"
+                                     x-transition:enter-start="opacity-0 scale-90"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-700">
+                                     <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 uppercase tracking-widest text-center">
+                                         Nuevo Evento Detectado
+                                     </h3>
+                                     <p class="text-center text-gray-500 dark:text-gray-400 text-sm mb-6">
+                                         El evento "<span class="font-bold text-gray-700 dark:text-gray-200" x-text="eventoNombre"></span>" no existe en la biblioteca. Por favor, configúrelo:
+                                     </p>
+
+                                     <div class="space-y-6">
+                                         {{-- Selección de Color (Estilo Modulo Eventos) --}}
+                                         <div>
+                                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Color del Evento</label>
+                                             <div x-data="{ 
+                                                     openColores: false, 
+                                                     colores: @entangle('colores'),
+                                                     get selectedHex() {
+                                                         let color = this.colores.find(c => c.id_color == nuevoColorId);
+                                                         return color ? color.codigo_color : null;
+                                                     },
+                                                     get selectedName() {
+                                                         let color = this.colores.find(c => c.id_color == nuevoColorId);
+                                                         return color ? color.nombre_color : 'Seleccione un color';
+                                                     }
+                                                 }" 
+                                                 class="relative w-full">
+                                                 
+                                                 <button @click="openColores = !openColores" type="button" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl pl-4 pr-10 py-3 text-left focus:outline-none focus:ring-2 focus:ring-gray-400 shadow-sm min-h-[48px]">
+                                                     <span class="flex items-center gap-3">
+                                                         <template x-if="selectedHex">
+                                                             <span class="w-6 h-6 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm" :style="`background-color: ${selectedHex}`"></span>
+                                                         </template>
+                                                         <span class="block truncate text-sm font-medium" :class="nuevoColorId ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'" x-text="selectedName"></span>
+                                                     </span>
+                                                     <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                                                         <span class="material-icons">expand_more</span>
+                                                     </span>
+                                                 </button>
+
+                                                 <div x-show="openColores" @click.away="openColores = false" x-transition.opacity class="absolute z-10 mt-2 w-full bg-white dark:bg-gray-800 shadow-2xl max-h-60 rounded-2xl py-2 border border-gray-100 dark:border-gray-700 overflow-auto focus:outline-none" style="display: none;">
+                                                     <ul class="flex flex-col w-full">
+                                                         @foreach($colores as $color)
+                                                             <li @click="nuevoColorId = {{ $color->id_color }}; openColores = false" 
+                                                                 class="cursor-pointer select-none w-full px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center transition-colors" 
+                                                                 :class="nuevoColorId == {{ $color->id_color }} ? 'bg-gray-50 dark:bg-gray-700/50' : ''">
+                                                                 <div class="flex items-center gap-4">
+                                                                     <span class="w-7 h-7 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm" style="background-color: {{ $color->codigo_color }}"></span>
+                                                                     <span class="text-gray-900 dark:text-gray-200 text-sm font-semibold">{{ mb_strtoupper($color->nombre_color) }}</span>
+                                                                 </div>
+                                                             </li>
+                                                         @endforeach
+                                                     </ul>
+                                                 </div>
+                                             </div>
+                                         </div>
+
+                                         {{-- Tipo de Evento --}}
+                                         <div>
+                                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tipo de Evento</label>
+                                             <select x-model="nuevoTipo" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400">
+                                                 <option value="1">FERIADO NACIONAL</option>
+                                                 <option value="2">ADMINISTRATIVO/ACADÉMICO</option>
+                                                 <option value="3">OTROS</option>
+                                             </select>
+                                         </div>
+
+                                         {{-- Opciones adicionales --}}
+                                         <div class="space-y-4 pt-2" x-show="nuevoTipo != '1'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" style="display: none;">
+                                             <x-toggle-switch id="laborable_switch" :label="__('¿Es un día laborable?')" model="form.nuevoLaborable" />
+                                             <x-toggle-switch id="repetible_switch" :label="__('¿Es un evento repetible?')" model="form.nuevoRepetible" />
+                                         </div>
+                                     </div>
+
+                                     <div class="flex flex-col gap-3 mt-8">
+                                         <x-primary-button @click="confirmarNuevoEvento()" class="w-full justify-center py-3 rounded-xl">
+                                             REGISTRAR Y ASIGNAR
+                                         </x-primary-button>
+                                         <x-secondary-button @click="closeModal()" class="w-full justify-center py-3 rounded-xl">
+                                             CANCELAR
+                                         </x-secondary-button>
+                                     </div>
+                                 </div>
+                             </div>
+
                             {{-- Modal Registro --}}
                             <div x-show="showEventModal" style="display: none;"
                                 class="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -632,26 +762,16 @@
                                         </div>
                                     </div>
                                     <div class="space-y-5">
-                                        <div>
-                                            <label
-                                                class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Seleccionar
-                                                Evento</label>
-                                            <select x-model="eventoSeleccionado"
-                                                x-on:change="let opt = $event.target.options[$event.target.selectedIndex]; eventoNombre = opt.text; eventoTipo = opt.dataset.tipo; eventoColor = opt.dataset.color;"
-                                                class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 shadow-sm">
-                                                <option value="" disabled selected>-- Seleccione un Evento --</option>
-                                                @foreach($bibliotecaEventos as $evento)
-                                                    @if($evento->is_repetible_evento || !collect($eventosRegistrados)->contains('id', $evento->id_evento))
-                                                        <option value="{{ $evento->id_evento }}"
-                                                            data-tipo="{{ $evento->tipo_evento }}"
-                                                            data-color="{{ $evento->codigo_color }}">
-                                                            {{ $evento->nombre_evento }}
-                                                        </option>
-                                                    @endif
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
+                                         <div>
+                                             <x-datalist 
+                                                 label="Nombre del Evento"
+                                                 :options="collect($bibliotecaEventos)"
+                                                 textField="nombre_evento"
+                                                 wire:model.live="form.nombreEventoTemporal"
+                                                 placeholder="ESCRIBA O SELECCIONE UN EVENTO"
+                                             />
+                                         </div>
+                                     </div>
                                     <div
                                         class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
                                         <x-secondary-button type="button"
