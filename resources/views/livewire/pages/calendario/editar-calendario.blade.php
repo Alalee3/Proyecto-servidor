@@ -122,14 +122,14 @@
                         <div class="w-full">
                             <x-input-label for="dia_fin_calendario_academico" :value="__('Fin del Período')" />
                             <x-text-input id="dia_fin_calendario_academico" type="date"
-                                wire:model.live="form.dia_fin_calendario_academico" 
-                                class="w-full mt-1 date-input-dark" required />
+                                wire:model.live="form.dia_fin_calendario_academico" class="w-full mt-1 date-input-dark"
+                                required />
                         </div>
                     </div>
                     <div
                         class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
                         <x-primary-button type="button" @click="openSection = 'eventos'">
-                            VER EVENTOS ASIGNADOS <span class="material-icons text-sm">arrow_forward</span>
+                            CONTINUAR <span class="material-icons text-sm">arrow_forward</span>
                         </x-primary-button>
                     </div>
                 </div>
@@ -159,12 +159,13 @@
                                     showEventModal: false,
                                     selectedEventStart: '',
                                     selectedEventEnd: '',
-                                    eventoNombre: '',
+                                    eventoNombre: @entangle('form.nombreEventoTemporal'),
                                     eventoTipo: '1',
                                     eventoColor: '',
                                     eventoSeleccionado: '',
                                     clickCount: 0,
                                     eventosAlpine: @entangle('eventosRegistrados'),
+                                    bibliotecaAlpine: @js($bibliotecaEventos),
                                     tooltip: { visible: false, x: 0, y: 0, content: null },
                                     tooltipTimeout: null,
                                     currentYear: null,
@@ -173,6 +174,70 @@
                                     _savedStart: '',
                                     _savedCount: 0,
                                     _clickLock: false,
+                                    showQuickModal: false,
+                                    nuevoColorId: @entangle('form.nuevoColorId'),
+                                    nuevoTipo: @entangle('form.nuevoTipo'),
+                                    nuevoLaborable: @entangle('form.nuevoLaborable'),
+                                    nuevoRepetible: @entangle('form.nuevoRepetible'),
+
+                                    formatDate(dateStr) {
+                                        if (!dateStr) return '';
+                                        const parts = dateStr.split('-');
+                                        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                                    },
+
+                                    isTrimestreHabilitado(trimIndex) {
+                                        if (!inicio || !fin) return false;
+                                        const startMonth = (trimIndex - 1) * 3;
+                                        const endMonth = trimIndex * 3 - 1;
+                                        
+                                        // Fecha inicial del trimestre para el año actual
+                                        const trimStart = new Date(this.currentYear, startMonth, 1);
+                                        // Fecha final del trimestre (último día del mes final)
+                                        const trimEnd = new Date(this.currentYear, endMonth + 1, 0);
+                                        
+                                        const calInicio = new Date(inicio + 'T00:00:00');
+                                        const calFin = new Date(fin + 'T00:00:00');
+                                        
+                                        // Hay solapamiento si (trimStart <= calFin) && (trimEnd >= calInicio)
+                                        return (trimStart <= calFin) && (trimEnd >= calInicio);
+                                    },
+
+                                    handleMouseEnterDay(btn, day) {
+                                        clearTimeout(this.tooltipTimeout);
+                                        const matchingEvents = this.eventosAlpine.filter(ev => {
+                                            let s = new Date(ev.inicio + 'T00:00:00');
+                                            let e = new Date(ev.fin + 'T00:00:00');
+                                            let d = new Date(day + 'T00:00:00');
+                                            return d >= s && d <= e;
+                                        });
+                                        if (matchingEvents.length === 0) {
+                                            this.tooltip.visible = false;
+                                            return;
+                                        }
+                                        const rect = btn.getBoundingClientRect();
+                                        this.tooltip.content = matchingEvents;
+                                        this.tooltip.visible = true;
+                                        this.tooltip.x = rect.left + (rect.width / 2);
+                                        this.tooltip.y = rect.top;
+                                    },
+
+                                    handleMouseLeaveDay() {
+                                        this.tooltipTimeout = setTimeout(() => {
+                                            this.tooltip.visible = false;
+                                            this.tooltip.content = null;
+                                        }, 300);
+                                    },
+                                    
+                                    abrirPrimerTrimestreValido() {
+                                         for (let i = 1; i <= 4; i++) {
+                                             if (this.isTrimestreHabilitado(i)) {
+                                                this.openTrimestre = i;
+                                                return;
+                                             }
+                                         }
+                                         this.openTrimestre = null;
+                                     },
                                     
                                     getVanillaConfig(year, monthIndex) {
                                         const isDark = document.documentElement.classList.contains('dark');
@@ -246,14 +311,37 @@
                                         this.$watch('inicio', (val) => { if(val && fin) this.setupCalendar(); });
                                         this.$watch('fin', (val) => { if(val && inicio) this.setupCalendar(); });
                                         this.$watch('eventosAlpine', () => {
-                                            this.refrescarEventosVisuales();
+                                            if (this.picker1) this.picker1.update();
+                                            if (this.picker2) this.picker2.update();
+                                            if (this.picker3) this.picker3.update();
+                                            if (this.picker4) this.picker4.update();
+                                            this.$nextTick(() => this.refrescarEventosVisuales());
                                         });
+
+                                        // Delegación de eventos para tooltips
+                                        this.$nextTick(() => {
+                                            [this.$refs.calendar1, this.$refs.calendar2, this.$refs.calendar3, this.$refs.calendar4].forEach(calendarEl => {
+                                                if (!calendarEl) return;
+                                                calendarEl.addEventListener('mouseover', (e) => {
+                                                    const btn = e.target.closest('[data-calendar-day]');
+                                                    if (btn && btn.classList.contains('sogat-evento-registrado')) {
+                                                        this.handleMouseEnterDay(btn, btn.dataset.calendarDay);
+                                                    }
+                                                });
+                                                calendarEl.addEventListener('mouseout', (e) => {
+                                                    const btn = e.target.closest('[data-calendar-day]');
+                                                    if (btn) this.handleMouseLeaveDay();
+                                                });
+                                            });
+                                        });
+
                                         if(inicio && fin) this.setupCalendar();
                                     },
                                     setupCalendar() {
                                         this.calStartYear = parseInt(inicio.substring(0, 4));
                                         this.calEndYear = parseInt(fin.substring(0, 4));
                                         this.currentYear = this.calStartYear;
+                                        this.abrirPrimerTrimestreValido();
                                         this.inicializarPicker(this.currentYear);
                                     },
 
@@ -261,6 +349,7 @@
                                         const nuevoAnio = parseInt(this.currentYear) + dir;
                                         if (nuevoAnio >= this.calStartYear && nuevoAnio <= this.calEndYear) {
                                             this.currentYear = nuevoAnio;
+                                            this.abrirPrimerTrimestreValido();
                                             this.inicializarPicker(nuevoAnio);
                                         }
                                     },
@@ -288,6 +377,8 @@
                                             calendarEl.querySelectorAll('[data-calendar-day]').forEach(btn => {
                                             const day = btn.dataset.calendarDay;
                                             btn.style.backgroundColor = ''; btn.style.color = ''; btn.style.border = '';
+                                            btn.style.fontWeight = '';
+                                            btn.style.position = '';
                                             btn.classList.remove('sogat-evento-registrado');
                                             
                                             const existingBadge = btn.querySelector('.sogat-event-counter');
@@ -307,48 +398,64 @@
                                                     btn.style.position = 'relative';
                                                     btn.appendChild(badge);
                                                 }
-                                                const matchingEvents = this.eventosAlpine.filter(ev => {
-                                                    let s = new Date(ev.inicio + 'T00:00:00');
-                                                    let e = new Date(ev.fin + 'T00:00:00');
-                                                    let d = new Date(day + 'T00:00:00');
-                                                    return d >= s && d <= e;
-                                                });
-                                                btn.addEventListener('mouseenter', (e) => { 
-                                                    clearTimeout(this.tooltipTimeout); 
-                                                    const rect = btn.getBoundingClientRect();
-                                                    this.tooltip.content = matchingEvents; 
-                                                    this.tooltip.visible = true; 
-                                                    this.tooltip.x = rect.left + (rect.width / 2); 
-                                                    this.tooltip.y = rect.top; 
-                                                });
-                                                btn.addEventListener('mouseleave', () => { 
-                                                    this.tooltipTimeout = setTimeout(() => {
-                                                        this.tooltip.visible = false; 
-                                                        this.tooltip.content = null; 
-                                                    }, 300);
-                                                });
                                             }
                                             });
                                         });
                                     },
-                                    closeModal() {
-                                        this.showEventModal = false;
-                                        if(this.picker1) {
-                                            this.picker1.selectedDates = []; this.picker1.update();
-                                            this.picker2.selectedDates = []; this.picker2.update();
-                                            this.picker3.selectedDates = []; this.picker3.update();
-                                            this.picker4.selectedDates = []; this.picker4.update();
-                                            this.$nextTick(() => this.refrescarEventosVisuales());
-                                        }
-                                        this.selectedEventStart = ''; this.selectedEventEnd = ''; this.eventoNombre = '';
-                                        this.eventoTipo = '1'; this.eventoColor = ''; this.eventoSeleccionado = ''; this.clickCount = 0;
-                                    },
+
                                     guardarEvento() {
-                                        if(!this.eventoNombre.trim()) { alert('Debe ingresar un nombre para el evento.'); return; }
-                                        $wire.agregarEvento(this.selectedEventStart, this.selectedEventEnd, this.eventoSeleccionado, this.eventoNombre, this.eventoTipo, this.eventoColor);
-                                        this.closeModal();
-                                    },
-                                    eliminarEventoDesdeTooltip(ev) {
+                                         if(!this.eventoNombre || !this.eventoNombre.trim()) { alert('Debe ingresar un nombre para el evento.'); return; }
+                                         
+                                         // Buscar si el nombre existe en la biblioteca
+                                         const existing = this.bibliotecaAlpine.find(o => o.nombre_evento.toUpperCase() === this.eventoNombre.trim().toUpperCase());
+                                         
+                                         if (existing) {
+                                             this.eventoSeleccionado = existing.id_evento;
+                                             this.eventoTipo = existing.tipo_evento;
+                                             this.eventoColor = existing.codigo_color;
+                                             $wire.agregarEvento(this.selectedEventStart, this.selectedEventEnd, this.eventoSeleccionado, this.eventoNombre, this.eventoTipo, this.eventoColor);
+                                             this.closeModal();
+                                         } else {
+                                             // No existe, abrir el modal de registro rápido
+                                             this.showEventModal = false;
+                                             this.showQuickModal = true;
+                                         }
+                                     },
+
+                                     confirmarNuevoEvento() {
+                                         if (!this.nuevoColorId) { alert('Debe seleccionar un color para el nuevo evento.'); return; }
+                                         
+                                         $wire.crearYAgregarEvento(
+                                             this.selectedEventStart, 
+                                             this.selectedEventEnd, 
+                                             this.eventoNombre, 
+                                             this.nuevoTipo, 
+                                             this.nuevoColorId, 
+                                             this.nuevoLaborable, 
+                                             this.nuevoRepetible
+                                         ).then(success => {
+                                             if (success) {
+                                                 this.showQuickModal = false;
+                                                 this.closeModal();
+                                             }
+                                         });
+                                     },
+
+                                     closeModal() {
+                                         this.showEventModal = false;
+                                         this.showQuickModal = false;
+                                         if(this.picker1) {
+                                             this.picker1.selectedDates = []; this.picker1.update();
+                                             this.picker2.selectedDates = []; this.picker2.update();
+                                             this.picker3.selectedDates = []; this.picker3.update();
+                                             this.picker4.selectedDates = []; this.picker4.update();
+                                             this.$nextTick(() => this.refrescarEventosVisuales());
+                                         }
+                                         this.selectedEventStart = ''; this.selectedEventEnd = ''; this.eventoNombre = '';
+                                         this.eventoSeleccionado = ''; this.clickCount = 0;
+                                         this.nuevoColorId = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false;
+                                     },
+                                     eliminarEventoDesdeTooltip(ev) {
                                         let index = this.eventosAlpine.findIndex(e => e.id === ev.id && e.inicio === ev.inicio && e.fin === ev.fin);
                                         if (index !== -1) {
                                             $wire.removerEvento(index);
@@ -420,9 +527,7 @@
                                         <span x-text="currentYear"
                                             class="text-7xl font-black text-gray-800 dark:text-gray-100 min-w-[150px] text-center drop-shadow-sm"
                                             style="font-family: 'Verdana', sans-serif; letter-spacing: -0.05em;"></span>
-                                        <span
-                                            class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Año
-                                            Escolar</span>
+
                                     </div>
                                     <button type="button" @click="cambiarAnio(1)" :disabled="currentYear >= calEndYear"
                                         :class="currentYear >= calEndYear ? 'opacity-30 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer'"
@@ -436,26 +541,40 @@
                                 </div>
                             </template>
                             <template x-if="calStartYear && calEndYear && calStartYear >= calEndYear">
-                                <div class="text-center mb-8 mt-2">
+                                <div class="text-center mb-4 mt-2">
                                     <span x-text="currentYear"
                                         class="text-7xl font-black text-gray-800 dark:text-gray-100 drop-shadow-sm"
                                         style="font-family: 'Verdana', sans-serif; letter-spacing: -0.05em;"></span>
                                 </div>
                             </template>
 
+                            {{-- Indicador de fecha seleccionada (siempre visible) --}}
+                            <div x-show="selectedEventStart"
+                                 class="flex justify-center mb-6 -mt-4">
+                                <div class="px-4 py-1.5 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-full text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center gap-2">
+                                    <span class="material-icons text-sm">event</span>
+                                    <span x-text="'Fecha de inicio seleccionada para el evento: ' + formatDate(selectedEventStart)"></span>
+                                </div>
+                            </div>
+
                             <div class="space-y-4 w-full">
                                 <!-- Trimestre 1 -->
                                 <div
                                     class="border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-sm transition-all duration-300">
-                                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                                        @click="openTrimestre = openTrimestre === 1 ? null : 1">
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 transition-colors"
+                                        :class="!isTrimestreHabilitado(1) ? 'opacity-40 cursor-not-allowed bg-gray-200 dark:bg-gray-800' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'"
+                                        @click="if(isTrimestreHabilitado(1)) openTrimestre = openTrimestre === 1 ? null : 1">
                                         <h4
                                             class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
-                                            Primer Trimestre del Año <span>| Eventos Asignados: <span
-                                                    x-text="contarEventosTrimestre(0, 2)"></span></span>
+                                            Primer Trimestre del Año 
+                                            <template x-if="isTrimestreHabilitado(1)">
+                                                <span>| Eventos Asignados: <span x-text="contarEventosTrimestre(0, 2)"></span></span>
+                                            </template>
                                         </h4>
                                         <span class="material-icons transition-transform duration-200"
+                                            x-show="isTrimestreHabilitado(1)"
                                             :class="openTrimestre === 1 ? 'rotate-180' : ''">expand_more</span>
+                                        <span class="material-icons text-gray-400" x-show="!isTrimestreHabilitado(1)">lock</span>
                                     </div>
                                     <div x-show="openTrimestre === 1" x-collapse
                                         class="p-4 flex justify-center flex-col items-center">
@@ -466,15 +585,20 @@
                                 <!-- Trimestre 2 -->
                                 <div
                                     class="border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-sm transition-all duration-300">
-                                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                                        @click="openTrimestre = openTrimestre === 2 ? null : 2">
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 transition-colors"
+                                        :class="!isTrimestreHabilitado(2) ? 'opacity-40 cursor-not-allowed bg-gray-200 dark:bg-gray-800' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'"
+                                        @click="if(isTrimestreHabilitado(2)) openTrimestre = openTrimestre === 2 ? null : 2">
                                         <h4
                                             class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
-                                            Segundo Trimestre del Año <span>| Eventos Asignados: <span
-                                                    x-text="contarEventosTrimestre(3, 5)"></span></span>
+                                            Segundo Trimestre del Año 
+                                            <template x-if="isTrimestreHabilitado(2)">
+                                                <span>| Eventos Asignados: <span x-text="contarEventosTrimestre(3, 5)"></span></span>
+                                            </template>
                                         </h4>
                                         <span class="material-icons transition-transform duration-200"
+                                            x-show="isTrimestreHabilitado(2)"
                                             :class="openTrimestre === 2 ? 'rotate-180' : ''">expand_more</span>
+                                        <span class="material-icons text-gray-400" x-show="!isTrimestreHabilitado(2)">lock</span>
                                     </div>
                                     <div x-show="openTrimestre === 2" x-collapse
                                         class="p-4 flex justify-center flex-col items-center">
@@ -485,15 +609,20 @@
                                 <!-- Trimestre 3 -->
                                 <div
                                     class="border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-sm transition-all duration-300">
-                                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                                        @click="openTrimestre = openTrimestre === 3 ? null : 3">
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 transition-colors"
+                                        :class="!isTrimestreHabilitado(3) ? 'opacity-40 cursor-not-allowed bg-gray-200 dark:bg-gray-800' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'"
+                                        @click="if(isTrimestreHabilitado(3)) openTrimestre = openTrimestre === 3 ? null : 3">
                                         <h4
                                             class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
-                                            Tercer Trimestre del Año <span>| Eventos Asignados: <span
-                                                    x-text="contarEventosTrimestre(6, 8)"></span></span>
+                                            Tercer Trimestre del Año 
+                                            <template x-if="isTrimestreHabilitado(3)">
+                                                <span>| Eventos Asignados: <span x-text="contarEventosTrimestre(6, 8)"></span></span>
+                                            </template>
                                         </h4>
                                         <span class="material-icons transition-transform duration-200"
+                                            x-show="isTrimestreHabilitado(3)"
                                             :class="openTrimestre === 3 ? 'rotate-180' : ''">expand_more</span>
+                                        <span class="material-icons text-gray-400" x-show="!isTrimestreHabilitado(3)">lock</span>
                                     </div>
                                     <div x-show="openTrimestre === 3" x-collapse
                                         class="p-4 flex justify-center flex-col items-center">
@@ -504,15 +633,20 @@
                                 <!-- Trimestre 4 -->
                                 <div
                                     class="border-2 border-gray-200 dark:border-gray-700 rounded-xl shadow-sm transition-all duration-300">
-                                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                                        @click="openTrimestre = openTrimestre === 4 ? null : 4">
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 transition-colors"
+                                        :class="!isTrimestreHabilitado(4) ? 'opacity-40 cursor-not-allowed bg-gray-200 dark:bg-gray-800' : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'"
+                                        @click="if(isTrimestreHabilitado(4)) openTrimestre = openTrimestre === 4 ? null : 4">
                                         <h4
                                             class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
-                                            Cuarto Trimestre del Año <span>| Eventos Asignados: <span
-                                                    x-text="contarEventosTrimestre(9, 11)"></span></span>
+                                            Cuarto Trimestre del Año 
+                                            <template x-if="isTrimestreHabilitado(4)">
+                                                <span>| Eventos Asignados: <span x-text="contarEventosTrimestre(9, 11)"></span></span>
+                                            </template>
                                         </h4>
                                         <span class="material-icons transition-transform duration-200"
+                                            x-show="isTrimestreHabilitado(4)"
                                             :class="openTrimestre === 4 ? 'rotate-180' : ''">expand_more</span>
+                                        <span class="material-icons text-gray-400" x-show="!isTrimestreHabilitado(4)">lock</span>
                                     </div>
                                     <div x-show="openTrimestre === 4" x-collapse
                                         class="p-4 flex justify-center flex-col items-center">
@@ -548,26 +682,16 @@
                                         </div>
                                     </div>
                                     <div class="space-y-5">
-                                        <div>
-                                            <label
-                                                class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Seleccionar
-                                                Evento</label>
-                                            <select x-model="eventoSeleccionado"
-                                                x-on:change="let opt = $event.target.options[$event.target.selectedIndex]; eventoNombre = opt.text; eventoTipo = opt.dataset.tipo; eventoColor = opt.dataset.color;"
-                                                class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400 shadow-sm">
-                                                <option value="" disabled selected>-- Seleccione un Evento --</option>
-                                                @foreach($bibliotecaEventos as $evento)
-                                                    @if($evento->is_repetible_evento || !collect($eventosRegistrados)->contains('id', $evento->id_evento))
-                                                        <option value="{{ $evento->id_evento }}"
-                                                            data-tipo="{{ $evento->tipo_evento }}"
-                                                            data-color="{{ $evento->codigo_color }}">
-                                                            {{ $evento->nombre_evento }}
-                                                        </option>
-                                                    @endif
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
+                                         <div>
+                                             <x-datalist 
+                                                 label="Nombre del Evento"
+                                                 :options="collect($bibliotecaEventos)"
+                                                 textField="nombre_evento"
+                                                 wire:model.live="form.nombreEventoTemporal"
+                                                 placeholder="ESCRIBA O SELECCIONE UN EVENTO"
+                                             />
+                                         </div>
+                                     </div>
                                     <div
                                         class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
                                         <x-secondary-button type="button"
@@ -578,11 +702,99 @@
                                 </div>
                             </div>
 
+                            {{-- Modal Registro Rápido (Nuevo Evento) --}}
+                            <div x-show="showQuickModal" style="display: none;"
+                                class="fixed inset-0 z-50 flex items-center justify-center px-4">
+                                <div @click.away="closeModal()" x-transition:enter="ease-out duration-300"
+                                    x-transition:enter-start="opacity-0 scale-90"
+                                    x-transition:enter-end="opacity-100 scale-100"
+                                    class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-700">
+                                    <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 uppercase tracking-widest text-center">
+                                        Nuevo Evento Detectado
+                                    </h3>
+                                    <p class="text-center text-gray-500 dark:text-gray-400 text-sm mb-6">
+                                        El evento "<span class="font-bold text-gray-700 dark:text-gray-200" x-text="eventoNombre"></span>" no existe en la biblioteca. Por favor, configúrelo:
+                                    </p>
+                                    <div class="space-y-6">
+                                        {{-- Selección de Color (Estilo Modulo Eventos) --}}
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Color del Evento</label>
+                                            <div x-data="{ 
+                                                    openColores: false, 
+                                                    colores: @entangle('colores'),
+                                                    get selectedHex() {
+                                                        let color = this.colores.find(c => c.id_color == nuevoColorId);
+                                                        return color ? color.codigo_color : null;
+                                                    },
+                                                    get selectedName() {
+                                                        let color = this.colores.find(c => c.id_color == nuevoColorId);
+                                                        return color ? color.nombre_color : 'Seleccione un color';
+                                                    }
+                                                }" 
+                                                class="relative w-full">
+                                                
+                                                <button @click="openColores = !openColores" type="button" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl pl-4 pr-10 py-3 text-left focus:outline-none focus:ring-2 focus:ring-gray-400 shadow-sm min-h-[48px]">
+                                                    <span class="flex items-center gap-3">
+                                                        <template x-if="selectedHex">
+                                                            <span class="w-6 h-6 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm" :style="`background-color: ${selectedHex}`"></span>
+                                                        </template>
+                                                        <span class="block truncate text-sm font-medium" :class="nuevoColorId ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'" x-text="selectedName"></span>
+                                                    </span>
+                                                    <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                                                        <span class="material-icons">expand_more</span>
+                                                    </span>
+                                                </button>
+
+                                                <div x-show="openColores" @click.away="openColores = false" x-transition.opacity class="absolute z-10 mt-2 w-full bg-white dark:bg-gray-800 shadow-2xl max-h-60 rounded-2xl py-2 border border-gray-100 dark:border-gray-700 overflow-auto focus:outline-none" style="display: none;">
+                                                    <ul class="flex flex-col w-full">
+                                                        @foreach($colores as $color)
+                                                            <li @click="nuevoColorId = {{ $color->id_color }}; openColores = false" 
+                                                                class="cursor-pointer select-none w-full px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center transition-colors" 
+                                                                :class="nuevoColorId == {{ $color->id_color }} ? 'bg-gray-50 dark:bg-gray-700/50' : ''">
+                                                                <div class="flex items-center gap-4">
+                                                                    <span class="w-7 h-7 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm" style="background-color: {{ $color->codigo_color }}"></span>
+                                                                    <span class="text-gray-900 dark:text-gray-200 text-sm font-semibold">{{ mb_strtoupper($color->nombre_color) }}</span>
+                                                                </div>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {{-- Tipo de Evento --}}
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tipo de Evento</label>
+                                            <select x-model="nuevoTipo" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400">
+                                                <option value="1">FERIADO NACIONAL</option>
+                                                <option value="2">ADMINISTRATIVO/ACADÉMICO</option>
+                                                <option value="3">OTROS</option>
+                                            </select>
+                                        </div>
+
+                                        {{-- Opciones adicionales --}}
+                                        <div class="space-y-4 pt-2" x-show="nuevoTipo != '1'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" style="display: none;">
+                                            <x-toggle-switch id="laborable_switch_edit" :label="__('¿Es un día laborable?')" model="form.nuevoLaborable" />
+                                            <x-toggle-switch id="repetible_switch_edit" :label="__('¿Es un evento repetible?')" model="form.nuevoRepetible" />
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-col gap-3 mt-8">
+                                        <x-primary-button @click="confirmarNuevoEvento()" class="w-full justify-center py-3 rounded-xl">
+                                            REGISTRAR Y ASIGNAR
+                                        </x-primary-button>
+                                        <x-secondary-button @click="closeModal()" class="w-full justify-center py-3 rounded-xl">
+                                            CANCELAR
+                                        </x-secondary-button>
+                                    </div>
+                                </div>
+                            </div>
+
                             {{-- Botón para regresar a la sección anterior --}}
                             <div class="flex justify-start mt-8 pt-4 border-t border-gray-100 dark:border-gray-700">
                                 <x-secondary-button type="button" @click="openSection = 'fechas'">
                                     <span class="material-icons text-sm mr-2">arrow_back</span>
-                                    REGRESAR A CONFIGURACIÓN
+                                    VOLVER
                                 </x-secondary-button>
                             </div>
                         </div>
@@ -608,9 +820,9 @@
                 </x-secondary-button>
 
                 <!-- Botón Aprobar -->
-                <x-primary-button type="button" wire:click="aprobar" wire:loading.attr="disabled" class="bg-green-600 hover:bg-green-700 focus:ring-green-500">
+                <x-secondary-button type="button" wire:click="aprobar" wire:loading.attr="disabled">
                     {{ __('Aceptar Calendario') }}
-                </x-primary-button>
+                </x-secondary-button>
             </div>
         </div>
     </div>
