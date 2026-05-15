@@ -17,6 +17,7 @@ class CreateCalendarioForm extends Form
     public $nuevoTipo = '1';
     public $nuevoLaborable = false;
     public $nuevoRepetible = false;
+    public $nuevoObligatorio = true;
     public $idEventoTemporal = null; // Para cuando se edite un evento existente
     public $isCreatingEvento = false; // Controlar si se están aplicando las validaciones de creación rápida
 
@@ -79,6 +80,7 @@ class CreateCalendarioForm extends Form
                         }
                     }
                 ],
+                'nuevoObligatorio' => ['required', 'boolean'],
                 'nuevoColorId' => [
                     'required',
                     'exists:color,id_color',
@@ -110,6 +112,7 @@ class CreateCalendarioForm extends Form
             'nombreEventoTemporal.regex' => 'Formato inválido en la descripción.',
             'nuevoTipo.required' => 'El tipo de evento es obligatorio.',
             'nuevoColorId.required' => 'El color es obligatorio.',
+            'nuevoObligatorio.boolean' => 'El valor de obligatorio debe ser booleano.',
         ];
     }
 
