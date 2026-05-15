@@ -26,18 +26,32 @@ class CreateCalendarioForm extends Form
             'dia_inicio_calendario_academico' => [
                 'required',
                 'date',
+                function ($attribute, $value, $fail) {
+                    $dayOfWeek = date('N', strtotime($value));
+                    if ($dayOfWeek >= 6) {
+                        $fail('El período no puede comenzar un fin de semana.');
+                    }
+                },
             ],
             'dia_fin_calendario_academico' => [
                 'required',
                 'date',
                 'after_or_equal:dia_inicio_calendario_academico',
+                function ($attribute, $value, $fail) {
+                    $dayOfWeek = date('N', strtotime($value));
+                    if ($dayOfWeek >= 6) {
+                        $fail('El período no puede finalizar un fin de semana.');
+                    }
+                },
             ],
         ];
 
         if ($this->isCreatingEvento) {
             $eventRules = [
                 'nombreEventoTemporal' => [
-                    'required', 'string', 'max:100',
+                    'required',
+                    'string',
+                    'max:100',
                     function ($attribute, $value, $fail) {
                         $repo = new \App\Repositories\Calendario\CalendarioCreateRepo();
                         if ($repo->existeEventoConNombre($value, $this->idEventoTemporal)) {
@@ -48,7 +62,8 @@ class CreateCalendarioForm extends Form
                 ],
                 'nuevoTipo' => ['required', 'in:1,2,3'],
                 'nuevoLaborable' => [
-                    'required', 'boolean',
+                    'required',
+                    'boolean',
                     function ($attribute, $value, $fail) {
                         if ($this->nuevoTipo == '1' && $value) {
                             $fail('Un feriado nacional no puede ser marcado como laborable.');
@@ -56,7 +71,8 @@ class CreateCalendarioForm extends Form
                     }
                 ],
                 'nuevoRepetible' => [
-                    'required', 'boolean',
+                    'required',
+                    'boolean',
                     function ($attribute, $value, $fail) {
                         if ($this->nuevoTipo == '1' && $value) {
                             $fail('Un feriado nacional no puede ser marcado como repetible.');
@@ -64,7 +80,8 @@ class CreateCalendarioForm extends Form
                     }
                 ],
                 'nuevoColorId' => [
-                    'required', 'exists:color,id_color',
+                    'required',
+                    'exists:color,id_color',
                     function ($attribute, $value, $fail) {
                         $repo = new \App\Repositories\Calendario\CalendarioCreateRepo();
                         if ($repo->existeEventoConColor($value, $this->idEventoTemporal)) {
@@ -133,9 +150,10 @@ class CreateCalendarioForm extends Form
      */
     public function validarSeccionFechas()
     {
+        $allRules = $this->rules();
         $this->validate([
-            'dia_inicio_calendario_academico' => 'required|date',
-            'dia_fin_calendario_academico' => 'required|date|after_or_equal:dia_inicio_calendario_academico',
+            'dia_inicio_calendario_academico' => $allRules['dia_inicio_calendario_academico'],
+            'dia_fin_calendario_academico' => $allRules['dia_fin_calendario_academico'],
         ]);
     }
 
@@ -145,7 +163,7 @@ class CreateCalendarioForm extends Form
     public function validarFormularioCompleto($eventosRegistrados)
     {
         $errores = [];
-        
+
         // 1. Validar reglas básicas del objeto Form
         try {
             $this->validate();
@@ -165,7 +183,8 @@ class CreateCalendarioForm extends Form
             $todosLosErrores = [];
             foreach ($errores as $err) {
                 if (is_array($err)) {
-                    foreach ($err as $e) $todosLosErrores[] = $e;
+                    foreach ($err as $e)
+                        $todosLosErrores[] = $e;
                 } else {
                     $todosLosErrores[] = $err;
                 }
