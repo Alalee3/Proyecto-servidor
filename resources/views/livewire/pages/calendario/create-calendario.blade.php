@@ -33,6 +33,19 @@
                 color: #999 !important;
             }
 
+            /* Fines de semana DENTRO del rango válido en rojo intenso */
+            .sogat-weekend-in-range {
+                opacity: 1 !important;
+                color: #ff0000 !important;
+                font-weight: normal !important;
+                cursor: not-allowed !important;
+            }
+
+            .dark .sogat-weekend-in-range {
+                color: #ff4d4d !important;
+                opacity: 1 !important;
+            }
+
             .sogat-datepicker-container {
                 width: 100%;
             }
@@ -242,7 +255,13 @@
                                                     month: monthIndex,
                                                     year: year
                                                 },
-                                                range: { min: inicio, max: fin, disablePast: false, disableAllDays: false },
+                                                range: { 
+                                                    min: inicio, 
+                                                    max: fin, 
+                                                    disablePast: false, 
+                                                    disableAllDays: false,
+                                                    disableWeekday: [0, 6] 
+                                                },
                                                 selection: { day: 'single' },
                                                 visibility: { daysOutside: false, today: false, theme: isDark ? 'dark' : 'light' }
                                             },
@@ -337,12 +356,15 @@
                                                 let startD = new Date(ev.inicio + 'T00:00:00');
                                                 let endD   = new Date(ev.fin + 'T00:00:00');
                                                 while (startD <= endD) {
-                                                    let y = startD.getFullYear();
-                                                    let m = String(startD.getMonth() + 1).padStart(2, '0');
-                                                    let d = String(startD.getDate()).padStart(2, '0');
-                                                    let dateStr = `${y}-${m}-${d}`;
-                                                    dayColors[dateStr] = ev.color;
-                                                    dayEventsCount[dateStr] = (dayEventsCount[dateStr] || 0) + 1;
+                                                    let dayOfWeek = startD.getDay(); // 0: Dom, 6: Sáb
+                                                    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                                                        let y = startD.getFullYear();
+                                                        let m = String(startD.getMonth() + 1).padStart(2, '0');
+                                                        let d = String(startD.getDate()).padStart(2, '0');
+                                                        let dateStr = `${y}-${m}-${d}`;
+                                                        dayColors[dateStr] = ev.color;
+                                                        dayEventsCount[dateStr] = (dayEventsCount[dateStr] || 0) + 1;
+                                                    }
                                                     startD.setDate(startD.getDate() + 1);
                                                 }
                                             });
@@ -350,9 +372,20 @@
                                         [this.$refs.calendar1, this.$refs.calendar2, this.$refs.calendar3, this.$refs.calendar4].forEach(calendarEl => {
                                             if (!calendarEl) return;
                                             calendarEl.querySelectorAll('[data-calendar-day]').forEach(btn => {
-                                            const day = btn.dataset.calendarDay;
-                                            btn.style.backgroundColor = ''; btn.style.color = ''; btn.style.border = '';
-                                            btn.classList.remove('sogat-evento-registrado');
+                                                const day = btn.dataset.calendarDay;
+                                                const dObj = new Date(day + 'T00:00:00');
+                                                const dayOfWeek = dObj.getDay();
+                                                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                                                const isInRange = (day >= inicio && day <= fin);
+
+                                                if (isWeekend && isInRange) {
+                                                    btn.classList.add('sogat-weekend-in-range');
+                                                } else {
+                                                    btn.classList.remove('sogat-weekend-in-range');
+                                                }
+
+                                                btn.style.backgroundColor = ''; btn.style.color = ''; btn.style.border = '';
+                                                btn.classList.remove('sogat-evento-registrado');
                                             
                                             // Limpiar contador previo
                                             const existingBadge = btn.querySelector('.sogat-event-counter');
@@ -546,11 +579,12 @@
                             </template>
 
                             {{-- Indicador de fecha seleccionada (siempre visible) --}}
-                            <div x-show="selectedEventStart"
-                                 class="flex justify-center mb-6 -mt-4">
-                                <div class="px-4 py-1.5 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-full text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center gap-2">
+                            <div x-show="selectedEventStart" class="flex justify-center mb-6 -mt-4">
+                                <div
+                                    class="px-4 py-1.5 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-full text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center gap-2">
                                     <span class="material-icons text-sm">event</span>
-                                    <span x-text="'Fecha de inicio seleccionada para el evento: ' + formatDate(selectedEventStart)"></span>
+                                    <span
+                                        x-text="'Fecha de inicio seleccionada para el evento: ' + formatDate(selectedEventStart)"></span>
                                 </div>
                             </div>
 
@@ -563,15 +597,17 @@
                                         @click="if(isTrimestreHabilitado(1)) openTrimestre = openTrimestre === 1 ? null : 1">
                                         <h4
                                             class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
-                                            Primer Trimestre del Año 
+                                            Primer Trimestre del Año
                                             <template x-if="isTrimestreHabilitado(1)">
-                                                <span>| Eventos Asignados: <span x-text="contarEventosTrimestre(0, 2)"></span></span>
+                                                <span>| Eventos Asignados: <span
+                                                        x-text="contarEventosTrimestre(0, 2)"></span></span>
                                             </template>
                                         </h4>
                                         <span class="material-icons transition-transform duration-200"
                                             x-show="isTrimestreHabilitado(1)"
                                             :class="openTrimestre === 1 ? 'rotate-180' : ''">expand_more</span>
-                                        <span class="material-icons text-gray-400" x-show="!isTrimestreHabilitado(1)">lock</span>
+                                        <span class="material-icons text-gray-400"
+                                            x-show="!isTrimestreHabilitado(1)">lock</span>
                                     </div>
                                     <div x-show="openTrimestre === 1" x-collapse
                                         class="p-4 flex justify-center flex-col items-center">
@@ -587,15 +623,17 @@
                                         @click="if(isTrimestreHabilitado(2)) openTrimestre = openTrimestre === 2 ? null : 2">
                                         <h4
                                             class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
-                                            Segundo Trimestre del Año 
+                                            Segundo Trimestre del Año
                                             <template x-if="isTrimestreHabilitado(2)">
-                                                <span>| Eventos Asignados: <span x-text="contarEventosTrimestre(3, 5)"></span></span>
+                                                <span>| Eventos Asignados: <span
+                                                        x-text="contarEventosTrimestre(3, 5)"></span></span>
                                             </template>
                                         </h4>
                                         <span class="material-icons transition-transform duration-200"
                                             x-show="isTrimestreHabilitado(2)"
                                             :class="openTrimestre === 2 ? 'rotate-180' : ''">expand_more</span>
-                                        <span class="material-icons text-gray-400" x-show="!isTrimestreHabilitado(2)">lock</span>
+                                        <span class="material-icons text-gray-400"
+                                            x-show="!isTrimestreHabilitado(2)">lock</span>
                                     </div>
                                     <div x-show="openTrimestre === 2" x-collapse
                                         class="p-4 flex justify-center flex-col items-center">
@@ -611,15 +649,17 @@
                                         @click="if(isTrimestreHabilitado(3)) openTrimestre = openTrimestre === 3 ? null : 3">
                                         <h4
                                             class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
-                                            Tercer Trimestre del Año 
+                                            Tercer Trimestre del Año
                                             <template x-if="isTrimestreHabilitado(3)">
-                                                <span>| Eventos Asignados: <span x-text="contarEventosTrimestre(6, 8)"></span></span>
+                                                <span>| Eventos Asignados: <span
+                                                        x-text="contarEventosTrimestre(6, 8)"></span></span>
                                             </template>
                                         </h4>
                                         <span class="material-icons transition-transform duration-200"
                                             x-show="isTrimestreHabilitado(3)"
                                             :class="openTrimestre === 3 ? 'rotate-180' : ''">expand_more</span>
-                                        <span class="material-icons text-gray-400" x-show="!isTrimestreHabilitado(3)">lock</span>
+                                        <span class="material-icons text-gray-400"
+                                            x-show="!isTrimestreHabilitado(3)">lock</span>
                                     </div>
                                     <div x-show="openTrimestre === 3" x-collapse
                                         class="p-4 flex justify-center flex-col items-center">
@@ -635,15 +675,17 @@
                                         @click="if(isTrimestreHabilitado(4)) openTrimestre = openTrimestre === 4 ? null : 4">
                                         <h4
                                             class="text-sm font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
-                                            Cuarto Trimestre del Año 
+                                            Cuarto Trimestre del Año
                                             <template x-if="isTrimestreHabilitado(4)">
-                                                <span>| Eventos Asignados: <span x-text="contarEventosTrimestre(9, 11)"></span></span>
+                                                <span>| Eventos Asignados: <span
+                                                        x-text="contarEventosTrimestre(9, 11)"></span></span>
                                             </template>
                                         </h4>
                                         <span class="material-icons transition-transform duration-200"
                                             x-show="isTrimestreHabilitado(4)"
                                             :class="openTrimestre === 4 ? 'rotate-180' : ''">expand_more</span>
-                                        <span class="material-icons text-gray-400" x-show="!isTrimestreHabilitado(4)">lock</span>
+                                        <span class="material-icons text-gray-400"
+                                            x-show="!isTrimestreHabilitado(4)">lock</span>
                                     </div>
                                     <div x-show="openTrimestre === 4" x-collapse
                                         class="p-4 flex justify-center flex-col items-center">
@@ -653,25 +695,30 @@
                                 </div>
                             </div>
 
-                             {{-- Modal Registro Rápido (Nuevo Evento) --}}
-                             <div x-show="showQuickModal" style="display: none;"
-                                 class="fixed inset-0 z-50 flex items-center justify-center px-4">
-                                 <div @click.away="closeModal()" x-transition:enter="ease-out duration-300"
-                                     x-transition:enter-start="opacity-0 scale-90"
-                                     x-transition:enter-end="opacity-100 scale-100"
-                                     class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-700">
-                                     <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 uppercase tracking-widest text-center">
-                                         Nuevo Evento Detectado
-                                     </h3>
-                                     <p class="text-center text-gray-500 dark:text-gray-400 text-sm mb-6">
-                                         El evento "<span class="font-bold text-gray-700 dark:text-gray-200" x-text="eventoNombre"></span>" no existe en la biblioteca. Por favor, configúrelo:
-                                     </p>
+                            {{-- Modal Registro Rápido (Nuevo Evento) --}}
+                            <div x-show="showQuickModal" style="display: none;"
+                                class="fixed inset-0 z-50 flex items-center justify-center px-4">
+                                <div @click.away="closeModal()" x-transition:enter="ease-out duration-300"
+                                    x-transition:enter-start="opacity-0 scale-90"
+                                    x-transition:enter-end="opacity-100 scale-100"
+                                    class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-700">
+                                    <h3
+                                        class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 uppercase tracking-widest text-center">
+                                        Nuevo Evento Detectado
+                                    </h3>
+                                    <p class="text-center text-gray-500 dark:text-gray-400 text-sm mb-6">
+                                        El evento "<span class="font-bold text-gray-700 dark:text-gray-200"
+                                            x-text="eventoNombre"></span>" no existe en la biblioteca. Por favor,
+                                        configúrelo:
+                                    </p>
 
-                                     <div class="space-y-6">
-                                         {{-- Selección de Color (Estilo Modulo Eventos) --}}
-                                         <div>
-                                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Color del Evento</label>
-                                             <div x-data="{ 
+                                    <div class="space-y-6">
+                                        {{-- Selección de Color (Estilo Modulo Eventos) --}}
+                                        <div>
+                                            <label
+                                                class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Color
+                                                del Evento</label>
+                                            <div x-data="{ 
                                                      openColores: false, 
                                                      colores: @entangle('colores'),
                                                      get selectedHex() {
@@ -682,65 +729,85 @@
                                                          let color = this.colores.find(c => c.id_color == nuevoColorId);
                                                          return color ? color.nombre_color : 'Seleccione un color';
                                                      }
-                                                 }" 
-                                                 class="relative w-full">
-                                                 
-                                                 <button @click="openColores = !openColores" type="button" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl pl-4 pr-10 py-3 text-left focus:outline-none focus:ring-2 focus:ring-gray-400 shadow-sm min-h-[48px]">
-                                                     <span class="flex items-center gap-3">
-                                                         <template x-if="selectedHex">
-                                                             <span class="w-6 h-6 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm" :style="`background-color: ${selectedHex}`"></span>
-                                                         </template>
-                                                         <span class="block truncate text-sm font-medium" :class="nuevoColorId ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'" x-text="selectedName"></span>
-                                                     </span>
-                                                     <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-                                                         <span class="material-icons">expand_more</span>
-                                                     </span>
-                                                 </button>
+                                                 }" class="relative w-full">
 
-                                                 <div x-show="openColores" @click.away="openColores = false" x-transition.opacity class="absolute z-10 mt-2 w-full bg-white dark:bg-gray-800 shadow-2xl max-h-60 rounded-2xl py-2 border border-gray-100 dark:border-gray-700 overflow-auto focus:outline-none" style="display: none;">
-                                                     <ul class="flex flex-col w-full">
-                                                         @foreach($colores as $color)
-                                                             <li @click="nuevoColorId = {{ $color->id_color }}; openColores = false" 
-                                                                 class="cursor-pointer select-none w-full px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center transition-colors" 
-                                                                 :class="nuevoColorId == {{ $color->id_color }} ? 'bg-gray-50 dark:bg-gray-700/50' : ''">
-                                                                 <div class="flex items-center gap-4">
-                                                                     <span class="w-7 h-7 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm" style="background-color: {{ $color->codigo_color }}"></span>
-                                                                     <span class="text-gray-900 dark:text-gray-200 text-sm font-semibold">{{ mb_strtoupper($color->nombre_color) }}</span>
-                                                                 </div>
-                                                             </li>
-                                                         @endforeach
-                                                     </ul>
-                                                 </div>
-                                             </div>
-                                         </div>
+                                                <button @click="openColores = !openColores" type="button"
+                                                    class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl pl-4 pr-10 py-3 text-left focus:outline-none focus:ring-2 focus:ring-gray-400 shadow-sm min-h-[48px]">
+                                                    <span class="flex items-center gap-3">
+                                                        <template x-if="selectedHex">
+                                                            <span
+                                                                class="w-6 h-6 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm"
+                                                                :style="`background-color: ${selectedHex}`"></span>
+                                                        </template>
+                                                        <span class="block truncate text-sm font-medium"
+                                                            :class="nuevoColorId ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'"
+                                                            x-text="selectedName"></span>
+                                                    </span>
+                                                    <span
+                                                        class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                                                        <span class="material-icons">expand_more</span>
+                                                    </span>
+                                                </button>
 
-                                         {{-- Tipo de Evento --}}
-                                         <div>
-                                             <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tipo de Evento</label>
-                                             <select x-model="nuevoTipo" wire:model.live="form.nuevoTipo" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400">
-                                                 <option value="1">FERIADO NACIONAL</option>
-                                                 <option value="2">ADMINISTRATIVO/ACADÉMICO</option>
-                                                 <option value="3">OTROS</option>
-                                             </select>
-                                         </div>
+                                                <div x-show="openColores" @click.away="openColores = false"
+                                                    x-transition.opacity
+                                                    class="absolute z-10 mt-2 w-full bg-white dark:bg-gray-800 shadow-2xl max-h-60 rounded-2xl py-2 border border-gray-100 dark:border-gray-700 overflow-auto focus:outline-none"
+                                                    style="display: none;">
+                                                    <ul class="flex flex-col w-full">
+                                                        @foreach($colores as $color)
+                                                            <li @click="nuevoColorId = {{ $color->id_color }}; openColores = false"
+                                                                class="cursor-pointer select-none w-full px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center transition-colors"
+                                                                :class="nuevoColorId == {{ $color->id_color }} ? 'bg-gray-50 dark:bg-gray-700/50' : ''">
+                                                                <div class="flex items-center gap-4">
+                                                                    <span
+                                                                        class="w-7 h-7 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm"
+                                                                        style="background-color: {{ $color->codigo_color }}"></span>
+                                                                    <span
+                                                                        class="text-gray-900 dark:text-gray-200 text-sm font-semibold">{{ mb_strtoupper($color->nombre_color) }}</span>
+                                                                </div>
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                         {{-- Opciones adicionales --}}
-                                         <div class="space-y-4 pt-2" x-show="nuevoTipo != '1'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" style="display: none;">
-                                             <x-toggle-switch id="laborable_switch" :label="__('¿Es un día laborable?')" model="form.nuevoLaborable" />
-                                             <x-toggle-switch id="repetible_switch" :label="__('¿Es un evento repetible?')" model="form.nuevoRepetible" />
-                                         </div>
-                                     </div>
+                                        {{-- Tipo de Evento --}}
+                                        <div>
+                                            <label
+                                                class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tipo
+                                                de Evento</label>
+                                            <select x-model="nuevoTipo" wire:model.live="form.nuevoTipo"
+                                                class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400">
+                                                <option value="1">FERIADO NACIONAL</option>
+                                                <option value="2">ADMINISTRATIVO/ACADÉMICO</option>
+                                                <option value="3">OTROS</option>
+                                            </select>
+                                        </div>
 
-                                     <div class="flex flex-col gap-3 mt-8">
-                                         <x-primary-button @click="confirmarNuevoEvento()" class="w-full justify-center py-3 rounded-xl">
-                                             REGISTRAR Y ASIGNAR
-                                         </x-primary-button>
-                                         <x-secondary-button @click="closeModal()" class="w-full justify-center py-3 rounded-xl">
-                                             CANCELAR
-                                         </x-secondary-button>
-                                     </div>
-                                 </div>
-                             </div>
+                                        {{-- Opciones adicionales --}}
+                                        <div class="space-y-4 pt-2" x-show="nuevoTipo != '1'"
+                                            x-transition:enter="transition ease-out duration-300"
+                                            x-transition:enter-start="opacity-0 -translate-y-2"
+                                            x-transition:enter-end="opacity-100 translate-y-0" style="display: none;">
+                                            <x-toggle-switch id="laborable_switch" :label="__('¿Es un día laborable?')"
+                                                model="form.nuevoLaborable" />
+                                            <x-toggle-switch id="repetible_switch" :label="__('¿Es un evento repetible?')" model="form.nuevoRepetible" />
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-col gap-3 mt-8">
+                                        <x-primary-button @click="confirmarNuevoEvento()"
+                                            class="w-full justify-center py-3 rounded-xl">
+                                            REGISTRAR Y ASIGNAR
+                                        </x-primary-button>
+                                        <x-secondary-button @click="closeModal()"
+                                            class="w-full justify-center py-3 rounded-xl">
+                                            CANCELAR
+                                        </x-secondary-button>
+                                    </div>
+                                </div>
+                            </div>
 
                             {{-- Modal Registro --}}
                             <div x-show="showEventModal" style="display: none;"
@@ -768,17 +835,13 @@
                                         </div>
                                     </div>
                                     <div class="space-y-5">
-                                         <div>
-                                             <x-datalist 
-                                                 wire:key="datalist-register-{{ count($bibliotecaFiltrada) }}"
-                                                 label="Nombre del Evento"
-                                                 :options="$bibliotecaFiltrada"
-                                                 textField="nombre_evento"
-                                                 wire:model.live="form.nombreEventoTemporal"
-                                                 placeholder="ESCRIBA O SELECCIONE UN EVENTO"
-                                             />
-                                         </div>
-                                     </div>
+                                        <div>
+                                            <x-datalist wire:key="datalist-register-{{ count($bibliotecaFiltrada) }}"
+                                                label="Nombre del Evento" :options="$bibliotecaFiltrada"
+                                                textField="nombre_evento" wire:model.live="form.nombreEventoTemporal"
+                                                placeholder="ESCRIBA O SELECCIONE UN EVENTO" />
+                                        </div>
+                                    </div>
                                     <div
                                         class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
                                         <x-secondary-button type="button"

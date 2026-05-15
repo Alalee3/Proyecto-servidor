@@ -113,10 +113,22 @@ class EditarCalendario extends Component
             return;
         }
 
-        foreach ($this->eventosRegistrados as $evento) {
-            if (isset($evento['id']) && $evento['id'] == $id_evento) {
-                $eventoInfo = collect($this->bibliotecaEventos)->firstWhere('id_evento', $id_evento);
-                if (!$eventoInfo || !$eventoInfo->is_repetible_evento) {
+        // Validación: No permitir que un evento inicie o termine en fin de semana
+        if (date('N', strtotime($inicio)) >= 6 || date('N', strtotime($fin)) >= 6) {
+            $this->js("alert('Los eventos no pueden iniciar ni finalizar en días de fin de semana (Sábado o Domingo).')");
+            return;
+        }
+
+        // Validación de duplicados
+        $isRepetible = false;
+        $eventoInfo = collect($this->bibliotecaEventos)->firstWhere('id_evento', $id_evento);
+        if ($eventoInfo && $eventoInfo->is_repetible_evento) {
+            $isRepetible = true;
+        }
+
+        if (!$isRepetible) {
+            foreach ($this->eventosRegistrados as $evento) {
+                if (isset($evento['id']) && $evento['id'] == $id_evento) {
                     return; 
                 }
             }

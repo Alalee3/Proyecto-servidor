@@ -190,12 +190,12 @@
                                 $eventId = $eventData ? $eventData['ids'][0] : null;
                                 $isWeekend = ($col == 0 || $col == 6);
 
-                                if ($eventId) {
+                                if ($eventId && !$isWeekend) {
                                     $bgColor = $eventColors[$eventId] ?? '#ffffff';
-                                    $textColor = $isWeekend ? '#DC3545' : '#ffffff';
-                                } elseif ($isVigente && $isWeekend) {
+                                    $textColor = '#ffffff';
+                                } elseif ($isWeekend) {
                                     $bgColor = '#ffffff';
-                                    $textColor = '#DC3545';
+                                    $textColor = ($isVigente || $cellDate) ? '#DC3545' : '#ffffff';
                                 } else {
                                     $bgColor = '#ffffff';
                                     $textColor = $isVigente ? '#000000' : ($cellDate ? '#bbbbbb' : '#ffffff');

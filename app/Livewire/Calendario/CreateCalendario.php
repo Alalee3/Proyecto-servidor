@@ -102,20 +102,29 @@ class CreateCalendario extends Component
 
     public function agregarEvento($inicio, $fin, $id_evento, $nombre, $tipo, $color)
     {
-        // Validar el nombre y tipo usando las reglas definidas en el form
         $this->form->validarEvento($nombre, $tipo);
 
         if (empty($id_evento) || empty($nombre) || empty($tipo)) {
             return;
         }
 
-        // Validación para evitar seleccionar un evento dos veces (solo si NO es repetible)
-        foreach ($this->eventosRegistrados as $evento) {
-            if (isset($evento['id']) && $evento['id'] == $id_evento) {
-                // Buscar si es repetible en la biblioteca
-                $eventoInfo = collect($this->bibliotecaEventos)->firstWhere('id_evento', $id_evento);
-                if (!$eventoInfo || !$eventoInfo->is_repetible_evento) {
-                    return; // Ya está registrado y no es repetible
+        // Validación: No permitir que un evento inicie o termine en fin de semana
+        if (date('N', strtotime($inicio)) >= 6 || date('N', strtotime($fin)) >= 6) {
+            $this->js("alert('Los eventos no pueden iniciar ni finalizar en días de fin de semana (Sábado o Domingo).')");
+            return;
+        }
+
+        // Validación de duplicados
+        $isRepetible = false;
+        $eventoInfo = collect($this->bibliotecaEventos)->firstWhere('id_evento', $id_evento);
+        if ($eventoInfo && $eventoInfo->is_repetible_evento) {
+            $isRepetible = true;
+        }
+
+        if (!$isRepetible) {
+            foreach ($this->eventosRegistrados as $evento) {
+                if (isset($evento['id']) && $evento['id'] == $id_evento) {
+                    return; 
                 }
             }
         }
