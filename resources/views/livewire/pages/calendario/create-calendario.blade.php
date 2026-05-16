@@ -109,7 +109,8 @@
         <div class="space-y-6" x-data="{ 
                     openSection: 'fechas',
                     inicio: @entangle('form.dia_inicio_calendario_academico'),
-                    fin: @entangle('form.dia_fin_calendario_academico')
+                    fin: @entangle('form.dia_fin_calendario_academico'),
+                    tipo_calendario: @entangle('form.tipo_calendario')
                 }">
 
             {{-- Acordeón 1: Fechas --}}
@@ -141,6 +142,63 @@
                                 required />
                             <x-input-error :messages="$errors->first('form.dia_fin_calendario_academico')"
                                 class="mt-2" />
+                        </div>
+                    </div>
+
+                    {{-- Selección de Tipo de Calendario --}}
+                    <div class="max-w-4xl mx-auto">
+                        <x-input-label :value="__('Tipo de Régimen / Calendario')"
+                            class="mb-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest" />
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {{-- Semestral --}}
+                            <label
+                                class="relative flex cursor-pointer rounded-2xl border-2 p-5 shadow-sm focus:outline-none transition-all duration-200"
+                                :class="tipo_calendario == '1' ? 'bg-blue-50/50 dark:bg-blue-900/20 border-blue-500 ring-2 ring-blue-500/20' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'">
+                                <input type="radio" value="1" wire:model.live="form.tipo_calendario" class="sr-only">
+                                <div class="flex w-full items-center justify-between">
+                                    <div class="flex items-center gap-4">
+                                        <div class="p-2 rounded-xl"
+                                            :class="tipo_calendario == '1' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-400'">
+                                            <span class="material-icons">calendar_view_month</span>
+                                        </div>
+                                        <div class="text-left">
+                                            <p
+                                                class="font-black text-sm text-gray-900 dark:text-gray-100 uppercase tracking-tight">
+                                                TIPO 1 - SEMESTRAL</p>
+                                            <p
+                                                class="text-gray-500 dark:text-gray-400 text-[10px] mt-0.5 font-bold uppercase tracking-widest">
+                                                18 SEMANAS ACADÉMICAS</p>
+                                        </div>
+                                    </div>
+                                    <span x-show="tipo_calendario == '1'"
+                                        class="material-icons text-blue-500">check_circle</span>
+                                </div>
+                            </label>
+
+                            {{-- Anual --}}
+                            <label
+                                class="relative flex cursor-pointer rounded-2xl border-2 p-5 shadow-sm focus:outline-none transition-all duration-200"
+                                :class="tipo_calendario == '2' ? 'bg-blue-50/50 dark:bg-blue-900/20 border-blue-500 ring-2 ring-blue-500/20' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'">
+                                <input type="radio" value="2" wire:model.live="form.tipo_calendario" class="sr-only">
+                                <div class="flex w-full items-center justify-between">
+                                    <div class="flex items-center gap-4">
+                                        <div class="p-2 rounded-xl"
+                                            :class="tipo_calendario == '2' ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-400'">
+                                            <span class="material-icons">event_note</span>
+                                        </div>
+                                        <div class="text-left">
+                                            <p
+                                                class="font-black text-sm text-gray-900 dark:text-gray-100 uppercase tracking-tight">
+                                                TIPO 2 - ANUAL</p>
+                                            <p
+                                                class="text-gray-500 dark:text-gray-400 text-[10px] mt-0.5 font-bold uppercase tracking-widest">
+                                                52 SEMANAS ACADÉMICAS</p>
+                                        </div>
+                                    </div>
+                                    <span x-show="tipo_calendario == '2'"
+                                        class="material-icons text-blue-500">check_circle</span>
+                                </div>
+                            </label>
                         </div>
                     </div>
                     <div
@@ -883,8 +941,87 @@
                                             <div class="text-gray-900 dark:text-gray-200 font-extrabold text-sm"
                                                 x-text="selectedEventStart"></div>
                                         </div>
-                                        <div class="text-gray-400 dark:text-gray-600 px-4"><span
-                                                class="material-icons text-sm">arrow_forward</span></div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                                            <div class="relative">
+                                                <x-input-label for="fecha_inicio" :value="__('Inicio del Período')"
+                                                    class="mb-2" />
+                                                <div class="flex items-center">
+                                                    <x-text-input id="fecha_inicio" type="text"
+                                                        class="w-full block bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded-xl shadow-sm"
+                                                        placeholder="DD/MM/AAAA"
+                                                        wire:model.live="form.dia_inicio_calendario_academico" />
+                                                    <span class="ml-2 text-red-500 font-bold">*</span>
+                                                </div>
+                                                <x-input-error
+                                                    :messages="$errors->get('form.dia_inicio_calendario_academico')"
+                                                    class="mt-2" />
+                                            </div>
+                                            <div class="relative">
+                                                <x-input-label for="fecha_fin" :value="__('Fin del Período')"
+                                                    class="mb-2" />
+                                                <div class="flex items-center">
+                                                    <x-text-input id="fecha_fin" type="text"
+                                                        class="w-full block bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600 rounded-xl shadow-sm"
+                                                        placeholder="DD/MM/AAAA"
+                                                        wire:model.live="form.dia_fin_calendario_academico" />
+                                                    <span class="ml-2 text-red-500 font-bold">*</span>
+                                                </div>
+                                                <x-input-error
+                                                    :messages="$errors->get('form.dia_fin_calendario_academico')"
+                                                    class="mt-2" />
+                                            </div>
+                                        </div>
+
+                                        {{-- Selección de Tipo de Calendario --}}
+                                        <div
+                                            class="mb-8 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-700">
+                                            <x-input-label :value="__('Tipo de Calendario')"
+                                                class="mb-4 text-xs font-bold text-gray-500 uppercase tracking-widest" />
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <label
+                                                    class="relative flex cursor-pointer rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm focus:outline-none transition-all"
+                                                    :class="form.tipo_calendario === '1' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 ring-1 ring-blue-500' : 'bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'">
+                                                    <input type="radio" value="1" wire:model.live="form.tipo_calendario"
+                                                        class="sr-only">
+                                                    <div class="flex w-full items-center justify-between">
+                                                        <div class="flex items-center">
+                                                            <div class="text-sm">
+                                                                <p
+                                                                    class="font-bold text-gray-900 dark:text-gray-100 uppercase tracking-tight">
+                                                                    TIPO 1 - SEMESTRAL</p>
+                                                                <p
+                                                                    class="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                                                                    Configuración estándar de 18 semanas académicas.</p>
+                                                            </div>
+                                                        </div>
+                                                        <span x-show="form.tipo_calendario === '1'"
+                                                            class="material-icons text-blue-500">check_circle</span>
+                                                    </div>
+                                                </label>
+
+                                                <label
+                                                    class="relative flex cursor-pointer rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm focus:outline-none transition-all"
+                                                    :class="form.tipo_calendario === '2' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 ring-1 ring-blue-500' : 'bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600'">
+                                                    <input type="radio" value="2" wire:model.live="form.tipo_calendario"
+                                                        class="sr-only">
+                                                    <div class="flex w-full items-center justify-between">
+                                                        <div class="flex items-center">
+                                                            <div class="text-sm">
+                                                                <p
+                                                                    class="font-bold text-gray-900 dark:text-gray-100 uppercase tracking-tight">
+                                                                    TIPO 2 - ANUAL</p>
+                                                                <p
+                                                                    class="text-gray-500 dark:text-gray-400 text-xs mt-1">
+                                                                    Configuración extendida de 52 semanas académicas.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <span x-show="form.tipo_calendario === '2'"
+                                                            class="material-icons text-blue-500">check_circle</span>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
                                         <div class="text-right"><label
                                                 class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">Fin</label>
                                             <div class="text-gray-900 dark:text-gray-200 font-extrabold text-sm"
