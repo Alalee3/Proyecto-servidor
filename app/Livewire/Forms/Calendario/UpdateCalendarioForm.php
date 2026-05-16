@@ -18,6 +18,8 @@ class UpdateCalendarioForm extends Form
     public $nuevoTipo = '1';
     public $nuevoLaborable = false;
     public $nuevoRepetible = false;
+    public $nuevoIsRangoDias = false;
+    public $nuevoRangoDias = '';
     public $idEventoTemporal = null;
     public $isCreatingEvento = false;
 
@@ -79,6 +81,14 @@ class UpdateCalendarioForm extends Form
                             $fail('Un feriado no puede ser marcado como repetible.');
                         }
                     }
+                ],
+                'nuevoIsRangoDias' => ['required', 'boolean'],
+                'nuevoRangoDias' => [
+                    'nullable',
+                    'required_if:nuevoIsRangoDias,true',
+                    'numeric',
+                    'min:1',
+                    'max:90'
                 ],
                 'nuevoColorId' => [
                     'required',

@@ -47,7 +47,7 @@ class EventoIndexRepo
         return DB::table('evento as e')
             ->join('color as c', 'e.id_color', '=', 'c.id_color')
             ->where('e.estatus', 1)
-            ->select('e.id_evento', 'e.nombre_evento', 'e.tipo_evento', 'e.is_laborable_evento', 'e.is_repetible_evento', 'c.codigo_color')
+            ->select('e.id_evento', 'e.nombre_evento', 'e.tipo_evento', 'e.is_laborable_evento', 'e.is_repetible_evento', 'e.is_rango_dias_evento', 'e.rango_dias_evento', 'c.codigo_color')
             ->get();
     }
 
@@ -67,20 +67,6 @@ class EventoIndexRepo
             ->get();
     }
 
-    /**
-     * Registra un nuevo evento (plantilla) en la base de datos.
-     */
-    public function crearTemplate($data)
-    {
-        return DB::table('evento')->insertGetId([
-            'id_color' => $data['id_color'],
-            'nombre_evento' => mb_strtoupper($data['nombre']),
-            'tipo_evento' => $data['tipo'],
-            'is_laborable_evento' => $data['is_laborable'],
-            'is_repetible_evento' => $data['is_repetible'],
-            'estatus' => '1',
-        ]);
-    }
 
     /**
      * Obtiene un color específico por su ID.

@@ -45,7 +45,7 @@ class EditarCalendario extends Component
 
         // Cargar datos en el formulario
         $this->form->setCalendario($calendario);
-        
+
         $this->currentYear = date('Y', strtotime($calendario->dia_inicio_calendario_academico));
 
         // Cargar eventos registrados
@@ -98,11 +98,12 @@ class EditarCalendario extends Component
         $inicio = $this->form->dia_inicio_calendario_academico;
         $fin = $this->form->dia_fin_calendario_academico;
 
-        if (!$inicio || !$fin) return;
+        if (!$inicio || !$fin)
+            return;
 
-        $this->eventosRegistrados = array_filter($this->eventosRegistrados, function($evento) use ($inicio, $fin) {
+        $this->eventosRegistrados = array_filter($this->eventosRegistrados, function ($evento) use ($inicio, $fin) {
             return ($evento['inicio'] >= $inicio && $evento['inicio'] <= $fin) &&
-                   ($evento['fin'] >= $inicio && $evento['fin'] <= $fin);
+                ($evento['fin'] >= $inicio && $evento['fin'] <= $fin);
         });
 
         $this->eventosRegistrados = array_values($this->eventosRegistrados);
@@ -132,7 +133,7 @@ class EditarCalendario extends Component
         if (!$isRepetible) {
             foreach ($this->eventosRegistrados as $evento) {
                 if (isset($evento['id']) && $evento['id'] == $id_evento) {
-                    return; 
+                    return;
                 }
             }
         }
@@ -144,6 +145,8 @@ class EditarCalendario extends Component
             'nombre' => $nombre,
             'tipo' => $tipo,
             'color' => $color,
+            'is_rango_dias_evento' => $eventoInfo->is_rango_dias_evento ?? false,
+            'rango_dias_evento' => $eventoInfo->rango_dias_evento ?? null,
         ];
 
         $this->guardarBorrador();
@@ -158,7 +161,7 @@ class EditarCalendario extends Component
         }
     }
 
-    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $id_color, $is_laborable, $is_repetible)
+    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $id_color, $is_laborable, $is_repetible, $is_rango_dias, $rango_dias)
     {
         if ($tipo == '1' || $tipo == '2') {
             $is_laborable = false;
@@ -167,19 +170,19 @@ class EditarCalendario extends Component
 
         try {
             $eventoRepo = new EventoIndexRepo();
-            $id_evento = $eventoRepo->crearTemplate([
+            $id_evento = $this->calendarioRepository->crearTemplate([
                 'id_color' => $id_color,
                 'nombre' => $nombre,
                 'tipo' => $tipo,
                 'is_laborable' => $is_laborable,
                 'is_repetible' => $is_repetible,
+                'is_rango_dias' => $is_rango_dias,
+                'rango_dias' => $rango_dias,
             ]);
 
             $colorObj = $eventoRepo->obtenerColorPorId($id_color);
             $colorHex = $colorObj ? $colorObj->codigo_color : '#808080';
 
-            // Actualizar biblioteca local
-            $eventoRepo = new EventoIndexRepo();
             $this->bibliotecaEventos = $eventoRepo->obtenerBiblioteca();
             $this->cargarColoresDisponibles();
 
@@ -195,7 +198,8 @@ class EditarCalendario extends Component
 
     protected function guardarBorrador()
     {
-        if (!$this->id_calendario) return;
+        if (!$this->id_calendario)
+            return;
 
         try {
             $this->calendarioRepository->guardarBorrador([

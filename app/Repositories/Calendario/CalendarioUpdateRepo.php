@@ -120,4 +120,20 @@ class CalendarioUpdateRepo
             })
             ->exists();
     }
+    /**
+     * Registra un nuevo evento (plantilla) en la base de datos.
+     */
+    public function crearTemplate($data)
+    {
+        return DB::table('evento')->insertGetId([
+            'id_color' => $data['id_color'],
+            'nombre_evento' => mb_strtoupper($data['nombre']),
+            'tipo_evento' => $data['tipo'],
+            'is_laborable_evento' => $data['is_laborable'],
+            'is_repetible_evento' => $data['is_repetible'],
+            'is_rango_dias_evento' => $data['is_rango_dias'],
+            'rango_dias_evento' => $data['rango_dias'],
+            'estatus' => '1',
+        ]);
+    }
 }

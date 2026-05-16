@@ -208,6 +208,8 @@
                                     nuevoTipo: @entangle('form.nuevoTipo'),
                                     nuevoLaborable: @entangle('form.nuevoLaborable'),
                                      nuevoRepetible: @entangle('form.nuevoRepetible'),
+                                     nuevoIsRangoDias: @entangle('form.nuevoIsRangoDias'),
+                                     nuevoRangoDias: @entangle('form.nuevoRangoDias'),
 
 
                                     formatDate(dateStr) {
@@ -350,6 +352,8 @@
                                             if (val == '1' || val == '2') {
                                                 this.nuevoLaborable = false;
                                                 this.nuevoRepetible = false;
+                                                this.nuevoIsRangoDias = false;
+                                                this.nuevoRangoDias = '';
                                             }
                                         });
                                         this.$watch('eventosAlpine', () => {
@@ -489,7 +493,8 @@
                                              this.nuevoColorId, 
                                              this.nuevoLaborable, 
                                              this.nuevoRepetible,
-                                             this.nuevoObligatorio
+                                             this.nuevoIsRangoDias,
+                                             this.nuevoRangoDias
                                          ).then(success => {
                                              if (success) {
                                                  this.showQuickModal = false;
@@ -510,7 +515,7 @@
                                          }
                                          this.selectedEventStart = ''; this.selectedEventEnd = ''; this.eventoNombre = '';
                                          this.eventoSeleccionado = ''; this.clickCount = 0;
-                                         this.nuevoColorId = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false;
+                                         this.nuevoColorId = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false; this.nuevoIsRangoDias = false; this.nuevoRangoDias = '';
                                      },
                                      eliminarEventoDesdeTooltip(ev) {
                                         let index = this.eventosAlpine.findIndex(e => e.id === ev.id && e.inicio === ev.inicio && e.fin === ev.fin);
@@ -771,7 +776,7 @@
                                 <div @click.away="closeModal()" x-transition:enter="ease-out duration-300"
                                     x-transition:enter-start="opacity-0 scale-90"
                                     x-transition:enter-end="opacity-100 scale-100"
-                                    class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-2xl w-full max-w-lg border border-gray-200 dark:border-gray-700">
+                                    class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-gray-200 dark:border-gray-700">
                                     <h3
                                         class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 uppercase tracking-widest text-center">
                                         Nuevo Evento Detectado
@@ -781,90 +786,100 @@
                                             x-text="eventoNombre"></span>" no existe en la biblioteca. Por favor,
                                         configúrelo:
                                     </p>
-                                    <div class="space-y-6">
-                                        {{-- Selección de Color (Estilo Modulo Eventos) --}}
-                                        <div>
-                                            <label
-                                                class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Color
-                                                del Evento</label>
-                                            <div x-data="{ 
-                                                    openColores: false, 
-                                                    colores: @entangle('colores'),
-                                                    get selectedHex() {
-                                                        let color = this.colores.find(c => c.id_color == nuevoColorId);
-                                                        return color ? color.codigo_color : null;
-                                                    },
-                                                    get selectedName() {
-                                                        let color = this.colores.find(c => c.id_color == nuevoColorId);
-                                                        return color ? color.nombre_color : 'Seleccione un color';
-                                                    }
-                                                }" class="relative w-full">
+                                     <div class="space-y-6">
+                                         {{-- Primera Fila: Color y Tipo --}}
+                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                             {{-- Selección de Color --}}
+                                             <div>
+                                                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Color del Evento</label>
+                                                 <div x-data="{ 
+                                                          openColores: false, 
+                                                          colores: @entangle('colores'),
+                                                          get selectedHex() {
+                                                              let color = this.colores.find(c => c.id_color == nuevoColorId);
+                                                              return color ? color.codigo_color : null;
+                                                          },
+                                                          get selectedName() {
+                                                              let color = this.colores.find(c => c.id_color == nuevoColorId);
+                                                              return color ? color.nombre_color : 'Seleccione un color';
+                                                          }
+                                                      }" class="relative">
+                                                     
+                                                     <button @click="openColores = !openColores" type="button"
+                                                         class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-left focus:ring-2 focus:ring-gray-400 flex items-center justify-between transition-all">
+                                                         <div class="flex items-center gap-3 overflow-hidden">
+                                                             <div x-show="selectedHex" class="flex-shrink-0 w-5 h-5 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm"
+                                                                  :style="'background-color: ' + selectedHex"></div>
+                                                             <span class="text-sm text-gray-700 dark:text-gray-200 font-medium truncate" x-text="selectedName.toUpperCase()"></span>
+                                                         </div>
+                                                         <span class="material-icons text-gray-400 transition-transform duration-200" :class="openColores ? 'rotate-180' : ''">expand_more</span>
+                                                     </button>
 
-                                                <button @click="openColores = !openColores" type="button"
-                                                    class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl pl-4 pr-10 py-3 text-left focus:outline-none focus:ring-2 focus:ring-gray-400 shadow-sm min-h-[48px]">
-                                                    <span class="flex items-center gap-3">
-                                                        <template x-if="selectedHex">
-                                                            <span
-                                                                class="w-6 h-6 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm"
-                                                                :style="`background-color: ${selectedHex}`"></span>
-                                                        </template>
-                                                        <span class="block truncate text-sm font-medium"
-                                                            :class="nuevoColorId ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'"
-                                                            x-text="selectedName"></span>
-                                                    </span>
-                                                    <span
-                                                        class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-                                                        <span class="material-icons">expand_more</span>
-                                                    </span>
-                                                </button>
+                                                     <div x-show="openColores" @click.away="openColores = false"
+                                                         x-transition:enter="transition ease-out duration-200"
+                                                         x-transition:enter-start="opacity-0 translate-y-2"
+                                                         x-transition:enter-end="opacity-100 translate-y-0"
+                                                         class="absolute z-[60] mt-2 w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 max-h-60 overflow-y-auto sogat-scrollbar">
+                                                         <ul class="divide-y divide-gray-50 dark:divide-gray-700/50">
+                                                             @foreach($colores as $color)
+                                                                 <li @click="nuevoColorId = {{ $color->id_color }}; openColores = false"
+                                                                     class="cursor-pointer select-none w-full px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center transition-colors"
+                                                                     :class="nuevoColorId == {{ $color->id_color }} ? 'bg-gray-50 dark:bg-gray-700/50' : ''">
+                                                                     <div class="flex items-center gap-4">
+                                                                         <span
+                                                                             class="w-7 h-7 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm"
+                                                                             style="background-color: {{ $color->codigo_color }}"></span>
+                                                                         <span
+                                                                             class="text-gray-900 dark:text-gray-200 text-sm font-semibold">{{ mb_strtoupper($color->nombre_color) }}</span>
+                                                                     </div>
+                                                                 </li>
+                                                             @endforeach
+                                                         </ul>
+                                                     </div>
+                                                 </div>
+                                             </div>
 
-                                                <div x-show="openColores" @click.away="openColores = false"
-                                                    x-transition.opacity
-                                                    class="absolute z-10 mt-2 w-full bg-white dark:bg-gray-800 shadow-2xl max-h-60 rounded-2xl py-2 border border-gray-100 dark:border-gray-700 overflow-auto focus:outline-none"
-                                                    style="display: none;">
-                                                    <ul class="flex flex-col w-full">
-                                                        @foreach($colores as $color)
-                                                            <li @click="nuevoColorId = {{ $color->id_color }}; openColores = false"
-                                                                class="cursor-pointer select-none w-full px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center transition-colors"
-                                                                :class="nuevoColorId == {{ $color->id_color }} ? 'bg-gray-50 dark:bg-gray-700/50' : ''">
-                                                                <div class="flex items-center gap-4">
-                                                                    <span
-                                                                        class="w-7 h-7 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm"
-                                                                        style="background-color: {{ $color->codigo_color }}"></span>
-                                                                    <span
-                                                                        class="text-gray-900 dark:text-gray-200 text-sm font-semibold">{{ mb_strtoupper($color->nombre_color) }}</span>
-                                                                </div>
-                                                            </li>
-                                                        @endforeach
-                                                    </ul>
+                                             {{-- Tipo de Evento --}}
+                                             <div>
+                                                 <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tipo de Evento</label>
+                                                 <select x-model="nuevoTipo" wire:model.live="form.nuevoTipo"
+                                                     class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400">
+                                                     <option value="1">FERIADOS NACIONALES</option>
+                                                     <option value="2">FERIADOS LOCALES</option>
+                                                     <option value="3">ADMINISTRATIVO</option>
+                                                     <option value="4">ACADÉMICO</option>
+                                                     <option value="5">VACACIONES COLECTIVAS</option>
+                                                 </select>
+                                             </div>
+                                        </div>
+
+                                        {{-- Segunda Fila: Switches --}}
+                                        <div x-show="nuevoTipo != '1' && nuevoTipo != '2'" 
+                                             x-transition:enter="transition ease-out duration-300"
+                                             x-transition:enter-start="opacity-0 -translate-y-2"
+                                             x-transition:enter-end="opacity-100 translate-y-0"
+                                             class="space-y-6 pt-2">
+                                            
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <x-toggle-switch id="laborable_switch_edit" :label="__('¿Es Laborable?')" model="form.nuevoLaborable" />
+                                                <x-toggle-switch id="repetible_switch_edit" :label="__('¿Es Repetible?')" model="form.nuevoRepetible" />
+                                            </div>
+
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                                                <div>
+                                                    <x-toggle-switch id="is_rango_dias_switch_edit" :label="__('¿Tiene cantidad especifica días?')" model="form.nuevoIsRangoDias" />
+                                                </div>
+                                                <div x-show="nuevoIsRangoDias" x-transition>
+                                                    <x-input-label for="nuevo_rango_dias_input_edit" :value="__('Cantidad de Días')" class="mb-2" />
+                                                    <x-text-input id="nuevo_rango_dias_input_edit" type="number"
+                                                        class="w-full block"
+                                                        wire:model.live="form.nuevoRangoDias"
+                                                        placeholder="EJ: 5" min="1" max="90" />
+                                                    <x-input-error :messages="$errors->get('form.nuevoRangoDias')" class="mt-2" />
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {{-- Tipo de Evento --}}
-                                        <div>
-                                            <label
-                                                class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tipo
-                                                de Evento</label>
-                                            <select x-model="nuevoTipo" wire:model.live="form.nuevoTipo"
-                                                class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400">
-                                                <option value="1">FERIADOS NACIONALES</option>
-                                                <option value="2">FERIADOS LOCALES</option>
-                                                <option value="3">ADMINISTRATIVO</option>
-                                                <option value="4">ACADÉMICO</option>
-                                                <option value="5">VACACIONES COLECTIVAS</option>
-                                            </select>
-                                        </div>
-
-                                        {{-- Opciones adicionales --}}
-                                        <div class="space-y-4 pt-2" x-show="nuevoTipo != '1' && nuevoTipo != '2'"
-                                            x-transition:enter="transition ease-out duration-300"
-                                            x-transition:enter-start="opacity-0 -translate-y-2"
-                                            x-transition:enter-end="opacity-100 translate-y-0" style="display: none;">
-                                            <x-toggle-switch id="laborable_switch_edit" :label="__('¿Es un día laborable?')" model="form.nuevoLaborable" />
-                                            <x-toggle-switch id="repetible_switch_edit" :label="__('¿Es un evento repetible?')" model="form.nuevoRepetible" />
-
-                                        </div>
                                     </div>
 
                                     <div class="flex flex-col gap-3 mt-8">

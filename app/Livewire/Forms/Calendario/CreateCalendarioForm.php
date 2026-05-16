@@ -17,6 +17,8 @@ class CreateCalendarioForm extends Form
     public $nuevoTipo = '1';
     public $nuevoLaborable = false;
     public $nuevoRepetible = false;
+    public $nuevoIsRangoDias = false;
+    public $nuevoRangoDias = '';
     public $idEventoTemporal = null; // Para cuando se edite un evento existente
     public $isCreatingEvento = false; // Controlar si se están aplicando las validaciones de creación rápida
 
@@ -78,6 +80,14 @@ class CreateCalendarioForm extends Form
                             $fail('Un feriado no puede ser marcado como repetible.');
                         }
                     }
+                ],
+                'nuevoIsRangoDias' => ['required', 'boolean'],
+                'nuevoRangoDias' => [
+                    'nullable',
+                    'required_if:nuevoIsRangoDias,true',
+                    'numeric',
+                    'min:1',
+                    'max:90'
                 ],
                 'nuevoColorId' => [
                     'required',
