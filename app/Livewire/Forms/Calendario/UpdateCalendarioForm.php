@@ -168,10 +168,32 @@ class UpdateCalendarioForm extends Form
         $idsRegistrados = collect($eventosRegistrados)->pluck('id')->all();
 
         foreach ($eventosObligatorios as $obligatorio) {
+            // 2.1 Validar que el evento esté registrado
             if (!in_array($obligatorio->id_evento, $idsRegistrados)) {
                 $msg = "El evento \"{$obligatorio->nombre_evento}\" debe ser asignado al calendario antes de guardar.";
                 $this->addError('eventosRegistrados', $msg);
                 $errores[] = [$msg];
+                continue;
+            }
+
+            // 2.2 Validar duración exacta si tiene rango de días específico
+            if ($obligatorio->is_rango_dias_evento) {
+                $totalDias = 0;
+                foreach ($eventosRegistrados as $reg) {
+                    if ($reg['id'] == $obligatorio->id_evento) {
+                        $inicio = new \DateTime($reg['inicio']);
+                        $fin = new \DateTime($reg['fin']);
+                        // Calculamos la diferencia en días y sumamos 1 para incluir ambos extremos
+                        $intervalo = $inicio->diff($fin);
+                        $totalDias += $intervalo->days + 1;
+                    }
+                }
+
+                if ($totalDias != $obligatorio->rango_dias_evento) {
+                    $msg = "El evento \"{$obligatorio->nombre_evento}\" debe durar exactamente {$obligatorio->rango_dias_evento} días (actualmente tiene {$totalDias}).";
+                    $this->addError('eventosRegistrados', $msg);
+                    $errores[] = [$msg];
+                }
             }
         }
 
