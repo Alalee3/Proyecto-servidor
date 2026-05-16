@@ -18,6 +18,7 @@ class Evento extends Model
         'is_laborable_evento' => 'boolean',
         'is_repetible_evento' => 'boolean',
         'is_obligatorio_evento' => 'boolean',
+        'is_rango_dias_evento' => 'boolean',
     ];
 
     public function color_rel()

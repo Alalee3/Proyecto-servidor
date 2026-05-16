@@ -12,6 +12,8 @@ class CreateEventoForm extends Form
     public $is_laborable = false;
     public $is_repetible = false;
     public $is_obligatorio = true;
+    public $is_rango_dias = false;
+    public $rango_dias = '';
 
     protected function rules()
     {
@@ -45,6 +47,8 @@ class CreateEventoForm extends Form
                     }
                 }
             ],
+            'is_rango_dias' => ['required', 'boolean'],
+            'rango_dias' => ['required_if:is_rango_dias,true', 'nullable', 'integer', 'min:1', 'max:90'],
         ];
     }
 
@@ -62,6 +66,11 @@ class CreateEventoForm extends Form
             'is_laborable.boolean' => 'El valor de laborable debe ser booleano.',
             'is_repetible.boolean' => 'El valor de repetible debe ser booleano.',
             'is_obligatorio.boolean' => 'El valor de obligatorio debe ser booleano.',
+            'is_rango_dias.boolean' => 'El valor de rango de días debe ser booleano.',
+            'rango_dias.required_if' => 'La cantidad de días es obligatoria.',
+            'rango_dias.integer' => 'La cantidad de días debe ser un número entero.',
+            'rango_dias.min' => 'La cantidad de días debe ser al menos 1.',
+            'rango_dias.max' => 'La cantidad de días no debe superar los 90 días.',
         ];
     }
 }

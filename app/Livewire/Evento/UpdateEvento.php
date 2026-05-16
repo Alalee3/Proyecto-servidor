@@ -58,6 +58,12 @@ class UpdateEvento extends Component
                 $this->form->is_obligatorio = true;
             }
         }
+
+        // Limpiar rango de días si el switch se apaga
+        if ($propertyName === 'form.is_rango_dias' && !$this->form->is_rango_dias) {
+            $this->form->rango_dias = '';
+            $this->resetErrorBag('form.rango_dias');
+        }
     }
 
     public function guardar()
