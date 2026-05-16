@@ -15,7 +15,6 @@ class UpdateEventoForm extends Form
     public $tipo_evento = '1';
     public $is_laborable = false;
     public $is_repetible = false;
-    public $is_obligatorio = true;
     public $is_rango_dias = false;
     public $rango_dias = '';
 
@@ -27,7 +26,6 @@ class UpdateEventoForm extends Form
         $this->id_color = $evento->id_color;
         $this->is_laborable = (bool) $evento->is_laborable_evento;
         $this->is_repetible = (bool) $evento->is_repetible_evento;
-        $this->is_obligatorio = (bool) $evento->is_obligatorio_evento;
         $this->is_rango_dias = (bool) $evento->is_rango_dias_evento;
         $this->rango_dias = $evento->rango_dias_evento;
     }
@@ -50,7 +48,6 @@ class UpdateEventoForm extends Form
             'tipo_evento' => ['required', 'in:1,2,3,4,5'],
             'is_laborable' => ['required', 'boolean'],
             'is_repetible' => ['required', 'boolean'],
-            'is_obligatorio' => ['required', 'boolean'],
             'id_color' => [
                 'required',
                 'exists:color,id_color',
@@ -79,7 +76,6 @@ class UpdateEventoForm extends Form
             'id_color.exists' => 'El color seleccionado no es válido.',
             'is_laborable.boolean' => 'El valor de laborable debe ser booleano.',
             'is_repetible.boolean' => 'El valor de repetible debe ser booleano.',
-            'is_obligatorio.boolean' => 'El valor de obligatorio debe ser booleano.',
             'is_rango_dias.boolean' => 'El valor de rango de días debe ser booleano.',
             'rango_dias.required_if' => 'La cantidad de días es obligatoria.',
             'rango_dias.integer' => 'La cantidad de días debe ser un número entero.',

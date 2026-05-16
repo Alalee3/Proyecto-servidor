@@ -55,7 +55,6 @@ class UpdateEvento extends Component
             if ($this->form->tipo_evento == '1' || $this->form->tipo_evento == '2') {
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = false;
-                $this->form->is_obligatorio = true;
             }
         }
 

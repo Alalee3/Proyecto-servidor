@@ -11,7 +11,6 @@ class CreateEventoForm extends Form
     public $tipo_evento = '1';
     public $is_laborable = false;
     public $is_repetible = false;
-    public $is_obligatorio = true;
     public $is_rango_dias = false;
     public $rango_dias = '';
 
@@ -36,7 +35,6 @@ class CreateEventoForm extends Form
             ],
             'is_laborable' => ['required', 'boolean'],
             'is_repetible' => ['required', 'boolean'],
-            'is_obligatorio' => ['required', 'boolean'],
             'id_color' => [
                 'required',
                 'exists:color,id_color',
@@ -65,7 +63,6 @@ class CreateEventoForm extends Form
             'id_color.exists' => 'El color seleccionado no es válido.',
             'is_laborable.boolean' => 'El valor de laborable debe ser booleano.',
             'is_repetible.boolean' => 'El valor de repetible debe ser booleano.',
-            'is_obligatorio.boolean' => 'El valor de obligatorio debe ser booleano.',
             'is_rango_dias.boolean' => 'El valor de rango de días debe ser booleano.',
             'rango_dias.required_if' => 'La cantidad de días es obligatoria.',
             'rango_dias.integer' => 'La cantidad de días debe ser un número entero.',

@@ -99,9 +99,6 @@
                     <x-toggle-switch id="is_repetible" :label="__('¿Es Repetible?')" model="form.is_repetible" />
                 @endif
 
-                @if($form->tipo_evento != '1' && $form->tipo_evento != '2')
-                    <x-toggle-switch id="is_obligatorio" :label="__('¿Es Obligatorio?')" model="form.is_obligatorio" />
-                @endif
 
                 <x-toggle-switch id="is_rango_dias" :label="__('¿Tiene cantidad especifica días?')"
                     model="form.is_rango_dias" />

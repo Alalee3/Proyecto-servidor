@@ -18,7 +18,6 @@ class EventoUpdateRepo
                 'id_color'      => $data['id_color'],
                 'is_laborable_evento'  => $data['is_laborable'],
                 'is_repetible_evento'  => $data['is_repetible'],
-                'is_obligatorio_evento' => $data['is_obligatorio'],
                 'is_rango_dias_evento'  => $data['is_rango_dias'],
                 'rango_dias_evento'     => $data['is_rango_dias'] ? ($data['rango_dias'] ?? null) : null,
             ]);

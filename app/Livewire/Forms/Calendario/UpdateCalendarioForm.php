@@ -161,10 +161,18 @@ class UpdateCalendarioForm extends Form
             $errores = array_merge($errores, array_values($e->errors()));
         }
 
-        if (count($eventosRegistrados) === 0) {
-            $msg = 'Debe registrar al menos un evento antes de guardar el calendario.';
-            $this->addError('eventosRegistrados', $msg);
-            $errores[] = [$msg];
+        // 2. Validar que todos los eventos activos estén asignados (ahora todos son obligatorios)
+        $eventosObligatorios = \App\Models\Evento::where('estatus', '1')
+            ->get();
+
+        $idsRegistrados = collect($eventosRegistrados)->pluck('id')->all();
+
+        foreach ($eventosObligatorios as $obligatorio) {
+            if (!in_array($obligatorio->id_evento, $idsRegistrados)) {
+                $msg = "El evento \"{$obligatorio->nombre_evento}\" debe ser asignado al calendario antes de guardar.";
+                $this->addError('eventosRegistrados', $msg);
+                $errores[] = [$msg];
+            }
         }
 
         if (count($errores) > 0) {

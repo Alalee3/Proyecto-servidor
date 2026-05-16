@@ -208,7 +208,6 @@
                                     nuevoTipo: @entangle('form.nuevoTipo'),
                                     nuevoLaborable: @entangle('form.nuevoLaborable'),
                                      nuevoRepetible: @entangle('form.nuevoRepetible'),
-                                     nuevoObligatorio: @entangle('form.nuevoObligatorio'),
 
 
                                     formatDate(dateStr) {
@@ -351,7 +350,6 @@
                                             if (val == '1' || val == '2') {
                                                 this.nuevoLaborable = false;
                                                 this.nuevoRepetible = false;
-                                                this.nuevoObligatorio = true;
                                             }
                                         });
                                         this.$watch('eventosAlpine', () => {
@@ -512,7 +510,7 @@
                                          }
                                          this.selectedEventStart = ''; this.selectedEventEnd = ''; this.eventoNombre = '';
                                          this.eventoSeleccionado = ''; this.clickCount = 0;
-                                         this.nuevoColorId = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false; this.nuevoObligatorio = true;
+                                         this.nuevoColorId = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false;
                                      },
                                      eliminarEventoDesdeTooltip(ev) {
                                         let index = this.eventosAlpine.findIndex(e => e.id === ev.id && e.inicio === ev.inicio && e.fin === ev.fin);
@@ -865,7 +863,6 @@
                                             x-transition:enter-end="opacity-100 translate-y-0" style="display: none;">
                                             <x-toggle-switch id="laborable_switch_edit" :label="__('¿Es un día laborable?')" model="form.nuevoLaborable" />
                                             <x-toggle-switch id="repetible_switch_edit" :label="__('¿Es un evento repetible?')" model="form.nuevoRepetible" />
-                                             <x-toggle-switch id="obligatorio_switch_edit" :label="__('¿Es un evento obligatorio?')" model="form.nuevoObligatorio" />
 
                                         </div>
                                     </div>

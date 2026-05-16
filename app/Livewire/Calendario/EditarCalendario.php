@@ -86,7 +86,6 @@ class EditarCalendario extends Component
             if ($this->form->nuevoTipo == '1' || $this->form->nuevoTipo == '2') {
                 $this->form->nuevoLaborable = false;
                 $this->form->nuevoRepetible = false;
-                $this->form->nuevoObligatorio = true;
             } else {
                 $this->form->nuevoLaborable = false;
                 $this->form->nuevoRepetible = false;
@@ -159,13 +158,11 @@ class EditarCalendario extends Component
         }
     }
 
-    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $id_color, $is_laborable, $is_repetible, $is_obligatorio = true)
+    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $id_color, $is_laborable, $is_repetible)
     {
-        // Enforce flags for Holiday types (1 and 2)
         if ($tipo == '1' || $tipo == '2') {
             $is_laborable = false;
             $is_repetible = false;
-            $is_obligatorio = true;
         }
 
         try {
@@ -176,7 +173,6 @@ class EditarCalendario extends Component
                 'tipo' => $tipo,
                 'is_laborable' => $is_laborable,
                 'is_repetible' => $is_repetible,
-                'is_obligatorio' => $is_obligatorio,
             ]);
 
             $colorObj = $eventoRepo->obtenerColorPorId($id_color);

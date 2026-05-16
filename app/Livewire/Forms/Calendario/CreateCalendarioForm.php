@@ -17,7 +17,6 @@ class CreateCalendarioForm extends Form
     public $nuevoTipo = '1';
     public $nuevoLaborable = false;
     public $nuevoRepetible = false;
-    public $nuevoObligatorio = true;
     public $idEventoTemporal = null; // Para cuando se edite un evento existente
     public $isCreatingEvento = false; // Controlar si se están aplicando las validaciones de creación rápida
 
@@ -80,7 +79,6 @@ class CreateCalendarioForm extends Form
                         }
                     }
                 ],
-                'nuevoObligatorio' => ['required', 'boolean'],
                 'nuevoColorId' => [
                     'required',
                     'exists:color,id_color',
@@ -112,7 +110,6 @@ class CreateCalendarioForm extends Form
             'nombreEventoTemporal.regex' => 'Formato inválido en la descripción.',
             'nuevoTipo.required' => 'El tipo de evento es obligatorio.',
             'nuevoColorId.required' => 'El color es obligatorio.',
-            'nuevoObligatorio.boolean' => 'El valor de obligatorio debe ser booleano.',
         ];
     }
 
@@ -174,9 +171,8 @@ class CreateCalendarioForm extends Form
             $errores = array_merge($errores, array_values($e->errors()));
         }
 
-        // 2. Validar que todos los eventos obligatorios estén asignados
-        $eventosObligatorios = \App\Models\Evento::where('is_obligatorio_evento', true)
-            ->where('estatus', '1')
+        // 2. Validar que todos los eventos activos estén asignados (ahora todos son obligatorios)
+        $eventosObligatorios = \App\Models\Evento::where('estatus', '1')
             ->get();
 
         $idsRegistrados = collect($eventosRegistrados)->pluck('id')->all();

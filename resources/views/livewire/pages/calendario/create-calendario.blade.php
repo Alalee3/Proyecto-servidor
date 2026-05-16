@@ -209,7 +209,6 @@
                                     nuevoTipo: @entangle('form.nuevoTipo'),
                                     nuevoLaborable: @entangle('form.nuevoLaborable'),
                                      nuevoRepetible: @entangle('form.nuevoRepetible'),
-                                     nuevoObligatorio: @entangle('form.nuevoObligatorio'),
 
                                     isCreatingEvento: @entangle('form.isCreatingEvento'),
 
@@ -490,7 +489,7 @@
                                          }
                                          this.selectedEventStart = ''; this.selectedEventEnd = ''; this.eventoNombre = '';
                                          this.eventoSeleccionado = ''; this.clickCount = 0;
-                                                                                   this.nuevoColorId = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false; this.nuevoObligatorio = true; this.isCreatingEvento = false;
+                                                                                   this.nuevoColorId = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false; this.isCreatingEvento = false;
 
                                      },
                                     eliminarEventoDesdeTooltip(ev) {
@@ -804,7 +803,6 @@
                                             <x-toggle-switch id="laborable_switch" :label="__('¿Es un día laborable?')"
                                                 model="form.nuevoLaborable" />
                                             <x-toggle-switch id="repetible_switch" :label="__('¿Es un evento repetible?')" model="form.nuevoRepetible" />
-                                             <x-toggle-switch id="obligatorio_switch" :label="__('¿Es un evento obligatorio?')" model="form.nuevoObligatorio" />
 
                                         </div>
                                     </div>
