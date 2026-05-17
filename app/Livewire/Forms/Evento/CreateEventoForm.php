@@ -33,7 +33,16 @@ class CreateEventoForm extends Form
             ],
             'tipo_evento' => [
                 'required',
-                'in:1,2,3,4,5'
+                'in:1,2,3,4,5',
+                function ($attribute, $value, $fail) {
+                    if ($this->is_especial) {
+                        if (in_array($this->especial_evento, ['2', '3']) && $value != '4') {
+                            $fail('Para este evento especial, el tipo de evento debe ser obligatoriamente Académico.');
+                        } elseif ($this->especial_evento == '1' && $value != '5') {
+                            $fail('Para Vacaciones Colectivas, el tipo de evento debe ser obligatoriamente Administrativo/Académico.');
+                        }
+                    }
+                }
             ],
             'is_especial' => [
                 'required',
@@ -44,8 +53,32 @@ class CreateEventoForm extends Form
                 'nullable',
                 'in:1,2,3'
             ],
-            'is_laborable' => ['required', 'boolean'],
-            'is_repetible' => ['required', 'boolean'],
+            'is_laborable' => [
+                'required',
+                'boolean',
+                function ($attribute, $value, $fail) {
+                    if ($this->is_especial) {
+                        if (in_array($this->especial_evento, ['2', '3']) && !$value) {
+                            $fail('Para este evento especial, debe ser obligatoriamente Laborable.');
+                        } elseif ($this->especial_evento == '1' && $value) {
+                            $fail('Para Vacaciones Colectivas, no debe ser Laborable.');
+                        }
+                    }
+                }
+            ],
+            'is_repetible' => [
+                'required',
+                'boolean',
+                function ($attribute, $value, $fail) {
+                    if ($this->is_especial) {
+                        if (in_array($this->especial_evento, ['2', '3']) && !$value) {
+                            $fail('Para este evento especial, debe ser obligatoriamente Repetible.');
+                        } elseif ($this->especial_evento == '1' && !$value) {
+                            $fail('Para Vacaciones Colectivas, debe ser obligatoriamente Repetible.');
+                        }
+                    }
+                }
+            ],
             'id_color' => [
                 'required',
                 'exists:color,id_color',
@@ -56,8 +89,35 @@ class CreateEventoForm extends Form
                     }
                 }
             ],
-            'is_rango_dias' => ['required', 'boolean'],
-            'rango_dias' => ['required_if:is_rango_dias,true', 'nullable', 'integer', 'min:1', 'max:90'],
+            'is_rango_dias' => [
+                'required',
+                'boolean',
+                function ($attribute, $value, $fail) {
+                    if ($this->is_especial) {
+                        if (in_array($this->especial_evento, ['2', '3']) && !$value) {
+                            $fail('Para este evento especial, debe tener obligatoriamente cantidad específica de días.');
+                        } elseif ($this->especial_evento == '1' && $value) {
+                            $fail('Para Vacaciones Colectivas, no debe tener cantidad específica de días.');
+                        }
+                    }
+                }
+            ],
+            'rango_dias' => [
+                'required_if:is_rango_dias,true',
+                'nullable',
+                'integer',
+                'min:1',
+                'max:90',
+                function ($attribute, $value, $fail) {
+                    if ($this->is_especial) {
+                        if (in_array($this->especial_evento, ['2', '3']) && $value != 1) {
+                            $fail('Para este evento especial, la cantidad de días debe ser obligatoriamente 1.');
+                        } elseif ($this->especial_evento == '1' && !empty($value)) {
+                            $fail('Para Vacaciones Colectivas, no se debe definir cantidad de días.');
+                        }
+                    }
+                }
+            ],
         ];
     }
 
