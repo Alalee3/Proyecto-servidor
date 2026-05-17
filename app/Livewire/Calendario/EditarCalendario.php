@@ -24,6 +24,7 @@ class EditarCalendario extends Component
     public $currentYear;
     public $id_calendario;
     public $colores = [];
+    public $selectedYearTemporal = null;
 
     public function boot()
     {
@@ -361,18 +362,39 @@ class EditarCalendario extends Component
     {
         $eventoRepo = new EventoIndexRepo();
         $biblioteca = $eventoRepo->obtenerBiblioteca();
-        $idsAsignados = collect($this->eventosRegistrados)->pluck('id')->filter()->toArray();
 
-        return $biblioteca->filter(function ($evento) use ($idsAsignados) {
-            // Si es un evento especial de tipo 2 (Inicio) o 3 (Fin) y ya está asignado, no lo mostramos
+        // Determinar el año seleccionado
+        $targetYear = $this->selectedYearTemporal;
+        if (!$targetYear && $this->form->dia_inicio_calendario_academico) {
+            $targetYear = date('Y', strtotime($this->form->dia_inicio_calendario_academico));
+        }
+        if (!$targetYear) {
+            $targetYear = date('Y');
+        }
+
+        // Obtener IDs de eventos asignados EN EL AÑO SELECCIONADO del calendario actual
+        $idsAsignadosEsteAnio = [];
+        foreach ($this->eventosRegistrados as $ev) {
+            $evStart = $ev['inicio'] ?? null;
+            if ($evStart) {
+                $evYear = date('Y', strtotime($evStart));
+                if ((int)$evYear === (int)$targetYear) {
+                    $idsAsignadosEsteAnio[] = $ev['id'] ?? null;
+                }
+            }
+        }
+        $idsAsignadosEsteAnio = array_filter(array_unique($idsAsignadosEsteAnio));
+
+        return $biblioteca->filter(function ($evento) use ($idsAsignadosEsteAnio) {
+            // Si es un evento especial de tipo 2 (Inicio) o 3 (Fin) y ya está asignado en este año, no lo mostramos
             $especial = $evento->especial_evento ?? null;
-            if (in_array($especial, ['2', '3']) && in_array($evento->id_evento, $idsAsignados)) {
+            if (in_array($especial, ['2', '3']) && in_array($evento->id_evento, $idsAsignadosEsteAnio)) {
                 return false;
             }
 
             // Si el evento es repetible, siempre aparece.
-            // Si NO es repetible, solo aparece si NO ha sido asignado aún.
-            return $evento->is_repetible_evento || !in_array($evento->id_evento, $idsAsignados);
+            // Si NO es repetible, solo aparece si NO ha sido asignado aún en este año.
+            return $evento->is_repetible_evento || !in_array($evento->id_evento, $idsAsignadosEsteAnio);
         })->values();
     }
 

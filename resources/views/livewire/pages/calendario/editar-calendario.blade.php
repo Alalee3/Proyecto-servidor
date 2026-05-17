@@ -333,6 +333,8 @@
                                                         this.clickCount  = 0;
                                                         this._savedStart = '';
                                                         this._savedCount = 0;
+                                                        let targetYear = new Date(this.selectedEventStart + 'T00:00:00').getFullYear();
+                                                        $wire.set('selectedYearTemporal', targetYear);
                                                         this.showEventModal = true;
                                                         this.$nextTick(() => this.refrescarEventosVisuales());
                                                     }
@@ -534,6 +536,7 @@
                                      },
 
                                      closeModal() {
+                                         $wire.set('selectedYearTemporal', null);
                                          this.showEventModal = false;
                                          this.showQuickModal = false;
                                          if(this.picker1) {

@@ -209,54 +209,126 @@ class CreateCalendarioForm extends Form
                 $errores[] = [$msg];
                 continue;
             }
+        }
 
-            // 2.2 Validar duración exacta si tiene rango de días específico
-            if ($obligatorio->is_rango_dias_evento) {
-                $totalDias = 0;
-                foreach ($eventosRegistrados as $reg) {
-                    if ($reg['id'] == $obligatorio->id_evento) {
-                        $inicio = new \DateTime($reg['inicio']);
-                        $fin = new \DateTime($reg['fin']);
-                        // Calculamos la diferencia en días y sumamos 1 para incluir ambos extremos
-                        $intervalo = $inicio->diff($fin);
-                        $totalDias += $intervalo->days + 1;
-                    }
-                }
+        // 3. Validar eventos especiales y eventos no repetibles
+        $eventosDb = \App\Models\Evento::whereIn('id_evento', $idsRegistrados)->get()->keyBy('id_evento');
+        $countInicio = 0;
+        $countFin = 0;
+        $visitados = [];
 
-                if ($totalDias != $obligatorio->rango_dias_evento) {
-                    $msg = "El evento \"{$obligatorio->nombre_evento}\" debe durar exactamente {$obligatorio->rango_dias_evento} días (actualmente tiene {$totalDias}).";
-                    $this->addError('eventosRegistrados', $msg);
-                    $errores[] = [$msg];
+        $inicioLapso = null;
+        $finLapso = null;
+        foreach ($eventosRegistrados as $reg) {
+            $id = $reg['id'] ?? null;
+            if ($id && isset($eventosDb[$id])) {
+                $evento = $eventosDb[$id];
+                if ($evento->especial_evento == '2') {
+                    $inicioLapso = $reg['inicio'] ?? null;
+                } elseif ($evento->especial_evento == '3') {
+                    $finLapso = $reg['fin'] ?? null;
                 }
             }
         }
 
-        // 3. Validar que exista exactamente un evento de tipo 'Inicio del Lapso Académico' (especial_evento = 2)
-        // y un evento de tipo 'Fin del Lapso Académico' (especial_evento = 3)
-        $eventosDb = \App\Models\Evento::whereIn('id_evento', $idsRegistrados)->get()->keyBy('id_evento');
-        $countInicio = 0;
-        $countFin = 0;
-
         foreach ($eventosRegistrados as $reg) {
             $id = $reg['id'] ?? null;
             if ($id && isset($eventosDb[$id])) {
-                $esp = $eventosDb[$id]->especial_evento;
+                $evento = $eventosDb[$id];
+
+                // Validar duración exacta de cada instancia si el evento tiene rango de días específico
+                if ($evento->is_rango_dias_evento) {
+                    $inicio = new \DateTime($reg['inicio']);
+                    $fin = new \DateTime($reg['fin']);
+                    $diferencia = $inicio->diff($fin)->days + 1;
+                    if ($diferencia != $evento->rango_dias_evento) {
+                        $msg = "Cada instancia del evento \"{$evento->nombre_evento}\" debe durar exactamente {$evento->rango_dias_evento} días (actualmente dura {$diferencia} días).";
+                        $this->addError('eventosRegistrados', $msg);
+                        $errores[] = [$msg];
+                    }
+                }
+
+                $esp = $evento->especial_evento;
                 if ($esp == '2') {
                     $countInicio++;
                 } elseif ($esp == '3') {
                     $countFin++;
                 }
+
+                // Validar que las fechas del evento estén comprendidas dentro del rango del calendario académico
+                $calInicio = $this->dia_inicio_calendario_academico;
+                $calFin = $this->dia_fin_calendario_academico;
+                $regInicio = $reg['inicio'] ?? null;
+                $regFin = $reg['fin'] ?? null;
+
+                $calFuera = ($regInicio && ($regInicio < $calInicio || $regInicio > $calFin)) ||
+                            ($regFin && ($regFin < $calInicio || $regFin > $calFin));
+
+                if ($calFuera) {
+                    $msg = "El evento \"{$evento->nombre_evento}\" debe estar comprendido dentro del período académico ({$calInicio} al {$calFin}).";
+                    $this->addError('eventosRegistrados', $msg);
+                    $errores[] = [$msg];
+                }
+
+                // Validar que eventos de tipo 3, 4 y 5 estén dentro del rango del lapso académico (excluyendo tipos 1 y 2)
+                if (in_array($evento->tipo_evento, ['3', '4', '5'])) {
+                    if ($inicioLapso && $finLapso) {
+                        $lapsoFuera = ($regInicio && ($regInicio < $inicioLapso || $regInicio > $finLapso)) ||
+                                      ($regFin && ($regFin < $inicioLapso || $regFin > $finLapso));
+
+                        if ($lapsoFuera) {
+                            $msg = "El evento \"{$evento->nombre_evento}\" debe estar comprendido dentro del lapso académico ({$inicioLapso} al {$finLapso}).";
+                            $this->addError('eventosRegistrados', $msg);
+                            $errores[] = [$msg];
+                        }
+                    }
+                }
+
+                // Validar que los eventos no repetibles (como feriados de tipo 1 y 2) solo ocurran 1 vez por año en toda la base de datos
+                if (!$evento->is_repetible_evento && in_array($evento->tipo_evento, ['1', '2'])) {
+                    $year = date('Y', strtotime($reg['inicio']));
+                    
+                    // Verificar si ya se asignó más de una vez en este mismo request/calendario
+                    $key = $id . '_' . $year;
+                    if (in_array($key, $visitados)) {
+                        $msg = "El evento no repetible \"{$evento->nombre_evento}\" no se puede asignar más de una vez en el mismo año.";
+                        $this->addError('eventosRegistrados', $msg);
+                        $errores[] = [$msg];
+                        continue;
+                    }
+                    $visitados[] = $key;
+
+                    // Verificar en otros calendarios del mismo año
+                    $query = DB::table('detalle_evento as de')
+                        ->join('calendario_academico as ca', 'de.id_calendario_academico', '=', 'ca.id_calendario_academico')
+                        ->where('de.id_evento', $id)
+                        ->where('de.estatus', 1)
+                        ->where('ca.estatus', 1)
+                        ->whereYear('ca.dia_inicio_calendario_academico', $year);
+
+                    // Si estamos editando, omitimos el calendario actual
+                    if (isset($this->id_calendario_academico) && !empty($this->id_calendario_academico)) {
+                        $query->where('ca.id_calendario_academico', '!=', $this->id_calendario_academico);
+                    }
+
+                    $countInDb = $query->count();
+                    if ($countInDb > 0) {
+                        $msg = "El evento no repetible \"{$evento->nombre_evento}\" ya está registrado en otro calendario académico para el año {$year}.";
+                        $this->addError('eventosRegistrados', $msg);
+                        $errores[] = [$msg];
+                    }
+                }
             }
         }
 
-        if ($countInicio !== 2) {
-            $msg = "El calendario debe contener exactamente dos eventos especiales de tipo \"Inicio del Lapso Académico\".";
+        if ($countInicio !== 1) {
+            $msg = "El calendario debe contener exactamente un evento especial de tipo \"Inicio del Lapso Académico\".";
             $this->addError('eventosRegistrados', $msg);
             $errores[] = [$msg];
         }
 
-        if ($countFin !== 2) {
-            $msg = "El calendario debe contener exactamente dos eventos especiales de tipo \"Fin del Lapso Académico\".";
+        if ($countFin !== 1) {
+            $msg = "El calendario debe contener exactamente un evento especial de tipo \"Fin del Lapso Académico\".";
             $this->addError('eventosRegistrados', $msg);
             $errores[] = [$msg];
         }
