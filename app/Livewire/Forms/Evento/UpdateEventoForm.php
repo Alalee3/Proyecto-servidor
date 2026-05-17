@@ -20,6 +20,7 @@ class UpdateEventoForm extends Form
     public $is_rango_dias = false;
     public $rango_dias = '';
     public $is_independiente = false;
+    public $cantidad_dias_evento = '';
 
     public function setEvento($evento)
     {
@@ -34,11 +35,24 @@ class UpdateEventoForm extends Form
         $this->is_rango_dias = (bool) $evento->is_rango_dias_evento;
         $this->rango_dias = $evento->rango_dias_evento;
         $this->is_independiente = (bool) ($evento->is_independiente ?? $evento->is_independiente_evento ?? false);
+        $this->cantidad_dias_evento = $evento->cantidad_dias_evento;
     }
 
     protected function rules()
     {
         return [
+            'cantidad_dias_evento' => [
+                'nullable',
+                function ($attribute, $value, $fail) {
+                    if ($this->is_especial && $this->especial_evento == '1') {
+                        if (empty($value) && $value !== '0' && $value !== 0) {
+                            $fail('La cantidad de días de vacaciones es obligatoria.');
+                        } elseif (!is_numeric($value) || $value < 1 || $value > 365) {
+                            $fail('La cantidad de días de vacaciones debe ser un número entero entre 1 y 365.');
+                        }
+                    }
+                }
+            ],
             'is_independiente' => [
                 'required',
                 'boolean',

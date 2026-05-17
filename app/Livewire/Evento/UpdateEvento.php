@@ -59,6 +59,7 @@ class UpdateEvento extends Component
                 $this->form->is_rango_dias = true;
                 $this->form->rango_dias = '1';
                 $this->form->is_independiente = true;
+                $this->form->cantidad_dias_evento = '';
             } elseif ($this->form->especial_evento == '1') {
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = true;
@@ -66,6 +67,8 @@ class UpdateEvento extends Component
                 $this->form->is_rango_dias = false;
                 $this->form->rango_dias = '';
                 $this->form->is_independiente = true;
+            } else {
+                $this->form->cantidad_dias_evento = '';
             }
         }
 
@@ -93,7 +96,9 @@ class UpdateEvento extends Component
         // Limpiar especial_evento si el switch se apaga
         if ($propertyName === 'form.is_especial' && !$this->form->is_especial) {
             $this->form->especial_evento = '';
+            $this->form->cantidad_dias_evento = '';
             $this->resetErrorBag('form.especial_evento');
+            $this->resetErrorBag('form.cantidad_dias_evento');
         }
 
         // Limpiar rango de días si el switch se apaga

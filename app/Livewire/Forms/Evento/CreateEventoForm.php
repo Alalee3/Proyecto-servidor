@@ -16,10 +16,23 @@ class CreateEventoForm extends Form
     public $is_rango_dias = false;
     public $rango_dias = '';
     public $is_independiente = true;
+    public $cantidad_dias_evento = 60;
 
     protected function rules()
     {
         return [
+            'cantidad_dias_evento' => [
+                'nullable',
+                function ($attribute, $value, $fail) {
+                    if ($this->is_especial && $this->especial_evento == '1') {
+                        if (empty($value) && $value !== '0' && $value !== 0) {
+                            $fail('La cantidad de días de vacaciones es obligatoria.');
+                        } elseif (!is_numeric($value) || $value < 1 || $value > 365) {
+                            $fail('La cantidad de días de vacaciones debe ser un número entero entre 1 y 365.');
+                        }
+                    }
+                }
+            ],
             'is_independiente' => [
                 'required',
                 'boolean',

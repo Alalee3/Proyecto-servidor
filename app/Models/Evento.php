@@ -20,6 +20,7 @@ class Evento extends Model
         'is_rango_dias_evento' => 'boolean',
         'is_independiente' => 'boolean',
         'is_independiente_evento' => 'boolean',
+        'cantidad_dias_evento' => 'integer',
     ];
 
     public function color_rel()

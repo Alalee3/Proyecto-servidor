@@ -31,6 +31,15 @@
                         </select>
                         <x-input-error :messages="$errors->first('form.especial_evento')" class="mt-2" />
                     </div>
+
+                    @if($form->especial_evento == '1')
+                        <div class="w-full">
+                            <x-input-label for="cantidad_dias_evento" :value="__('Cantidad de Días de Vacaciones *')" />
+                            <x-text-input id="cantidad_dias_evento" type="number" min="1" max="365" class="w-full"
+                                wire:model.live="form.cantidad_dias_evento" placeholder="Ej: 15" />
+                            <x-input-error :messages="$errors->first('form.cantidad_dias_evento')" class="mt-2" />
+                        </div>
+                    @endif
                 @endif
 
                 <div class="w-full">

@@ -21,6 +21,7 @@ class EventoUpdateRepo
                 'is_repetible_evento'  => $data['is_repetible'],
                 'is_rango_dias_evento'  => $data['is_rango_dias'],
                 'rango_dias_evento'     => $data['is_rango_dias'] ? ($data['rango_dias'] ?? null) : null,
+                'cantidad_dias_evento'  => (($data['is_especial'] ?? false) && ($data['especial_evento'] ?? '') == '1') ? ($data['cantidad_dias_evento'] ?? null) : null,
             ];
 
             // Guardar is_independiente de forma dinámica según la columna que exista en la BD

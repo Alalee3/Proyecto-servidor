@@ -49,6 +49,7 @@ class CreateEvento extends Component
                 $this->form->is_rango_dias = true;
                 $this->form->rango_dias = '1';
                 $this->form->is_independiente = true;
+                $this->form->cantidad_dias_evento = '';
             } elseif ($this->form->especial_evento == '1') {
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = true;
@@ -56,6 +57,9 @@ class CreateEvento extends Component
                 $this->form->is_rango_dias = false;
                 $this->form->rango_dias = '';
                 $this->form->is_independiente = true;
+                $this->form->cantidad_dias_evento = 60;
+            } else {
+                $this->form->cantidad_dias_evento = '';
             }
         }
 
@@ -87,7 +91,9 @@ class CreateEvento extends Component
         // Limpiar especial_evento si el switch se apaga
         if ($propertyName === 'form.is_especial' && !$this->form->is_especial) {
             $this->form->especial_evento = '';
+            $this->form->cantidad_dias_evento = '';
             $this->resetErrorBag('form.especial_evento');
+            $this->resetErrorBag('form.cantidad_dias_evento');
         }
 
         // Limpiar rango de días si el switch se apaga
@@ -103,7 +109,7 @@ class CreateEvento extends Component
             $this->form->validate();
             $id_repo = $this->eventoRepository->crear($this->form->all());
 
-            $this->reset('form.descripcion_evento', 'form.tipo_evento', 'form.id_color', 'form.especial_evento', 'form.is_especial');
+            $this->reset('form.descripcion_evento', 'form.tipo_evento', 'form.id_color', 'form.especial_evento', 'form.is_especial', 'form.cantidad_dias_evento');
             $this->refreshEventos();
             $this->showAlert('success', 'Evento creado correctamente.');
         } catch (\Illuminate\Validation\ValidationException $e) {
