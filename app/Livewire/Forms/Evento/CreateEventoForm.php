@@ -15,10 +15,23 @@ class CreateEventoForm extends Form
     public $is_repetible = false;
     public $is_rango_dias = false;
     public $rango_dias = '';
+    public $is_independiente = true;
 
     protected function rules()
     {
         return [
+            'is_independiente' => [
+                'required',
+                'boolean',
+                function ($attribute, $value, $fail) {
+                    if (in_array($this->tipo_evento, ['1', '2']) && !$value) {
+                        $fail('Para los feriados nacionales y locales, el evento debe ser obligatoriamente Independiente.');
+                    }
+                    if ($this->is_especial && !$value) {
+                        $fail('Para los eventos especiales, el evento debe ser obligatoriamente Independiente.');
+                    }
+                }
+            ],
             'descripcion_evento' => [
                 'required',
                 'string',

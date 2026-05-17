@@ -109,6 +109,8 @@
                     </div>
                     <x-input-error :messages="$errors->first('form.id_color')" class="mt-2" />
                 </div>
+                <x-toggle-switch id="is_independiente_edit" :label="__('¿Es Independiente?')" model="form.is_independiente" />
+
                 @if($form->tipo_evento != '1' && $form->tipo_evento != '2')
                     <x-toggle-switch id="is_laborable_edit" :label="__('¿Es Laborable?')" model="form.is_laborable" />
 

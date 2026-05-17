@@ -19,6 +19,7 @@ class UpdateEventoForm extends Form
     public $is_repetible = false;
     public $is_rango_dias = false;
     public $rango_dias = '';
+    public $is_independiente = false;
 
     public function setEvento($evento)
     {
@@ -32,11 +33,24 @@ class UpdateEventoForm extends Form
         $this->is_repetible = (bool) $evento->is_repetible_evento;
         $this->is_rango_dias = (bool) $evento->is_rango_dias_evento;
         $this->rango_dias = $evento->rango_dias_evento;
+        $this->is_independiente = (bool) ($evento->is_independiente ?? $evento->is_independiente_evento ?? false);
     }
 
     protected function rules()
     {
         return [
+            'is_independiente' => [
+                'required',
+                'boolean',
+                function ($attribute, $value, $fail) {
+                    if (in_array($this->tipo_evento, ['1', '2']) && !$value) {
+                        $fail('Para los feriados nacionales y locales, el evento debe ser obligatoriamente Independiente.');
+                    }
+                    if ($this->is_especial && !$value) {
+                        $fail('Para los eventos especiales, el evento debe ser obligatoriamente Independiente.');
+                    }
+                }
+            ],
             'descripcion_evento' => [
                 'required',
                 'string',

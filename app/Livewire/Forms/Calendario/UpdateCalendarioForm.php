@@ -261,8 +261,9 @@ class UpdateCalendarioForm extends Form
                     $errores[] = [$msg];
                 }
 
-                // Validar que eventos de tipo 3, 4 y 5 estén dentro del rango del lapso académico (excluyendo tipos 1 y 2)
-                if (in_array($evento->tipo_evento, ['3', '4', '5'])) {
+                // Validar que eventos con is_independiente false estén dentro del rango del lapso académico
+                $isIndependiente = $evento->is_independiente ?? $evento->is_independiente_evento ?? false;
+                if (!$isIndependiente) {
                     if ($inicioLapso && $finLapso) {
                         $lapsoFuera = ($regInicio && ($regInicio < $inicioLapso || $regInicio > $finLapso)) ||
                                       ($regFin && ($regFin < $inicioLapso || $regFin > $finLapso));
