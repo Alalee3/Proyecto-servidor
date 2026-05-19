@@ -49,7 +49,7 @@ class CreateEvento extends Component
                 $this->form->is_rango_dias = true;
                 $this->form->rango_dias = '1';
                 $this->form->is_independiente = true;
-                $this->form->cantidad_dias_evento = '';
+                $this->form->cantidad_dias_evento = 0;
             } elseif ($this->form->especial_evento == '1') {
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = true;
@@ -65,7 +65,7 @@ class CreateEvento extends Component
                 $this->form->is_rango_dias = false;
                 $this->form->rango_dias = '';
                 $this->form->is_independiente = true;
-                $this->form->cantidad_dias_evento = '';
+                $this->form->cantidad_dias_evento = 0;
             } elseif ($this->form->especial_evento == '5') { // Carnaval
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = false;
@@ -73,9 +73,9 @@ class CreateEvento extends Component
                 $this->form->is_rango_dias = false;
                 $this->form->rango_dias = '';
                 $this->form->is_independiente = true;
-                $this->form->cantidad_dias_evento = '';
+                $this->form->cantidad_dias_evento = 0;
             } else {
-                $this->form->cantidad_dias_evento = '';
+                $this->form->cantidad_dias_evento = 0;
             }
         }
 
@@ -107,7 +107,7 @@ class CreateEvento extends Component
         // Limpiar especial_evento si el switch se apaga
         if ($propertyName === 'form.is_especial' && !$this->form->is_especial) {
             $this->form->especial_evento = '';
-            $this->form->cantidad_dias_evento = '';
+            $this->form->cantidad_dias_evento = 0;
             $this->resetErrorBag('form.especial_evento');
             $this->resetErrorBag('form.cantidad_dias_evento');
         }

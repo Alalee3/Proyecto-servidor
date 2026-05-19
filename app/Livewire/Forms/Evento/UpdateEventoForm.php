@@ -51,7 +51,7 @@ class UpdateEventoForm extends Form
                             $fail('La cantidad de días de vacaciones debe ser un número entero entre 1 y 365.');
                         }
                     } else {
-                        if (!empty($value) && $value !== '') {
+                        if ($value !== null && $value !== '' && $value !== 0 && $value !== '0') {
                             $fail('No se permite asignar una cantidad de días de vacaciones para este tipo de evento.');
                         }
                     }
