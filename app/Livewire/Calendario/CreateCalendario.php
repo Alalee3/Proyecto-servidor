@@ -51,7 +51,7 @@ class CreateCalendario extends Component
                 $this->form->nuevoIsIndependiente = true;
             } else {
                 $this->form->nuevoLaborable = false;
-                $this->form->nuevoRepetible = false;
+                $this->form->nuevoRepetible = true;
                 $this->form->nuevoIsIndependiente = false;
             }
         }

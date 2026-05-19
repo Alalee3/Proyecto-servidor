@@ -70,6 +70,9 @@ class UpdateCalendarioForm extends Form
                         if (($this->nuevoTipo == '1' || $this->nuevoTipo == '2') && $value) {
                             $fail('Un feriado no puede ser marcado como repetible.');
                         }
+                        if (in_array($this->nuevoTipo, ['3', '4', '5']) && !$value) {
+                            $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');
+                        }
                     }
                 ],
                 'nuevoIsRangoDias' => ['required', 'boolean'],
