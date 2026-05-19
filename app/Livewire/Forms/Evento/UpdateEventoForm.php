@@ -115,6 +115,9 @@ class UpdateEventoForm extends Form
                 'required',
                 'boolean',
                 function ($attribute, $value, $fail) {
+                    if (in_array($this->tipo_evento, ['3', '4', '5']) && !$value) {
+                        $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');
+                    }
                     if ($this->is_especial) {
                         if (in_array($this->especial_evento, ['1', '2', '3']) && !$value) {
                             $fail('Para este evento especial, debe ser obligatoriamente Repetible.');

@@ -99,7 +99,7 @@ class CreateEvento extends Component
                 } else {
                     // Para tipos 3, 4 y 5
                     $this->form->is_laborable = false;
-                    $this->form->is_repetible = false;
+                    $this->form->is_repetible = true;
                 }
             }
         }
