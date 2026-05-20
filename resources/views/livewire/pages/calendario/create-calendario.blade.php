@@ -130,7 +130,7 @@
                 <div x-show="openSection === 'fechas'" x-collapse class="p-4 space-y-6">
 
                     {{-- Selección de Fechas --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mx-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mx-auto mb-6">
                         <div class="w-full">
                             <x-input-label for="dia_inicio_calendario_academico" :value="__('Inicio del Período')" />
                             <x-text-input id="dia_inicio_calendario_academico" type="date"
@@ -145,6 +145,26 @@
                                 wire:model.live="form.dia_fin_calendario_academico" class="w-full mt-1 date-input-dark"
                                 required />
                             <x-input-error :messages="$errors->first('form.dia_fin_calendario_academico')"
+                                class="mt-2" />
+                        </div>
+                    </div>
+
+                    {{-- Selección de Semanas por Lapso --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mx-auto">
+                        <div class="w-full">
+                            <x-input-label for="semana_lapso_uno_calendario_academico" :value="__('Cantidad de Semanas (Lapso 1)')" />
+                            <x-text-input id="semana_lapso_uno_calendario_academico" type="number" min="1" max="99"
+                                wire:model.live="form.semana_lapso_uno_calendario_academico"
+                                class="w-full mt-1" placeholder="Ej: 18" required />
+                            <x-input-error :messages="$errors->first('form.semana_lapso_uno_calendario_academico')"
+                                class="mt-2" />
+                        </div>
+                        <div class="w-full">
+                            <x-input-label for="semana_lapso_dos_calendario_academico" :value="__('Cantidad de Semanas (Lapso 2)')" />
+                            <x-text-input id="semana_lapso_dos_calendario_academico" type="number" min="1" max="99"
+                                wire:model.live="form.semana_lapso_dos_calendario_academico" class="w-full mt-1"
+                                placeholder="Ej: 18" required />
+                            <x-input-error :messages="$errors->first('form.semana_lapso_dos_calendario_academico')"
                                 class="mt-2" />
                         </div>
                     </div>
@@ -339,6 +359,9 @@
                                                 this.nuevoRepetible = false;
                                                 this.nuevoIsRangoDias = false;
                                                 this.nuevoRangoDias = '';
+                                                this.nuevoIsIndependiente = true;
+                                            } else {
+                                                this.nuevoRepetible = true;
                                             }
                                         });
                                         this.$watch('mapaEventosAlpine', () => {
@@ -460,7 +483,7 @@
                                                             inicios.push(ev.inicio);
                                                         } else if (esp === '3') {
                                                             fines.push(ev.fin);
-                                                        } else if (esp === '4' || esp === '5' || nombreEv.includes('semana santa') || nombreEv.includes('carnaval')) {
+                                                        } else if (esp === '4' || esp === '5' || nombreEv.includes('semana santa') || nombreEv.includes('carnaval') || nombreEv.includes('viernes santo') || nombreEv.includes('jueves santo')) {
                                                             // Marcar cada lunes de semana festiva
                                                             let d = new Date(ev.inicio + 'T00:00:00');
                                                             let dFin = new Date(ev.fin + 'T00:00:00');
@@ -1042,8 +1065,12 @@
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 <x-toggle-switch id="laborable_switch" :label="__('¿Es Laborable?')"
                                                     model="form.nuevoLaborable" />
-                                                <x-toggle-switch id="repetible_switch" :label="__('¿Es Repetible?')"
-                                                    model="form.nuevoRepetible" />
+                                                <div>
+                                                    <x-toggle-switch id="nuevo_is_independiente_switch" :label="__('¿Es Independiente?')"
+                                                        model="form.nuevoIsIndependiente" />
+                                                    <x-input-error :messages="$errors->get('form.nuevoIsIndependiente')"
+                                                        class="mt-2" />
+                                                </div>
                                             </div>
 
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
@@ -1056,15 +1083,6 @@
                                                         class="w-full block" wire:model.live="form.nuevoRangoDias"
                                                         placeholder="EJ: 5" min="1" max="90" />
                                                     <x-input-error :messages="$errors->get('form.nuevoRangoDias')"
-                                                        class="mt-2" />
-                                                </div>
-                                            </div>
-
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <x-toggle-switch id="nuevo_is_independiente_switch" :label="__('¿Es Independiente?')"
-                                                        model="form.nuevoIsIndependiente" />
-                                                    <x-input-error :messages="$errors->get('form.nuevoIsIndependiente')"
                                                         class="mt-2" />
                                                 </div>
                                             </div>

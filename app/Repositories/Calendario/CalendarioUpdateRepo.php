@@ -46,13 +46,12 @@ class CalendarioUpdateRepo
         return DB::transaction(function () use ($data, $eventos, $id) {
             $inicioDate = $data['dia_inicio_calendario_academico'] ? Carbon::parse($data['dia_inicio_calendario_academico']) : null;
             $finDate = $data['dia_fin_calendario_academico'] ? Carbon::parse($data['dia_fin_calendario_academico']) : null;
-            
-            $semanas = ($inicioDate && $finDate) ? ceil(($inicioDate->diffInDays($finDate) + 1) / 7) : 0;
 
             $record = [
                 'dia_inicio_calendario_academico' => $data['dia_inicio_calendario_academico'],
                 'dia_fin_calendario_academico' => $data['dia_fin_calendario_academico'],
-                'semana_calendario_academico' => $semanas,
+                'semana_lapso_uno_calendario_academico' => $data['semana_lapso_uno_calendario_academico'] ?? 0,
+                'semana_lapso_dos_calendario_academico' => $data['semana_lapso_dos_calendario_academico'] ?? 0,
                 'estatus' => $data['estatus'] ?? '2' // En revisión por defecto en update
             ];
 

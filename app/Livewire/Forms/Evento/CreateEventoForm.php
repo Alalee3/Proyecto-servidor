@@ -83,7 +83,17 @@ class CreateEventoForm extends Form
             'especial_evento' => [
                 'required_if:is_especial,true',
                 'nullable',
-                'in:1,2,3,4,5'
+                'in:1,2,3,4,5',
+                function ($attribute, $value, $fail) {
+                    if ($this->is_especial && !empty($value)) {
+                        $exists = \Illuminate\Support\Facades\DB::table('evento')
+                            ->where('especial_evento', $value)
+                            ->exists();
+                        if ($exists) {
+                            $fail('Ya existe un evento registrado con el tipo especial seleccionado.');
+                        }
+                    }
+                }
             ],
             'is_laborable' => [
                 'required',

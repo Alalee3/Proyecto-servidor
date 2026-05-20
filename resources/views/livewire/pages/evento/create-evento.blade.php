@@ -120,24 +120,23 @@
                     </div>
                     <x-input-error :messages="$errors->first('form.id_color')" class="mt-2" />
                 </div>
-                <x-toggle-switch id="is_independiente" :label="__('¿Es Independiente?')" model="form.is_independiente" />
+                @if($form->tipo_evento != '1' && $form->tipo_evento != '2' && !$form->is_especial)
+                    <x-toggle-switch id="is_independiente" :label="__('¿Es Independiente?')" model="form.is_independiente" />
 
-                @if($form->tipo_evento != '1' && $form->tipo_evento != '2')
                     <x-toggle-switch id="is_laborable" :label="__('¿Es Laborable?')" model="form.is_laborable" />
-
-                    <x-toggle-switch id="is_repetible" :label="__('¿Es Repetible?')" model="form.is_repetible" />
                 @endif
 
+                @if(!$form->is_especial)
+                    <x-toggle-switch id="is_rango_dias" :label="__('¿Tiene cantidad especifica días?')"
+                        model="form.is_rango_dias" />
 
-                <x-toggle-switch id="is_rango_dias" :label="__('¿Tiene cantidad especifica días?')"
-                    model="form.is_rango_dias" />
-
-                <div class="w-full" x-show="$wire.form.is_rango_dias" x-transition>
-                    <x-input-label for="rango_dias" :value="__('Cantidad de Días')" />
-                    <x-text-input id="rango_dias" type="number" min="1" max="90" class="w-full" wire:model.live="form.rango_dias"
-                        placeholder="Ej: 5" />
-                    <x-input-error :messages="$errors->first('form.rango_dias')" class="mt-2" />
-                </div>
+                    <div class="w-full" x-show="$wire.form.is_rango_dias" x-transition>
+                        <x-input-label for="rango_dias" :value="__('Cantidad de Días')" />
+                        <x-text-input id="rango_dias" type="number" min="1" max="90" class="w-full" wire:model.live="form.rango_dias"
+                            placeholder="Ej: 5" />
+                        <x-input-error :messages="$errors->first('form.rango_dias')" class="mt-2" />
+                    </div>
+                @endif
             </div>
 
             <div class="flex items-center justify-end gap-4">

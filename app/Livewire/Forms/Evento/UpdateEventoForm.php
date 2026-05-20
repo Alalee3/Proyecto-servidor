@@ -97,7 +97,22 @@ class UpdateEventoForm extends Form
                 }
             ],
             'is_especial' => ['required', 'boolean'],
-            'especial_evento' => ['required_if:is_especial,true', 'nullable', 'in:1,2,3,4,5'],
+            'especial_evento' => [
+                'required_if:is_especial,true',
+                'nullable',
+                'in:1,2,3,4,5',
+                function ($attribute, $value, $fail) {
+                    if ($this->is_especial && !empty($value)) {
+                        $exists = \Illuminate\Support\Facades\DB::table('evento')
+                            ->where('especial_evento', $value)
+                            ->where('id_evento', '!=', $this->id_evento)
+                            ->exists();
+                        if ($exists) {
+                            $fail('Ya existe otro evento registrado con el tipo especial seleccionado.');
+                        }
+                    }
+                }
+            ],
             'is_laborable' => [
                 'required',
                 'boolean',

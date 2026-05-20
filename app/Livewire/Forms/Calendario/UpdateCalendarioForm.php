@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\DB;
 class UpdateCalendarioForm extends Form
 {
     public $id_calendario_academico = '';
-    public $semana_calendario_academico = '';
+    public $semana_lapso_uno_calendario_academico = '';
+    public $semana_lapso_dos_calendario_academico = '';
     public $dia_inicio_calendario_academico = '';
     public $dia_fin_calendario_academico = '';
     public $tipo_calendario = '1';
@@ -28,6 +29,8 @@ class UpdateCalendarioForm extends Form
     public function rules()
     {
         $rules = [
+            'semana_lapso_uno_calendario_academico' => ['required', 'integer', 'min:1', 'max:99'],
+            'semana_lapso_dos_calendario_academico' => ['required', 'integer', 'min:1', 'max:99'],
             'dia_inicio_calendario_academico' => [
                 'required',
                 'date',
@@ -126,6 +129,14 @@ class UpdateCalendarioForm extends Form
     public function messages()
     {
         return [
+            'semana_lapso_uno_calendario_academico.required' => 'La cantidad de semanas para el lapso 1 es obligatoria.',
+            'semana_lapso_uno_calendario_academico.integer' => 'La cantidad de semanas para el lapso 1 debe ser un número.',
+            'semana_lapso_uno_calendario_academico.min' => 'El mínimo de semanas para el lapso 1 es 1.',
+            'semana_lapso_uno_calendario_academico.max' => 'El máximo de semanas para el lapso 1 es 99.',
+            'semana_lapso_dos_calendario_academico.required' => 'La cantidad de semanas para el lapso 2 es obligatoria.',
+            'semana_lapso_dos_calendario_academico.integer' => 'La cantidad de semanas para el lapso 2 debe ser un número.',
+            'semana_lapso_dos_calendario_academico.min' => 'El mínimo de semanas para el lapso 2 es 1.',
+            'semana_lapso_dos_calendario_academico.max' => 'El máximo de semanas para el lapso 2 es 99.',
             'dia_inicio_calendario_academico.required' => 'La fecha de inicio es obligatoria.',
             'dia_inicio_calendario_academico.date' => 'La fecha de inicio debe ser válida.',
             'dia_fin_calendario_academico.required' => 'La fecha de fin es obligatoria.',
@@ -144,7 +155,8 @@ class UpdateCalendarioForm extends Form
     public function setCalendario($calendario)
     {
         $this->id_calendario_academico = $calendario->id_calendario_academico;
-        $this->semana_calendario_academico = $calendario->semana_calendario_academico;
+        $this->semana_lapso_uno_calendario_academico = $calendario->semana_lapso_uno_calendario_academico;
+        $this->semana_lapso_dos_calendario_academico = $calendario->semana_lapso_dos_calendario_academico;
         $this->dia_inicio_calendario_academico = $calendario->dia_inicio_calendario_academico;
         $this->dia_fin_calendario_academico = $calendario->dia_fin_calendario_academico;
         $this->tipo_calendario = $calendario->tipo_calendario ?? '1';
@@ -177,6 +189,8 @@ class UpdateCalendarioForm extends Form
         $this->validate([
             'dia_inicio_calendario_academico' => $allRules['dia_inicio_calendario_academico'],
             'dia_fin_calendario_academico' => $allRules['dia_fin_calendario_academico'],
+            'semana_lapso_uno_calendario_academico' => $allRules['semana_lapso_uno_calendario_academico'],
+            'semana_lapso_dos_calendario_academico' => $allRules['semana_lapso_dos_calendario_academico'],
         ]);
 
         // Cálculo de Semanas Exactas (Sin forzar Lunes-Domingo)
@@ -188,6 +202,18 @@ class UpdateCalendarioForm extends Form
 
         if ($finReal->gt($limite18Meses)) {
             $msg = "El período académico no puede durar más de 18 meses.";
+            $this->addError('dia_fin_calendario_academico', $msg);
+            throw \Illuminate\Validation\ValidationException::withMessages(['form.dia_fin_calendario_academico' => [$msg]]);
+        }
+
+        // Validar que la duración física del calendario sea suficiente para albergar los lapsos
+        $semanasFechas = ceil(($inicioReal->diffInDays($finReal) + 1) / 7);
+        $semanasLapso1 = (int)$this->semana_lapso_uno_calendario_academico;
+        $semanasLapso2 = (int)$this->semana_lapso_dos_calendario_academico;
+        $totalSemanasLapsos = $semanasLapso1 + $semanasLapso2;
+
+        if ($semanasFechas < $totalSemanasLapsos) {
+            $msg = "El período seleccionado solo dura {$semanasFechas} semanas físicas, lo cual no es suficiente para albergar las {$totalSemanasLapsos} semanas sumadas de ambos lapsos. Extienda la fecha de fin o reduzca las semanas de los lapsos.";
             $this->addError('dia_fin_calendario_academico', $msg);
             throw \Illuminate\Validation\ValidationException::withMessages(['form.dia_fin_calendario_academico' => [$msg]]);
         }
@@ -389,6 +415,22 @@ class UpdateCalendarioForm extends Form
 
             if ($S2 < $E1) {
                 $msg = "Los lapsos académicos no pueden solaparse ni estar contenidos uno dentro del otro. El segundo lapso debe iniciar el mismo día o después de que termine el primer lapso (Fin del primer lapso: {$E1}, Inicio del segundo lapso: {$S2}).";
+                $this->addError('eventosRegistrados', $msg);
+                $errores[] = [$msg];
+            }
+
+            // Validar cantidad de semanas asignadas al Lapso 1 en la cuadrícula
+            $semanasLapso1 = \App\Support\CalendarioLapsoSemanas::contarSemanas($S1, $E1, $eventosRegistrados);
+            if ($semanasLapso1 != $this->semana_lapso_uno_calendario_academico) {
+                $msg = "Las fechas asignadas en la cuadrícula para el Primer Lapso Académico abarcan {$semanasLapso1} semanas, pero en la configuración inicial se estipularon {$this->semana_lapso_uno_calendario_academico} semanas.";
+                $this->addError('eventosRegistrados', $msg);
+                $errores[] = [$msg];
+            }
+
+            // Validar cantidad de semanas asignadas al Lapso 2 en la cuadrícula
+            $semanasLapso2 = \App\Support\CalendarioLapsoSemanas::contarSemanas($S2, $E2, $eventosRegistrados);
+            if ($semanasLapso2 != $this->semana_lapso_dos_calendario_academico) {
+                $msg = "Las fechas asignadas en la cuadrícula para el Segundo Lapso Académico abarcan {$semanasLapso2} semanas, pero en la configuración inicial se estipularon {$this->semana_lapso_dos_calendario_academico} semanas.";
                 $this->addError('eventosRegistrados', $msg);
                 $errores[] = [$msg];
             }

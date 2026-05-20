@@ -137,7 +137,7 @@ class EditarCalendario extends Component
             $nombre = (string)$eventoInfo->nombre_evento;
             // Intentar obtener el color desde la relación o fallback
             $color = (string)($eventoInfo->color_rel ? $eventoInfo->color_rel->codigo_color : $color);
-            $tipo = (string)$eventoInfo->id_tipo_evento;
+            $tipo = (string)($eventoInfo->tipo_evento ?? $tipo ?? '');
         }
 
         // Analizar si el rango contiene fines de semana
@@ -215,7 +215,96 @@ class EditarCalendario extends Component
         }
 
         $this->actualizarMapaEventos();
+
+        if ($this->debeRecalcularFinesLapso($eventoInfo)) {
+            $this->recalcularFinesLapso();
+        }
+
         $this->guardarBorrador();
+    }
+
+    protected function debeRecalcularFinesLapso(?\App\Models\Evento $eventoInfo): bool
+    {
+        $hayInicios = collect($this->eventosRegistrados)->contains(
+            fn ($e) => ($e['especial_evento'] ?? '') === '2'
+        );
+
+        if (!$hayInicios || !$eventoInfo) {
+            return false;
+        }
+
+        $esp = (string) ($eventoInfo->especial_evento ?? '');
+
+        return $esp === '2'
+            || $esp === '4'
+            || $esp === '5'
+            || \App\Support\CalendarioLapsoSemanas::eventoModeloEsFestivo($eventoInfo);
+    }
+
+    protected function recalcularFinesLapso(): void
+    {
+        $calFin = $this->form->dia_fin_calendario_academico;
+        if (!$calFin) {
+            return;
+        }
+
+        $this->eventosRegistrados = array_values(array_filter(
+            $this->eventosRegistrados,
+            fn ($ev) => ($ev['especial_evento'] ?? '') !== '3'
+        ));
+
+        $eventoFin = \App\Models\Evento::where('especial_evento', '3')
+            ->where('estatus', '1')
+            ->first();
+
+        if (!$eventoFin) {
+            return;
+        }
+
+        $colorFin = '';
+        if ($eventoFin->id_color) {
+            $colorObj = \Illuminate\Support\Facades\DB::table('color')->where('id_color', $eventoFin->id_color)->first();
+            $colorFin = $colorObj ? $colorObj->codigo_color : '';
+        }
+
+        $inicios = collect($this->eventosRegistrados)
+            ->filter(fn ($ev) => ($ev['especial_evento'] ?? '') === '2')
+            ->sortBy('inicio')
+            ->values();
+
+        foreach ($inicios as $index => $inicioEv) {
+            $semanas = $index === 0
+                ? (int) $this->form->semana_lapso_uno_calendario_academico
+                : (int) $this->form->semana_lapso_dos_calendario_academico;
+
+            if ($semanas < 1) {
+                continue;
+            }
+
+            $fechaFinAuto = \App\Support\CalendarioLapsoSemanas::fechaFinLapso(
+                $inicioEv['inicio'],
+                $semanas,
+                $this->eventosRegistrados
+            );
+
+            if ($fechaFinAuto > $calFin) {
+                continue;
+            }
+
+            $this->eventosRegistrados[] = [
+                'id' => (int) $eventoFin->id_evento,
+                'inicio' => $fechaFinAuto,
+                'fin' => $fechaFinAuto,
+                'nombre_evento' => (string) $eventoFin->nombre_evento,
+                'tipo' => (string) $eventoFin->tipo_evento,
+                'color' => (string) $colorFin,
+                'is_rango_dias_evento' => (bool) $eventoFin->is_rango_dias_evento,
+                'rango_dias_evento' => $eventoFin->rango_dias_evento,
+                'especial_evento' => '3',
+            ];
+        }
+
+        $this->actualizarMapaEventos();
     }
 
     /**
@@ -250,11 +339,28 @@ class EditarCalendario extends Component
 
     public function removerEvento($index)
     {
-        if (isset($this->eventosRegistrados[$index])) {
-            unset($this->eventosRegistrados[$index]);
-            $this->eventosRegistrados = array_values($this->eventosRegistrados);
-            $this->guardarBorrador();
+        if (!isset($this->eventosRegistrados[$index])) {
+            return;
         }
+
+        $removido = $this->eventosRegistrados[$index];
+        $idsFestivos = \App\Support\CalendarioLapsoSemanas::idsEventosFestivos($this->eventosRegistrados);
+        $eraFestivo = \App\Support\CalendarioLapsoSemanas::registroEsFestivo($removido, $idsFestivos);
+        $eraInicioLapso = ($removido['especial_evento'] ?? '') === '2';
+
+        unset($this->eventosRegistrados[$index]);
+        $this->eventosRegistrados = array_values($this->eventosRegistrados);
+        $this->actualizarMapaEventos();
+
+        $hayInicios = collect($this->eventosRegistrados)->contains(
+            fn ($e) => ($e['especial_evento'] ?? '') === '2'
+        );
+
+        if ($hayInicios && ($eraFestivo || $eraInicioLapso)) {
+            $this->recalcularFinesLapso();
+        }
+
+        $this->guardarBorrador();
     }
 
     public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $id_color, $is_laborable, $is_repetible, $is_rango_dias, $rango_dias)

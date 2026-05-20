@@ -110,6 +110,19 @@ class CreateEvento extends Component
             $this->form->cantidad_dias_evento = 0;
             $this->resetErrorBag('form.especial_evento');
             $this->resetErrorBag('form.cantidad_dias_evento');
+
+            // Reestablecer valores por defecto según el tipo de evento actual
+            if ($this->form->tipo_evento == '1' || $this->form->tipo_evento == '2') {
+                $this->form->is_independiente = true;
+                $this->form->is_laborable = false;
+                $this->form->is_repetible = false;
+            } else {
+                $this->form->is_independiente = false;
+                $this->form->is_laborable = false;
+                $this->form->is_repetible = true;
+            }
+            $this->form->is_rango_dias = false;
+            $this->form->rango_dias = '';
         }
 
         // Limpiar rango de días si el switch se apaga
