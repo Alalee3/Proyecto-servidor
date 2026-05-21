@@ -41,8 +41,8 @@ class CreateEventoForm extends Form
                 'required',
                 'boolean',
                 function ($attribute, $value, $fail) {
-                    if (in_array($this->tipo_evento, ['1', '2']) && !$value) {
-                        $fail('Para los feriados nacionales y locales, el evento debe ser obligatoriamente Independiente.');
+                    if (in_array($this->tipo_evento, ['1', '2', '6']) && !$value) {
+                        $fail('Para los feriados, el evento debe ser obligatoriamente Independiente.');
                     }
                     if ($this->is_especial && !$value) {
                         $fail('Para los eventos especiales, el evento debe ser obligatoriamente Independiente.');
@@ -63,15 +63,15 @@ class CreateEventoForm extends Form
             ],
             'tipo_evento' => [
                 'required',
-                'in:1,2,3,4,5',
+                'in:1,2,3,4,5,6',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial) {
                         if (in_array($this->especial_evento, ['2', '3']) && $value != '4') {
                             $fail('Para este evento especial, el tipo de evento debe ser obligatoriamente Académico.');
                         } elseif ($this->especial_evento == '1' && $value != '5') {
                             $fail('Para Vacaciones Colectivas, el tipo de evento debe ser obligatoriamente Administrativo/Académico.');
-                        } elseif (in_array($this->especial_evento, ['4', '5']) && !in_array($value, ['1', '2'])) {
-                            $fail('Para Semana Santa y Carnaval, el tipo de evento debe ser Feriado Nacional o Feriado Local.');
+                        } elseif (in_array($this->especial_evento, ['4', '5']) && !in_array($value, ['6'])) {
+                            $fail('Para Semana Santa y Carnaval, el tipo de evento debe ser Feriado Mundial.');
                         }
                     }
                 }

@@ -38,7 +38,8 @@ class CreateEvento extends Component
     public function updated($propertyName)
     {
         $field = str_replace('form.', '', $propertyName);
-        $this->form->validateOnly($field);
+
+        // 1. APLICAR TODA LA LÓGICA DINÁMICA DE ESTADO PRIMERO
 
         // Si cambia especial_evento y es Inicio (2) o Fin (3) del Lapso, aplicamos valores por defecto. Si es Vacaciones Colectivas (1) aplicamos los suyos.
         if ($propertyName === 'form.especial_evento') {
@@ -61,7 +62,7 @@ class CreateEvento extends Component
             } elseif ($this->form->especial_evento == '4') { // Semana Santa
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = false;
-                $this->form->tipo_evento = '1';
+                $this->form->tipo_evento = '6';
                 $this->form->is_rango_dias = false;
                 $this->form->rango_dias = '';
                 $this->form->is_independiente = true;
@@ -69,7 +70,7 @@ class CreateEvento extends Component
             } elseif ($this->form->especial_evento == '5') { // Carnaval
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = false;
-                $this->form->tipo_evento = '1';
+                $this->form->tipo_evento = '6';
                 $this->form->is_rango_dias = false;
                 $this->form->rango_dias = '';
                 $this->form->is_independiente = true;
@@ -84,16 +85,16 @@ class CreateEvento extends Component
             $this->form->is_independiente = true;
         }
 
-        // Si cambia el tipo de evento
+// Si cambia el tipo de evento
         if ($propertyName === 'form.tipo_evento') {
-            if ($this->form->tipo_evento == '1' || $this->form->tipo_evento == '2') {
+            if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                 $this->form->is_independiente = true;
             } else {
                 $this->form->is_independiente = false;
             }
 
             if (!in_array($this->form->especial_evento, ['1', '2', '3', '4', '5'])) {
-                if ($this->form->tipo_evento == '1' || $this->form->tipo_evento == '2') {
+                if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                     $this->form->is_laborable = false;
                     $this->form->is_repetible = false;
                 } else {
@@ -104,7 +105,7 @@ class CreateEvento extends Component
             }
         }
 
-        // Limpiar especial_evento si el switch se apaga
+// Limpiar especial_evento si el switch se apaga
         if ($propertyName === 'form.is_especial' && !$this->form->is_especial) {
             $this->form->especial_evento = '';
             $this->form->cantidad_dias_evento = 0;
@@ -112,7 +113,7 @@ class CreateEvento extends Component
             $this->resetErrorBag('form.cantidad_dias_evento');
 
             // Reestablecer valores por defecto según el tipo de evento actual
-            if ($this->form->tipo_evento == '1' || $this->form->tipo_evento == '2') {
+            if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                 $this->form->is_independiente = true;
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = false;
@@ -124,12 +125,14 @@ class CreateEvento extends Component
             $this->form->is_rango_dias = false;
             $this->form->rango_dias = '';
         }
-
         // Limpiar rango de días si el switch se apaga
         if ($propertyName === 'form.is_rango_dias' && !$this->form->is_rango_dias) {
             $this->form->rango_dias = '';
             $this->resetErrorBag('form.rango_dias');
         }
+
+        // 2. FINALMENTE VALIDAMOS EL CAMPO
+        $this->form->validateOnly($field);
     }
 
     public function guardar()
