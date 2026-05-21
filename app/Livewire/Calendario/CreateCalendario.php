@@ -40,7 +40,7 @@ class CreateCalendario extends Component
         }
 
         if ($propertyName === 'form.nuevoTipo') {
-            if ($this->form->nuevoTipo == '1' || $this->form->nuevoTipo == '2') {
+            if (in_array($this->form->nuevoTipo, ['1', '2', '6'])) {
                 $this->form->nuevoLaborable = false;
                 $this->form->nuevoRepetible = false;
                 $this->form->nuevoIsIndependiente = true;
@@ -164,7 +164,7 @@ class CreateCalendario extends Component
         $subrangos = [];
 
         // Feriados nacionales y locales (1 y 2), o si el rango completo está en fin de semana
-        if (in_array($tipo, ['1', '2']) || $todoEsWeekend) {
+        if (in_array($tipo, ['1', '2', '6']) || $todoEsWeekend) {
             $subrangos[] = ['inicio' => $inicio, 'fin' => $fin];
         } else {
             // Otros eventos: dividimos omitiendo los fines de semana
@@ -365,7 +365,7 @@ class CreateCalendario extends Component
             return false;
         }
 
-        if ($tipo == '1' || $tipo == '2') {
+        if (in_array($tipo, ['1', '2', '6'])) {
             $is_laborable = false;
             $is_repetible = false;
         }

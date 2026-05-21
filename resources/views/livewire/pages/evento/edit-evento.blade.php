@@ -10,20 +10,20 @@
     <div class="sogat-card">
         <form wire:submit.prevent="guardar" class="w-full space-y-6" novalidate>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                
+
                 @php
-                    $deshabilitarIndependienteLaborable = $form->is_especial
-                        || in_array($form->tipo_evento, ['1', '2', '6'], true);
-                    $deshabilitarRangoDias = $form->is_especial;
-                    $deshabilitarCantidadRango = $form->is_especial || !$form->is_rango_dias;
+                $deshabilitarIndependienteLaborable = $form->is_especial
+                || in_array($form->tipo_evento, ['1', '2', '6'], true);
+                $deshabilitarRangoDias = $form->is_especial;
+                $deshabilitarCantidadRango = $form->is_especial || !$form->is_rango_dias;
                 @endphp
 
                 <div class="w-full">
                     <x-input-label for="tipo" :value="__('Tipo de Evento')" />
                     <select id="tipo" wire:model.live="form.tipo_evento" @disabled($form->is_especial)
                         @class([
-                            'w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm',
-                            'opacity-60 cursor-not-allowed' => $form->is_especial,
+                        'w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm',
+                        'opacity-60 cursor-not-allowed' => $form->is_especial,
                         ])>
                         <option value="1">Feriado Nacional</option>
                         <option value="2">Feriado Local</option>
@@ -84,19 +84,19 @@
                             style="display: none;">
                             <ul tabindex="-1" role="listbox" class="flex flex-col w-full">
                                 @foreach($colores as $color)
-                                    <li @click="selectedId = {{ $color->id_color }}; open = false"
-                                        class="cursor-pointer select-none w-full px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center transition-colors"
-                                        :class="selectedId == {{ $color->id_color }} ? 'bg-gray-50 dark:bg-gray-700/50' : ''"
-                                        role="option">
-                                        <div class="flex items-center gap-3">
-                                            <span
-                                                class="w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm"
-                                                style="background-color: {{ $color->codigo_color }}"></span>
-                                            <span
-                                                class="text-gray-900 dark:text-gray-200 font-medium">{{ $color->nombre_color }}</span>
+                                <li @click="selectedId = {{ $color->id_color }}; open = false"
+                                    class="cursor-pointer select-none w-full px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center transition-colors"
+                                    :class="selectedId == {{ $color->id_color }} ? 'bg-gray-50 dark:bg-gray-700/50' : ''"
+                                    role="option">
+                                    <div class="flex items-center gap-3">
+                                        <span
+                                            class="w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm"
+                                            style="background-color: {{ $color->codigo_color }}"></span>
+                                        <span
+                                            class="text-gray-900 dark:text-gray-200 font-medium">{{ $color->nombre_color }}</span>
 
-                                        </div>
-                                    </li>
+                                    </div>
+                                </li>
                                 @endforeach
                             </ul>
                         </div>
@@ -110,6 +110,9 @@
                 <x-toggle-switch id="is_laborable_edit" :label="__('¿Es Laborable?')" model="form.is_laborable"
                     :disabled="$deshabilitarIndependienteLaborable" />
 
+                <x-toggle-switch id="is_repetible_edit" :label="__('¿Se puede repetir?')" model="form.is_repetible"
+                    :disabled="true" />
+
                 <x-toggle-switch id="is_rango_dias_edit" :label="__('¿Tiene cantidad especifica días de duración?')"
                     model="form.is_rango_dias" :disabled="$deshabilitarRangoDias" />
 
@@ -121,14 +124,14 @@
                 </div>
 
                 <x-toggle-switch id="is_especial_edit" :label="__('¿Es un Evento Especial?')" model="form.is_especial" />
-                
+
                 @if($form->is_especial)
                 <div class="w-full">
                     <x-input-label for="especial" :value="__('Seleccione el tipo de Evento Especial')" />
                     <select id="especial" wire:model.live="form.especial_evento" @disabled(!$form->is_especial)
                         @class([
-                            'w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm',
-                            'opacity-60 cursor-not-allowed' => !$form->is_especial,
+                        'w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm',
+                        'opacity-60 cursor-not-allowed' => !$form->is_especial,
                         ])>
                         <option value="">Seleccione...</option>
                         <option value="1">Vacaciones Colectivas</option>

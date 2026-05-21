@@ -70,12 +70,12 @@ class CreateCalendarioForm extends Form
                     },
                     'regex:/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\d\s\.,\-\(\)\"\':\/]+$/u'
                 ],
-                'nuevoTipo' => ['required', 'in:1,2,3,4,5'],
+                'nuevoTipo' => ['required', 'in:1,2,3,4,5,6'],
                 'nuevoLaborable' => [
                     'required',
                     'boolean',
                     function ($attribute, $value, $fail) {
-                        if (($this->nuevoTipo == '1' || $this->nuevoTipo == '2') && $value) {
+                        if (in_array($this->nuevoTipo, ['1', '2', '6']) && $value) {
                             $fail('Un feriado no puede ser marcado como laborable.');
                         }
                     }
@@ -84,7 +84,7 @@ class CreateCalendarioForm extends Form
                     'required',
                     'boolean',
                     function ($attribute, $value, $fail) {
-                        if (($this->nuevoTipo == '1' || $this->nuevoTipo == '2') && $value) {
+                        if (in_array($this->nuevoTipo, ['1', '2', '6']) && $value) {
                             $fail('Un feriado no puede ser marcado como repetible.');
                         }
                         if (in_array($this->nuevoTipo, ['3', '4', '5']) && !$value) {
@@ -104,7 +104,7 @@ class CreateCalendarioForm extends Form
                     'required',
                     'boolean',
                     function ($attribute, $value, $fail) {
-                        if (in_array($this->nuevoTipo, ['1', '2']) && !$value) {
+                        if (in_array($this->nuevoTipo, ['1', '2', '6']) && !$value) {
                             $fail('Para los feriados nacionales y locales, el evento debe ser obligatoriamente Independiente.');
                         }
                     }
@@ -167,7 +167,7 @@ class CreateCalendarioForm extends Form
             ],
             'tipo' => [
                 'required',
-                'in:1,2,3,4,5'
+                'in:1,2,3,4,5,6'
             ],
         ];
 
@@ -308,7 +308,7 @@ class CreateCalendarioForm extends Form
                     }
                 }
 
-                if ($todoEsWeekend && !in_array($tipo, ['1', '2'])) {
+                if ($todoEsWeekend && !in_array($tipo, ['1', '2', '6'])) {
                     $msg = "El evento \"{$evento->nombre_evento}\" está asignado en fin de semana, lo cual solo se permite para Feriados Nacionales o Locales.";
                     $this->addError('eventosRegistrados', $msg);
                     $errores[] = [$msg];
@@ -524,7 +524,7 @@ class CreateCalendarioForm extends Form
             }
         }
 
-        if ($todoEsWeekend && !in_array($tipo, ['1', '2'])) {
+        if ($todoEsWeekend && !in_array($tipo, ['1', '2', '6'])) {
             $msg = "Los fines de semana (sábados y domingos) solo admiten eventos de tipo Feriado Nacional o Feriado Local.";
             $this->addError('eventosRegistrados', $msg);
             throw \Illuminate\Validation\ValidationException::withMessages(['eventosRegistrados' => [$msg]]);

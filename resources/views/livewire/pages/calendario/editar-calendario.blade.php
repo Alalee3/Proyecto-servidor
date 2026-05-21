@@ -109,7 +109,8 @@
             [x-cloak] {
                 display: none !important;
             }
-        </style>        <div class="space-y-6" x-data="{ 
+        </style>
+        <div class="space-y-6" x-data="{ 
                     openSection: 'fechas',
                     inicio: @entangle('form.dia_inicio_calendario_academico'),
                     fin: @entangle('form.dia_fin_calendario_academico')
@@ -835,36 +836,36 @@
                             </template>
 
                             @if ($this->vacacionesContador)
-                                <div class="flex justify-center mb-6 -mt-4">
-                                    @if ($this->vacacionesContador['faltantes'] > 0)
-                                        <div class="px-4 py-1.5 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-full text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center">
-                                            <span>
-                                                Vacaciones Colectivas {{ $this->vacacionesContador['anio'] }}: Asignados {{ $this->vacacionesContador['total_assignados'] }} de {{ $this->vacacionesContador['requeridos'] }} días
-                                                @if ($this->vacacionesContador['asignados_otros'] > 0)
-                                                    <span class="text-[10px] opacity-80">({{ $this->vacacionesContador['asignados_otros'] }} días en otros períodos)</span>
-                                                @endif
-                                            </span>
-                                        </div>
-                                    @elseif ($this->vacacionesContador['excedidos'] > 0)
-                                        <div class="px-4 py-1.5 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-full text-red-600 dark:text-red-400 text-xs font-bold flex items-center">
-                                            <span>
-                                                Vacaciones Colectivas {{ $this->vacacionesContador['anio'] }}: Asignados {{ $this->vacacionesContador['total_assignados'] }} de {{ $this->vacacionesContador['requeridos'] }} días
-                                                @if ($this->vacacionesContador['asignados_otros'] > 0)
-                                                    <span class="text-[10px] opacity-80">({{ $this->vacacionesContador['asignados_otros'] }} días en otros períodos)</span>
-                                                @endif
-                                            </span>
-                                        </div>
-                                    @else
-                                        <div class="px-4 py-1.5 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-full text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center">
-                                            <span>
-                                                Vacaciones Colectivas {{ $this->vacacionesContador['anio'] }}: Asignados {{ $this->vacacionesContador['total_assignados'] }} de {{ $this->vacacionesContador['requeridos'] }} días
-                                                @if ($this->vacacionesContador['asignados_otros'] > 0)
-                                                    <span class="text-[10px] opacity-80">({{ $this->vacacionesContador['asignados_otros'] }} días en otros períodos)</span>
-                                                @endif
-                                            </span>
-                                        </div>
-                                    @endif
+                            <div class="flex justify-center mb-6 -mt-4">
+                                @if ($this->vacacionesContador['faltantes'] > 0)
+                                <div class="px-4 py-1.5 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-full text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center">
+                                    <span>
+                                        Vacaciones Colectivas {{ $this->vacacionesContador['anio'] }}: Asignados {{ $this->vacacionesContador['total_assignados'] }} de {{ $this->vacacionesContador['requeridos'] }} días
+                                        @if ($this->vacacionesContador['asignados_otros'] > 0)
+                                        <span class="text-[10px] opacity-80">({{ $this->vacacionesContador['asignados_otros'] }} días en otros períodos)</span>
+                                        @endif
+                                    </span>
                                 </div>
+                                @elseif ($this->vacacionesContador['excedidos'] > 0)
+                                <div class="px-4 py-1.5 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-full text-red-600 dark:text-red-400 text-xs font-bold flex items-center">
+                                    <span>
+                                        Vacaciones Colectivas {{ $this->vacacionesContador['anio'] }}: Asignados {{ $this->vacacionesContador['total_assignados'] }} de {{ $this->vacacionesContador['requeridos'] }} días
+                                        @if ($this->vacacionesContador['asignados_otros'] > 0)
+                                        <span class="text-[10px] opacity-80">({{ $this->vacacionesContador['asignados_otros'] }} días en otros períodos)</span>
+                                        @endif
+                                    </span>
+                                </div>
+                                @else
+                                <div class="px-4 py-1.5 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-full text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center">
+                                    <span>
+                                        Vacaciones Colectivas {{ $this->vacacionesContador['anio'] }}: Asignados {{ $this->vacacionesContador['total_assignados'] }} de {{ $this->vacacionesContador['requeridos'] }} días
+                                        @if ($this->vacacionesContador['asignados_otros'] > 0)
+                                        <span class="text-[10px] opacity-80">({{ $this->vacacionesContador['asignados_otros'] }} días en otros períodos)</span>
+                                        @endif
+                                    </span>
+                                </div>
+                                @endif
+                            </div>
                             @endif
 
 
@@ -1044,118 +1045,134 @@
                                             x-text="eventoNombre"></span>" no existe en la biblioteca. Por favor,
                                         configúrelo:
                                     </p>
-                                    <div class="space-y-6">
-                                        {{-- Primera Fila: Color y Tipo --}}
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            {{-- Selección de Color --}}
-                                            <div>
-                                                <label
-                                                    class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Color
-                                                    del Evento</label>
-                                                <div x-data="{ 
-                                                          openColores: false, 
-                                                          colores: @entangle('colores'),
-                                                          get selectedHex() {
-                                                              let color = this.colores.find(c => c.id_color == nuevoColorId);
-                                                              return color ? color.codigo_color : null;
-                                                          },
-                                                          get selectedName() {
-                                                              let color = this.colores.find(c => c.id_color == nuevoColorId);
-                                                              return color ? color.nombre_color : 'Seleccione un color';
-                                                          }
-                                                      }" class="relative">
+                                    {{-- Lógica PHP de Control de Deshabilitación para el Calendario Principal --}}
+                                    @php
+                                    $deshabilitarIndependienteLaborable = in_array($form->nuevoTipo, ['1', '2', '6'], true);
+                                    // La cantidad de días se deshabilita únicamente si el switch de rango está apagado
+                                    $deshabilitarCantidadRango = !$form->nuevoIsRangoDias;
+                                    @endphp
 
-                                                    <button @click="openColores = !openColores" type="button"
-                                                        class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-left focus:ring-2 focus:ring-gray-400 flex items-center justify-between transition-all">
-                                                        <div class="flex items-center gap-3 overflow-hidden">
-                                                            <div x-show="selectedHex"
-                                                                class="flex-shrink-0 w-5 h-5 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm"
-                                                                :style="'background-color: ' + selectedHex"></div>
-                                                            <span
-                                                                class="text-sm text-gray-700 dark:text-gray-200 font-medium truncate"
-                                                                x-text="selectedName.toUpperCase()"></span>
-                                                        </div>
-                                                        <span
-                                                            class="material-icons text-gray-400 transition-transform duration-200"
-                                                            :class="openColores ? 'rotate-180' : ''">expand_more</span>
-                                                    </button>
+                                    {{-- Cuadrícula Principal Unificada de 3 Columnas (3x3) --}}
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2 items-start">
 
-                                                    <div x-show="openColores" @click.away="openColores = false"
-                                                        x-transition:enter="transition ease-out duration-200"
-                                                        x-transition:enter-start="opacity-0 translate-y-2"
-                                                        x-transition:enter-end="opacity-100 translate-y-0"
-                                                        class="absolute z-[60] mt-2 w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 max-h-60 overflow-y-auto sogat-scrollbar">
-                                                        <ul class="divide-y divide-gray-50 dark:divide-gray-700/50">
-                                                            @foreach($colores as $color)
-                                                                <li @click="nuevoColorId = {{ $color->id_color }}; openColores = false"
-                                                                    class="cursor-pointer select-none w-full px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center transition-colors"
-                                                                    :class="nuevoColorId == {{ $color->id_color }} ? 'bg-gray-50 dark:bg-gray-700/50' : ''">
-                                                                    <div class="flex items-center gap-4">
-                                                                        <span
-                                                                            class="w-7 h-7 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm"
-                                                                            style="background-color: {{ $color->codigo_color }}"></span>
-                                                                        <span
-                                                                            class="text-gray-900 dark:text-gray-200 text-sm font-semibold">{{ mb_strtoupper($color->nombre_color) }}</span>
-                                                                    </div>
-                                                                </li>
-                                                            @endforeach
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                        {{-- FILA 1 --}}
+                                        {{-- Columna 1: Tipo de Evento --}}
+                                        <div>
+                                            <x-input-label for="tipo" :value="__('Tipo de Evento')" class="mb-2" />
+                                            <select id="tipo" x-model="nuevoTipo" wire:model.live="form.nuevoTipo"
+                                                class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm p-2.5 text-sm text-gray-900 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                                                <option value="1">Feriado Nacional</option>
+                                                <option value="2">Feriado Local</option>
+                                                <option value="6">Feriado Mundial</option>
+                                                <option value="3">Administrativo</option>
+                                                <option value="4">Académico</option>
+                                                <option value="5">Administrativo/Académico</option>
+                                            </select>
+                                            <x-input-error :messages="$errors->first('form.nuevoTipo')" class="mt-2" />
+                                        </div>
 
-                                            {{-- Tipo de Evento --}}
-                                            <div>
-                                                <label
-                                                    class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tipo
-                                                    de Evento</label>
-                                                <select x-model="nuevoTipo" wire:model.live="form.nuevoTipo"
-                                                    class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-gray-400">
-                                                    <option value="1">FERIADOS NACIONALES</option>
-                                                    <option value="2">FERIADOS LOCALES</option>
-                                                    <option value="3">ADMINISTRATIVO</option>
-                                                    <option value="4">ACADÉMICO</option>
-                                                    <option value="5">ADMINISTRATIVO/ACADÉMICO</option>
-                                                </select>
+                                        {{-- Columna 2: Nombre/Descripción del Evento --}}
+                                        <div>
+                                            <x-input-label for="nombre_evento_static" :value="__('Nombre del Evento')" class="mb-2" />
+                                            <div class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm p-2.5 text-sm text-gray-700 dark:text-gray-300 font-semibold min-h-[42px] flex items-center">
+                                                <span x-text="eventoNombre ? eventoNombre.toUpperCase() : 'EJ: CONGRESO NACIONAL'"></span>
                                             </div>
                                         </div>
 
-                                        {{-- Segunda Fila: Switches --}}
-                                        <div x-show="nuevoTipo != '1' && nuevoTipo != '2'"
-                                            x-transition:enter="transition ease-out duration-300"
-                                            x-transition:enter-start="opacity-0 -translate-y-2"
-                                            x-transition:enter-end="opacity-100 translate-y-0" class="space-y-6 pt-2">
+                                        {{-- Columna 3: Color del Evento --}}
+                                        <div>
+                                            <x-input-label for="id_color" :value="__('Color del Evento *')" class="mb-2" />
+                                            <div x-data="{ 
+                 openColores: false, 
+                 colores: @entangle('colores'),
+                 get selectedHex() {
+                     let color = this.colores.find(c => c.id_color == nuevoColorId);
+                     return color ? color.codigo_color : null;
+                 },
+                 get selectedName() {
+                     let color = this.colores.find(c => c.id_color == nuevoColorId);
+                     return color ? color.nombre_color : 'Seleccione un color';
+                 }
+             }" class="relative w-full">
 
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <x-toggle-switch id="laborable_switch_edit" :label="__('¿Es Laborable?')"
-                                                    model="form.nuevoLaborable" />
-                                                <div>
-                                                    <x-toggle-switch id="nuevo_is_independiente_switch_edit" :label="__('¿Es Independiente?')"
-                                                        model="form.nuevoIsIndependiente" />
-                                                    <x-input-error :messages="$errors->get('form.nuevoIsIndependiente')"
-                                                        class="mt-2" />
+                                                <button @click="openColores = !openColores" type="button"
+                                                    class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm min-h-[42px]">
+                                                    <span class="flex items-center gap-2">
+                                                        <template x-if="selectedHex">
+                                                            <span class="w-5 h-5 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm"
+                                                                :style="`background-color: ${selectedHex}`"></span>
+                                                        </template>
+                                                        <span class="block truncate text-gray-500 dark:text-gray-400"
+                                                            :class="nuevoColorId ? 'text-gray-900 dark:text-gray-100 font-semibold' : ''"
+                                                            x-text="selectedName"></span>
+                                                    </span>
+                                                    <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                        <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                        </svg>
+                                                    </span>
+                                                </button>
+
+                                                <div x-show="openColores" @click.away="openColores = false" x-transition.opacity
+                                                    class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg max-h-56 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+                                                    style="display: none;">
+                                                    <ul class="flex flex-col w-full">
+                                                        @foreach($colores as $color)
+                                                        <li @click="nuevoColorId = {{ $color->id_color }}; openColores = false"
+                                                            class="cursor-pointer select-none w-full px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center transition-colors"
+                                                            :class="nuevoColorId == {{ $color->id_color }} ? 'bg-gray-50 dark:bg-gray-700/50' : ''">
+                                                            <div class="flex items-center gap-3">
+                                                                <span class="w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm"
+                                                                    style="background-color: {{ $color->codigo_color }}"></span>
+                                                                <span class="text-gray-900 dark:text-gray-200 font-medium">{{ $color->nombre_color }}</span>
+                                                            </div>
+                                                        </li>
+                                                        @endforeach
+                                                    </ul>
                                                 </div>
                                             </div>
-
-                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                                                <div>
-                                                    <x-toggle-switch id="is_rango_dias_switch_edit" :label="__('¿Tiene cantidad especifica días?')"
-                                                        model="form.nuevoIsRangoDias" />
-                                                </div>
-                                                <div x-show="nuevoIsRangoDias" x-transition>
-                                                    <x-input-label for="nuevo_rango_dias_input_edit"
-                                                        :value="__('Cantidad de Días')" class="mb-2" />
-                                                    <x-text-input id="nuevo_rango_dias_input_edit" type="number"
-                                                        class="w-full block" wire:model.live="form.nuevoRangoDias"
-                                                        placeholder="EJ: 5" min="1" max="90" />
-                                                    <x-input-error :messages="$errors->get('form.nuevoRangoDias')"
-                                                        class="mt-2" />
-                                                </div>
-                                            </div>
+                                            <x-input-error :messages="$errors->first('form.nuevoColorId')" class="mt-2" />
                                         </div>
+
+                                        {{-- FILA 2 --}}
+                                        {{-- Columna 1: ¿Puede registrarse fuera de un semestre? --}}
+                                        <div>
+                                            <x-toggle-switch id="nuevo_is_independiente_switch" :label="__('¿Puede registrarse fuera de un semestre?')"
+                                                model="form.nuevoIsIndependiente" :disabled="$deshabilitarIndependienteLaborable" />
+                                            <x-input-error :messages="$errors->get('form.nuevoIsIndependiente')" class="mt-2" />
+                                        </div>
+
+                                        {{-- Columna 2: ¿Es Laborable? --}}
+                                        <div>
+                                            <x-toggle-switch id="laborable_switch" :label="__('¿Es Laborable?')"
+                                                model="form.nuevoLaborable" :disabled="$deshabilitarIndependienteLaborable" />
+                                        </div>
+
+                                        {{-- Columna 3: ¿Se puede repetir? --}}
+                                        <div>
+                                            <x-toggle-switch id="repetible_switch" :label="__('¿Se puede repetir?')"
+                                                model="form.nuevoRepetible" :disabled="true" />
+                                        </div>
+
+                                        {{-- FILA 3 --}}
+                                        {{-- Columna 1: ¿Tiene cantidad específica de días de duración? --}}
+                                        <div>
+                                            <x-toggle-switch id="is_rango_dias_switch" :label="__('¿Tiene cantidad específica de días de duración?')"
+                                                model="form.nuevoIsRangoDias" />
+                                        </div>
+
+                                        {{-- Columna 2: Cantidad de días que debe durar el evento --}}
+                                        <div class="w-full">
+                                            <x-input-label for="nuevo_rango_dias_input" :value="__('Cantidad de días que debe durar el evento')" class="mb-2" />
+                                            <x-text-input id="nuevo_rango_dias_input" type="number" min="1" max="90" class="w-full"
+                                                wire:model.live="form.nuevoRangoDias" placeholder="Ej: 5" :disabled="$deshabilitarCantidadRango" />
+                                            <x-input-error :messages="$errors->first('form.nuevoRangoDias')" class="mt-2" />
+                                        </div>
+
+                                        {{-- Columna 3: Espacio vacío simétrico --}}
+                                        <div class="hidden lg:block"></div>
 
                                     </div>
-
                                     <div class="flex flex-col gap-3 mt-8">
                                         <x-primary-button @click="confirmarNuevoEvento()" wire:loading.attr="disabled"
                                             class="w-full justify-center py-3 rounded-xl">
