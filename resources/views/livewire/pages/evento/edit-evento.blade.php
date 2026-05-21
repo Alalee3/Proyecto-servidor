@@ -10,39 +10,13 @@
     <div class="sogat-card">
         <form wire:submit.prevent="guardar" class="w-full space-y-6" novalidate>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="w-full">
-                    <x-datalist
-                        wire:key="datalist-eventos-{{ md5($eventosExistentes->pluck('nombre_evento')->join(',')) }}"
-                        label="Nombre del Evento" :options="$eventosExistentes" textField="nombre_evento"
-                        wire:model.live="form.descripcion_evento" placeholder="Ej: Congreso Nacional" required />
-                </div>
-
-                <x-toggle-switch id="is_especial_edit" :label="__('¿Es un Evento Especial?')" model="form.is_especial" />
-
-                <div class="w-full">
-                    <x-input-label for="especial" :value="__('Seleccione Evento Especial')" />
-                    <select id="especial" wire:model.live="form.especial_evento" @disabled(!$form->is_especial)
-                        @class([
-                            'w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm',
-                            'opacity-60 cursor-not-allowed' => !$form->is_especial,
-                        ])>
-                        <option value="">Seleccione...</option>
-                        <option value="1">Vacaciones Colectivas</option>
-                        <option value="2">Inicio del Lapso Académico</option>
-                        <option value="3">Fin del Lapso Académico</option>
-                        <option value="4">Semana Santa</option>
-                        <option value="5">Carnaval</option>
-                    </select>
-                    <x-input-error :messages="$errors->first('form.especial_evento')" class="mt-2" />
-                </div>
-
-                <div class="w-full">
-                    <x-input-label for="cantidad_dias_evento" :value="__('Cantidad de Días de Vacaciones *')" />
-                    <x-text-input id="cantidad_dias_evento" type="number" min="1" max="365" class="w-full"
-                        wire:model.live="form.cantidad_dias_evento" placeholder="Ej: 15"
-                        :disabled="!$form->is_especial || $form->especial_evento != '1'" />
-                    <x-input-error :messages="$errors->first('form.cantidad_dias_evento')" class="mt-2" />
-                </div>
+                
+                @php
+                    $deshabilitarIndependienteLaborable = $form->is_especial
+                        || in_array($form->tipo_evento, ['1', '2', '6'], true);
+                    $deshabilitarRangoDias = $form->is_especial;
+                    $deshabilitarCantidadRango = $form->is_especial || !$form->is_rango_dias;
+                @endphp
 
                 <div class="w-full">
                     <x-input-label for="tipo" :value="__('Tipo de Evento')" />
@@ -53,11 +27,19 @@
                         ])>
                         <option value="1">Feriado Nacional</option>
                         <option value="2">Feriado Local</option>
+                        <option value="6">Feriado Mundial</option>
                         <option value="3">Administrativo</option>
                         <option value="4">Académico</option>
                         <option value="5">Administrativo/Académico</option>
                     </select>
                     <x-input-error :messages="$errors->first('form.tipo_evento')" class="mt-2" />
+                </div>
+
+                <div class="w-full">
+                    <x-datalist
+                        wire:key="datalist-eventos-{{ md5($eventosExistentes->pluck('nombre_evento')->join(',')) }}"
+                        label="Nombre del Evento" :options="$eventosExistentes" textField="nombre_evento"
+                        wire:model.live="form.descripcion_evento" placeholder="Ej: Congreso Nacional" required />
                 </div>
 
                 <div class="w-full">
@@ -122,28 +104,52 @@
                     <x-input-error :messages="$errors->first('form.id_color')" class="mt-2" />
                 </div>
 
-                @php
-                    $deshabilitarIndependienteLaborable = $form->is_especial
-                        || in_array($form->tipo_evento, ['1', '2'], true);
-                    $deshabilitarRangoDias = $form->is_especial;
-                    $deshabilitarCantidadRango = $form->is_especial || !$form->is_rango_dias;
-                @endphp
-
-                <x-toggle-switch id="is_independiente_edit" :label="__('¿Es Independiente?')" model="form.is_independiente"
+                <x-toggle-switch id="is_independiente_edit" :label="__('¿Puede registrarse fuera de un semestre?')" model="form.is_independiente"
                     :disabled="$deshabilitarIndependienteLaborable" />
 
                 <x-toggle-switch id="is_laborable_edit" :label="__('¿Es Laborable?')" model="form.is_laborable"
                     :disabled="$deshabilitarIndependienteLaborable" />
 
-                <x-toggle-switch id="is_rango_dias_edit" :label="__('¿Tiene cantidad especifica días?')"
+                <x-toggle-switch id="is_rango_dias_edit" :label="__('¿Tiene cantidad especifica días de duración?')"
                     model="form.is_rango_dias" :disabled="$deshabilitarRangoDias" />
 
                 <div class="w-full">
-                    <x-input-label for="rango_dias_edit" :value="__('Cantidad de Días')" />
+                    <x-input-label for="rango_dias_edit" :value="__('Cantidad de días que debe durar el evento')" />
                     <x-text-input id="rango_dias_edit" type="number" min="1" max="90" class="w-full"
                         wire:model.live="form.rango_dias" placeholder="Ej: 5" :disabled="$deshabilitarCantidadRango" />
                     <x-input-error :messages="$errors->first('form.rango_dias')" class="mt-2" />
                 </div>
+
+                <x-toggle-switch id="is_especial_edit" :label="__('¿Es un Evento Especial?')" model="form.is_especial" />
+                
+                @if($form->is_especial)
+                <div class="w-full">
+                    <x-input-label for="especial" :value="__('Seleccione el tipo de Evento Especial')" />
+                    <select id="especial" wire:model.live="form.especial_evento" @disabled(!$form->is_especial)
+                        @class([
+                            'w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm',
+                            'opacity-60 cursor-not-allowed' => !$form->is_especial,
+                        ])>
+                        <option value="">Seleccione...</option>
+                        <option value="1">Vacaciones Colectivas</option>
+                        <option value="2">Inicio del Lapso Académico</option>
+                        <option value="3">Fin del Lapso Académico</option>
+                        <option value="4">Semana Santa</option>
+                        <option value="5">Carnaval</option>
+                    </select>
+                    <x-input-error :messages="$errors->first('form.especial_evento')" class="mt-2" />
+                </div>
+                @endif
+
+                @if($form->is_especial && $form->especial_evento == '1')
+                <div class="w-full">
+                    <x-input-label for="cantidad_dias_evento" :value="__('Cantidad de Días de Vacaciones')" />
+                    <x-text-input id="cantidad_dias_evento" type="number" min="1" max="365" class="w-full"
+                        wire:model.live="form.cantidad_dias_evento" placeholder="Ej: 15"
+                        :disabled="!$form->is_especial || $form->especial_evento != '1'" />
+                    <x-input-error :messages="$errors->first('form.cantidad_dias_evento')" class="mt-2" />
+                </div>
+                @endif
             </div>
 
             <div class="flex items-center justify-end gap-4">
