@@ -33,6 +33,11 @@ class Evento extends Model
         return $this->hasMany(DetalleEvento::class, 'id_evento');
     }
 
+    public function semanas()
+    {
+        return $this->hasMany(SemanaEvento::class, 'id_evento');
+    }
+
     /**
      * Compatibility Accessors for old schema column names
      */

@@ -33,6 +33,9 @@ class UpdateEvento extends Component
         $this->form->setEvento($evento);
         $this->cargarColores();
         $this->refreshEventos();
+        if (empty($this->form->semanas)) {
+            $this->form->semanas = [''];
+        }
     }
 
     public function refreshEventos()
@@ -204,6 +207,19 @@ class UpdateEvento extends Component
     public function cancelar()
     {
         return redirect()->route('evento/listar');
+    }
+
+    public function agregarSemana()
+    {
+        if ($this->form->is_repetible) {
+            $this->form->semanas[] = '';
+        }
+    }
+
+    public function removerSemana($index)
+    {
+        unset($this->form->semanas[$index]);
+        $this->form->semanas = array_values($this->form->semanas);
     }
 
     public function render()

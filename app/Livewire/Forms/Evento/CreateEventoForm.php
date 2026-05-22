@@ -16,7 +16,8 @@ class CreateEventoForm extends Form
     public $is_rango_dias = false;
     public $rango_dias = '';
     public $is_independiente = true;
-    public $cantidad_dias_evento = 60;
+    public $cantidad_dias_evento = 0;
+    public $semanas = [];
 
     protected function rules()
     {
@@ -165,6 +166,34 @@ class CreateEventoForm extends Form
                     }
                 }
             ],
+            'semanas' => [
+                'required',
+                'array',
+                'min:1',
+                function ($attribute, $value, $fail) {
+                    if (!$this->is_repetible && count($value) > 1) {
+                        $fail('Si el evento no es repetible, solo puede seleccionar una (1) semana.');
+                    }
+                    
+                    // Filtrar valores vacíos
+                    $semanasValidas = array_filter($value, function($val) {
+                        return $val !== null && $val !== '';
+                    });
+                    
+                    // Comprobar duplicados
+                    if (count($semanasValidas) !== count(array_unique($semanasValidas))) {
+                        $fail('No puede seleccionar la misma semana más de una vez.');
+                    }
+                    
+                    foreach ($value as $semana) {
+                        if ($semana !== null && $semana !== '') {
+                            if (!is_numeric($semana) || $semana < 1 || $semana > 99) {
+                                $fail('Las semanas seleccionadas deben ser un número válido entre 1 y 99.');
+                            }
+                        }
+                    }
+                }
+            ],
         ];
     }
 
@@ -188,6 +217,9 @@ class CreateEventoForm extends Form
             'rango_dias.integer' => 'La cantidad de días debe ser un número entero.',
             'rango_dias.min' => 'La cantidad de días debe ser al menos 1.',
             'rango_dias.max' => 'La cantidad de días no debe superar los 90 días.',
+            'semanas.required' => 'Debe seleccionar al menos una semana.',
+            'semanas.array' => 'Formato inválido de semanas.',
+            'semanas.min' => 'Debe seleccionar al menos una semana.',
         ];
     }
 }

@@ -21,6 +21,7 @@ class UpdateEventoForm extends Form
     public $rango_dias = '';
     public $is_independiente = false;
     public $cantidad_dias_evento = '';
+    public $semanas = [];
 
     public function setEvento($evento)
     {
@@ -36,6 +37,7 @@ class UpdateEventoForm extends Form
         $this->rango_dias = $evento->rango_dias_evento;
         $this->is_independiente = (bool) ($evento->is_independiente ?? $evento->is_independiente_evento ?? false);
         $this->cantidad_dias_evento = $evento->cantidad_dias_evento;
+        $this->semanas = $evento->semanas->pluck('numero_semana_evento')->toArray();
     }
 
     protected function rules()
@@ -186,6 +188,34 @@ class UpdateEventoForm extends Form
                     }
                 }
             ],
+            'semanas' => [
+                'required',
+                'array',
+                'min:1',
+                function ($attribute, $value, $fail) {
+                    if (!$this->is_repetible && count($value) > 1) {
+                        $fail('Si el evento no es repetible, solo puede seleccionar una (1) semana.');
+                    }
+                    
+                    // Filtrar valores vacíos
+                    $semanasValidas = array_filter($value, function($val) {
+                        return $val !== null && $val !== '';
+                    });
+                    
+                    // Comprobar duplicados
+                    if (count($semanasValidas) !== count(array_unique($semanasValidas))) {
+                        $fail('No puede seleccionar la misma semana más de una vez.');
+                    }
+                    
+                    foreach ($value as $semana) {
+                        if ($semana !== null && $semana !== '') {
+                            if (!is_numeric($semana) || $semana < 1 || $semana > 99) {
+                                $fail('Las semanas seleccionadas deben ser un número válido entre 1 y 99.');
+                            }
+                        }
+                    }
+                }
+            ],
         ];
     }
 
@@ -209,6 +239,9 @@ class UpdateEventoForm extends Form
             'rango_dias.integer' => 'La cantidad de días debe ser un número entero.',
             'rango_dias.min' => 'La cantidad de días debe ser al menos 1.',
             'rango_dias.max' => 'La cantidad de días no debe superar los 90 días.',
+            'semanas.required' => 'Debe seleccionar al menos una semana.',
+            'semanas.array' => 'Formato inválido de semanas.',
+            'semanas.min' => 'Debe seleccionar al menos una semana.',
         ];
     }
 }

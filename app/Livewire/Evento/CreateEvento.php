@@ -23,6 +23,9 @@ class CreateEvento extends Component
     {
         $this->cargarColores();
         $this->refreshEventos();
+        if (empty($this->form->semanas)) {
+            $this->form->semanas = [''];
+        }
     }
 
     public function refreshEventos()
@@ -137,6 +140,11 @@ class CreateEvento extends Component
                 }
             }
         }
+        
+        // Si no es repetible, recortar semanas a 1
+        if (!$this->form->is_repetible && is_array($this->form->semanas) && count($this->form->semanas) > 1) {
+            $this->form->semanas = array_slice($this->form->semanas, 0, 1);
+        }
 
 // Limpiar especial_evento si el switch se apaga
         if ($propertyName === 'form.is_especial' && !$this->form->is_especial) {
@@ -175,6 +183,7 @@ class CreateEvento extends Component
             $id_repo = $this->eventoRepository->crear($this->form->all());
 
             $this->reset('form.descripcion_evento', 'form.tipo_evento', 'form.id_color', 'form.especial_evento', 'form.is_especial', 'form.cantidad_dias_evento');
+            $this->form->semanas = ['']; // Reset semanas explicitly just in case
             $this->refreshEventos();
             $this->showAlert('success', 'Evento creado correctamente.');
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -191,6 +200,19 @@ class CreateEvento extends Component
     {
         $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
         $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
+    }
+
+    public function agregarSemana()
+    {
+        if ($this->form->is_repetible) {
+            $this->form->semanas[] = '';
+        }
+    }
+
+    public function removerSemana($index)
+    {
+        unset($this->form->semanas[$index]);
+        $this->form->semanas = array_values($this->form->semanas);
     }
 
     public function render()

@@ -35,6 +35,24 @@ class EventoUpdateRepo
 
             $evento->update($params);
 
+            if (!empty($data['semanas']) && is_array($data['semanas'])) {
+                \App\Models\SemanaEvento::where('id_evento', $id)->delete();
+                $semanasData = [];
+                $semanasValidas = array_unique(array_filter($data['semanas'], function($val) {
+                    return $val !== null && $val !== '';
+                }));
+                foreach ($semanasValidas as $semana) {
+                    $semanasData[] = [
+                        'id_evento' => $evento->id_evento,
+                        'numero_semana_evento' => $semana,
+                        'estatus' => '1',
+                    ];
+                }
+                if (count($semanasData) > 0) {
+                    \App\Models\SemanaEvento::insert($semanasData);
+                }
+            }
+
             return $evento;
         });
     }

@@ -33,6 +33,18 @@ class EventoCreateRepo
 
         $evento = Evento::create($params);
 
+        if (!empty($data['semanas']) && is_array($data['semanas'])) {
+            $semanasData = [];
+            foreach ($data['semanas'] as $semana) {
+                $semanasData[] = [
+                    'id_evento' => $evento->id_evento,
+                    'numero_semana_evento' => $semana,
+                    'estatus' => '1',
+                ];
+            }
+            \App\Models\SemanaEvento::insert($semanasData);
+        }
+
         return $evento->id_evento;
     }
 
