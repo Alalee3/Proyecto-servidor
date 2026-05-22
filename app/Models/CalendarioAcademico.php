@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class CalendarioAcademico extends Model
 {
+    use \App\Traits\Auditable;
+
     protected $table = 'calendario_academico';
     protected $primaryKey = 'id_calendario_academico';
     public $timestamps = false;

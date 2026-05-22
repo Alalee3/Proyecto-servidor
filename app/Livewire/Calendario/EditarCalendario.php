@@ -471,7 +471,8 @@ class EditarCalendario extends Component
                 'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
                 'semana_lapso_uno_calendario_academico' => $this->form->semana_lapso_uno_calendario_academico,
                 'semana_lapso_dos_calendario_academico' => $this->form->semana_lapso_dos_calendario_academico,
-                'semana_lapso_introductorio_calendario_academico' => $this->form->semana_lapso_introductorio_calendario_academico,
+                'semana_lapso_uno_introductorio_calendario_academico' => $this->form->semana_lapso_uno_introductorio_calendario_academico,
+                'semana_lapso_dos_introductorio_calendario_academico' => $this->form->semana_lapso_dos_introductorio_calendario_academico,
                 'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
                 'estatus' => '2' // Sigue en revisión
             ], $this->eventosRegistrados, $this->id_calendario);
@@ -514,7 +515,8 @@ class EditarCalendario extends Component
                     'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
                     'semana_lapso_uno_calendario_academico' => $this->form->semana_lapso_uno_calendario_academico,
                     'semana_lapso_dos_calendario_academico' => $this->form->semana_lapso_dos_calendario_academico,
-                    'semana_lapso_introductorio_calendario_academico' => $this->form->semana_lapso_introductorio_calendario_academico,
+                    'semana_lapso_uno_introductorio_calendario_academico' => $this->form->semana_lapso_uno_introductorio_calendario_academico,
+                    'semana_lapso_dos_introductorio_calendario_academico' => $this->form->semana_lapso_dos_introductorio_calendario_academico,
                     'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
                 ]);
 
@@ -555,7 +557,8 @@ class EditarCalendario extends Component
                     'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
                     'semana_lapso_uno_calendario_academico' => $this->form->semana_lapso_uno_calendario_academico,
                     'semana_lapso_dos_calendario_academico' => $this->form->semana_lapso_dos_calendario_academico,
-                    'semana_lapso_introductorio_calendario_academico' => $this->form->semana_lapso_introductorio_calendario_academico,
+                    'semana_lapso_uno_introductorio_calendario_academico' => $this->form->semana_lapso_uno_introductorio_calendario_academico,
+                    'semana_lapso_dos_introductorio_calendario_academico' => $this->form->semana_lapso_dos_introductorio_calendario_academico,
                     'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
                 ]);
 

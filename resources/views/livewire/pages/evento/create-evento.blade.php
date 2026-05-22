@@ -39,7 +39,8 @@
                     <x-datalist
                         wire:key="datalist-eventos-{{ md5($eventosExistentes->pluck('nombre_evento')->join(',')) }}"
                         label="Nombre del Evento" :options="$eventosExistentes" textField="nombre_evento"
-                        wire:model.live="form.descripcion_evento" placeholder="Ej: Congreso Nacional" required />
+                        wire:model.live="form.descripcion_evento" placeholder="Ej: Congreso Nacional" required
+                        :disabled="$form->is_especial" />
                 </div>
 
                 <div class="w-full">

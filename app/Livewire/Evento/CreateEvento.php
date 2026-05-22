@@ -94,6 +94,23 @@ class CreateEvento extends Component
             } else {
                 $this->form->cantidad_dias_evento = 0;
             }
+            $nombresEspeciales = [
+                '1' => 'Vacaciones Colectivas',
+                '2' => 'Inicio del Lapso Académico',
+                '3' => 'Fin del Lapso Académico',
+                '4' => 'Semana Santa',
+                '5' => 'Carnaval',
+                '7' => 'Inicio del Lapso Introductorio',
+                '8' => 'Fin del Lapso Introductorio',
+                '9' => 'Inicio del Curso Intensivo',
+                '10' => 'Fin del Curso Intensivo',
+            ];
+
+            if (isset($nombresEspeciales[$this->form->especial_evento])) {
+                $this->form->descripcion_evento = $nombresEspeciales[$this->form->especial_evento];
+            } else {
+                $this->form->descripcion_evento = '';
+            }
         }
 
         // Si cambia is_especial
