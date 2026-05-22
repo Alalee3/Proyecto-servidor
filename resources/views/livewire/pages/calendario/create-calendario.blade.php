@@ -169,6 +169,24 @@
                                 class="mt-2" />
                         </div>
                     </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mx-auto mt-6">
+                        <div class="w-full">
+                            <x-input-label for="semana_lapso_introductorio_calendario_academico" :value="__('Cantidad de Semanas (Lapso Introductorio)')" />
+                            <x-text-input id="semana_lapso_introductorio_calendario_academico" type="number" min="1" max="99"
+                                wire:model.live="form.semana_lapso_introductorio_calendario_academico"
+                                class="w-full mt-1" placeholder="Opcional" />
+                            <x-input-error :messages="$errors->first('form.semana_lapso_introductorio_calendario_academico')"
+                                class="mt-2" />
+                        </div>
+                        <div class="w-full">
+                            <x-input-label for="semana_intensibo_introductorio_calendario_academico" :value="__('Cantidad de Semanas (Intensivo)')" />
+                            <x-text-input id="semana_intensibo_introductorio_calendario_academico" type="number" min="1" max="99"
+                                wire:model.live="form.semana_intensibo_introductorio_calendario_academico" class="w-full mt-1"
+                                placeholder="Opcional" />
+                            <x-input-error :messages="$errors->first('form.semana_intensibo_introductorio_calendario_academico')"
+                                class="mt-2" />
+                        </div>
+                    </div>
                     <div
                         class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
                         <x-primary-button type="button" wire:click="validarSeccionFechas"
@@ -453,7 +471,7 @@
                                                     
                                                     const niHdr = document.createElement('div');
                                                     niHdr.className = 'vanilla-calendar-week-day sogat-week-hdr-ni font-black text-[10px] text-gray-500 dark:text-gray-400 border-l border-gray-100 dark:border-gray-700 flex items-center justify-center';
-                                                    niHdr.style.setProperty('color', '#ef4444', 'important');
+                                                    niHdr.style.setProperty('color', '#0ea5e9', 'important'); // azul celeste
                                                     niHdr.innerText = 'NI';
                                                     
                                                     weekEl.appendChild(trHdr);
@@ -473,6 +491,10 @@
                                                 // Encontrar todas las fechas de inicio y fin de lapsos (especial_evento 2 y 3)
                                                 let inicios = [];
                                                 let fines = [];
+                                                let iniciosIntro = [];
+                                                let finesIntro = [];
+                                                let iniciosIntensivo = [];
+                                                let finesIntensivo = [];
                                                 // Encontrar todas las semanas festivas (Semana Santa = 4 y Carnaval = 5)
                                                 let semanasFestivas = new Set();
 
@@ -484,6 +506,14 @@
                                                             inicios.push(ev.inicio);
                                                         } else if (esp === '3') {
                                                             fines.push(ev.fin);
+                                                        } else if (esp === '7') {
+                                                            iniciosIntro.push(ev.inicio);
+                                                        } else if (esp === '8') {
+                                                            finesIntro.push(ev.fin);
+                                                        } else if (esp === '9') {
+                                                            iniciosIntensivo.push(ev.inicio);
+                                                        } else if (esp === '10') {
+                                                            finesIntensivo.push(ev.fin);
                                                         } else if (esp === '4' || esp === '5' || nombreEv.includes('semana santa') || nombreEv.includes('carnaval') || nombreEv.includes('viernes santo') || nombreEv.includes('jueves santo')) {
                                                             // Marcar cada lunes de semana festiva
                                                             let d = new Date(ev.inicio + 'T00:00:00');
@@ -506,6 +536,10 @@
                                                 }
                                                 inicios.sort();
                                                 fines.sort();
+                                                iniciosIntro.sort();
+                                                finesIntro.sort();
+                                                iniciosIntensivo.sort();
+                                                finesIntensivo.sort();
 
                                                 daysContainer.innerHTML = '';
                                                 for (let i = 0; i < dayElements.length; i += 7) {
@@ -544,60 +578,117 @@
                                                             break;
                                                         }
                                                     }
+                                                    
+                                                    // Determinar si esta semana pertenece a un lapso introductorio
+                                                    let activeIntroIndex = -1;
+                                                    let activeIntroInicio = null;
+                                                    let activeIntroFin = null;
+
+                                                    for (let k = 0; k < iniciosIntro.length; k++) {
+                                                        const iniL = iniciosIntro[k];
+                                                        const finL = finesIntro[k];
+                                                        if (!finL) continue;
+                                                        let hasLapso = false;
+                                                        for (let dStr of weekDates) {
+                                                            if (dStr >= iniL && dStr <= finL) {
+                                                                hasLapso = true;
+                                                                break;
+                                                            }
+                                                        }
+                                                        if (hasLapso) {
+                                                            activeIntroIndex = k;
+                                                            activeIntroInicio = iniL;
+                                                            activeIntroFin = finL;
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    // Determinar si esta semana pertenece a un curso intensivo
+                                                    let activeIntensivoIndex = -1;
+                                                    let activeIntensivoInicio = null;
+                                                    let activeIntensivoFin = null;
+
+                                                    for (let k = 0; k < iniciosIntensivo.length; k++) {
+                                                        const iniL = iniciosIntensivo[k];
+                                                        const finL = finesIntensivo[k];
+                                                        if (!finL) continue;
+                                                        let hasLapso = false;
+                                                        for (let dStr of weekDates) {
+                                                            if (dStr >= iniL && dStr <= finL) {
+                                                                hasLapso = true;
+                                                                break;
+                                                            }
+                                                        }
+                                                        if (hasLapso) {
+                                                            activeIntensivoIndex = k;
+                                                            activeIntensivoInicio = iniL;
+                                                            activeIntensivoFin = finL;
+                                                            break;
+                                                        }
+                                                    }
 
                                                     let trVal = '';
                                                     let niVal = '';
 
-                                                    if (activeLapsoIndex !== -1 && weekDates.length > 0) {
-                                                         // Calcular índice de la semana en base a la fecha de inicio del lapso activo
+                                                    const getWeekCount = (lapsoInicioStr) => {
                                                          const firstDateStr = weekDates[0];
                                                          const firstDate = new Date(firstDateStr + 'T00:00:00');
-                                                         const lapsoDate = new Date(activeLapsoInicio + 'T00:00:00');
+                                                         const lapsoDate = new Date(lapsoInicioStr + 'T00:00:00');
 
-                                                         // Lunes de la semana de inicio del lapso
                                                          const dayOfWeek = lapsoDate.getDay();
                                                          const offset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
                                                          const mondayInicioLapso = new Date(lapsoDate);
                                                          mondayInicioLapso.setDate(mondayInicioLapso.getDate() + offset);
 
-                                                         // Lunes de la semana actual
                                                          const currentDayOfWeek = firstDate.getDay();
                                                          const currentOffset = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
                                                          const mondayCurrent = new Date(firstDate);
                                                          mondayCurrent.setDate(mondayCurrent.getDate() + currentOffset);
 
-                                                         // Formatear lunes actual a string YYYY-MM-DD
                                                          const yCurr = mondayCurrent.getFullYear();
                                                          const mCurr = String(mondayCurrent.getMonth() + 1).padStart(2, '0');
                                                          const dCurr = String(mondayCurrent.getDate()).padStart(2, '0');
                                                          const mondayCurrentStr = `${yCurr}-${mCurr}-${dCurr}`;
 
                                                          if (semanasFestivas.has(mondayCurrentStr)) {
-                                                             trVal = '';
-                                                             niVal = '';
-                                                         } else {
-                                                             // Contar cuántas semanas desde el inicio del lapso hasta el lunes actual NO son festivas
-                                                             let weekIndex = 0;
-                                                             let tempMonday = new Date(mondayInicioLapso);
-                                                             while (tempMonday <= mondayCurrent) {
-                                                                 const yTemp = tempMonday.getFullYear();
-                                                                 const mTemp = String(tempMonday.getMonth() + 1).padStart(2, '0');
-                                                                 const dTemp = String(tempMonday.getDate()).padStart(2, '0');
-                                                                 const tempMondayStr = `${yTemp}-${mTemp}-${dTemp}`;
+                                                             return '';
+                                                         }
+                                                         
+                                                         let weekIndex = 0;
+                                                         let tempMonday = new Date(mondayInicioLapso);
+                                                         while (tempMonday <= mondayCurrent) {
+                                                             const yTemp = tempMonday.getFullYear();
+                                                             const mTemp = String(tempMonday.getMonth() + 1).padStart(2, '0');
+                                                             const dTemp = String(tempMonday.getDate()).padStart(2, '0');
+                                                             const tempMondayStr = `${yTemp}-${mTemp}-${dTemp}`;
 
-                                                                 if (!semanasFestivas.has(tempMondayStr)) {
-                                                                     weekIndex++;
-                                                                 }
-
-                                                                 // Avanzar 1 semana
-                                                                 tempMonday.setDate(tempMonday.getDate() + 7);
+                                                             if (!semanasFestivas.has(tempMondayStr)) {
+                                                                 weekIndex++;
                                                              }
 
+                                                             tempMonday.setDate(tempMonday.getDate() + 7);
+                                                         }
+                                                         return weekIndex;
+                                                    };
+
+                                                    if (activeLapsoIndex !== -1 && weekDates.length > 0) {
+                                                         const weekIndex = getWeekCount(activeLapsoInicio);
+                                                         if (weekIndex !== '') {
                                                              const suffixes = ['I', 'II', 'III', 'IV', 'V'];
                                                              const suffix = suffixes[activeLapsoIndex] || 'I';
-
                                                              trVal = `${weekIndex}${suffix}`;
-                                                             niVal = `${weekIndex}${suffix}`;
+                                                         }
+                                                    } else if (activeIntensivoIndex !== -1 && weekDates.length > 0) {
+                                                         const weekIndex = getWeekCount(activeIntensivoInicio);
+                                                         if (weekIndex !== '') {
+                                                             trVal = `${weekIndex}IN`;
+                                                         }
+                                                    }
+                                                    
+                                                    if (activeIntroIndex !== -1 && weekDates.length > 0) {
+                                                         const weekIndex = getWeekCount(activeIntroInicio);
+                                                         if (weekIndex !== '') {
+                                                             niVal = `${weekIndex}`;
                                                          }
                                                     }
 
@@ -606,7 +697,7 @@
                                                     trCell.innerText = trVal;
 
                                                     const niCell = document.createElement('div');
-                                                    niCell.className = 'sogat-week-col-ni flex items-center justify-center text-xs font-bold text-blue-500 border-l border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/20 rounded-md';
+                                                    niCell.className = 'sogat-week-col-ni flex items-center justify-center text-xs font-black text-sky-500 border-l border-gray-100 dark:border-gray-700 bg-sky-50/50 dark:bg-sky-900/20 rounded-md';
                                                     niCell.innerText = niVal;
 
                                                     daysContainer.appendChild(trCell);

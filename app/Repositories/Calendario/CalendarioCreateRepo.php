@@ -10,8 +10,10 @@ class CalendarioCreateRepo
     public function crear(array $data)
     {
         $calendario = \App\Models\CalendarioAcademico::create([
-            'semana_lapso_uno_calendario_academico' => $data['semana_lapso_uno_calendario_academico'],
-            'semana_lapso_dos_calendario_academico' => $data['semana_lapso_dos_calendario_academico'],
+            'semana_lapso_uno_calendario_academico' => $data['semana_lapso_uno_calendario_academico'] ?? 0,
+            'semana_lapso_dos_calendario_academico' => $data['semana_lapso_dos_calendario_academico'] ?? 0,
+            'semana_lapso_introductorio_calendario_academico' => $data['semana_lapso_introductorio_calendario_academico'] ?? null,
+            'semana_intensibo_introductorio_calendario_academico' => $data['semana_intensibo_introductorio_calendario_academico'] ?? null,
             'dia_inicio_calendario_academico' => $data['dia_inicio_calendario_academico'],
             'dia_fin_calendario_academico' => $data['dia_fin_calendario_academico'],
             'estatus' => '2', // En revisión
@@ -57,6 +59,8 @@ class CalendarioCreateRepo
                     ->update([
                         'semana_lapso_uno_calendario_academico' => $data['semana_lapso_uno_calendario_academico'],
                         'semana_lapso_dos_calendario_academico' => $data['semana_lapso_dos_calendario_academico'],
+                        'semana_lapso_introductorio_calendario_academico' => $data['semana_lapso_introductorio_calendario_academico'] ?? null,
+                        'semana_intensibo_introductorio_calendario_academico' => $data['semana_intensibo_introductorio_calendario_academico'] ?? null,
                         'dia_inicio_calendario_academico' => $data['dia_inicio_calendario_academico'],
                         'dia_fin_calendario_academico' => $data['dia_fin_calendario_academico'],
                         'estatus' => '2', // Al confirmar, pasa a En revisión
@@ -119,6 +123,8 @@ class CalendarioCreateRepo
                 'dia_fin_calendario_academico' => $data['dia_fin_calendario_academico'],
                 'semana_lapso_uno_calendario_academico' => $data['semana_lapso_uno_calendario_academico'] ?? 0,
                 'semana_lapso_dos_calendario_academico' => $data['semana_lapso_dos_calendario_academico'] ?? 0,
+                'semana_lapso_introductorio_calendario_academico' => $data['semana_lapso_introductorio_calendario_academico'] ?? null,
+                'semana_intensibo_introductorio_calendario_academico' => $data['semana_intensibo_introductorio_calendario_academico'] ?? null,
                 'estatus' => $data['estatus'] ?? '4' // Por defecto incompleto
             ];
 

@@ -226,7 +226,7 @@ class EditarCalendario extends Component
     protected function debeRecalcularFinesLapso(?\App\Models\Evento $eventoInfo): bool
     {
         $hayInicios = collect($this->eventosRegistrados)->contains(
-            fn ($e) => ($e['especial_evento'] ?? '') === '2'
+            fn ($e) => in_array($e['especial_evento'] ?? '', ['2', '7', '9'])
         );
 
         if (!$hayInicios || !$eventoInfo) {
@@ -236,6 +236,8 @@ class EditarCalendario extends Component
         $esp = (string) ($eventoInfo->especial_evento ?? '');
 
         return $esp === '2'
+            || $esp === '7'
+            || $esp === '9'
             || $esp === '4'
             || $esp === '5'
             || \App\Support\CalendarioLapsoSemanas::eventoModeloEsFestivo($eventoInfo);
@@ -250,23 +252,57 @@ class EditarCalendario extends Component
 
         $this->eventosRegistrados = array_values(array_filter(
             $this->eventosRegistrados,
-            fn ($ev) => ($ev['especial_evento'] ?? '') !== '3'
+            fn ($ev) => !in_array($ev['especial_evento'] ?? '', ['3', '8', '10'])
         ));
 
-        $eventoFin = \App\Models\Evento::where('especial_evento', '3')
+        $eventosFinTemplates = \App\Models\Evento::whereIn('especial_evento', ['3', '8', '10'])
             ->where('estatus', '1')
-            ->first();
+            ->get()
+            ->keyBy('especial_evento');
 
-        if (!$eventoFin) {
+        if ($eventosFinTemplates->isEmpty()) {
             return;
         }
 
-        $colorFin = '';
-        if ($eventoFin->id_color) {
-            $colorObj = \Illuminate\Support\Facades\DB::table('color')->where('id_color', $eventoFin->id_color)->first();
-            $colorFin = $colorObj ? $colorObj->codigo_color : '';
+        $colorCache = [];
+        foreach ($eventosFinTemplates as $ev) {
+            if ($ev->id_color && !isset($colorCache[$ev->id_color])) {
+                $colorObj = DB::table('color')->where('id_color', $ev->id_color)->first();
+                $colorCache[$ev->id_color] = $colorObj ? $colorObj->codigo_color : '';
+            }
         }
 
+        $generarFin = function ($inicioEv, $semanas, $templateKey) use ($calFin, $eventosFinTemplates, $colorCache) {
+            if ($semanas < 1 || !isset($eventosFinTemplates[$templateKey])) {
+                return;
+            }
+            $template = $eventosFinTemplates[$templateKey];
+            $fechaFinAuto = \App\Support\CalendarioLapsoSemanas::fechaFinLapso(
+                $inicioEv['inicio'],
+                $semanas,
+                $this->eventosRegistrados
+            );
+
+            if ($fechaFinAuto > $calFin) {
+                return;
+            }
+
+            $colorFin = $template->id_color ? ($colorCache[$template->id_color] ?? '') : '';
+
+            $this->eventosRegistrados[] = [
+                'id' => (int) $template->id_evento,
+                'inicio' => $fechaFinAuto,
+                'fin' => $fechaFinAuto,
+                'nombre_evento' => (string) $template->nombre_evento,
+                'tipo' => (string) $template->tipo_evento,
+                'color' => (string) $colorFin,
+                'is_rango_dias_evento' => (bool) $template->is_rango_dias_evento,
+                'rango_dias_evento' => $template->rango_dias_evento,
+                'especial_evento' => $templateKey,
+            ];
+        };
+
+        // Lapsos regulares (2 -> 3)
         $inicios = collect($this->eventosRegistrados)
             ->filter(fn ($ev) => ($ev['especial_evento'] ?? '') === '2')
             ->sortBy('inicio')
@@ -276,32 +312,29 @@ class EditarCalendario extends Component
             $semanas = $index === 0
                 ? (int) $this->form->semana_lapso_uno_calendario_academico
                 : (int) $this->form->semana_lapso_dos_calendario_academico;
+            $generarFin($inicioEv, $semanas, '3');
+        }
 
-            if ($semanas < 1) {
-                continue;
-            }
+        // Introductorio (7 -> 8)
+        $iniciosIntro = collect($this->eventosRegistrados)
+            ->filter(fn ($ev) => ($ev['especial_evento'] ?? '') === '7')
+            ->sortBy('inicio')
+            ->values();
 
-            $fechaFinAuto = \App\Support\CalendarioLapsoSemanas::fechaFinLapso(
-                $inicioEv['inicio'],
-                $semanas,
-                $this->eventosRegistrados
-            );
+        foreach ($iniciosIntro as $inicioEv) {
+            $semanas = (int) $this->form->semana_lapso_introductorio_calendario_academico;
+            $generarFin($inicioEv, $semanas, '8');
+        }
 
-            if ($fechaFinAuto > $calFin) {
-                continue;
-            }
+        // Intensivo (9 -> 10)
+        $iniciosIntensivo = collect($this->eventosRegistrados)
+            ->filter(fn ($ev) => ($ev['especial_evento'] ?? '') === '9')
+            ->sortBy('inicio')
+            ->values();
 
-            $this->eventosRegistrados[] = [
-                'id' => (int) $eventoFin->id_evento,
-                'inicio' => $fechaFinAuto,
-                'fin' => $fechaFinAuto,
-                'nombre_evento' => (string) $eventoFin->nombre_evento,
-                'tipo' => (string) $eventoFin->tipo_evento,
-                'color' => (string) $colorFin,
-                'is_rango_dias_evento' => (bool) $eventoFin->is_rango_dias_evento,
-                'rango_dias_evento' => $eventoFin->rango_dias_evento,
-                'especial_evento' => '3',
-            ];
+        foreach ($iniciosIntensivo as $inicioEv) {
+            $semanas = (int) $this->form->semana_intensibo_introductorio_calendario_academico;
+            $generarFin($inicioEv, $semanas, '10');
         }
 
         $this->actualizarMapaEventos();
@@ -346,14 +379,14 @@ class EditarCalendario extends Component
         $removido = $this->eventosRegistrados[$index];
         $idsFestivos = \App\Support\CalendarioLapsoSemanas::idsEventosFestivos($this->eventosRegistrados);
         $eraFestivo = \App\Support\CalendarioLapsoSemanas::registroEsFestivo($removido, $idsFestivos);
-        $eraInicioLapso = ($removido['especial_evento'] ?? '') === '2';
+        $eraInicioLapso = in_array($removido['especial_evento'] ?? '', ['2', '7', '9']);
 
         unset($this->eventosRegistrados[$index]);
         $this->eventosRegistrados = array_values($this->eventosRegistrados);
         $this->actualizarMapaEventos();
 
         $hayInicios = collect($this->eventosRegistrados)->contains(
-            fn ($e) => ($e['especial_evento'] ?? '') === '2'
+            fn ($e) => in_array($e['especial_evento'] ?? '', ['2', '7', '9'])
         );
 
         if ($hayInicios && ($eraFestivo || $eraInicioLapso)) {
@@ -434,6 +467,10 @@ class EditarCalendario extends Component
             $this->calendarioRepository->guardarBorrador([
                 'dia_inicio_calendario_academico' => $this->form->dia_inicio_calendario_academico,
                 'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
+                'semana_lapso_uno_calendario_academico' => $this->form->semana_lapso_uno_calendario_academico,
+                'semana_lapso_dos_calendario_academico' => $this->form->semana_lapso_dos_calendario_academico,
+                'semana_lapso_introductorio_calendario_academico' => $this->form->semana_lapso_introductorio_calendario_academico,
+                'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
                 'estatus' => '2' // Sigue en revisión
             ], $this->eventosRegistrados, $this->id_calendario);
         } catch (Exception $e) {
@@ -473,6 +510,10 @@ class EditarCalendario extends Component
                 $this->calendarioRepository->actualizarEstatus($this->id_calendario, '1', [
                     'dia_inicio_calendario_academico' => $this->form->dia_inicio_calendario_academico,
                     'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
+                    'semana_lapso_uno_calendario_academico' => $this->form->semana_lapso_uno_calendario_academico,
+                    'semana_lapso_dos_calendario_academico' => $this->form->semana_lapso_dos_calendario_academico,
+                    'semana_lapso_introductorio_calendario_academico' => $this->form->semana_lapso_introductorio_calendario_academico,
+                    'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
                 ]);
 
                 $this->calendarioRepository->sincronizarEventos($this->id_calendario, $this->eventosRegistrados);
@@ -510,6 +551,10 @@ class EditarCalendario extends Component
                 $this->calendarioRepository->actualizarEstatus($this->id_calendario, '2', [
                     'dia_inicio_calendario_academico' => $this->form->dia_inicio_calendario_academico,
                     'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
+                    'semana_lapso_uno_calendario_academico' => $this->form->semana_lapso_uno_calendario_academico,
+                    'semana_lapso_dos_calendario_academico' => $this->form->semana_lapso_dos_calendario_academico,
+                    'semana_lapso_introductorio_calendario_academico' => $this->form->semana_lapso_introductorio_calendario_academico,
+                    'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
                 ]);
 
                 $this->calendarioRepository->sincronizarEventos($this->id_calendario, $this->eventosRegistrados);

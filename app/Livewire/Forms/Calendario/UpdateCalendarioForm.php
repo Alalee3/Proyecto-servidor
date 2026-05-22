@@ -10,6 +10,8 @@ class UpdateCalendarioForm extends Form
     public $id_calendario_academico = '';
     public $semana_lapso_uno_calendario_academico = '';
     public $semana_lapso_dos_calendario_academico = '';
+    public $semana_lapso_introductorio_calendario_academico = '';
+    public $semana_intensibo_introductorio_calendario_academico = '';
     public $dia_inicio_calendario_academico = '';
     public $dia_fin_calendario_academico = '';
     public $tipo_calendario = '1';
@@ -31,6 +33,8 @@ class UpdateCalendarioForm extends Form
         $rules = [
             'semana_lapso_uno_calendario_academico' => ['required', 'integer', 'min:1', 'max:99'],
             'semana_lapso_dos_calendario_academico' => ['required', 'integer', 'min:1', 'max:99'],
+            'semana_lapso_introductorio_calendario_academico' => ['required', 'integer', 'min:1', 'max:99'],
+            'semana_intensibo_introductorio_calendario_academico' => ['required', 'integer', 'min:1', 'max:99'],
             'dia_inicio_calendario_academico' => [
                 'required',
                 'date',
@@ -157,6 +161,8 @@ class UpdateCalendarioForm extends Form
         $this->id_calendario_academico = $calendario->id_calendario_academico;
         $this->semana_lapso_uno_calendario_academico = $calendario->semana_lapso_uno_calendario_academico;
         $this->semana_lapso_dos_calendario_academico = $calendario->semana_lapso_dos_calendario_academico;
+        $this->semana_lapso_introductorio_calendario_academico = $calendario->semana_lapso_introductorio_calendario_academico;
+        $this->semana_intensibo_introductorio_calendario_academico = $calendario->semana_intensibo_introductorio_calendario_academico;
         $this->dia_inicio_calendario_academico = $calendario->dia_inicio_calendario_academico;
         $this->dia_fin_calendario_academico = $calendario->dia_fin_calendario_academico;
         $this->tipo_calendario = $calendario->tipo_calendario ?? '1';
@@ -191,6 +197,8 @@ class UpdateCalendarioForm extends Form
             'dia_fin_calendario_academico' => $allRules['dia_fin_calendario_academico'],
             'semana_lapso_uno_calendario_academico' => $allRules['semana_lapso_uno_calendario_academico'],
             'semana_lapso_dos_calendario_academico' => $allRules['semana_lapso_dos_calendario_academico'],
+            'semana_lapso_introductorio_calendario_academico' => $allRules['semana_lapso_introductorio_calendario_academico'],
+            'semana_intensibo_introductorio_calendario_academico' => $allRules['semana_intensibo_introductorio_calendario_academico'],
         ]);
 
         // Cálculo de Semanas Exactas (Sin forzar Lunes-Domingo)
@@ -210,10 +218,12 @@ class UpdateCalendarioForm extends Form
         $semanasFechas = ceil(($inicioReal->diffInDays($finReal) + 1) / 7);
         $semanasLapso1 = (int)$this->semana_lapso_uno_calendario_academico;
         $semanasLapso2 = (int)$this->semana_lapso_dos_calendario_academico;
-        $totalSemanasLapsos = $semanasLapso1 + $semanasLapso2;
+        $semanasIntro = (int)$this->semana_lapso_introductorio_calendario_academico;
+        $semanasIntensivo = (int)$this->semana_intensibo_introductorio_calendario_academico;
+        $totalSemanasLapsos = $semanasLapso1 + $semanasLapso2 + $semanasIntro + $semanasIntensivo;
 
         if ($semanasFechas < $totalSemanasLapsos) {
-            $msg = "El período seleccionado solo dura {$semanasFechas} semanas físicas, lo cual no es suficiente para albergar las {$totalSemanasLapsos} semanas sumadas de ambos lapsos. Extienda la fecha de fin o reduzca las semanas de los lapsos.";
+            $msg = "El período seleccionado solo dura {$semanasFechas} semanas físicas, lo cual no es suficiente para albergar las {$totalSemanasLapsos} semanas sumadas de los cuatro periodos (Lapsos, Introductorio e Intensivo). Extienda la fecha de fin o reduzca las semanas de los periodos.";
             $this->addError('dia_fin_calendario_academico', $msg);
             throw \Illuminate\Validation\ValidationException::withMessages(['form.dia_fin_calendario_academico' => [$msg]]);
         }
@@ -247,9 +257,10 @@ class UpdateCalendarioForm extends Form
 
         // 3. Validar eventos especiales y eventos no repetibles
         $eventosDb = \App\Models\Evento::whereIn('id_evento', $idsRegistrados)->get()->keyBy('id_evento');
-        $inicios = [];
-        $fines = [];
-        $visitados = [];
+        $inicios_intro = [];
+        $fines_intro = [];
+        $inicios_intensi = [];
+        $fines_intensi = [];
 
         foreach ($eventosRegistrados as $reg) {
             $id = $reg['id'] ?? null;
@@ -259,14 +270,31 @@ class UpdateCalendarioForm extends Form
                     $inicios[] = $reg['inicio'] ?? null;
                 } elseif ($evento->especial_evento == '3') {
                     $fines[] = $reg['fin'] ?? null;
+                } elseif ($evento->especial_evento == '7') {
+                    $inicios_intro[] = $reg['inicio'] ?? null;
+                } elseif ($evento->especial_evento == '8') {
+                    $fines_intro[] = $reg['fin'] ?? null;
+                } elseif ($evento->especial_evento == '9') {
+                    $inicios_intensi[] = $reg['inicio'] ?? null;
+                } elseif ($evento->especial_evento == '10') {
+                    $fines_intensi[] = $reg['fin'] ?? null;
                 }
             }
         }
 
         $inicios = array_filter(array_unique($inicios));
         $fines = array_filter(array_unique($fines));
+        $inicios_intro = array_filter(array_unique($inicios_intro));
+        $fines_intro = array_filter(array_unique($fines_intro));
+        $inicios_intensi = array_filter(array_unique($inicios_intensi));
+        $fines_intensi = array_filter(array_unique($fines_intensi));
+        
         sort($inicios);
         sort($fines);
+        sort($inicios_intro);
+        sort($fines_intro);
+        sort($inicios_intensi);
+        sort($fines_intensi);
 
         foreach ($eventosRegistrados as $reg) {
             $id = $reg['id'] ?? null;
@@ -322,25 +350,27 @@ class UpdateCalendarioForm extends Form
                     $errores[] = [$msg];
                 }
 
-                // Validar que eventos con is_independiente false estén dentro del rango de alguno de los dos lapsos académicos
+                // Validar que eventos con is_independiente false estén dentro del rango de alguno de los periodos académicos
                 $isIndependiente = $evento->is_independiente ?? $evento->is_independiente_evento ?? false;
                 if (!$isIndependiente) {
+                    $dentroDeAlgunPeriodo = false;
+                    
+                    // Comprobar Lapsos 1 y 2
                     if (count($inicios) === 2 && count($fines) === 2) {
-                        $S1 = $inicios[0];
-                        $E1 = $fines[0];
-                        $S2 = $inicios[1];
-                        $E2 = $fines[1];
+                        $dentroDeAlgunPeriodo = $dentroDeAlgunPeriodo || ($regInicio && $regInicio >= $inicios[0] && $regFin && $regFin <= $fines[0]);
+                        $dentroDeAlgunPeriodo = $dentroDeAlgunPeriodo || ($regInicio && $regInicio >= $inicios[1] && $regFin && $regFin <= $fines[1]);
+                    }
+                    // Comprobar Introductorio
+                    if (count($inicios_intro) === 1 && count($fines_intro) === 1) {
+                        $dentroDeAlgunPeriodo = $dentroDeAlgunPeriodo || ($regInicio && $regInicio >= $inicios_intro[0] && $regFin && $regFin <= $fines_intro[0]);
+                    }
+                    // Comprobar Intensivo
+                    if (count($inicios_intensi) === 1 && count($fines_intensi) === 1) {
+                        $dentroDeAlgunPeriodo = $dentroDeAlgunPeriodo || ($regInicio && $regInicio >= $inicios_intensi[0] && $regFin && $regFin <= $fines_intensi[0]);
+                    }
 
-                        $dentroLapso1 = ($regInicio && $regInicio >= $S1 && $regFin && $regFin <= $E1);
-                        $dentroLapso2 = ($regInicio && $regInicio >= $S2 && $regFin && $regFin <= $E2);
-
-                        if (!$dentroLapso1 && !$dentroLapso2) {
-                            $msg = "El evento \"{$evento->nombre_evento}\" debe estar comprendido dentro de alguno de los dos lapsos académicos (Primer Lapso: {$S1} al {$E1}, Segundo Lapso: {$S2} al {$E2}).";
-                            $this->addError('eventosRegistrados', $msg);
-                            $errores[] = [$msg];
-                        }
-                    } else {
-                        $msg = "El evento \"{$evento->nombre_evento}\" requiere que estén registrados exactamente dos lapsos académicos para validar su ubicación.";
+                    if (!$dentroDeAlgunPeriodo) {
+                        $msg = "El evento \"{$evento->nombre_evento}\" debe estar comprendido dentro de alguno de los periodos académicos (Lapsos, Introductorio o Intensivo).";
                         $this->addError('eventosRegistrados', $msg);
                         $errores[] = [$msg];
                     }
@@ -395,44 +425,81 @@ class UpdateCalendarioForm extends Form
             $errores[] = [$msg];
         }
 
+        if ($this->semana_lapso_introductorio_calendario_academico > 0) {
+            if (count($inicios_intro) !== 1 || count($fines_intro) !== 1) {
+                $msg = "Debe haber exactamente un Inicio y un Fin de Lapso Introductorio si configuró semanas mayores a 0.";
+                $this->addError('eventosRegistrados', $msg);
+                $errores[] = [$msg];
+            }
+        } elseif (count($inicios_intro) > 0 || count($fines_intro) > 0) {
+            $msg = "No puede agregar eventos de Lapso Introductorio si configuró sus semanas en 0.";
+            $this->addError('eventosRegistrados', $msg);
+            $errores[] = [$msg];
+        }
+
+        if ($this->semana_intensibo_introductorio_calendario_academico > 0) {
+            if (count($inicios_intensi) !== 1 || count($fines_intensi) !== 1) {
+                $msg = "Debe haber exactamente un Inicio y un Fin de Curso Intensivo si configuró semanas mayores a 0.";
+                $this->addError('eventosRegistrados', $msg);
+                $errores[] = [$msg];
+            }
+        } elseif (count($inicios_intensi) > 0 || count($fines_intensi) > 0) {
+            $msg = "No puede agregar eventos de Curso Intensivo si configuró sus semanas en 0.";
+            $this->addError('eventosRegistrados', $msg);
+            $errores[] = [$msg];
+        }
+
+        $periodosRegistrados = [];
+
         if (count($inicios) === 2 && count($fines) === 2) {
-            $S1 = $inicios[0];
-            $E1 = $fines[0];
-            $S2 = $inicios[1];
-            $E2 = $fines[1];
+            $periodosRegistrados['Lapso 1'] = ['nombre' => 'Lapso 1', 'inicio' => $inicios[0], 'fin' => $fines[0], 'semanas_configuradas' => $this->semana_lapso_uno_calendario_academico];
+            $periodosRegistrados['Lapso 2'] = ['nombre' => 'Lapso 2', 'inicio' => $inicios[1], 'fin' => $fines[1], 'semanas_configuradas' => $this->semana_lapso_dos_calendario_academico];
+        }
+        if (count($inicios_intro) === 1 && count($fines_intro) === 1) {
+            $periodosRegistrados['Lapso Introductorio'] = ['nombre' => 'Lapso Introductorio', 'inicio' => $inicios_intro[0], 'fin' => $fines_intro[0], 'semanas_configuradas' => $this->semana_lapso_introductorio_calendario_academico];
+        }
+        if (count($inicios_intensi) === 1 && count($fines_intensi) === 1) {
+            $periodosRegistrados['Curso Intensivo'] = ['nombre' => 'Curso Intensivo', 'inicio' => $inicios_intensi[0], 'fin' => $fines_intensi[0], 'semanas_configuradas' => $this->semana_intensibo_introductorio_calendario_academico];
+        }
 
-            if ($S1 > $E1) {
-                $msg = "El primer lapso académico tiene una fecha de inicio ({$S1}) posterior a su fecha de fin ({$E1}).";
+        foreach ($periodosRegistrados as $key => $periodo) {
+            if ($periodo['inicio'] > $periodo['fin']) {
+                $msg = "El periodo '{$periodo['nombre']}' tiene una fecha de inicio posterior a su fecha de fin.";
                 $this->addError('eventosRegistrados', $msg);
                 $errores[] = [$msg];
             }
 
-            if ($S2 > $E2) {
-                $msg = "El segundo lapso académico tiene una fecha de inicio ({$S2}) posterior a su fecha de fin ({$E2}).";
+            // Validar cantidad de semanas asignadas
+            $semanasReales = \App\Support\CalendarioLapsoSemanas::contarSemanas($periodo['inicio'], $periodo['fin'], $eventosRegistrados);
+            if ($semanasReales != $periodo['semanas_configuradas']) {
+                $msg = "Las fechas asignadas para '{$periodo['nombre']}' abarcan {$semanasReales} semanas, pero se estipularon {$periodo['semanas_configuradas']}.";
                 $this->addError('eventosRegistrados', $msg);
                 $errores[] = [$msg];
             }
+        }
 
-            if ($S2 < $E1) {
-                $msg = "Los lapsos académicos no pueden solaparse ni estar contenidos uno dentro del otro. El segundo lapso debe iniciar el mismo día o después de que termine el primer lapso (Fin del primer lapso: {$E1}, Inicio del segundo lapso: {$S2}).";
-                $this->addError('eventosRegistrados', $msg);
-                $errores[] = [$msg];
-            }
+        // Definir qué periodos NO pueden solaparse entre sí.
+        // Nota: Lapso Introductorio SÍ puede solaparse con Lapso 1 y Lapso 2, por eso no se incluyen esos pares.
+        $paresNoSolapables = [
+            ['Lapso 1', 'Lapso 2'],
+            ['Lapso 1', 'Curso Intensivo'],
+            ['Lapso 2', 'Curso Intensivo'],
+            ['Lapso Introductorio', 'Curso Intensivo']
+        ];
 
-            // Validar cantidad de semanas asignadas al Lapso 1 en la cuadrícula
-            $semanasLapso1 = \App\Support\CalendarioLapsoSemanas::contarSemanas($S1, $E1, $eventosRegistrados);
-            if ($semanasLapso1 != $this->semana_lapso_uno_calendario_academico) {
-                $msg = "Las fechas asignadas en la cuadrícula para el Primer Lapso Académico abarcan {$semanasLapso1} semanas, pero en la configuración inicial se estipularon {$this->semana_lapso_uno_calendario_academico} semanas.";
-                $this->addError('eventosRegistrados', $msg);
-                $errores[] = [$msg];
-            }
+        foreach ($paresNoSolapables as $par) {
+            $p1 = $par[0];
+            $p2 = $par[1];
+            if (isset($periodosRegistrados[$p1]) && isset($periodosRegistrados[$p2])) {
+                $per1 = $periodosRegistrados[$p1];
+                $per2 = $periodosRegistrados[$p2];
 
-            // Validar cantidad de semanas asignadas al Lapso 2 en la cuadrícula
-            $semanasLapso2 = \App\Support\CalendarioLapsoSemanas::contarSemanas($S2, $E2, $eventosRegistrados);
-            if ($semanasLapso2 != $this->semana_lapso_dos_calendario_academico) {
-                $msg = "Las fechas asignadas en la cuadrícula para el Segundo Lapso Académico abarcan {$semanasLapso2} semanas, pero en la configuración inicial se estipularon {$this->semana_lapso_dos_calendario_academico} semanas.";
-                $this->addError('eventosRegistrados', $msg);
-                $errores[] = [$msg];
+                // Check overlap: max(start1, start2) <= min(end1, end2)
+                if (max($per1['inicio'], $per2['inicio']) <= min($per1['fin'], $per2['fin'])) {
+                    $msg = "Los periodos no pueden solaparse. '{$per1['nombre']}' ({$per1['inicio']} al {$per1['fin']}) choca con '{$per2['nombre']}' ({$per2['inicio']} al {$per2['fin']}).";
+                    $this->addError('eventosRegistrados', $msg);
+                    $errores[] = [$msg];
+                }
             }
         }
 

@@ -61,6 +61,14 @@ class UpdateEvento extends Component
                 $this->form->rango_dias = '1';
                 $this->form->is_independiente = true;
                 $this->form->cantidad_dias_evento = 0;
+            } elseif (in_array($this->form->especial_evento, ['7', '8', '9', '10'])) {
+                $this->form->is_laborable = true;
+                $this->form->is_repetible = false;
+                $this->form->tipo_evento = '4';
+                $this->form->is_rango_dias = true;
+                $this->form->rango_dias = '1';
+                $this->form->is_independiente = true;
+                $this->form->cantidad_dias_evento = 0;
             } elseif ($this->form->especial_evento == '1') { 
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = true;
@@ -103,7 +111,7 @@ class UpdateEvento extends Component
                 $this->form->is_independiente = false;
             }
 
-            if (!in_array($this->form->especial_evento, ['1', '2', '3', '4', '5'])) {
+            if (!in_array($this->form->especial_evento, ['1', '2', '3', '4', '5', '7', '8', '9', '10'])) {
                 if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                     $this->form->is_laborable = false;
                     $this->form->is_repetible = false;

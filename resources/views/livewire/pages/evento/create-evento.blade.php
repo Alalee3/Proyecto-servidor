@@ -138,6 +138,10 @@
                         <option value="3">Fin del Lapso Académico</option>
                         <option value="4">Semana Santa</option>
                         <option value="5">Carnaval</option>
+                        <option value="7">Inicio del Lapso Introductorio</option>
+                        <option value="8">Fin del Lapso Introductorio</option>
+                        <option value="9">Inicio del Curso Intensivo</option>
+                        <option value="10">Fin del Curso Intensivo</option>
                     </select>
                     <x-input-error :messages="$errors->first('form.especial_evento')" class="mt-2" />
                 </div>

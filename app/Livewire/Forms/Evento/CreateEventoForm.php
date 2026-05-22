@@ -66,7 +66,7 @@ class CreateEventoForm extends Form
                 'in:1,2,3,4,5,6',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial) {
-                        if (in_array($this->especial_evento, ['2', '3']) && $value != '4') {
+                        if (in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10']) && $value != '4') {
                             $fail('Para este evento especial, el tipo de evento debe ser obligatoriamente Académico.');
                         } elseif ($this->especial_evento == '1' && $value != '5') {
                             $fail('Para Vacaciones Colectivas, el tipo de evento debe ser obligatoriamente Administrativo/Académico.');
@@ -83,7 +83,7 @@ class CreateEventoForm extends Form
             'especial_evento' => [
                 'required_if:is_especial,true',
                 'nullable',
-                'in:1,2,3,4,5',
+                'in:1,2,3,4,5,6,7,8,9,10',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial && !empty($value)) {
                         $exists = \Illuminate\Support\Facades\DB::table('evento')
@@ -100,7 +100,7 @@ class CreateEventoForm extends Form
                 'boolean',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial) {
-                        if (in_array($this->especial_evento, ['2', '3']) && !$value) {
+                        if (in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10']) && !$value) {
                             $fail('Para este evento especial, debe ser obligatoriamente Laborable.');
                         } elseif (in_array($this->especial_evento, ['1', '4', '5']) && $value) {
                             $fail('Para este evento especial, no debe ser Laborable.');
@@ -113,12 +113,14 @@ class CreateEventoForm extends Form
                 'boolean',
                 function ($attribute, $value, $fail) {
                     if (in_array($this->tipo_evento, ['3', '4', '5']) && !$value) {
-                        $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');
+                        if (!($this->is_especial && in_array($this->especial_evento, ['7', '8', '9', '10']))) {
+                            $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');
+                        }
                     }
                     if ($this->is_especial) {
                         if (in_array($this->especial_evento, ['1', '2', '3']) && !$value) {
                             $fail('Para este evento especial, debe ser obligatoriamente Repetible.');
-                        } elseif (in_array($this->especial_evento, ['4', '5']) && $value) {
+                        } elseif (in_array($this->especial_evento, ['4', '5', '7', '8', '9', '10']) && $value) {
                             $fail('Para este evento especial, no debe ser Repetible.');
                         }
                     }
@@ -139,7 +141,7 @@ class CreateEventoForm extends Form
                 'boolean',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial) {
-                        if (in_array($this->especial_evento, ['2', '3']) && !$value) {
+                        if (in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10']) && !$value) {
                             $fail('Para este evento especial, debe tener obligatoriamente cantidad específica de días.');
                         } elseif (in_array($this->especial_evento, ['1', '4', '5']) && $value) {
                             $fail('Para este evento especial, no debe tener cantidad específica de días.');
@@ -155,7 +157,7 @@ class CreateEventoForm extends Form
                 'max:90',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial) {
-                        if (in_array($this->especial_evento, ['2', '3']) && $value != 1) {
+                        if (in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10']) && $value != 1) {
                             $fail('Para este evento especial, la cantidad de días debe ser obligatoriamente 1.');
                         } elseif (in_array($this->especial_evento, ['1', '4', '5']) && !empty($value)) {
                             $fail('Para este evento especial, no se debe definir cantidad de días.');
