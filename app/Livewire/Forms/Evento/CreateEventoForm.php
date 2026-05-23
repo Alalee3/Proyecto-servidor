@@ -16,6 +16,7 @@ class CreateEventoForm extends Form
     public $is_rango_dias = false;
     public $rango_dias = '';
     public $is_independiente = true;
+    public $is_superponible = false;
     public $cantidad_dias_evento = 0;
     public $semanas = [];
 
@@ -47,6 +48,15 @@ class CreateEventoForm extends Form
                     }
                     if ($this->is_especial && !$value) {
                         $fail('Para los eventos especiales, el evento debe ser obligatoriamente Independiente.');
+                    }
+                }
+            ],
+            'is_superponible' => [
+                'required',
+                'boolean',
+                function ($attribute, $value, $fail) {
+                    if (in_array($this->tipo_evento, ['1', '2', '6']) && !$value) {
+                        $fail('Para los feriados, el evento debe ser obligatoriamente superponible.');
                     }
                 }
             ],
@@ -212,6 +222,7 @@ class CreateEventoForm extends Form
             'id_color.exists' => 'El color seleccionado no es válido.',
             'is_laborable.boolean' => 'El valor de laborable debe ser booleano.',
             'is_repetible.boolean' => 'El valor de repetible debe ser booleano.',
+            'is_superponible.boolean' => 'El valor de superponible debe ser booleano.',
             'is_rango_dias.boolean' => 'El valor de rango de días debe ser booleano.',
             'rango_dias.required_if' => 'La cantidad de días es obligatoria.',
             'rango_dias.integer' => 'La cantidad de días debe ser un número entero.',

@@ -14,6 +14,7 @@
                 @php
                 $deshabilitarIndependienteLaborable = $form->is_especial
                 || in_array($form->tipo_evento, ['1', '2', '6'], true);
+                $deshabilitarSuperponible = in_array($form->tipo_evento, ['1', '2','6'], true);
                 $deshabilitarRangoDias = $form->is_especial;
                 $deshabilitarCantidadRango = $form->is_especial || !$form->is_rango_dias;
                 @endphp
@@ -107,6 +108,9 @@
 
                 <x-toggle-switch id="is_independiente_edit" :label="__('¿Puede registrarse fuera de un semestre?')" model="form.is_independiente"
                     :disabled="$deshabilitarIndependienteLaborable" />
+
+                <x-toggle-switch id="is_superponible_edit" :label="__('¿Puede solaparse con otros eventos? (Superponible)')" model="form.is_superponible"
+                    :disabled="$deshabilitarSuperponible" />
 
                 <x-toggle-switch id="is_laborable_edit" :label="__('¿Es Laborable?')" model="form.is_laborable"
                     :disabled="$deshabilitarIndependienteLaborable" />

@@ -20,6 +20,7 @@ class UpdateEventoForm extends Form
     public $is_rango_dias = false;
     public $rango_dias = '';
     public $is_independiente = false;
+    public $is_superponible = false;
     public $cantidad_dias_evento = '';
     public $semanas = [];
 
@@ -36,6 +37,7 @@ class UpdateEventoForm extends Form
         $this->is_rango_dias = (bool) $evento->is_rango_dias_evento;
         $this->rango_dias = $evento->rango_dias_evento;
         $this->is_independiente = (bool) ($evento->is_independiente ?? $evento->is_independiente_evento ?? false);
+        $this->is_superponible = (bool) ($evento->is_superponible_evento ?? false);
         $this->cantidad_dias_evento = $evento->cantidad_dias_evento;
         $this->semanas = $evento->semanas->pluck('numero_semana_evento')->toArray();
     }
@@ -68,6 +70,15 @@ class UpdateEventoForm extends Form
                     }
                     if ($this->is_especial && !$value) {
                         $fail('Para los eventos especiales, el evento debe ser obligatoriamente Independiente.');
+                    }
+                }
+            ],
+            'is_superponible' => [
+                'required',
+                'boolean',
+                function ($attribute, $value, $fail) {
+                    if (in_array($this->tipo_evento, ['1', '2', '6']) && !$value) {
+                        $fail('Para los feriados, el evento debe ser obligatoriamente superponible.');
                     }
                 }
             ],
@@ -234,6 +245,7 @@ class UpdateEventoForm extends Form
             'id_color.exists' => 'El color seleccionado no es válido.',
             'is_laborable.boolean' => 'El valor de laborable debe ser booleano.',
             'is_repetible.boolean' => 'El valor de repetible debe ser booleano.',
+            'is_superponible.boolean' => 'El valor de superponible debe ser booleano.',
             'is_rango_dias.boolean' => 'El valor de rango de días debe ser booleano.',
             'rango_dias.required_if' => 'La cantidad de días es obligatoria.',
             'rango_dias.integer' => 'La cantidad de días debe ser un número entero.',

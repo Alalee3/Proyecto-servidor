@@ -135,6 +135,7 @@ class UpdateEvento extends Component
         if ($propertyName === 'form.tipo_evento') {
             if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                 $this->form->is_independiente = true;
+                $this->form->is_superponible = true;
             } else {
                 $this->form->is_independiente = false;
             }
@@ -160,6 +161,7 @@ class UpdateEvento extends Component
             // Reestablecer valores por defecto según el tipo de evento actual
             if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                 $this->form->is_independiente = true;
+                $this->form->is_superponible = true;
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = false;
             } else {
