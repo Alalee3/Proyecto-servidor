@@ -45,64 +45,23 @@
                 </div>
 
                 <div class="w-full">
-                    <x-input-label for="id_color" :value="__('Color del Evento *')" />
-                    <div x-data="{ 
-                            open: false, 
-                            selectedId: @entangle('form.id_color'),
-                            colores: {{ $colores->toJson() }},
-                            get selectedHex() {
-                                let color = this.colores.find(c => c.id_color == this.selectedId);
-                                return color ? color.codigo_color : null;
-                            },
-                            get selectedName() {
-                                let color = this.colores.find(c => c.id_color == this.selectedId);
-                                return color ? color.nombre_color : 'Seleccione un color';
-                            }
-                        }" class="relative w-full">
-
-                        <button @click="if(!open) $wire.cargarColores(); open = !open" type="button"
-                            class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm min-h-[42px]">
-                            <span class="flex items-center gap-2">
-                                <template x-if="selectedHex">
-                                    <span
-                                        class="w-5 h-5 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm"
-                                        :style="`background-color: ${selectedHex}`"></span>
-                                </template>
-                                <span class="block truncate"
-                                    :class="selectedId ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'"
-                                    x-text="selectedName"></span>
-                            </span>
-                            <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd"
-                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                        clip-rule="evenodd" />
-                                </svg>
-                            </span>
-                        </button>
-
-                        <div x-show="open" @click.away="open = false" x-transition.opacity
-                            class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg max-h-56 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
-                            style="display: none;">
-                            <ul tabindex="-1" role="listbox" class="flex flex-col w-full">
-                                @foreach($colores as $color)
-                                <li @click="selectedId = {{ $color->id_color }}; open = false"
-                                    class="cursor-pointer select-none w-full px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center transition-colors"
-                                    :class="selectedId == {{ $color->id_color }} ? 'bg-gray-50 dark:bg-gray-700/50' : ''"
-                                    role="option">
-                                    <div class="flex items-center gap-3">
-                                        <span
-                                            class="w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm"
-                                            style="background-color: {{ $color->codigo_color }}"></span>
-                                        <span
-                                            class="text-gray-900 dark:text-gray-200 font-medium">{{ $color->nombre_color }}</span>
-
-                                    </div>
-                                </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    </div>
+                    <x-color-datalist
+                        wire:key="datalist-colores-edit-{{ md5($colores->pluck('nombre_color')->join(',')) }}"
+                        label="Color del Evento"
+                        :options="$colores"
+                        wire:model.live="form.colorNombre"
+                        placeholder="Escriba o seleccione un color"
+                        required
+                    />
+                    @if($form->colorNombre && !$form->id_color)
+                    <button type="button" wire:click="abrirModalCrearColor"
+                            class="mt-1 text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold flex items-center gap-1 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Crear "{{ $form->colorNombre }}" como nuevo color
+                    </button>
+                    @endif
                     <x-input-error :messages="$errors->first('form.id_color')" class="mt-2" />
                 </div>
 
@@ -211,4 +170,43 @@
             </div>
         </form>
     </div>
+
+    {{-- Modal para crear nuevo color --}}
+    <x-modal-base wire:model="showCreateColorModal">
+        <div class="p-6">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2 uppercase tracking-wider text-center">
+                {{ __('Registrar Nuevo Color') }}
+            </h3>
+            <p class="text-center text-sm text-gray-500 dark:text-gray-400 mb-6">
+                El color "<span class="font-semibold text-gray-700 dark:text-gray-200">{{ $newColorName }}</span>" no existe. Regístrelo a continuación:
+            </p>
+
+            <div class="space-y-4">
+                <div>
+                    <x-input-label for="modal_newColorName" :value="__('Nombre del Color *')" />
+                    <x-text-input id="modal_newColorName" type="text" class="w-full bg-gray-50 dark:bg-gray-900 cursor-not-allowed" wire:model="newColorName" readonly />
+                </div>
+
+                <div>
+                    <x-input-label for="modal_newColorCode" :value="__('Código Hexadecimal *')" />
+                    <div class="flex items-center gap-2">
+                        <input type="color" id="modal_newColorCode_picker" wire:model.live="newColorCode"
+                            class="h-10 w-10 p-1 border border-gray-300 dark:border-gray-700 rounded-md cursor-pointer bg-white dark:bg-gray-900">
+                        <x-text-input id="modal_newColorCode" type="text" class="flex-1 font-mono uppercase"
+                            wire:model.live="newColorCode" placeholder="#FF0000" maxlength="7" />
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Seleccione un color o introduzca su código hexadecimal.</p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <x-secondary-button type="button" wire:click="$set('showCreateColorModal', false)">
+                    {{ __('Cancelar') }}
+                </x-secondary-button>
+                <x-primary-button type="button" wire:click="crearColor" wire:loading.attr="disabled">
+                    {{ __('Guardar Color') }}
+                </x-primary-button>
+            </div>
+        </div>
+    </x-modal-base>
 </div>

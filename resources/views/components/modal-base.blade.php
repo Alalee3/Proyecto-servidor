@@ -1,4 +1,4 @@
-<div x-data="{ show: @entangle($attributes->wire('model')).defer }" x-show="show" x-on:keydown.escape.window="show = false"
+<div x-data="{ show: @entangle($attributes->wire('model')) }" x-show="show" x-on:keydown.escape.window="show = false"
     class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" {{-- Oculto por defecto, Alpine.js lo mostrará --}}>
     {{-- Overlay (fondo oscuro semi-transparente) --}}
     <div x-show="show" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"

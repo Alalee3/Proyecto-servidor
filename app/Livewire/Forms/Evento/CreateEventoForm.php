@@ -7,6 +7,7 @@ use Livewire\Form;
 class CreateEventoForm extends Form
 {
     public $id_color = '';
+    public $colorNombre = '';
     public $descripcion_evento = '';
     public $tipo_evento = '1';
     public $especial_evento = '';
@@ -138,9 +139,19 @@ class CreateEventoForm extends Form
                 }
             ],
             'id_color' => [
-                'required',
-                'exists:color,id_color',
                 function ($attribute, $value, $fail) {
+                    if (!empty($this->colorNombre) && empty($value)) {
+                        return;
+                    }
+                    if (empty($value)) {
+                        $fail('El color es obligatorio.');
+                        return;
+                    }
+                    $color = \App\Models\Color::find($value);
+                    if (!$color) {
+                        $fail('El color seleccionado no es válido.');
+                        return;
+                    }
                     $repo = new \App\Repositories\Evento\EventoCreateRepo();
                     if ($repo->existeColor($value)) {
                         $fail('Este color ya está asignado a otro evento activo.');
@@ -218,8 +229,7 @@ class CreateEventoForm extends Form
             'tipo_evento.in' => 'El tipo de evento no es válido.',
             'especial_evento.required_if' => 'Debe seleccionar qué tipo de evento especial es.',
             'especial_evento.in' => 'El evento especial seleccionado no es válido.',
-            'id_color.required' => 'El color es obligatorio.',
-            'id_color.exists' => 'El color seleccionado no es válido.',
+            'especial_evento.in' => 'El evento especial seleccionado no es válido.',
             'is_laborable.boolean' => 'El valor de laborable debe ser booleano.',
             'is_repetible.boolean' => 'El valor de repetible debe ser booleano.',
             'is_superponible.boolean' => 'El valor de superponible debe ser booleano.',

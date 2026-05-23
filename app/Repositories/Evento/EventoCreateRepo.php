@@ -49,19 +49,6 @@ class EventoCreateRepo
         return $evento->id_evento;
     }
 
-    public function getColoresDisponibles()
-    {
-        return DB::table('color')
-            ->where('estatus', '1')
-            ->whereNotIn('id_color', function ($query) {
-                $query->select('id_color')
-                    ->from('evento')
-                    ->whereNotNull('id_color')
-                    ->where('estatus', '!=', '3');
-            })
-            ->get();
-    }
-
     public function existeEventoConDescripcion(string $descripcion): bool
     {
         return DB::table('evento')

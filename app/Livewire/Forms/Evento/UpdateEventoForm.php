@@ -11,6 +11,7 @@ class UpdateEventoForm extends Form
     public $id_evento = '';
 
     public $id_color = '';
+    public $colorNombre = '';
     public $descripcion_evento = '';
     public $tipo_evento = '1';
     public $especial_evento = '';
@@ -32,6 +33,7 @@ class UpdateEventoForm extends Form
         $this->especial_evento = $evento->especial_evento ?? '';
         $this->is_especial = !empty($evento->especial_evento);
         $this->id_color = $evento->id_color;
+        $this->colorNombre = $evento->color_rel ? $evento->color_rel->nombre_color : '';
         $this->is_laborable = (bool) $evento->is_laborable_evento;
         $this->is_repetible = (bool) $evento->is_repetible_evento;
         $this->is_rango_dias = (bool) $evento->is_rango_dias_evento;
@@ -161,9 +163,19 @@ class UpdateEventoForm extends Form
                 }
             ],
             'id_color' => [
-                'required',
-                'exists:color,id_color',
                 function ($attribute, $value, $fail) {
+                    if (!empty($this->colorNombre) && empty($value)) {
+                        return;
+                    }
+                    if (empty($value)) {
+                        $fail('El color es obligatorio.');
+                        return;
+                    }
+                    $color = \App\Models\Color::find($value);
+                    if (!$color) {
+                        $fail('El color seleccionado no es válido.');
+                        return;
+                    }
                     $repo = new \App\Repositories\Evento\EventoUpdateRepo();
                     if ($repo->existeColor($value, $this->id_evento)) {
                         $fail('Este color ya está asignado a otro evento activo.');
@@ -241,8 +253,6 @@ class UpdateEventoForm extends Form
             'tipo_evento.in' => 'El tipo de evento no es válido.',
             'especial_evento.required_if' => 'Debe seleccionar qué tipo de evento especial es.',
             'especial_evento.in' => 'El evento especial seleccionado no es válido.',
-            'id_color.required' => 'El color es obligatorio.',
-            'id_color.exists' => 'El color seleccionado no es válido.',
             'is_laborable.boolean' => 'El valor de laborable debe ser booleano.',
             'is_repetible.boolean' => 'El valor de repetible debe ser booleano.',
             'is_superponible.boolean' => 'El valor de superponible debe ser booleano.',
