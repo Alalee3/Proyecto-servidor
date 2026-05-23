@@ -17,14 +17,21 @@ class ListColor extends Component
     public $idInhabilitar = null;
     public $idRestaurar = null;
 
+    protected $colorRepository;
+
+    public function __construct()
+    {
+        $this->colorRepository = new ColorIndexRepo();
+    }
+
+    public function updatedBusqueda()
+    {
+        $this->resetPage();
+    }
+
     public function confirmarInhabilitar($id)
     {
         $this->idInhabilitar = $id;
-    }
-
-    public function confirmarRestaurar($id)
-    {
-        $this->idRestaurar = $id;
     }
 
     public function inhabilitar()
@@ -34,20 +41,17 @@ class ListColor extends Component
         }
 
         try {
-            $repo = new ColorIndexRepo();
-            $result = $repo->inhabilitar($this->idInhabilitar);
-
-            if ($result) {
-                session()->flash('message', 'Color inhabilitado exitosamente.');
-                $this->dispatch('colorUpdated');
-            } else {
-                session()->flash('error', 'No se pudo inhabilitar el color.');
-            }
+            $this->colorRepository->inhabilitar($this->idInhabilitar);
+            session()->flash('message', 'Color inhabilitado correctamente.');
         } catch (Exception $e) {
-            session()->flash('error', $e->getMessage());
+            session()->flash('error', 'Error al inhabilitar el color.');
         }
-
         $this->idInhabilitar = null;
+    }
+
+    public function confirmarRestaurar($id)
+    {
+        $this->idRestaurar = $id;
     }
 
     public function restaurar()
@@ -57,19 +61,11 @@ class ListColor extends Component
         }
 
         try {
-            $repo = new ColorIndexRepo();
-            $result = $repo->restaurar($this->idRestaurar);
-
-            if ($result) {
-                session()->flash('message', 'Color restaurado exitosamente.');
-                $this->dispatch('colorUpdated');
-            } else {
-                session()->flash('error', 'No se pudo restaurar el color.');
-            }
+            $this->colorRepository->restaurar($this->idRestaurar);
+            session()->flash('message', 'Color restaurado correctamente.');
         } catch (Exception $e) {
-            session()->flash('error', 'Error al restaurar el color: ' . $e->getMessage());
+            session()->flash('error', 'Error al restaurar el color.');
         }
-
         $this->idRestaurar = null;
     }
 
@@ -80,8 +76,7 @@ class ListColor extends Component
             $this->paginacion = 5;
         }
 
-        $repo = new ColorIndexRepo();
-        $colores = $repo->listar($this->busqueda, $this->paginacion);
+        $colores = $this->colorRepository->listar($this->busqueda, $this->paginacion);
 
         return view('livewire.pages.color.list-color', compact('colores'));
     }

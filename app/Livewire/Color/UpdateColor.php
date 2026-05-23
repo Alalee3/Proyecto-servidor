@@ -6,57 +6,64 @@ use App\Livewire\Forms\Color\UpdateColorForm;
 use Livewire\Component;
 use App\Repositories\Color\ColorUpdateRepo;
 use Exception;
-use Illuminate\Support\Facades\Gate;
 
 class UpdateColor extends Component
 {
     public UpdateColorForm $form;
-    public $id_color;
+    public $coloresExistentes;
     protected $colorRepository;
 
-    public function boot()
+    public function __construct()
     {
         $this->colorRepository = new ColorUpdateRepo();
     }
 
     public function mount($id)
     {
-        if (!Gate::allows('editar-color')) {
-            abort(403);
+        try {
+            $color = $this->colorRepository->obtenerPorId($id);
+            if (!$color) {
+                return redirect()->route('color.list')->with('error', 'Color no encontrado.');
+            }
+            $this->form->setForm($color);
+            $this->refreshColores();
+        } catch (Exception $e) {
+            return redirect()->route('color.list')->with('error', 'Error al cargar el color.');
         }
-
-        $this->id_color = $id;
-        $color = $this->colorRepository->obtenerPorId($id);
-
-        if (!$color) {
-            session()->flash('error', 'Color no encontrado.');
-            return redirect()->route('color.list');
-        }
-
-        $this->form->setColor($color);
     }
 
-    public function updated($propertyName)
+    public function refreshColores()
     {
-        $this->validateOnly($propertyName);
+        $this->coloresExistentes = \App\Models\Color::where('estatus', '1')
+            ->orderBy('nombre_color')
+            ->get();
     }
 
     public function actualizar()
     {
-        if (!Gate::allows('editar-color')) {
-            abort(403);
-        }
-
-        $this->validate();
-
         try {
-            $this->colorRepository->actualizar($this->id_color, $this->form->all());
-
-            session()->flash('message', 'Color actualizado exitosamente.');
-            return redirect()->route('color.list');
+            $this->form->validate();
+            $this->colorRepository->actualizar($this->form->id_color, $this->form->all());
+            $this->showAlert('success', 'Color actualizado correctamente.', '/color/list');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors()->all();
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
+            $this->showAlert('error', $msg);
+            throw $e;
         } catch (Exception $e) {
-            session()->flash('error', 'Error al actualizar el color: ' . $e->getMessage());
+            $this->showAlert('error', 'Error al actualizar el color. Inténtelo de nuevo.');
         }
+    }
+
+    protected function showAlert($type, $message, $redirect = null)
+    {
+        $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
+        $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
+    }
+
+    public function cancelar()
+    {
+        return redirect()->route('color.list');
     }
 
     public function render()

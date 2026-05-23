@@ -6,6 +6,9 @@ use App\Models\Color;
 
 class ColorIndexRepo
 {
+    /**
+     * Lista los colores con búsqueda y paginación.
+     */
     public function listar($busqueda = '', $paginacion = 5)
     {
         return Color::when($busqueda, function ($consulta, $busqueda) {
@@ -16,6 +19,9 @@ class ColorIndexRepo
             ->paginate($paginacion);
     }
 
+    /**
+     * Inhabilita un color.
+     */
     public function inhabilitar($id)
     {
         $color = Color::find($id);
@@ -25,6 +31,9 @@ class ColorIndexRepo
         return false;
     }
 
+    /**
+     * Restaura un color.
+     */
     public function restaurar($id)
     {
         $color = Color::where('id_color', $id)->where('estatus', '3')->first();

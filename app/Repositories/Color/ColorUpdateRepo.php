@@ -6,11 +6,17 @@ use App\Models\Color;
 
 class ColorUpdateRepo
 {
+    /**
+     * Obtiene un color por su ID.
+     */
     public function obtenerPorId($id)
     {
         return Color::find($id);
     }
 
+    /**
+     * Actualiza un color existente.
+     */
     public function actualizar($id, array $datos)
     {
         $color = Color::find($id);
@@ -22,15 +28,5 @@ class ColorUpdateRepo
             return $color;
         }
         return null;
-    }
-
-    public function existeNombreExcluyendo($nombre, $id)
-    {
-        return Color::where('nombre_color', $nombre)->where('id_color', '!=', $id)->where('estatus', '!=', '3')->exists();
-    }
-
-    public function existeCodigoExcluyendo($codigo, $id)
-    {
-        return Color::where('codigo_color', $codigo)->where('id_color', '!=', $id)->where('estatus', '!=', '3')->exists();
     }
 }

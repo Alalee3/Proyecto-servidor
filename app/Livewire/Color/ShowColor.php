@@ -4,25 +4,34 @@ namespace App\Livewire\Color;
 
 use Livewire\Component;
 use App\Repositories\Color\ColorViewRepo;
-use Illuminate\Support\Facades\Gate;
+use Exception;
 
 class ShowColor extends Component
 {
     public $color;
+    protected $colorRepository;
 
-    public function mount($id)
+    public function __construct()
     {
-        if (!Gate::allows('ver-color')) {
-            abort(403);
-        }
+        $this->colorRepository = new ColorViewRepo();
+    }
 
-        $repo = new ColorViewRepo();
-        $this->color = $repo->mostrar($id);
-
-        if (!$this->color) {
-            session()->flash('error', 'Color no encontrado.');
+    public function mount(int $id)
+    {
+        try {
+            $this->color = $this->colorRepository->mostrar($id);
+            if (!$this->color) {
+                return redirect()->route('color.list')->with('error', 'Color no encontrado.');
+            }
+        } catch (Exception $e) {
+            session()->flash('error', 'Error al cargar el color: ' . $e->getMessage());
             return redirect()->route('color.list');
         }
+    }
+
+    public function cerrar()
+    {
+        return redirect()->route('color.list');
     }
 
     public function render()
