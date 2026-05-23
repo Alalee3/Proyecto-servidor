@@ -130,8 +130,8 @@
                 </div>
                 <div x-show="openSection === 'fechas'" x-collapse class="p-4 space-y-6">
 
-                    {{-- Selección de Fechas --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mx-auto mb-6">
+                    {{-- Selección de Fechas y Lapsos --}}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-7xl mx-auto mb-6">
                         <div class="w-full">
                             <x-input-label for="dia_inicio_calendario_academico" :value="__('Inicio del Período')" />
                             <x-text-input id="dia_inicio_calendario_academico" type="date"
@@ -146,10 +146,6 @@
                                 required />
                             <x-input-error :messages="$errors->first('form.dia_fin_calendario_academico')" class="mt-2" />
                         </div>
-                    </div>
-
-                    {{-- Selección de Semanas por Lapso --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mx-auto">
                         <div class="w-full">
                             <x-input-label for="semana_lapso_uno_calendario_academico" :value="__('Cantidad de Semanas (Lapso 1)')" />
                             <x-text-input id="semana_lapso_uno_calendario_academico" type="number" min="1" max="99"
@@ -166,8 +162,6 @@
                             <x-input-error :messages="$errors->first('form.semana_lapso_dos_calendario_academico')"
                                 class="mt-2" />
                         </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl mx-auto mt-6">
                         <div class="w-full">
                             <x-input-label for="semana_lapso_uno_introductorio_calendario_academico" :value="__('Semanas (Lapso 1 Introductorio)')" />
                             <x-text-input id="semana_lapso_uno_introductorio_calendario_academico" type="number" min="0" max="99"
