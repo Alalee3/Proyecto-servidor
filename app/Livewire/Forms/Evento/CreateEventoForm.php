@@ -17,7 +17,7 @@ class CreateEventoForm extends Form
     public $is_rango_dias = false;
     public $rango_dias = '';
     public $is_independiente = true;
-    public $is_superponible = false;
+    public $is_superponible = true;
     public $cantidad_dias_evento = 0;
     public $semanas = [];
 
