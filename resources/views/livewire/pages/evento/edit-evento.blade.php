@@ -53,15 +53,7 @@
                         placeholder="Escriba o seleccione un color"
                         required
                     />
-                    @if($form->colorNombre && !$form->id_color)
-                    <button type="button" wire:click="abrirModalCrearColor"
-                            class="mt-1 text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold flex items-center gap-1 transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        Crear "{{ $form->colorNombre }}" como nuevo color
-                    </button>
-                    @endif
+
                     <x-input-error :messages="$errors->first('form.id_color')" class="mt-2" />
                 </div>
 
