@@ -97,9 +97,6 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     Route::get('tema/update/{id}', UpdateTema::class)->middleware('can:editar-tema')->name('tema/update');
     Route::get('tema/show/{id}', ShowTema::class)->middleware('can:ver-tema')->name('tema/show');
 
-    //Route::get('usuarios/create', CreateUsuario::class)->name('usuarios/crear');
-    //Route::get('usuarios/list', ListUsuario::class)->name('usuarios/listar');
-
     Route::get('planificacion/list', ListPlanificacion::class)->middleware('can:listar-planificacion')->name('planificacion/listar');
     Route::get('planificacion/create', CreatePlanificacion::class)->middleware('can:crear-planificacion')->name('planificacion/crear');
     Route::get('planificacion/update/{planificacionId}', UpdatePlanificacion::class)->middleware('can:editar-planificacion')->name('planificaciones.update');
