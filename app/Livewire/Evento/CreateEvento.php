@@ -205,45 +205,6 @@ class CreateEvento extends Component
         $this->form->id_color = $color ? $color->id_color : '';
     }
 
-    public function abrirModalCrearColor()
-    {
-        $this->newColorName = trim($this->form->colorNombre);
-        $this->newColorCode = '#000000';
-        $this->showCreateColorModal = true;
-    }
-
-    public function crearColor()
-    {
-        try {
-            $this->validate([
-                'newColorName' => ['required', 'string', 'max:100', 'regex:/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\d\s]+$/u'],
-                'newColorCode' => ['required', 'string', 'size:7', 'regex:/^#[a-fA-F0-9]{6}$/'],
-            ]);
-
-            $repo = new ColorCreateRepo();
-            $id_color = $repo->crear([
-                'nombre_color' => $this->newColorName,
-                'codigo_color' => $this->newColorCode,
-            ]);
-
-            // Refresh colores
-            $this->cargarColores();
-
-            // Set form values
-            $this->form->colorNombre = $this->newColorName;
-            $this->form->id_color = $id_color;
-            $this->showCreateColorModal = false;
-
-            $this->showAlert('success', 'Color creado correctamente.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            $errors = $e->validator->errors()->all();
-            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
-            $this->showAlert('error', $msg);
-        } catch (Exception $e) {
-            $this->showAlert('error', 'Error al crear el color: ' . $e->getMessage());
-        }
-    }
-
     public function guardar()
     {
         if ($this->form->colorNombre && !$this->form->id_color) {
@@ -269,12 +230,47 @@ class CreateEvento extends Component
         }
     }
 
+    public function abrirModalCrearColor()
+    {
+        $this->newColorName = trim($this->form->colorNombre);
+        $this->newColorCode = '#000000';
+        $this->showCreateColorModal = true;
+    }
+
+    public function crearColor()
+    {
+        try {
+            $this->validate([
+                'newColorName' => ['required', 'string', 'max:100', 'regex:/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\d\s]+$/u'],
+                'newColorCode' => ['required', 'string', 'size:7', 'regex:/^#[a-fA-F0-9]{6}$/'],
+            ]);
+
+            $repo = new ColorCreateRepo();
+            $id_color = $repo->crear([
+                'nombre_color' => $this->newColorName,
+                'codigo_color' => $this->newColorCode,
+            ]);
+
+            $this->cargarColores();
+            $this->form->colorNombre = $this->newColorName;
+            $this->form->id_color = $id_color;
+            $this->showCreateColorModal = false;
+
+            $this->showAlert('success', 'Color creado correctamente.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $errors = $e->validator->errors()->all();
+            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
+            $this->showAlert('error', $msg);
+        } catch (Exception $e) {
+            $this->showAlert('error', 'Error al crear el color: ' . $e->getMessage());
+        }
+    }
+
     protected function showAlert($type, $message, $redirect = null)
     {
         $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
         $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
     }
-
     public function agregarSemana()
     {
         if ($this->form->is_repetible) {
