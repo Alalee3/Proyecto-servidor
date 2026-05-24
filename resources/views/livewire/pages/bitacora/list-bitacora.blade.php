@@ -9,9 +9,21 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 sm:rounded-lg">
 
             <div class="sogat-table-container">
-                <div
-                    class="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between p-4 bg-white dark:bg-gray-800">
-                    <x-table.search-input model="busqueda" placeholder="Buscar transacción..." debounce="300ms" />
+                <div class="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:items-center sm:justify-between p-4 bg-white dark:bg-gray-800 gap-4">
+                    <div class="flex-1 w-full sm:w-auto">
+                        <x-table.search-input model="busqueda" placeholder="Buscar transacción..." debounce="300ms" />
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <label for="fecha_inicio" class="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Desde:</label>
+                            <x-text-input id="fecha_inicio" type="date" wire:model.live="fecha_inicio" class="w-full sm:w-auto text-sm" />
+                        </div>
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <label for="fecha_fin" class="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">Hasta:</label>
+                            <x-text-input id="fecha_fin" type="date" wire:model.live="fecha_fin" class="w-full sm:w-auto text-sm" />
+                        </div>
+                    </div>
                 </div>
 
                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">

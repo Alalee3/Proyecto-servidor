@@ -11,6 +11,8 @@ class ListBitacora extends Component
     use WithPagination;
 
     public $busqueda = '';
+    public $fecha_inicio = null;
+    public $fecha_fin = null;
     public $paginacion = 5;
 
     protected $bitacoraRepository;
@@ -27,7 +29,7 @@ class ListBitacora extends Component
             $this->paginacion = 10;
         }
 
-        $bitacoras = $this->bitacoraRepository->listar($this->busqueda, $this->paginacion);
+        $bitacoras = $this->bitacoraRepository->listar($this->busqueda, $this->fecha_inicio, $this->fecha_fin, $this->paginacion);
 
         return view('livewire.pages.bitacora.list-bitacora', compact('bitacoras'));
     }

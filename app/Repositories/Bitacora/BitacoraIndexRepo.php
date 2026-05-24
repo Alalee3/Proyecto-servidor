@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 
 class BitacoraIndexRepo
 {
-    public function listar($busqueda = '', $paginacion = 10)
+    public function listar($busqueda = '', $fecha_inicio = null, $fecha_fin = null, $paginacion = 10)
     {
         $bitacora = \App\Models\Bitacora::from('bitacora as b')
             ->select(
@@ -28,6 +28,12 @@ class BitacoraIndexRepo
                         ->orWhere('b.ip_origen_bitacora', 'LIKE', '%' . $busqueda . '%')
                         ->orWhere('b.id_usuario', 'LIKE', '%' . $busqueda . '%');
                 });
+            })
+            ->when($fecha_inicio, function ($consulta, $fecha_inicio) {
+                $consulta->whereDate('b.fecha_creacion', '>=', $fecha_inicio);
+            })
+            ->when($fecha_fin, function ($consulta, $fecha_fin) {
+                $consulta->whereDate('b.fecha_creacion', '<=', $fecha_fin);
             })
             ->orderBy('b.fecha_creacion', 'desc')
             ->paginate($paginacion);
