@@ -54,7 +54,6 @@
                                     // Fallback logic for stdClass or missing relations
                                     $nombreTipo = $evento instanceof \App\Models\Evento ? $evento->tipo_evento_nombre : ($tipos[$evento->tipo_evento] ?? 'Desconocido');
                                     $codigoColor = $evento instanceof \App\Models\Evento ? $evento->color : ($evento->color ?? ($defaultColors[$evento->tipo_evento] ?? '#6c757d'));
-                                    $nombreColor = $evento instanceof \App\Models\Evento ? $evento->nombre_color : ($evento->nombre_color ?? 'N/A');
                                 @endphp
                                 <tr wire:key="{{ $evento->id_evento }}"
                                     class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
@@ -62,7 +61,6 @@
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">
                                         <div class="flex items-center gap-2">
                                             <span class="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm" style="background-color: {{ $codigoColor }}"></span>
-                                            <span class="text-sm">{{ $nombreColor }}</span>
                                         </div>
                                     </td>
                                     <td class="px-4 py-4 text-gray-900 dark:text-white">
