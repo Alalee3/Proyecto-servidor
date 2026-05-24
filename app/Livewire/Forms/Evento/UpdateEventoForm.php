@@ -163,12 +163,9 @@ class UpdateEventoForm extends Form
                 }
             ],
             'id_color' => [
+                'required_without:colorNombre',
                 function ($attribute, $value, $fail) {
-                    if (!empty($this->colorNombre) && empty($value)) {
-                        return;
-                    }
                     if (empty($value)) {
-                        $fail('El color es obligatorio.');
                         return;
                     }
                     $color = \App\Models\Color::find($value);
@@ -253,6 +250,7 @@ class UpdateEventoForm extends Form
             'tipo_evento.in' => 'El tipo de evento no es válido.',
             'especial_evento.required_if' => 'Debe seleccionar qué tipo de evento especial es.',
             'especial_evento.in' => 'El evento especial seleccionado no es válido.',
+            'id_color.required_without' => 'El color es obligatorio.',
             'is_laborable.boolean' => 'El valor de laborable debe ser booleano.',
             'is_repetible.boolean' => 'El valor de repetible debe ser booleano.',
             'is_superponible.boolean' => 'El valor de superponible debe ser booleano.',
