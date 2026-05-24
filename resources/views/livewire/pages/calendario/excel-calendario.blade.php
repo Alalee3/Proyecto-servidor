@@ -47,11 +47,11 @@
     {{-- Título General con Rango de Años --}}
     <thead style="font-weight: bold;">
         <tr>
-            <th colspan="33" style="text-align: center; font-size: 14pt;">CALENDARIO ACADÉMICO {{ $startYear }} -
+            <th colspan="39" style="text-align: center; font-size: 14pt;">CALENDARIO ACADÉMICO {{ $startYear }} -
                 {{ $endYear }}</th>
         </tr>
         <tr>
-            <th colspan="33" style="text-align: center;"><strong>Vigencia:</strong>
+            <th colspan="39" style="text-align: center;"><strong>Vigencia:</strong>
                 {{ \Carbon\Carbon::parse($calendario->dia_inicio_calendario_academico)->format('d/m/Y') }} hasta
                 {{ \Carbon\Carbon::parse($calendario->dia_fin_calendario_academico)->format('d/m/Y') }}</th>
         </tr>
@@ -78,7 +78,7 @@
     <tbody>
         @foreach($mesesChunks as $chunkIndex => $chunk)
             <tr>
-                <td colspan="24"></td>
+                <td colspan="30"></td>
                 @if($chunkIndex > 0)
                     @if($eventoIndex < $totalEventos)
                         @php $evento = $eventosSorted[$eventoIndex]; @endphp
@@ -109,12 +109,12 @@
                         $m = $item['month']; 
                         $y = $item['year'];
                     @endphp
-                    <td colspan="7" style="text-align: center; border: 0.5px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold;">
+                    <td colspan="9" style="text-align: center; border: 0.5px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold;">
                         {{ $mesesNombres[$m - 1] }} {{ $y }}</td>
                     <td style="width: 20px;"></td>
                 @endforeach
                 @if(count($chunk) < 3)
-                    <td colspan="{{ (3 - count($chunk)) * 8 }}"></td>
+                    <td colspan="{{ (3 - count($chunk)) * 10 }}"></td>
                 @endif
                 @if($chunkIndex == 0)
                     <td colspan="9" style="text-align: center; background-color: #f2f2f2; border: 1px solid #000; font-size: 11pt; font-weight: bold;">EVENTOS DEL
@@ -151,10 +151,12 @@
                     <td style="border: 0.5px solid #000; text-align: center; font-size: 11pt;">J</td>
                     <td style="border: 0.5px solid #000; text-align: center; font-size: 11pt;">V</td>
                     <td style="border: 0.5px solid #000; text-align: center; font-size: 11pt;">S</td>
+                    <td style="border: 0.5px solid #000; text-align: center; font-size: 10pt; color: #ef4444;">TR</td>
+                    <td style="border: 0.5px solid #000; text-align: center; font-size: 10pt; color: #0ea5e9;">NI</td>
                     <td></td>
                 @endforeach
                 @if(count($chunk) < 3)
-                    <td colspan="{{ (3 - count($chunk)) * 8 }}"></td>
+                    <td colspan="{{ (3 - count($chunk)) * 10 }}"></td>
                 @endif
                 @if($chunkIndex == 0)
                     <td colspan="4" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: left; padding-left: 5px;">Evento</td>
@@ -222,10 +224,30 @@
                                 {{ ($diaNum >= 1 && $diaNum <= $daysInMonth) ? $diaNum : '' }}
                             </td>
                         @endfor
+
+                        {{-- Lógica TR y NI en Excel --}}
+                        @php
+                            $weekDates = [];
+                            for($col = 0; $col < 7; $col++) {
+                                $diaNum = ($numFila * 7 + $col) - $startDayOfWeek + 1;
+                                if ($diaNum >= 1 && $diaNum <= $daysInMonth) {
+                                    $weekDates[] = \Carbon\Carbon::create($yLoop, $mLoop, $diaNum)->format('Y-m-d');
+                                }
+                            }
+                            $repo = new \App\Repositories\Calendario\CalendarioExcelRepo();
+                            $labels = $repo->getWeekLabels($weekDates, $weekLogic);
+                        @endphp
+                        <td style="border: 0.5px solid #000; text-align: center; background-color: #f9fafb; color: #111827; font-size: 10pt; font-weight: bold;">
+                            {{ $labels['TR'] }}
+                        </td>
+                        <td style="border: 0.5px solid #000; text-align: center; background-color: #f0f9ff; color: #0ea5e9; font-size: 10pt; font-weight: bold;">
+                            {{ $labels['NI'] }}
+                        </td>
+
                         <td></td>
                     @endforeach
                     @if(count($chunk) < 3)
-                        <td colspan="{{ (3 - count($chunk)) * 8 }}"></td>
+                        <td colspan="{{ (3 - count($chunk)) * 10 }}"></td>
                     @endif
 
                     {{-- Eventos --}}
@@ -257,7 +279,7 @@
         {{-- Eventos restantes --}}
         @while($eventoIndex < $totalEventos)
             <tr>
-                <td colspan="24"></td>
+                <td colspan="30"></td>
                 @php $evento = $eventosSorted[$eventoIndex]; @endphp
                 @if(isset($evento->isHeader))
                     <td colspan="9" style="background-color: #f2f2f2; border: 1px solid #000; font-weight: bold; font-size: 11pt; text-align: center;">{{ $evento->label }}</td>

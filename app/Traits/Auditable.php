@@ -48,14 +48,24 @@ trait Auditable
         // Obtenemos el nombre del módulo (puede definirse en el modelo como $moduleName)
         $modulo = property_exists($model, 'moduleName') ? $model->moduleName : class_basename($model);
 
+        // Filtrar campos excluidos de la bitácora (ej: datos binarios como imágenes)
+        $exclude = property_exists($model, 'auditExclude') ? (array) $model->auditExclude : [];
+
+        if ($anteriores !== null) {
+            $anteriores = array_diff_key($anteriores, array_flip($exclude));
+        }
+        if ($nuevos !== null) {
+            $nuevos = array_diff_key($nuevos, array_flip($exclude));
+        }
+
         Bitacora::create([
             'id_usuario' => Auth::user()->usu_cedula ?? (Auth::id() ?? 1),
             'modulo_afectado_bitacora' => $modulo,
             'tabla_afectada_bitacora' => $model->getTable(),
             'id_registro_afectado_bitacora' => (string) $model->getKey(),
             'accion_bitacora' => $accion,
-            'valores_anteriores_bitacora' => $anteriores, // Laravel se encarga del JSON por el Cast
-            'valores_nuevos_bitacora' => $nuevos,        // Laravel se encarga del JSON por el Cast
+            'valores_anteriores_bitacora' => $anteriores,
+            'valores_nuevos_bitacora' => $nuevos,
             'ip_origen_bitacora' => Request::ip(),
             'fecha_creacion' => now(),
             'estatus' => '1',

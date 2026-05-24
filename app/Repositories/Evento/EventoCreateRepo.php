@@ -13,12 +13,13 @@ class EventoCreateRepo
             'nombre_evento' => $data['descripcion_evento'],
             'tipo_evento'   => $data['tipo_evento'] ?? null,
             'especial_evento' => ($data['is_especial'] ?? false) ? (empty($data['especial_evento']) ? null : $data['especial_evento']) : null,
-            'id_color'      => $data['id_color'] ?? null,
+            'codigo_color_evento' => $data['codigo_color_evento'] ?? null,
             'is_laborable_evento'  => $data['is_laborable'] ?? true,
             'is_repetible_evento'  => $data['is_repetible'] ?? false,
             'is_rango_dias_evento'  => $data['is_rango_dias'] ?? false,
             'rango_dias_evento'     => $data['is_rango_dias'] ? ($data['rango_dias'] ?? null) : null,
             'cantidad_dias_evento'  => (($data['is_especial'] ?? false) && ($data['especial_evento'] ?? '') == '1') ? ($data['cantidad_dias_evento'] ?? null) : null,
+            'is_superponible_evento' => $data['is_superponible'] ?? false,
             'estatus'       => '1',
         ];
 
@@ -33,20 +34,19 @@ class EventoCreateRepo
 
         $evento = Evento::create($params);
 
-        return $evento->id_evento;
-    }
+        if (!empty($data['semanas']) && is_array($data['semanas'])) {
+            $semanasData = [];
+            foreach ($data['semanas'] as $semana) {
+                $semanasData[] = [
+                    'id_evento' => $evento->id_evento,
+                    'numero_semana_evento' => $semana,
+                    'estatus' => '1',
+                ];
+            }
+            \App\Models\SemanaEvento::insert($semanasData);
+        }
 
-    public function getColoresDisponibles()
-    {
-        return DB::table('color')
-            ->where('estatus', '1')
-            ->whereNotIn('id_color', function ($query) {
-                $query->select('id_color')
-                    ->from('evento')
-                    ->whereNotNull('id_color')
-                    ->where('estatus', '!=', '3');
-            })
-            ->get();
+        return $evento->id_evento;
     }
 
     public function existeEventoConDescripcion(string $descripcion): bool
@@ -56,10 +56,10 @@ class EventoCreateRepo
             ->exists();
     }
 
-    public function existeColor(string $id_color): bool
+    public function existeColor(string $codigo_color): bool
     {
         return DB::table('evento')
-            ->where('id_color', $id_color)
+            ->where('codigo_color_evento', $codigo_color)
             ->exists();
     }
 }

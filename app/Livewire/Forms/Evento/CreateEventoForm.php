@@ -6,7 +6,7 @@ use Livewire\Form;
 
 class CreateEventoForm extends Form
 {
-    public $id_color = '';
+    public $codigo_color_evento = '#000000';
     public $descripcion_evento = '';
     public $tipo_evento = '1';
     public $especial_evento = '';
@@ -16,7 +16,9 @@ class CreateEventoForm extends Form
     public $is_rango_dias = false;
     public $rango_dias = '';
     public $is_independiente = true;
-    public $cantidad_dias_evento = 60;
+    public $is_superponible = true;
+    public $cantidad_dias_evento = 0;
+    public $semanas = [];
 
     protected function rules()
     {
@@ -46,6 +48,15 @@ class CreateEventoForm extends Form
                     }
                     if ($this->is_especial && !$value) {
                         $fail('Para los eventos especiales, el evento debe ser obligatoriamente Independiente.');
+                    }
+                }
+            ],
+            'is_superponible' => [
+                'required',
+                'boolean',
+                function ($attribute, $value, $fail) {
+                    if (in_array($this->tipo_evento, ['1', '2', '6']) && !$value) {
+                        $fail('Para los feriados, el evento debe ser obligatoriamente superponible.');
                     }
                 }
             ],
@@ -126,13 +137,15 @@ class CreateEventoForm extends Form
                     }
                 }
             ],
-            'id_color' => [
+            'codigo_color_evento' => [
                 'required',
-                'exists:color,id_color',
+                'string',
+                'size:7',
+                'regex:/^#[a-fA-F0-9]{6}$/',
                 function ($attribute, $value, $fail) {
                     $repo = new \App\Repositories\Evento\EventoCreateRepo();
                     if ($repo->existeColor($value)) {
-                        $fail('Este color ya está asignado a otro evento activo.');
+                        $fail('Este código de color ya está asignado a otro evento activo.');
                     }
                 }
             ],
@@ -165,6 +178,34 @@ class CreateEventoForm extends Form
                     }
                 }
             ],
+            'semanas' => [
+                'required',
+                'array',
+                'min:1',
+                function ($attribute, $value, $fail) {
+                    if (!$this->is_repetible && count($value) > 1) {
+                        $fail('Si el evento no es repetible, solo puede seleccionar una (1) semana.');
+                    }
+                    
+                    // Filtrar valores vacíos
+                    $semanasValidas = array_filter($value, function($val) {
+                        return $val !== null && $val !== '';
+                    });
+                    
+                    // Comprobar duplicados
+                    if (count($semanasValidas) !== count(array_unique($semanasValidas))) {
+                        $fail('No puede seleccionar la misma semana más de una vez.');
+                    }
+                    
+                    foreach ($value as $semana) {
+                        if ($semana !== null && $semana !== '') {
+                            if (!is_numeric($semana) || $semana < 1 || $semana > 99) {
+                                $fail('Las semanas seleccionadas deben ser un número válido entre 1 y 99.');
+                            }
+                        }
+                    }
+                }
+            ],
         ];
     }
 
@@ -179,15 +220,20 @@ class CreateEventoForm extends Form
             'tipo_evento.in' => 'El tipo de evento no es válido.',
             'especial_evento.required_if' => 'Debe seleccionar qué tipo de evento especial es.',
             'especial_evento.in' => 'El evento especial seleccionado no es válido.',
-            'id_color.required' => 'El color es obligatorio.',
-            'id_color.exists' => 'El color seleccionado no es válido.',
+            'codigo_color_evento.required' => 'El color es obligatorio.',
+            'codigo_color_evento.size' => 'El código de color debe tener 7 caracteres (ej: #FF0000).',
+            'codigo_color_evento.regex' => 'El formato del código de color debe ser hexadecimal (ej: #FF0000).',
             'is_laborable.boolean' => 'El valor de laborable debe ser booleano.',
             'is_repetible.boolean' => 'El valor de repetible debe ser booleano.',
+            'is_superponible.boolean' => 'El valor de superponible debe ser booleano.',
             'is_rango_dias.boolean' => 'El valor de rango de días debe ser booleano.',
             'rango_dias.required_if' => 'La cantidad de días es obligatoria.',
             'rango_dias.integer' => 'La cantidad de días debe ser un número entero.',
             'rango_dias.min' => 'La cantidad de días debe ser al menos 1.',
             'rango_dias.max' => 'La cantidad de días no debe superar los 90 días.',
+            'semanas.required' => 'Debe seleccionar al menos una semana.',
+            'semanas.array' => 'Formato inválido de semanas.',
+            'semanas.min' => 'Debe seleccionar al menos una semana.',
         ];
     }
 }

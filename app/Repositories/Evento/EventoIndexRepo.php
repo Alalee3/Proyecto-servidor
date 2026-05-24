@@ -8,8 +8,7 @@ class EventoIndexRepo
 {
     public function listar($busqueda = '', $paginacion = 5)
     {
-        return \App\Models\Evento::with('color_rel')
-            ->select('evento.*')
+        return \App\Models\Evento::select('evento.*')
             ->when($busqueda, function ($consulta, $busqueda) {
                 $consulta->where('nombre_evento', 'LIKE', '%' . $busqueda . '%');
             })
@@ -44,35 +43,29 @@ class EventoIndexRepo
      */
     public function obtenerBiblioteca()
     {
-        return DB::table('evento as e')
-            ->join('color as c', 'e.id_color', '=', 'c.id_color')
-            ->where('e.estatus', 1)
-            ->select('e.id_evento', 'e.nombre_evento', 'e.tipo_evento', 'e.is_laborable_evento', 'e.is_repetible_evento', 'e.is_rango_dias_evento', 'e.rango_dias_evento', 'c.codigo_color')
+        return DB::table('evento')
+            ->where('estatus', 1)
+            ->select('id_evento', 'nombre_evento', 'tipo_evento', 
+                     'is_laborable_evento', 'is_repetible_evento', 
+                     'is_rango_dias_evento', 'rango_dias_evento', 
+                     'codigo_color_evento')
             ->get();
     }
 
     /**
-     * Obtiene los colores que aún no están asignados a ningún evento activo.
-     */
-    public function obtenerColoresDisponibles()
-    {
-        return DB::table('color')
-            ->where('estatus', '1')
-            ->whereNotIn('id_color', function ($query) {
-                $query->select('id_color')
-                    ->from('evento')
-                    ->whereNotNull('id_color')
-                    ->where('estatus', '!=', '3');
-            })
-            ->get();
-    }
-
-
-    /**
-     * Obtiene un color específico por su ID.
+     * Obtiene un color específico de un evento por su ID.
      */
     public function obtenerColorPorId($id)
     {
-        return DB::table('color')->where('id_color', $id)->first();
+        $evento = DB::table('evento')->where('id_evento', $id)->first();
+        if ($evento && $evento->codigo_color_evento) {
+            return (object) ['codigo_color' => $evento->codigo_color_evento];
+        }
+        // Fallback por tipo
+        $colors = [
+            1 => '#DC3545', 2 => '#FFC107', 3 => '#007BFF',
+            4 => '#28A745', 5 => '#6c757d'
+        ];
+        return (object) ['codigo_color' => $colors[$evento->tipo_evento] ?? '#808080'];
     }
 }

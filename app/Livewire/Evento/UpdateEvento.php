@@ -7,12 +7,10 @@ use Livewire\Component;
 use App\Repositories\Evento\EventoUpdateRepo;
 use App\Repositories\Evento\EventoViewRepo;
 use Exception;
-use Illuminate\Support\Facades\DB;
 
 class UpdateEvento extends Component
 {
     public UpdateEventoForm $form;
-    public $colores = [];
     public $eventosExistentes = [];
     protected $eventoRepository;
     protected $viewRepository;
@@ -31,18 +29,15 @@ class UpdateEvento extends Component
         }
 
         $this->form->setEvento($evento);
-        $this->cargarColores();
         $this->refreshEventos();
+        if (empty($this->form->semanas)) {
+            $this->form->semanas = [''];
+        }
     }
 
     public function refreshEventos()
     {
         $this->eventosExistentes = \App\Models\Evento::orderBy('nombre_evento')->get();
-    }
-
-    public function cargarColores()
-    {
-        $this->colores = $this->eventoRepository->getColoresDisponibles($this->form->id_evento);
     }
 
     public function updated($propertyName)
@@ -61,7 +56,15 @@ class UpdateEvento extends Component
                 $this->form->rango_dias = '1';
                 $this->form->is_independiente = true;
                 $this->form->cantidad_dias_evento = 0;
-            } elseif (in_array($this->form->especial_evento, ['7', '8', '9', '10'])) {
+            } elseif (in_array($this->form->especial_evento, ['7', '8'])) {
+                $this->form->is_laborable = true;
+                $this->form->is_repetible = true;
+                $this->form->tipo_evento = '4';
+                $this->form->is_rango_dias = true;
+                $this->form->rango_dias = '1';
+                $this->form->is_independiente = true;
+                $this->form->cantidad_dias_evento = 0;
+            } elseif (in_array($this->form->especial_evento, ['9', '10'])) {
                 $this->form->is_laborable = true;
                 $this->form->is_repetible = false;
                 $this->form->tipo_evento = '4';
@@ -69,7 +72,7 @@ class UpdateEvento extends Component
                 $this->form->rango_dias = '1';
                 $this->form->is_independiente = true;
                 $this->form->cantidad_dias_evento = 0;
-            } elseif ($this->form->especial_evento == '1') { 
+            } elseif ($this->form->especial_evento == '1') {
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = true;
                 $this->form->tipo_evento = '5';
@@ -96,6 +99,23 @@ class UpdateEvento extends Component
             } else {
                 $this->form->cantidad_dias_evento = 0;
             }
+            $nombresEspeciales = [
+                '1' => 'Vacaciones Colectivas',
+                '2' => 'Inicio del Lapso Académico',
+                '3' => 'Fin del Lapso Académico',
+                '4' => 'Semana Santa',
+                '5' => 'Carnaval',
+                '7' => 'Inicio del Lapso Introductorio',
+                '8' => 'Fin del Lapso Introductorio',
+                '9' => 'Inicio del Curso Intensivo',
+                '10' => 'Fin del Curso Intensivo',
+            ];
+
+            if (isset($nombresEspeciales[$this->form->especial_evento])) {
+                $this->form->descripcion_evento = $nombresEspeciales[$this->form->especial_evento];
+            } else {
+                $this->form->descripcion_evento = '';
+            }
         }
 
         // Si cambia is_especial
@@ -107,6 +127,7 @@ class UpdateEvento extends Component
         if ($propertyName === 'form.tipo_evento') {
             if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                 $this->form->is_independiente = true;
+                $this->form->is_superponible = true;
             } else {
                 $this->form->is_independiente = false;
             }
@@ -132,6 +153,7 @@ class UpdateEvento extends Component
             // Reestablecer valores por defecto según el tipo de evento actual
             if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                 $this->form->is_independiente = true;
+                $this->form->is_superponible = true;
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = false;
             } else {
@@ -150,7 +172,6 @@ class UpdateEvento extends Component
         }
 
         // 2. FINALMENTE VALIDAMOS EL CAMPO
-        // Al estar al final, nos aseguramos de que el DOM ya haya reaccionado a la lógica de arriba
         $this->form->validateOnly($field);
     }
 
@@ -175,10 +196,22 @@ class UpdateEvento extends Component
         $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
         $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
     }
-
     public function cancelar()
     {
         return redirect()->route('evento/listar');
+    }
+
+    public function agregarSemana()
+    {
+        if ($this->form->is_repetible) {
+            $this->form->semanas[] = '';
+        }
+    }
+
+    public function removerSemana($index)
+    {
+        unset($this->form->semanas[$index]);
+        $this->form->semanas = array_values($this->form->semanas);
     }
 
     public function render()

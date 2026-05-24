@@ -130,8 +130,8 @@
                 </div>
                 <div x-show="openSection === 'fechas'" x-collapse class="p-4 space-y-6">
 
-                    {{-- Selección de Fechas --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mx-auto mb-6">
+                    {{-- Selección de Fechas y Lapsos --}}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-7xl mx-auto mb-6">
                         <div class="w-full">
                             <x-input-label for="dia_inicio_calendario_academico" :value="__('Inicio del Período')" />
                             <x-text-input id="dia_inicio_calendario_academico" type="date"
@@ -146,10 +146,6 @@
                                 required />
                             <x-input-error :messages="$errors->first('form.dia_fin_calendario_academico')" class="mt-2" />
                         </div>
-                    </div>
-
-                    {{-- Selección de Semanas por Lapso --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl mx-auto">
                         <div class="w-full">
                             <x-input-label for="semana_lapso_uno_calendario_academico" :value="__('Cantidad de Semanas (Lapso 1)')" />
                             <x-text-input id="semana_lapso_uno_calendario_academico" type="number" min="1" max="99"
@@ -166,13 +162,11 @@
                             <x-input-error :messages="$errors->first('form.semana_lapso_dos_calendario_academico')"
                                 class="mt-2" />
                         </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl mx-auto mt-6">
                         <div class="w-full">
                             <x-input-label for="semana_lapso_uno_introductorio_calendario_academico" :value="__('Semanas (Lapso 1 Introductorio)')" />
                             <x-text-input id="semana_lapso_uno_introductorio_calendario_academico" type="number" min="0" max="99"
                                 wire:model.live="form.semana_lapso_uno_introductorio_calendario_academico"
-                                class="w-full mt-1" placeholder="Opcional" />
+                                class="w-full mt-1" placeholder="Ej: 18" />
                             <x-input-error :messages="$errors->first('form.semana_lapso_uno_introductorio_calendario_academico')"
                                 class="mt-2" />
                         </div>
@@ -180,7 +174,7 @@
                             <x-input-label for="semana_lapso_dos_introductorio_calendario_academico" :value="__('Semanas (Lapso 2 Introductorio)')" />
                             <x-text-input id="semana_lapso_dos_introductorio_calendario_academico" type="number" min="0" max="99"
                                 wire:model.live="form.semana_lapso_dos_introductorio_calendario_academico"
-                                class="w-full mt-1" placeholder="Opcional" />
+                                class="w-full mt-1" placeholder="Ej: 18" />
                             <x-input-error :messages="$errors->first('form.semana_lapso_dos_introductorio_calendario_academico')"
                                 class="mt-2" />
                         </div>
@@ -188,7 +182,7 @@
                             <x-input-label for="semana_intensibo_introductorio_calendario_academico" :value="__('Semanas (Intensivo)')" />
                             <x-text-input id="semana_intensibo_introductorio_calendario_academico" type="number" min="0" max="99"
                                 wire:model.live="form.semana_intensibo_introductorio_calendario_academico" class="w-full mt-1"
-                                placeholder="Opcional" />
+                                placeholder="Ej: 18" />
                             <x-input-error :messages="$errors->first('form.semana_intensibo_introductorio_calendario_academico')"
                                 class="mt-2" />
                         </div>
@@ -245,7 +239,7 @@
                                     _savedCount: 0,
                                     _clickLock: false,
                                     showQuickModal: false,
-                                    nuevoColorId: @entangle('form.nuevoColorId'),
+                                    nuevoColorHex: @entangle('form.nuevoColorHex'),
                                     nuevoTipo: @entangle('form.nuevoTipo'),
                                     nuevoLaborable: @entangle('form.nuevoLaborable'),
                                      nuevoRepetible: @entangle('form.nuevoRepetible'),
@@ -525,8 +519,9 @@
                                                 let finesIntro = [];
                                                 let iniciosIntensivo = [];
                                                 let finesIntensivo = [];
-                                                // Encontrar todas las semanas festivas (Semana Santa = 4 y Carnaval = 5)
-                                                let semanasFestivas = new Set();
+                                                // Encontrar todas las semanas festivas (Semana Santa = 4 y Carnaval = 5, y Vacaciones Colectivas = 1)
+                                                let semanasFestivasNormal = new Set();
+                                                let semanasFestivasIntensivo = new Set();
 
                                                 if (this.eventosAlpine) {
                                                     this.eventosAlpine.forEach(ev => {
@@ -544,7 +539,7 @@
                                                             iniciosIntensivo.push(ev.inicio);
                                                         } else if (esp === '10') {
                                                             finesIntensivo.push(ev.fin);
-                                                        } else if (esp === '4' || esp === '5' || nombreEv.includes('semana santa') || nombreEv.includes('carnaval') || nombreEv.includes('viernes santo') || nombreEv.includes('jueves santo')) {
+                                                        } else if (esp === '4' || esp === '5' || esp === '1' || nombreEv.includes('semana santa') || nombreEv.includes('carnaval') || nombreEv.includes('viernes santo') || nombreEv.includes('jueves santo') || nombreEv.includes('vacaciones colectivas')) {
                                                             // Marcar cada lunes de semana festiva
                                                             let d = new Date(ev.inicio + 'T00:00:00');
                                                             let dFin = new Date(ev.fin + 'T00:00:00');
@@ -557,7 +552,12 @@
                                                                 const y = monday.getFullYear();
                                                                 const m = String(monday.getMonth() + 1).padStart(2, '0');
                                                                 const dayStr = String(monday.getDate()).padStart(2, '0');
-                                                                semanasFestivas.add(`${y}-${m}-${dayStr}`);
+                                                                const dStrObj = `${y}-${m}-${dayStr}`;
+
+                                                                semanasFestivasNormal.add(dStrObj);
+                                                                if (esp !== '1' && !nombreEv.includes('vacaciones colectivas')) {
+                                                                    semanasFestivasIntensivo.add(dStrObj);
+                                                                }
 
                                                                 d.setDate(d.getDate() + 1);
                                                             }
@@ -660,7 +660,7 @@
                                                     let trVal = '';
                                                     let niVal = '';
 
-                                                    const getWeekCount = (lapsoInicioStr) => {
+                                                    const getWeekCount = (lapsoInicioStr, isIntensivo = false) => {
                                                          const firstDateStr = weekDates[0];
                                                          const firstDate = new Date(firstDateStr + 'T00:00:00');
                                                          const lapsoDate = new Date(lapsoInicioStr + 'T00:00:00');
@@ -680,7 +680,9 @@
                                                          const dCurr = String(mondayCurrent.getDate()).padStart(2, '0');
                                                          const mondayCurrentStr = `${yCurr}-${mCurr}-${dCurr}`;
 
-                                                         if (semanasFestivas.has(mondayCurrentStr)) {
+                                                         const festivasSet = isIntensivo ? semanasFestivasIntensivo : semanasFestivasNormal;
+
+                                                         if (festivasSet.has(mondayCurrentStr)) {
                                                              return '';
                                                          }
                                                          
@@ -692,7 +694,7 @@
                                                              const dTemp = String(tempMonday.getDate()).padStart(2, '0');
                                                              const tempMondayStr = `${yTemp}-${mTemp}-${dTemp}`;
 
-                                                             if (!semanasFestivas.has(tempMondayStr)) {
+                                                             if (!festivasSet.has(tempMondayStr)) {
                                                                  weekIndex++;
                                                              }
 
@@ -702,21 +704,21 @@
                                                     };
 
                                                     if (activeLapsoIndex !== -1 && weekDates.length > 0) {
-                                                         const weekIndex = getWeekCount(activeLapsoInicio);
+                                                         const weekIndex = getWeekCount(activeLapsoInicio, false);
                                                          if (weekIndex !== '') {
                                                              const suffixes = ['I', 'II', 'III', 'IV', 'V'];
                                                              const suffix = suffixes[activeLapsoIndex] || 'I';
                                                              trVal = `${weekIndex}${suffix}`;
                                                          }
                                                     } else if (activeIntensivoIndex !== -1 && weekDates.length > 0) {
-                                                         const weekIndex = getWeekCount(activeIntensivoInicio);
+                                                         const weekIndex = getWeekCount(activeIntensivoInicio, true);
                                                          if (weekIndex !== '') {
                                                              trVal = `${weekIndex}IN`;
                                                          }
                                                     }
                                                     
                                                     if (activeIntroIndex !== -1 && weekDates.length > 0) {
-                                                          const weekIndex = getWeekCount(activeIntroInicio);
+                                                          const weekIndex = getWeekCount(activeIntroInicio, false);
                                                           if (weekIndex !== '') {
                                                               const suffixes = ['I', 'II', 'III', 'IV'];
                                                               const suffix = suffixes[activeIntroIndex] || 'I';
@@ -804,7 +806,7 @@
                                      },
 
                                      confirmarNuevoEvento() {
-                                         if (!this.nuevoColorId) { alert('Debe seleccionar un color para el nuevo evento.'); return; }
+                                         if (!this.nuevoColorHex) { alert('Debe seleccionar un color para el nuevo evento.'); return; }
                                          if (this._clickLock) return;
                                          this._clickLock = true;
                                          
@@ -813,7 +815,7 @@
                                              this.selectedEventEnd, 
                                              this.eventoNombre, 
                                              this.nuevoTipo, 
-                                             this.nuevoColorId, 
+                                             this.nuevoColorHex, 
                                              this.nuevoLaborable, 
                                              this.nuevoRepetible,
                                              this.nuevoIsRangoDias,
@@ -840,7 +842,7 @@
                                          }
                                          this.selectedEventStart = ''; this.selectedEventEnd = ''; this.eventoNombre = '';
                                          this.eventoSeleccionado = ''; this.clickCount = 0;
-                                         this.nuevoColorId = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false; this.nuevoIsRangoDias = false; this.nuevoRangoDias = ''; this.nuevoIsIndependiente = true;
+                                         this.nuevoColorHex = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false; this.nuevoIsRangoDias = false; this.nuevoRangoDias = ''; this.nuevoIsIndependiente = true;
                                      },
                                      eliminarEventoDesdeTooltip(ev) {
                                         let index = this.eventosAlpine.findIndex(e => e.id === ev.id && e.inicio === ev.inicio && e.fin === ev.fin);
@@ -1088,205 +1090,8 @@
                             </div>
 
                             {{-- Modal Registro --}}
-                            <div x-show="showEventModal" style="display: none;"
-                                class="fixed inset-0 z-50 flex items-center justify-center px-4">
-                                <div @click.away="closeModal()" x-transition:enter="ease-out duration-300"
-                                    x-transition:enter-start="opacity-0 scale-90"
-                                    x-transition:enter-end="opacity-100 scale-100"
-                                    class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-2xl w-full max-w-md border border-gray-200 dark:border-gray-700">
-                                    <h3
-                                        class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 uppercase tracking-widest text-center">
-                                        Registrar Evento</h3>
-                                    <div
-                                        class="bg-gray-100 dark:bg-gray-700/50 border-l-4 border-gray-400 p-4 rounded-r-lg mb-6 flex justify-between items-center">
-                                        <div><label
-                                                class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">Inicio</label>
-                                            <div class="text-gray-900 dark:text-gray-200 font-extrabold text-sm"
-                                                x-text="selectedEventStart"></div>
-                                        </div>
-                                        <div class="text-gray-400 dark:text-gray-600 px-4"><span
-                                                class="material-icons text-sm">arrow_forward</span></div>
-                                        <div class="text-right"><label
-                                                class="block text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-1">Fin</label>
-                                            <div class="text-gray-900 dark:text-gray-200 font-extrabold text-sm"
-                                                x-text="selectedEventEnd"></div>
-                                        </div>
-                                    </div>
-                                    <div class="space-y-5">
-                                        <div>
-                                            <x-datalist wire:key="datalist-edit-{{ count($bibliotecaFiltrada) }}"
-                                                label="Nombre del Evento" :options="$bibliotecaFiltrada"
-                                                textField="nombre_evento" wire:model.live="form.nombreEventoTemporal"
-                                                placeholder="ESCRIBA O SELECCIONE UN EVENTO" />
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="mt-8 flex justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
-                                        <x-secondary-button type="button"
-                                            @click="closeModal()">{{ __('Cancelar') }}</x-secondary-button>
-                                        <x-primary-button type="button"
-                                            @click="guardarEvento()">{{ __('Guardar') }}</x-primary-button>
-                                    </div>
-                                </div>
-                            </div>
+                            @include('livewire.pages.calendario.calendario-evento-modal', ['wireKey' => 'datalist-edit'])
 
-                            {{-- Modal Registro Rápido (Nuevo Evento) --}}
-                            <div x-show="showQuickModal" style="display: none;"
-                                class="fixed inset-0 z-50 flex items-center justify-center px-4">
-                                <div @click.away="closeModal()" x-transition:enter="ease-out duration-300"
-                                    x-transition:enter-start="opacity-0 scale-90"
-                                    x-transition:enter-end="opacity-100 scale-100"
-                                    class="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-gray-200 dark:border-gray-700">
-                                    <h3
-                                        class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 uppercase tracking-widest text-center">
-                                        Nuevo Evento Detectado
-                                    </h3>
-                                    <p class="text-center text-gray-500 dark:text-gray-400 text-sm mb-6">
-                                        El evento "<span class="font-bold text-gray-700 dark:text-gray-200"
-                                            x-text="eventoNombre"></span>" no existe en la biblioteca. Por favor,
-                                        configúrelo:
-                                    </p>
-                                    {{-- Lógica PHP de Control de Deshabilitación para el Calendario Principal --}}
-                                    @php
-                                    $deshabilitarIndependienteLaborable = in_array($form->nuevoTipo, ['1', '2', '6'], true);
-                                    // La cantidad de días se deshabilita únicamente si el switch de rango está apagado
-                                    $deshabilitarCantidadRango = !$form->nuevoIsRangoDias;
-                                    @endphp
-
-                                    {{-- Cuadrícula Principal Unificada de 3 Columnas (3x3) --}}
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2 items-start">
-
-                                        {{-- FILA 1 --}}
-                                        {{-- Columna 1: Tipo de Evento --}}
-                                        <div>
-                                            <x-input-label for="tipo" :value="__('Tipo de Evento')" class="mb-2" />
-                                            <select id="tipo" x-model="nuevoTipo" wire:model.live="form.nuevoTipo"
-                                                class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm p-2.5 text-sm text-gray-900 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                                                <option value="1">Feriado Nacional</option>
-                                                <option value="2">Feriado Local</option>
-                                                <option value="6">Feriado Mundial</option>
-                                                <option value="3">Administrativo</option>
-                                                <option value="4">Académico</option>
-                                                <option value="5">Administrativo/Académico</option>
-                                            </select>
-                                            <x-input-error :messages="$errors->first('form.nuevoTipo')" class="mt-2" />
-                                        </div>
-
-                                        {{-- Columna 2: Nombre/Descripción del Evento --}}
-                                        <div>
-                                            <x-input-label for="nombre_evento_static" :value="__('Nombre del Evento')" class="mb-2" />
-                                            <div class="w-full bg-gray-100 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm p-2.5 text-sm text-gray-700 dark:text-gray-300 font-semibold min-h-[42px] flex items-center">
-                                                <span x-text="eventoNombre ? eventoNombre.toUpperCase() : 'EJ: CONGRESO NACIONAL'"></span>
-                                            </div>
-                                        </div>
-
-                                        {{-- Columna 3: Color del Evento --}}
-                                        <div>
-                                            <x-input-label for="id_color" :value="__('Color del Evento *')" class="mb-2" />
-                                            <div x-data="{ 
-                 openColores: false, 
-                 colores: @entangle('colores'),
-                 get selectedHex() {
-                     let color = this.colores.find(c => c.id_color == nuevoColorId);
-                     return color ? color.codigo_color : null;
-                 },
-                 get selectedName() {
-                     let color = this.colores.find(c => c.id_color == nuevoColorId);
-                     return color ? color.nombre_color : 'Seleccione un color';
-                 }
-             }" class="relative w-full">
-
-                                                <button @click="openColores = !openColores" type="button"
-                                                    class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm pl-3 pr-10 py-2 text-left focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm min-h-[42px]">
-                                                    <span class="flex items-center gap-2">
-                                                        <template x-if="selectedHex">
-                                                            <span class="w-5 h-5 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm"
-                                                                :style="`background-color: ${selectedHex}`"></span>
-                                                        </template>
-                                                        <span class="block truncate text-gray-500 dark:text-gray-400"
-                                                            :class="nuevoColorId ? 'text-gray-900 dark:text-gray-100 font-semibold' : ''"
-                                                            x-text="selectedName"></span>
-                                                    </span>
-                                                    <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                                        <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                                        </svg>
-                                                    </span>
-                                                </button>
-
-                                                <div x-show="openColores" @click.away="openColores = false" x-transition.opacity
-                                                    class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 shadow-lg max-h-56 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
-                                                    style="display: none;">
-                                                    <ul class="flex flex-col w-full">
-                                                        @foreach($colores as $color)
-                                                        <li @click="nuevoColorId = {{ $color->id_color }}; openColores = false"
-                                                            class="cursor-pointer select-none w-full px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center transition-colors"
-                                                            :class="nuevoColorId == {{ $color->id_color }} ? 'bg-gray-50 dark:bg-gray-700/50' : ''">
-                                                            <div class="flex items-center gap-3">
-                                                                <span class="w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm"
-                                                                    style="background-color: {{ $color->codigo_color }}"></span>
-                                                                <span class="text-gray-900 dark:text-gray-200 font-medium">{{ $color->nombre_color }}</span>
-                                                            </div>
-                                                        </li>
-                                                        @endforeach
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                            <x-input-error :messages="$errors->first('form.nuevoColorId')" class="mt-2" />
-                                        </div>
-
-                                        {{-- FILA 2 --}}
-                                        {{-- Columna 1: ¿Puede registrarse fuera de un semestre? --}}
-                                        <div>
-                                            <x-toggle-switch id="nuevo_is_independiente_switch" :label="__('¿Puede registrarse fuera de un semestre?')"
-                                                model="form.nuevoIsIndependiente" :disabled="$deshabilitarIndependienteLaborable" />
-                                            <x-input-error :messages="$errors->get('form.nuevoIsIndependiente')" class="mt-2" />
-                                        </div>
-
-                                        {{-- Columna 2: ¿Es Laborable? --}}
-                                        <div>
-                                            <x-toggle-switch id="laborable_switch" :label="__('¿Es Laborable?')"
-                                                model="form.nuevoLaborable" :disabled="$deshabilitarIndependienteLaborable" />
-                                        </div>
-
-                                        {{-- Columna 3: ¿Se puede repetir? --}}
-                                        <div>
-                                            <x-toggle-switch id="repetible_switch" :label="__('¿Se puede repetir?')"
-                                                model="form.nuevoRepetible" :disabled="true" />
-                                        </div>
-
-                                        {{-- FILA 3 --}}
-                                        {{-- Columna 1: ¿Tiene cantidad específica de días de duración? --}}
-                                        <div>
-                                            <x-toggle-switch id="is_rango_dias_switch" :label="__('¿Tiene cantidad específica de días de duración?')"
-                                                model="form.nuevoIsRangoDias" />
-                                        </div>
-
-                                        {{-- Columna 2: Cantidad de días que debe durar el evento --}}
-                                        <div class="w-full">
-                                            <x-input-label for="nuevo_rango_dias_input" :value="__('Cantidad de días que debe durar el evento')" class="mb-2" />
-                                            <x-text-input id="nuevo_rango_dias_input" type="number" min="1" max="90" class="w-full"
-                                                wire:model.live="form.nuevoRangoDias" placeholder="Ej: 5" :disabled="$deshabilitarCantidadRango" />
-                                            <x-input-error :messages="$errors->first('form.nuevoRangoDias')" class="mt-2" />
-                                        </div>
-
-                                        {{-- Columna 3: Espacio vacío simétrico --}}
-                                        <div class="hidden lg:block"></div>
-
-                                    </div>
-                                    <div class="flex flex-col gap-3 mt-8">
-                                        <x-primary-button @click="confirmarNuevoEvento()" wire:loading.attr="disabled"
-                                            class="w-full justify-center py-3 rounded-xl">
-                                            <span wire:loading.remove>REGISTRAR Y ASIGNAR</span>
-                                            <span wire:loading>PROCESANDO...</span>
-                                        </x-primary-button>
-                                        <x-secondary-button @click="closeModal()"
-                                            class="w-full justify-center py-3 rounded-xl">
-                                            CANCELAR
-                                        </x-secondary-button>
-                                    </div>
-                                </div>
-                            </div>
 
                             {{-- Botón para regresar a la sección anterior --}}
                             <div class="flex justify-start mt-8 pt-4 border-t border-gray-100 dark:border-gray-700">

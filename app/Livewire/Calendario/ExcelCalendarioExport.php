@@ -105,46 +105,46 @@ class ExcelCalendarioExport implements FromView, WithStyles, WithDrawings, WithE
                 $eventoColWidth = ceil($eventoTotalWidth / 3);
 
                 // ─── Fijar anchos de todas las columnas ──────────────────────────────
-                // Días del calendario: 3 meses × 8 cols (7 días + 1 spacer)
-                for ($col = 1; $col <= 24; $col++) {
+                // Días del calendario: 3 meses × 10 cols (7 días + TR + NI + 1 spacer)
+                for ($col = 1; $col <= 30; $col++) {
                     $letter = Coordinate::stringFromColumnIndex($col);
-                    // Espaciadores (cols 8, 16) y Separador principal (col 24)
-                    if ($col % 8 === 0) {
-                        $width = ($col === 24) ? 10 : 1.5;
+                    // Espaciadores (cols 10, 20) y Separador principal (col 30)
+                    if ($col % 10 === 0) {
+                        $width = ($col === 30) ? 10 : 1.5;
                         $sheet->getColumnDimension($letter)->setWidth($width);
                     } else {
                         $sheet->getColumnDimension($letter)->setWidth(5.5);
                     }
                 }
 
-                // Col 25: tira de color del evento
-                $sheet->getColumnDimension(Coordinate::stringFromColumnIndex(25))->setWidth(2);
+                // Col 31: tira de color del evento
+                $sheet->getColumnDimension(Coordinate::stringFromColumnIndex(31))->setWidth(2);
 
-                // Cols 26-28: Evento (ancho dinámico)
-                for ($col = 26; $col <= 28; $col++) {
+                // Cols 32-34: Evento (ancho dinámico)
+                for ($col = 32; $col <= 34; $col++) {
                     $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($col))->setWidth($eventoColWidth);
                 }
 
-                // Cols 29-31: Fecha
-                for ($col = 29; $col <= 31; $col++) {
+                // Cols 35-37: Fecha
+                for ($col = 35; $col <= 37; $col++) {
                     $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($col))->setWidth(9);
                 }
 
-                // Cols 32-33: Condición
-                for ($col = 32; $col <= 33; $col++) {
+                // Cols 38-39: Condición
+                for ($col = 38; $col <= 39; $col++) {
                     $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($col))->setWidth(7);
                 }
 
                 // ─── Aplicar Alineación a Columnas de Eventos ───────────────
                 $lastRow = $sheet->getHighestRow();
-                // Evento (Z-AB): Izquierda
-                $sheet->getStyle('Z11:AB' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
-                $sheet->getStyle('Z11:AB' . $lastRow)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-                $sheet->getStyle('Z11:AB' . $lastRow)->getAlignment()->setIndent(1); // Pequeño margen
+                // Evento (AF-AH): Izquierda (Col 32-34)
+                $sheet->getStyle('AF11:AH' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+                $sheet->getStyle('AF11:AH' . $lastRow)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                $sheet->getStyle('AF11:AH' . $lastRow)->getAlignment()->setIndent(1); // Pequeño margen
     
-                // Fecha y Condición (AC-AG): Centro
-                $sheet->getStyle('AC11:AG' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle('AC11:AG' . $lastRow)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                // Fecha y Condición (AI-AM): Centro (Col 35-39)
+                $sheet->getStyle('AI11:AM' . $lastRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle('AI11:AM' . $lastRow)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
 
                 // ─── Añadir comentarios en las celdas con eventos ────────────────────
                 $mesesChunks = array_chunk($listaMesesCompleta, 3);
@@ -162,8 +162,8 @@ class ExcelCalendarioExport implements FromView, WithStyles, WithDrawings, WithE
                         $daysInMonth = $currentMonth->daysInMonth;
                         $startDayOfWeek = $currentMonth->dayOfWeek;
 
-                        // BaseCol: A=1, I=9, Q=17
-                        $baseCol = 1 + ($mPos * 8);
+                        // BaseCol: A=1, K=11, U=21
+                        $baseCol = 1 + ($mPos * 10);
 
                         for ($numFila = 0; $numFila < 6; $numFila++) {
                             for ($col = 0; $col < 7; $col++) {

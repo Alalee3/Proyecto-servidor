@@ -10,7 +10,6 @@ use Exception;
 class CreateEvento extends Component
 {
     public CreateEventoForm $form;
-    public $colores = [];
     public $eventosExistentes = [];
     protected $eventoRepository;
 
@@ -21,18 +20,15 @@ class CreateEvento extends Component
 
     public function mount()
     {
-        $this->cargarColores();
         $this->refreshEventos();
+        if (empty($this->form->semanas)) {
+            $this->form->semanas = [''];
+        }
     }
 
     public function refreshEventos()
     {
         $this->eventosExistentes = \App\Models\Evento::orderBy('nombre_evento')->get();
-    }
-
-    public function cargarColores()
-    {
-        $this->colores = $this->eventoRepository->getColoresDisponibles();
     }
 
     public function updated($propertyName)
@@ -51,7 +47,15 @@ class CreateEvento extends Component
                 $this->form->rango_dias = '1';
                 $this->form->is_independiente = true;
                 $this->form->cantidad_dias_evento = 0;
-            } elseif (in_array($this->form->especial_evento, ['7', '8', '9', '10'])) {
+            } elseif (in_array($this->form->especial_evento, ['7', '8'])) {
+                $this->form->is_laborable = true;
+                $this->form->is_repetible = true;
+                $this->form->tipo_evento = '4';
+                $this->form->is_rango_dias = true;
+                $this->form->rango_dias = '1';
+                $this->form->is_independiente = true;
+                $this->form->cantidad_dias_evento = 0;
+            } elseif (in_array($this->form->especial_evento, ['9', '10'])) {
                 $this->form->is_laborable = true;
                 $this->form->is_repetible = false;
                 $this->form->tipo_evento = '4';
@@ -86,6 +90,23 @@ class CreateEvento extends Component
             } else {
                 $this->form->cantidad_dias_evento = 0;
             }
+            $nombresEspeciales = [
+                '1' => 'Vacaciones Colectivas',
+                '2' => 'Inicio del Lapso Académico',
+                '3' => 'Fin del Lapso Académico',
+                '4' => 'Semana Santa',
+                '5' => 'Carnaval',
+                '7' => 'Inicio del Lapso Introductorio',
+                '8' => 'Fin del Lapso Introductorio',
+                '9' => 'Inicio del Curso Intensivo',
+                '10' => 'Fin del Curso Intensivo',
+            ];
+
+            if (isset($nombresEspeciales[$this->form->especial_evento])) {
+                $this->form->descripcion_evento = $nombresEspeciales[$this->form->especial_evento];
+            } else {
+                $this->form->descripcion_evento = '';
+            }
         }
 
         // Si cambia is_especial
@@ -93,10 +114,10 @@ class CreateEvento extends Component
             $this->form->is_independiente = true;
         }
 
-// Si cambia el tipo de evento
         if ($propertyName === 'form.tipo_evento') {
             if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                 $this->form->is_independiente = true;
+                $this->form->is_superponible = true;
             } else {
                 $this->form->is_independiente = false;
             }
@@ -113,7 +134,12 @@ class CreateEvento extends Component
             }
         }
 
-// Limpiar especial_evento si el switch se apaga
+        // Si no es repetible, recortar semanas a 1
+        if (!$this->form->is_repetible && is_array($this->form->semanas) && count($this->form->semanas) > 1) {
+            $this->form->semanas = array_slice($this->form->semanas, 0, 1);
+        }
+
+        // Limpiar especial_evento si el switch se apaga
         if ($propertyName === 'form.is_especial' && !$this->form->is_especial) {
             $this->form->especial_evento = '';
             $this->form->cantidad_dias_evento = 0;
@@ -123,6 +149,7 @@ class CreateEvento extends Component
             // Reestablecer valores por defecto según el tipo de evento actual
             if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                 $this->form->is_independiente = true;
+                $this->form->is_superponible = true;
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = false;
             } else {
@@ -149,7 +176,8 @@ class CreateEvento extends Component
             $this->form->validate();
             $id_repo = $this->eventoRepository->crear($this->form->all());
 
-            $this->reset('form.descripcion_evento', 'form.tipo_evento', 'form.id_color', 'form.especial_evento', 'form.is_especial', 'form.cantidad_dias_evento');
+            $this->reset('form.descripcion_evento', 'form.tipo_evento', 'form.codigo_color_evento', 'form.especial_evento', 'form.is_especial', 'form.cantidad_dias_evento');
+            $this->form->semanas = [''];
             $this->refreshEventos();
             $this->showAlert('success', 'Evento creado correctamente.');
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -166,6 +194,18 @@ class CreateEvento extends Component
     {
         $data = json_encode(['type' => $type, 'message' => $message, 'redirect' => $redirect]);
         $this->js("window.dispatchEvent(new CustomEvent('show-alert', { detail: {$data} }))");
+    }
+    public function agregarSemana()
+    {
+        if ($this->form->is_repetible) {
+            $this->form->semanas[] = '';
+        }
+    }
+
+    public function removerSemana($index)
+    {
+        unset($this->form->semanas[$index]);
+        $this->form->semanas = array_values($this->form->semanas);
     }
 
     public function render()

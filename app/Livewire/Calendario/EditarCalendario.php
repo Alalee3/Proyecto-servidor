@@ -23,7 +23,6 @@ class EditarCalendario extends Component
     public $bibliotecaEventos = [];
     public $currentYear;
     public $id_calendario;
-    public $colores = [];
     public $selectedYearTemporal = null;
 
     public function boot()
@@ -64,21 +63,15 @@ class EditarCalendario extends Component
                 'color' => (string) $ev->color,
                 'is_rango_dias_evento' => (bool) ($ev->is_rango_dias_evento ?? false),
                 'rango_dias_evento' => $ev->rango_dias_evento ?? null,
-                'especial_evento' => isset($ev->especial_evento) ? (string)$ev->especial_evento : null,
+                'especial_evento' => isset($ev->especial_evento) ? (string) $ev->especial_evento : null,
+                'is_superponible_evento' => (bool) ($ev->is_superponible_evento ?? false),
             ];
         }
 
         // Cargar la biblioteca de eventos (templates)
         $eventoRepo = new EventoIndexRepo();
         $this->bibliotecaEventos = $eventoRepo->obtenerBiblioteca();
-        $this->cargarColoresDisponibles();
         $this->actualizarMapaEventos();
-    }
-
-    public function cargarColoresDisponibles()
-    {
-        $eventoRepo = new EventoIndexRepo();
-        $this->colores = $eventoRepo->obtenerColoresDisponibles();
     }
 
     public function updated($propertyName)
@@ -121,7 +114,7 @@ class EditarCalendario extends Component
 
     public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null)
     {
-        $eventoInfo = \App\Models\Evento::find($id_evento);
+        $eventoInfo = \App\Models\Evento::with('semanas')->find($id_evento);
 
         // Buscar info fresca de la base de datos
         if (!$eventoInfo) {
@@ -129,15 +122,82 @@ class EditarCalendario extends Component
             $biblioteca = $eventoRepo->obtenerBiblioteca();
             $info = collect($biblioteca)->firstWhere('id_evento', $id_evento);
             if ($info) {
-                $nombre = (string)$info->nombre_evento;
-                $color = (string)$info->codigo_color;
-                $tipo = (string)$info->tipo_evento;
+                $nombre = (string) $info->nombre_evento;
+                $color = (string) $info->codigo_color;
+                $tipo = (string) $info->tipo_evento;
+                $eventoInfo = clone $info;
             }
         } else {
-            $nombre = (string)$eventoInfo->nombre_evento;
-            // Intentar obtener el color desde la relación o fallback
-            $color = (string)($eventoInfo->color_rel ? $eventoInfo->color_rel->codigo_color : $color);
-            $tipo = (string)($eventoInfo->tipo_evento ?? $tipo ?? '');
+            $nombre = (string) $eventoInfo->nombre_evento;
+            // Obtener el color desde codigo_color_evento o fallback
+            $color = (string) ($eventoInfo->codigo_color_evento ?: $color);
+            $tipo = (string) ($eventoInfo->tipo_evento ?? $tipo ?? '');
+        }
+
+        // VALIDACIÓN DE SEMANAS ESPECÍFICAS
+        $semanasPermitidas = [];
+        if ($eventoInfo && $eventoInfo->semanas) {
+            $semanasPermitidas = $eventoInfo->semanas->pluck('numero_semana_evento')->toArray();
+        }
+
+        if (!empty($semanasPermitidas)) {
+            // Buscar inicio de lapso académico (especial_evento = 2)
+            $lapsosAcademicos = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
+                ->sortByDesc('inicio');
+
+            $lapsoActual = $lapsosAcademicos->firstWhere('inicio', '<=', $inicio);
+
+            if (!$lapsoActual) {
+                $this->showAlert('error', 'Este evento tiene semanas específicas asignadas y solo puede registrarse durante un Lapso Académico regular.');
+                return;
+            }
+
+            // Verificar si hay un lapso introductorio o intensivo más reciente que el académico
+            $otrosLapsos = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => in_array($ev['especial_evento'] ?? '', ['7', '9']))
+                ->sortByDesc('inicio');
+            $otroLapsoActual = $otrosLapsos->firstWhere('inicio', '<=', $inicio);
+
+            if ($otroLapsoActual && $otroLapsoActual['inicio'] >= $lapsoActual['inicio']) {
+                $this->showAlert('error', 'Este evento tiene semanas específicas y solo puede registrarse durante un Lapso Académico regular (no introductorio ni intensivo).');
+                return;
+            }
+
+            $incluirVacaciones = true;
+
+            $semanaInicio = \App\Support\CalendarioLapsoSemanas::contarSemanas($lapsoActual['inicio'], $inicio, $this->eventosRegistrados, $incluirVacaciones);
+            $semanaFin = \App\Support\CalendarioLapsoSemanas::contarSemanas($lapsoActual['inicio'], $fin, $this->eventosRegistrados, $incluirVacaciones);
+
+            if (!in_array($semanaInicio, $semanasPermitidas) || !in_array($semanaFin, $semanasPermitidas)) {
+                $semanasStr = implode(', ', $semanasPermitidas);
+                $this->showAlert('error', "El evento solo puede registrarse en la(s) semana(s): {$semanasStr} del Lapso Académico. (Semana seleccionada: {$semanaInicio}" . ($semanaInicio != $semanaFin ? " a {$semanaFin}" : "") . ")");
+                return;
+            }
+        }
+
+        // VALIDAR REGLA DE SUPERPOSICIÓN CON VACACIONES COLECTIVAS
+        $is_superponible = $eventoInfo ? (bool) $eventoInfo->is_superponible_evento : false;
+        $is_vacaciones = ($eventoInfo->especial_evento ?? '') === '1';
+
+        if (!$is_superponible && !$is_vacaciones) {
+            foreach ($this->eventosRegistrados as $evReg) {
+                if (($evReg['especial_evento'] ?? '') === '1') {
+                    if ($inicio <= $evReg['fin'] && $fin >= $evReg['inicio']) {
+                        $this->showAlert('error', "El evento '{$nombre}' no es superponible y no puede registrarse en la misma fecha que las Vacaciones Colectivas.");
+                        return;
+                    }
+                }
+            }
+        } else if ($is_vacaciones) {
+            foreach ($this->eventosRegistrados as $evReg) {
+                if (isset($evReg['is_superponible_evento']) && !$evReg['is_superponible_evento']) {
+                    if ($inicio <= $evReg['fin'] && $fin >= $evReg['inicio']) {
+                        $this->showAlert('error', "No se pueden registrar Vacaciones Colectivas en estas fechas porque choca con el evento '{$evReg['nombre_evento']}', el cual no es superponible.");
+                        return;
+                    }
+                }
+            }
         }
 
         // Analizar si el rango contiene fines de semana
@@ -150,7 +210,7 @@ class EditarCalendario extends Component
         $period = new \DatePeriod($start, $interval, (clone $end)->modify('+1 day'));
 
         foreach ($period as $date) {
-            $dayOfWeek = (int)$date->format('N'); // 1 (Lunes) a 7 (Domingo)
+            $dayOfWeek = (int) $date->format('N');
             if ($dayOfWeek >= 6) {
                 $contieneWeekend = true;
             } else {
@@ -177,7 +237,7 @@ class EditarCalendario extends Component
             $currentEnd = null;
 
             foreach ($period as $date) {
-                $dayOfWeek = (int)$date->format('N');
+                $dayOfWeek = (int) $date->format('N');
                 $isWeekend = ($dayOfWeek >= 6);
 
                 if (!$isWeekend) {
@@ -200,15 +260,16 @@ class EditarCalendario extends Component
 
         foreach ($subrangos as $sub) {
             $nuevoEvento = [
-                'id' => (int)$id_evento,
-                'inicio' => (string)$sub['inicio'],
-                'fin' => (string)$sub['fin'],
-                'nombre_evento' => (string)$nombre,
-                'tipo' => (string)$tipo,
-                'color' => (string)$color,
-                'is_rango_dias_evento' => $eventoInfo ? (bool)$eventoInfo->is_rango_dias_evento : false,
+                'id' => (int) $id_evento,
+                'inicio' => (string) $sub['inicio'],
+                'fin' => (string) $sub['fin'],
+                'nombre_evento' => (string) $nombre,
+                'tipo' => (string) $tipo,
+                'color' => (string) $color,
+                'is_rango_dias_evento' => $eventoInfo ? (bool) $eventoInfo->is_rango_dias_evento : false,
                 'rango_dias_evento' => $eventoInfo ? $eventoInfo->rango_dias_evento : null,
-                'especial_evento' => $eventoInfo ? (string)$eventoInfo->especial_evento : null,
+                'especial_evento' => $eventoInfo ? (string) $eventoInfo->especial_evento : null,
+                'is_superponible_evento' => $eventoInfo ? (bool) $eventoInfo->is_superponible_evento : false,
             ];
 
             $this->eventosRegistrados[] = $nuevoEvento;
@@ -226,7 +287,7 @@ class EditarCalendario extends Component
     protected function debeRecalcularFinesLapso(?\App\Models\Evento $eventoInfo): bool
     {
         $hayInicios = collect($this->eventosRegistrados)->contains(
-            fn ($e) => in_array($e['especial_evento'] ?? '', ['2', '7', '9'])
+            fn($e) => in_array($e['especial_evento'] ?? '', ['2', '7', '9'])
         );
 
         if (!$hayInicios || !$eventoInfo) {
@@ -240,6 +301,7 @@ class EditarCalendario extends Component
             || $esp === '9'
             || $esp === '4'
             || $esp === '5'
+            || $esp === '1'
             || \App\Support\CalendarioLapsoSemanas::eventoModeloEsFestivo($eventoInfo);
     }
 
@@ -252,7 +314,7 @@ class EditarCalendario extends Component
 
         $this->eventosRegistrados = array_values(array_filter(
             $this->eventosRegistrados,
-            fn ($ev) => !in_array($ev['especial_evento'] ?? '', ['3', '8', '10'])
+            fn($ev) => !in_array($ev['especial_evento'] ?? '', ['3', '8', '10'])
         ));
 
         $eventosFinTemplates = \App\Models\Evento::whereIn('especial_evento', ['3', '8', '10'])
@@ -264,30 +326,27 @@ class EditarCalendario extends Component
             return;
         }
 
-        $colorCache = [];
-        foreach ($eventosFinTemplates as $ev) {
-            if ($ev->id_color && !isset($colorCache[$ev->id_color])) {
-                $colorObj = DB::table('color')->where('id_color', $ev->id_color)->first();
-                $colorCache[$ev->id_color] = $colorObj ? $colorObj->codigo_color : '';
-            }
-        }
-
-        $generarFin = function ($inicioEv, $semanas, $templateKey) use ($calFin, $eventosFinTemplates, $colorCache) {
+        $generarFin = function ($inicioEv, $semanas, $templateKey) use ($calFin, $eventosFinTemplates) {
             if ($semanas < 1 || !isset($eventosFinTemplates[$templateKey])) {
                 return;
             }
             $template = $eventosFinTemplates[$templateKey];
+
+            // Determinar si debemos incluir vacaciones colectivas (especial_evento = 1) en el conteo de semanas
+            $incluirVacaciones = in_array($templateKey, ['3', '8']);
+
             $fechaFinAuto = \App\Support\CalendarioLapsoSemanas::fechaFinLapso(
                 $inicioEv['inicio'],
                 $semanas,
-                $this->eventosRegistrados
+                $this->eventosRegistrados,
+                $incluirVacaciones
             );
 
             if ($fechaFinAuto > $calFin) {
                 return;
             }
 
-            $colorFin = $template->id_color ? ($colorCache[$template->id_color] ?? '') : '';
+            $colorFin = $template->codigo_color_evento ?? '';
 
             $this->eventosRegistrados[] = [
                 'id' => (int) $template->id_evento,
@@ -304,7 +363,7 @@ class EditarCalendario extends Component
 
         // Lapsos regulares (2 -> 3)
         $inicios = collect($this->eventosRegistrados)
-            ->filter(fn ($ev) => ($ev['especial_evento'] ?? '') === '2')
+            ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
             ->sortBy('inicio')
             ->values();
 
@@ -317,7 +376,7 @@ class EditarCalendario extends Component
 
         // Introductorio (7 -> 8)
         $iniciosIntro = collect($this->eventosRegistrados)
-            ->filter(fn ($ev) => ($ev['especial_evento'] ?? '') === '7')
+            ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '7')
             ->sortBy('inicio')
             ->values();
 
@@ -330,7 +389,7 @@ class EditarCalendario extends Component
 
         // Intensivo (9 -> 10)
         $iniciosIntensivo = collect($this->eventosRegistrados)
-            ->filter(fn ($ev) => ($ev['especial_evento'] ?? '') === '9')
+            ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '9')
             ->sortBy('inicio')
             ->values();
 
@@ -342,17 +401,36 @@ class EditarCalendario extends Component
         $this->actualizarMapaEventos();
     }
 
-    /**
-     * Organiza los eventos en un mapa indexado por fecha
-     */
     public function actualizarMapaEventos()
     {
         $mapa = [];
         foreach ($this->eventosRegistrados as $ev) {
-            $actual = \Carbon\Carbon::parse($ev['inicio']);
-            $fin = \Carbon\Carbon::parse($ev['fin']);
+            $start = \Carbon\Carbon::parse($ev['inicio']);
+            $end = \Carbon\Carbon::parse($ev['fin']);
+            $tipo = $ev['tipo'] ?? '1';
 
-            while ($actual->lte($fin)) {
+            // Determinar si el evento fue asignado exclusivamente en un fin de semana
+            $isTodoWeekend = true;
+            $temp = clone $start;
+            while ($temp->lte($end)) {
+                if ($temp->dayOfWeekIso < 6) {
+                    $isTodoWeekend = false;
+                    break;
+                }
+                $temp->addDay();
+            }
+
+            $ignorarFinesDeSemana = !in_array($tipo, ['1', '2', '6']) && !$isTodoWeekend;
+
+            $actual = clone $start;
+            while ($actual->lte($end)) {
+                $dayOfWeek = $actual->dayOfWeekIso;
+
+                if ($ignorarFinesDeSemana && $dayOfWeek >= 6) {
+                    $actual->addDay();
+                    continue;
+                }
+
                 $fechaStr = $actual->format('Y-m-d');
                 if (!isset($mapa[$fechaStr])) {
                     $mapa[$fechaStr] = [];
@@ -363,7 +441,7 @@ class EditarCalendario extends Component
                     'color' => $ev['color'] ?? '#333',
                     'inicio' => $ev['inicio'] ?? $fechaStr,
                     'fin' => $ev['fin'] ?? $fechaStr,
-                    'tipo' => $ev['tipo'] ?? '1',
+                    'tipo' => $tipo,
                     'especial_evento' => $ev['especial_evento'] ?? null
                 ];
                 $actual->addDay();
@@ -380,7 +458,7 @@ class EditarCalendario extends Component
 
         $removido = $this->eventosRegistrados[$index];
         $idsFestivos = \App\Support\CalendarioLapsoSemanas::idsEventosFestivos($this->eventosRegistrados);
-        $eraFestivo = \App\Support\CalendarioLapsoSemanas::registroEsFestivo($removido, $idsFestivos);
+        $eraFestivo = \App\Support\CalendarioLapsoSemanas::registroEsFestivo($removido, $idsFestivos) || ($removido['especial_evento'] ?? '') === '1';
         $eraInicioLapso = in_array($removido['especial_evento'] ?? '', ['2', '7', '9']);
 
         unset($this->eventosRegistrados[$index]);
@@ -388,7 +466,7 @@ class EditarCalendario extends Component
         $this->actualizarMapaEventos();
 
         $hayInicios = collect($this->eventosRegistrados)->contains(
-            fn ($e) => in_array($e['especial_evento'] ?? '', ['2', '7', '9'])
+            fn($e) => in_array($e['especial_evento'] ?? '', ['2', '7', '9'])
         );
 
         if ($hayInicios && ($eraFestivo || $eraInicioLapso)) {
@@ -398,7 +476,7 @@ class EditarCalendario extends Component
         $this->guardarBorrador();
     }
 
-    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $id_color, $is_laborable, $is_repetible, $is_rango_dias, $rango_dias)
+    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $codigo_color_evento, $is_laborable, $is_repetible, $is_rango_dias, $rango_dias)
     {
         // Validar usando el objeto Form
         try {
@@ -411,6 +489,19 @@ class EditarCalendario extends Component
         if (in_array($tipo, ['1', '2', '6'])) {
             $is_laborable = false;
             $is_repetible = false;
+        }
+
+        // VALIDAR REGLA DE SUPERPOSICIÓN CON VACACIONES COLECTIVAS ANTES DE CREAR EL TEMPLATE
+        $is_superponible_nuevo = in_array($tipo, ['1', '2', '6']) ? true : false;
+        if (!$is_superponible_nuevo) {
+            foreach ($this->eventosRegistrados as $evReg) {
+                if (($evReg['especial_evento'] ?? '') === '1') {
+                    if ($inicio <= $evReg['fin'] && $fin >= $evReg['inicio']) {
+                        $this->showAlert('error', "El evento '{$nombre}' no es superponible y no puede registrarse en la misma fecha que las Vacaciones Colectivas.");
+                        return false;
+                    }
+                }
+            }
         }
 
         $this->form->isCreatingEvento = true;
@@ -432,7 +523,7 @@ class EditarCalendario extends Component
 
             $eventoRepo = new EventoIndexRepo();
             $id_evento = $this->calendarioRepository->crearTemplate([
-                'id_color' => $id_color,
+                'codigo_color_evento' => $codigo_color_evento,
                 'nombre' => $nombre,
                 'tipo' => $tipo,
                 'is_laborable' => $is_laborable,
@@ -442,11 +533,9 @@ class EditarCalendario extends Component
                 'is_independiente' => $this->form->nuevoIsIndependiente,
             ]);
 
-            $colorObj = $eventoRepo->obtenerColorPorId($id_color);
-            $colorHex = $colorObj ? $colorObj->codigo_color : '#808080';
+            $colorHex = $codigo_color_evento ?: '#808080';
 
             $this->bibliotecaEventos = $eventoRepo->obtenerBiblioteca();
-            $this->cargarColoresDisponibles();
 
             // Agregar al calendario (esto llamará a guardarBorrador)
             $this->agregarEvento($inicio, $fin, $id_evento, $nombre, $tipo, $colorHex);
@@ -471,7 +560,8 @@ class EditarCalendario extends Component
                 'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
                 'semana_lapso_uno_calendario_academico' => $this->form->semana_lapso_uno_calendario_academico,
                 'semana_lapso_dos_calendario_academico' => $this->form->semana_lapso_dos_calendario_academico,
-                'semana_lapso_introductorio_calendario_academico' => $this->form->semana_lapso_introductorio_calendario_academico,
+                'semana_lapso_uno_introductorio_calendario_academico' => $this->form->semana_lapso_uno_introductorio_calendario_academico,
+                'semana_lapso_dos_introductorio_calendario_academico' => $this->form->semana_lapso_dos_introductorio_calendario_academico,
                 'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
                 'estatus' => '2' // Sigue en revisión
             ], $this->eventosRegistrados, $this->id_calendario);
@@ -514,7 +604,8 @@ class EditarCalendario extends Component
                     'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
                     'semana_lapso_uno_calendario_academico' => $this->form->semana_lapso_uno_calendario_academico,
                     'semana_lapso_dos_calendario_academico' => $this->form->semana_lapso_dos_calendario_academico,
-                    'semana_lapso_introductorio_calendario_academico' => $this->form->semana_lapso_introductorio_calendario_academico,
+                    'semana_lapso_uno_introductorio_calendario_academico' => $this->form->semana_lapso_uno_introductorio_calendario_academico,
+                    'semana_lapso_dos_introductorio_calendario_academico' => $this->form->semana_lapso_dos_introductorio_calendario_academico,
                     'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
                 ]);
 
@@ -555,7 +646,8 @@ class EditarCalendario extends Component
                     'dia_fin_calendario_academico' => $this->form->dia_fin_calendario_academico,
                     'semana_lapso_uno_calendario_academico' => $this->form->semana_lapso_uno_calendario_academico,
                     'semana_lapso_dos_calendario_academico' => $this->form->semana_lapso_dos_calendario_academico,
-                    'semana_lapso_introductorio_calendario_academico' => $this->form->semana_lapso_introductorio_calendario_academico,
+                    'semana_lapso_uno_introductorio_calendario_academico' => $this->form->semana_lapso_uno_introductorio_calendario_academico,
+                    'semana_lapso_dos_introductorio_calendario_academico' => $this->form->semana_lapso_dos_introductorio_calendario_academico,
                     'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
                 ]);
 
@@ -600,7 +692,7 @@ class EditarCalendario extends Component
             $evStart = $ev['inicio'] ?? null;
             if ($evStart) {
                 $evYear = date('Y', strtotime($evStart));
-                if ((int)$evYear === (int)$targetYear) {
+                if ((int) $evYear === (int) $targetYear) {
                     $idsAsignadosEsteAnio[] = $ev['id'] ?? null;
                 }
             }
@@ -644,10 +736,26 @@ class EditarCalendario extends Component
             if (($reg['id'] ?? null) == $eventoVacaciones->id_evento) {
                 $start = new \DateTime($reg['inicio']);
                 $end = new \DateTime($reg['fin']);
-                
+
+                // Determinar si es exclusivamente de fin de semana
+                $isTodoWeekend = true;
+                $tempInterval = new \DateInterval('P1D');
+                $tempPeriod = new \DatePeriod($start, $tempInterval, (clone $end)->modify('+1 day'));
+                foreach ($tempPeriod as $date) {
+                    if ((int) $date->format('N') < 6) {
+                        $isTodoWeekend = false;
+                        break;
+                    }
+                }
+
+                $ignorarFinesDeSemana = !in_array($reg['tipo'] ?? '1', ['1', '2', '6']) && !$isTodoWeekend;
+
                 $interval = new \DateInterval('P1D');
                 $period = new \DatePeriod($start, $interval, (clone $end)->modify('+1 day'));
                 foreach ($period as $date) {
+                    if ($ignorarFinesDeSemana && (int) $date->format('N') >= 6) {
+                        continue;
+                    }
                     if ($date->format('Y') == $targetYear) {
                         $diasActuales++;
                     }
@@ -655,9 +763,8 @@ class EditarCalendario extends Component
             }
         }
 
-        // Sumar días ya asignados en otros calendarios para este año
-        $excluirId = $this->id_calendario;
-        $diasEnOtrosCalendarios = $repo->obtenerDiasVacacionesEnOtrosCalendarios($eventoVacaciones->id_evento, $targetYear, $excluirId);
+        // Según el requerimiento: Solo se deben contar los días de vacaciones actuales del calendario específico
+        $diasEnOtrosCalendarios = 0;
 
         $totalAsignados = $diasActuales + $diasEnOtrosCalendarios;
         $cantidadRequerida = $eventoVacaciones->cantidad_dias_evento ?? 60;
