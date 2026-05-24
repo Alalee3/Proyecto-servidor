@@ -266,6 +266,23 @@ class AuthServiceProvider extends ServiceProvider
             return $accesoRepository->checkPermission('Cambiar Estatus de Planificacion');
         });
 
+        // --- GATES PARA EL MÓDULO DE FIRMA ---
+        Gate::define('listar-firma', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Listar de Firma');
+        });
+        Gate::define('crear-firma', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Crear de Firma');
+        });
+        Gate::define('editar-firma', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Editar de Firma');
+        });
+        Gate::define('ver-firma', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Ver Detalles de Firma');
+        });
+        Gate::define('cambiar-estatus-firma', function ($user) use ($accesoRepository) {
+            return $accesoRepository->checkPermission('Cambiar Estatus de Firma');
+        });
+
         // --- GATES PARA EL MÓDULO DE COLOR ---
         Gate::define('listar-color', function ($user) use ($accesoRepository) {
             return $accesoRepository->checkPermission('Listar de Color');

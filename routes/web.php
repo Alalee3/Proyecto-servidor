@@ -72,6 +72,11 @@ use App\Livewire\Color\ShowColor;
 
 use App\Livewire\Bitacora\ListBitacora;
 
+use App\Livewire\Firma\CreateFirma;
+use App\Livewire\Firma\ListFirma;
+use App\Livewire\Firma\UpdateFirma;
+use App\Livewire\Firma\ShowFirma;
+
 use Illuminate\Support\Facades\Route;
 
 Route::get('login', [\App\Http\Controllers\Auth\ExternalLoginController::class, 'login'])->name('login');
@@ -184,6 +189,12 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     // Rutas para Bitácora
     Route::get('bitacora/list', ListBitacora::class)->middleware('can:listar-bitacora')->name('bitacora/listar');
     Route::get('bitacora/show/{id}', \App\Livewire\Bitacora\ShowBitacora::class)->middleware('can:ver-bitacora')->name('bitacora/show');
+
+    // Rutas para Firmas
+    Route::get('firma/list', ListFirma::class)->middleware('can:listar-firma')->name('firma/listar');
+    Route::get('firma/create', CreateFirma::class)->middleware('can:crear-firma')->name('firma/crear');
+    Route::get('firma/update/{id}', UpdateFirma::class)->middleware('can:editar-firma')->name('firma/update');
+    Route::get('firma/show/{id}', ShowFirma::class)->middleware('can:ver-firma')->name('firma/show');
 });
 
 Route::middleware(['auth'])->group(function () { });

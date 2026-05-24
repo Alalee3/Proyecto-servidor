@@ -278,6 +278,24 @@
                 </div>
             @endcan
 
+            @can('listar-firma')
+                <!-- Firmas -->
+                <div>
+                    <button @click="openMenu === 20 ? openMenu = null : openMenu = 20" class="sogat-sidebar-item">
+                        <span>Firmas</span>
+                        <svg class="w-4 h-4 ml-auto transition-transform duration-200" :class="openMenu === 20 ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <ul x-show="openMenu === 20" x-collapse class="mt-0 space-y-0" style="display: none;">
+                        @can('crear-firma')
+                            <li><a href="{{ route('firma/crear') }}" class="sogat-sidebar-link">Crear Firma</a></li>
+                        @endcan
+                        <li><a href="{{ route('firma/listar') }}" class="sogat-sidebar-link">Gestionar Firmas</a></li>
+                    </ul>
+                </div>
+            @endcan
+
             @can('listar-bitacora')
                 <!-- Bitácora -->
                 <a href="{{ route('bitacora/listar') }}" class="sogat-sidebar-item">
