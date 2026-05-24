@@ -24,11 +24,6 @@ class Evento extends Model
         'cantidad_dias_evento' => 'integer',
     ];
 
-    public function color_rel()
-    {
-        return $this->belongsTo(Color::class, 'id_color');
-    }
-
     public function detalles()
     {
         return $this->hasMany(DetalleEvento::class, 'id_evento');
@@ -37,6 +32,20 @@ class Evento extends Model
     public function semanas()
     {
         return $this->hasMany(SemanaEvento::class, 'id_evento');
+    }
+
+    /**
+     * Accessor para mantener compatibilidad con código que usa ->color_rel
+     */
+    public function getColorRelAttribute()
+    {
+        if ($this->codigo_color_evento) {
+            return (object) [
+                'codigo_color' => $this->codigo_color_evento,
+                'nombre_color' => $this->codigo_color_evento,
+            ];
+        }
+        return null;
     }
 
     /**
@@ -69,11 +78,11 @@ class Evento extends Model
             4 => '#28A745',
             5 => '#6c757d'
         ];
-        return $this->color_rel->codigo_color ?? ($colors[$this->tipo_evento] ?? '#6c757d');
+        return $this->codigo_color_evento ?? ($colors[$this->tipo_evento] ?? '#6c757d');
     }
 
     public function getNombreColorAttribute()
     {
-        return $this->color_rel->nombre_color ?? 'N/A';
+        return $this->codigo_color_evento ?? 'N/A';
     }
 }

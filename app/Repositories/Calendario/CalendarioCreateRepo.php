@@ -97,7 +97,6 @@ class CalendarioCreateRepo
     {
         return DB::table('detalle_evento as de')
             ->join('evento as e', 'de.id_evento', '=', 'e.id_evento')
-            ->leftJoin('color as c', 'e.id_color', '=', 'c.id_color')
             ->where('de.id_calendario_academico', $id)
             ->select(
                 'e.id_evento as id',
@@ -105,7 +104,7 @@ class CalendarioCreateRepo
                 'de.dia_fin_detalle_evento as fin',
                 'e.nombre_evento as nombre',
                 'e.tipo_evento as tipo',
-                'c.codigo_color as color',
+                'e.codigo_color_evento as color',
                 'e.especial_evento as especial_evento'
             )
             ->get();
@@ -125,7 +124,7 @@ class CalendarioCreateRepo
                 'dia_fin_calendario_academico' => $data['dia_fin_calendario_academico'],
                 'semana_lapso_uno_calendario_academico' => $data['semana_lapso_uno_calendario_academico'] ?? 0,
                 'semana_lapso_dos_calendario_academico' => $data['semana_lapso_dos_calendario_academico'] ?? 0,
-                'semana_lapso_introductorio_calendario_academico' => $data['semana_lapso_introductorio_calendario_academico'] ?? null,
+                'semana_lapso_introductorio_calendario_academico' => $data['semana_lapso_uno_introductorio_calendario_academico'] ?? null,
                 'semana_intensibo_introductorio_calendario_academico' => $data['semana_intensibo_introductorio_calendario_academico'] ?? null,
                 'estatus' => $data['estatus'] ?? '4' // Por defecto incompleto
             ];
@@ -188,12 +187,12 @@ class CalendarioCreateRepo
     }
 
     /**
-     * Verifica si existe un evento con el mismo color (excluyendo inactivos).
+     * Verifica si existe un evento con el mismo código de color (excluyendo inactivos).
      */
-    public function existeEventoConColor($id_color, $excluirId = null)
+    public function existeEventoConColor($codigo_color, $excluirId = null)
     {
         return DB::table('evento')
-            ->where('id_color', $id_color)
+            ->where('codigo_color_evento', $codigo_color)
             ->where('estatus', '!=', '3')
             ->when($excluirId, function ($q) use ($excluirId) {
                 $q->where('id_evento', '!=', $excluirId);
@@ -206,7 +205,7 @@ class CalendarioCreateRepo
     public function crearTemplate($data)
     {
         $insert = [
-            'id_color' => $data['id_color'],
+            'codigo_color_evento' => $data['codigo_color_evento'],
             'nombre_evento' => mb_strtoupper($data['nombre']),
             'tipo_evento' => $data['tipo'],
             'is_laborable_evento' => $data['is_laborable'],

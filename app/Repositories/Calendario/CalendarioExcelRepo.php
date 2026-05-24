@@ -41,13 +41,12 @@ class CalendarioExcelRepo
         // Obtener TODOS los eventos del calendario
         $eventosRaw = DB::table('evento')
             ->join('detalle_evento', 'evento.id_evento', '=', 'detalle_evento.id_evento')
-            ->leftJoin('color', 'evento.id_color', '=', 'color.id_color')
             ->select(
                 'evento.id_evento',
                 'evento.nombre_evento as descripcion_evento',
                 'detalle_evento.dia_inicio_detalle_evento as dia_inicio_evento',
                 'detalle_evento.dia_fin_detalle_evento as dia_fin_evento',
-                'color.codigo_color',
+                'evento.codigo_color_evento as codigo_color',
                 'evento.is_laborable_evento',
                 'evento.tipo_evento'
             )

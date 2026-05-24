@@ -5,19 +5,13 @@ namespace App\Livewire\Evento;
 use App\Livewire\Forms\Evento\CreateEventoForm;
 use Livewire\Component;
 use App\Repositories\Evento\EventoCreateRepo;
-use App\Repositories\Color\ColorCreateRepo;
 use Exception;
 
 class CreateEvento extends Component
 {
     public CreateEventoForm $form;
-    public $colores = [];
     public $eventosExistentes = [];
     protected $eventoRepository;
-
-    public $showCreateColorModal = false;
-    public $newColorName = '';
-    public $newColorCode = '#000000';
 
     public function boot()
     {
@@ -26,7 +20,6 @@ class CreateEvento extends Component
 
     public function mount()
     {
-        $this->cargarColores();
         $this->refreshEventos();
         if (empty($this->form->semanas)) {
             $this->form->semanas = [''];
@@ -38,26 +31,8 @@ class CreateEvento extends Component
         $this->eventosExistentes = \App\Models\Evento::orderBy('nombre_evento')->get();
     }
 
-    public function cargarColores()
-    {
-        $this->colores = \App\Models\Color::where('estatus', '1')
-            ->whereNotIn('id_color', function ($query) {
-                $query->select('id_color')
-                    ->from('evento')
-                    ->whereNotNull('id_color');
-            })
-            ->orderBy('nombre_color')
-            ->get();
-    }
-
     public function updated($propertyName)
     {
-        // Special handling for colorNombre - sync with id_color
-        if ($propertyName === 'form.colorNombre') {
-            $this->sincronizarColor();
-            return;
-        }
-
         $field = str_replace('form.', '', $propertyName);
 
         // 1. APLICAR TODA LA LÓGICA DINÁMICA DE ESTADO PRIMERO
@@ -195,33 +170,13 @@ class CreateEvento extends Component
         $this->form->validateOnly($field);
     }
 
-    protected function sincronizarColor()
-    {
-        $nombre = trim($this->form->colorNombre);
-        if (empty($nombre)) {
-            $this->form->id_color = '';
-            return;
-        }
-
-        $color = \App\Models\Color::where('estatus', '1')
-            ->where('nombre_color', $nombre)
-            ->first();
-
-        $this->form->id_color = $color ? $color->id_color : '';
-    }
-
     public function guardar()
     {
-        if ($this->form->colorNombre && !$this->form->id_color) {
-            $this->abrirModalCrearColor();
-            return;
-        }
-
         try {
             $this->form->validate();
             $id_repo = $this->eventoRepository->crear($this->form->all());
 
-            $this->reset('form.descripcion_evento', 'form.tipo_evento', 'form.id_color', 'form.colorNombre', 'form.especial_evento', 'form.is_especial', 'form.cantidad_dias_evento');
+            $this->reset('form.descripcion_evento', 'form.tipo_evento', 'form.codigo_color_evento', 'form.especial_evento', 'form.is_especial', 'form.cantidad_dias_evento');
             $this->form->semanas = [''];
             $this->refreshEventos();
             $this->showAlert('success', 'Evento creado correctamente.');
@@ -232,42 +187,6 @@ class CreateEvento extends Component
             throw $e;
         } catch (Exception $e) {
             $this->showAlert('error', 'Error al crear evento: ' . $e->getMessage());
-        }
-    }
-
-    public function abrirModalCrearColor()
-    {
-        $this->newColorName = trim($this->form->colorNombre);
-        $this->newColorCode = '#000000';
-        $this->showCreateColorModal = true;
-    }
-
-    public function crearColor()
-    {
-        try {
-            $this->validate([
-                'newColorName' => ['required', 'string', 'max:100', 'regex:/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ\d\s]+$/u'],
-                'newColorCode' => ['required', 'string', 'size:7', 'regex:/^#[a-fA-F0-9]{6}$/'],
-            ]);
-
-            $repo = new ColorCreateRepo();
-            $id_color = $repo->crear([
-                'nombre_color' => $this->newColorName,
-                'codigo_color' => $this->newColorCode,
-            ]);
-
-            $this->cargarColores();
-            $this->form->colorNombre = $this->newColorName;
-            $this->form->id_color = $id_color;
-            $this->showCreateColorModal = false;
-
-            $this->showAlert('success', 'Color creado correctamente.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            $errors = $e->validator->errors()->all();
-            $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $errors);
-            $this->showAlert('error', $msg);
-        } catch (Exception $e) {
-            $this->showAlert('error', 'Error al crear el color: ' . $e->getMessage());
         }
     }
 

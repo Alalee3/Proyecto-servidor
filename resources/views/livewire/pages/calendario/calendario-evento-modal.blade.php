@@ -93,56 +93,18 @@ $wireKey = $wireKey ?? 'datalist-calendario';
                     </div>
                 </div>
 
-                {{-- Columna 3: Selección de Color --}}
+                {{-- Columna 3: Selección de Color con input nativo --}}
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{{ __('Color del Evento *') }}</label>
-                    <div x-data="{ 
-                        openColores: false, 
-                        colores: @entangle('colores'),
-                        get selectedHex() {
-                            let color = this.colores.find(c => c.id_color == nuevoColorId);
-                            return color ? color.codigo_color : null;
-                        },
-                        get selectedName() {
-                            let color = this.colores.find(c => c.id_color == nuevoColorId);
-                            return color ? color.nombre_color : '{{ __('Seleccione un color') }}';
-                        }
-                    }" class="relative">
-
-                        <button @click="openColores = !openColores" type="button"
-                            class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-left focus:ring-2 focus:ring-gray-400 flex items-center justify-between transition-all">
-                            <div class="flex items-center gap-3 overflow-hidden">
-                                <div x-show="selectedHex"
-                                    class="flex-shrink-0 w-5 h-5 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm"
-                                    :style="'background-color: ' + selectedHex"></div>
-                                <span class="text-sm text-gray-500 dark:text-gray-400 font-medium truncate"
-                                    :class="nuevoColorId ? 'text-gray-700 dark:text-gray-200 font-semibold' : ''"
-                                    x-text="selectedName.toUpperCase()"></span>
-                            </div>
-                            <span class="material-icons text-gray-400 transition-transform duration-200"
-                                :class="openColores ? 'rotate-180' : ''">expand_more</span>
-                        </button>
-
-                        <div x-show="openColores" @click.away="openColores = false"
-                            x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 translate-y-2"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            class="absolute z-[60] mt-2 w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 py-2 max-h-60 overflow-y-auto sogat-scrollbar">
-                            <ul class="divide-y divide-gray-50 dark:divide-gray-700/50">
-                                @foreach($colores as $color)
-                                <li @click="nuevoColorId = {{ $color->id_color }}; openColores = false"
-                                    class="cursor-pointer select-none w-full px-5 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center transition-colors"
-                                    :class="nuevoColorId == {{ $color->id_color }} ? 'bg-gray-50 dark:bg-gray-700/50' : ''">
-                                    <div class="flex items-center gap-4">
-                                        <span class="w-7 h-7 rounded-full border border-gray-200 dark:border-gray-700 shadow-sm"
-                                            style="background-color: {{ $color->codigo_color }}"></span>
-                                        <span class="text-gray-900 dark:text-gray-200 text-sm font-semibold">{{ mb_strtoupper($color->nombre_color) }}</span>
-                                    </div>
-                                </li>
-                                @endforeach
-                            </ul>
-                        </div>
+                    <div class="flex items-center gap-3">
+                        <input type="color" x-model="nuevoColorHex" wire:model.live="form.nuevoColorHex"
+                            class="w-14 h-14 rounded-xl border border-gray-300 dark:border-gray-600 cursor-pointer bg-transparent p-1"
+                            title="{{ __('Seleccione un color') }}">
+                        <input type="text" x-model="nuevoColorHex" wire:model.live="form.nuevoColorHex"
+                            class="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-xl p-3 text-sm text-gray-900 dark:text-white font-mono uppercase focus:ring-2 focus:ring-gray-400"
+                            placeholder="#FFFFFF" maxlength="7" pattern="#[0-9A-Fa-f]{6}">
                     </div>
+                    <x-input-error :messages="$errors->first('form.nuevoColorHex')" class="mt-2" />
                 </div>
 
                 {{-- FILA 2 --}}

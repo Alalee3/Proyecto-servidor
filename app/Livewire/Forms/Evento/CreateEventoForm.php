@@ -6,8 +6,7 @@ use Livewire\Form;
 
 class CreateEventoForm extends Form
 {
-    public $id_color = '';
-    public $colorNombre = '';
+    public $codigo_color_evento = '#000000';
     public $descripcion_evento = '';
     public $tipo_evento = '1';
     public $especial_evento = '';
@@ -138,20 +137,15 @@ class CreateEventoForm extends Form
                     }
                 }
             ],
-            'id_color' => [
-                'required_without:colorNombre',
+            'codigo_color_evento' => [
+                'required',
+                'string',
+                'size:7',
+                'regex:/^#[a-fA-F0-9]{6}$/',
                 function ($attribute, $value, $fail) {
-                    if (empty($value)) {
-                        return;
-                    }
-                    $color = \App\Models\Color::find($value);
-                    if (!$color) {
-                        $fail('El color seleccionado no es válido.');
-                        return;
-                    }
                     $repo = new \App\Repositories\Evento\EventoCreateRepo();
                     if ($repo->existeColor($value)) {
-                        $fail('Este color ya está asignado a otro evento activo.');
+                        $fail('Este código de color ya está asignado a otro evento activo.');
                     }
                 }
             ],
@@ -226,7 +220,9 @@ class CreateEventoForm extends Form
             'tipo_evento.in' => 'El tipo de evento no es válido.',
             'especial_evento.required_if' => 'Debe seleccionar qué tipo de evento especial es.',
             'especial_evento.in' => 'El evento especial seleccionado no es válido.',
-            'id_color.required_without' => 'El color es obligatorio.',
+            'codigo_color_evento.required' => 'El color es obligatorio.',
+            'codigo_color_evento.size' => 'El código de color debe tener 7 caracteres (ej: #FF0000).',
+            'codigo_color_evento.regex' => 'El formato del código de color debe ser hexadecimal (ej: #FF0000).',
             'is_laborable.boolean' => 'El valor de laborable debe ser booleano.',
             'is_repetible.boolean' => 'El valor de repetible debe ser booleano.',
             'is_superponible.boolean' => 'El valor de superponible debe ser booleano.',

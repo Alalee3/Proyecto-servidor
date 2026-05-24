@@ -24,7 +24,6 @@ class CalendarioUpdateRepo
     {
         return DB::table('detalle_evento as de')
             ->join('evento as e', 'de.id_evento', '=', 'e.id_evento')
-            ->leftJoin('color as c', 'e.id_color', '=', 'c.id_color')
             ->where('de.id_calendario_academico', $id)
             ->select(
                 'e.id_evento as id',
@@ -32,7 +31,7 @@ class CalendarioUpdateRepo
                 'de.dia_fin_detalle_evento as fin',
                 'e.nombre_evento as nombre',
                 'e.tipo_evento as tipo',
-                'c.codigo_color as color',
+                'e.codigo_color_evento as color',
                 'e.especial_evento as especial_evento'
             )
             ->get();
@@ -113,10 +112,10 @@ class CalendarioUpdateRepo
     /**
      * Verifica si existe un evento con el mismo color (específico para Update).
      */
-    public function existeEventoConColor($id_color, $excluirId = null)
+    public function existeEventoConColor($codigo_color, $excluirId = null)
     {
         return DB::table('evento')
-            ->where('id_color', $id_color)
+            ->where('codigo_color_evento', $codigo_color)
             ->where('estatus', '!=', '3')
             ->when($excluirId, function ($q) use ($excluirId) {
                 $q->where('id_evento', '!=', $excluirId);
@@ -129,7 +128,7 @@ class CalendarioUpdateRepo
     public function crearTemplate($data)
     {
         $insert = [
-            'id_color' => $data['id_color'],
+            'codigo_color_evento' => $data['codigo_color_evento'],
             'nombre_evento' => mb_strtoupper($data['nombre']),
             'tipo_evento' => $data['tipo'],
             'is_laborable_evento' => $data['is_laborable'],

@@ -45,16 +45,15 @@
                 </div>
 
                 <div class="w-full">
-                    <x-color-datalist
-                        wire:key="datalist-colores-{{ md5($colores->pluck('nombre_color')->join(',')) }}"
-                        label="Color del Evento"
-                        :options="$colores"
-                        wire:model.live="form.colorNombre"
-                        placeholder="Escriba o seleccione un color"
-                        required
-                    />
-
-                    <x-input-error :messages="$errors->first('form.id_color')" class="mt-2" />
+                    <x-input-label for="codigo_color" :value="__('Color del Evento')" />
+                    <div class="flex items-center gap-3 mt-1">
+                        <input id="codigo_color" type="color" wire:model.live="form.codigo_color_evento"
+                            class="w-12 h-10 p-1 border border-gray-300 dark:border-gray-700 rounded-md cursor-pointer shadow-sm bg-white dark:bg-gray-900"
+                            title="Seleccione un color" />
+                        <x-text-input type="text" wire:model.live="form.codigo_color_evento" class="flex-1 font-mono"
+                            placeholder="#000000" maxlength="7" />
+                    </div>
+                    <x-input-error :messages="$errors->first('form.codigo_color_evento')" class="mt-2" />
                 </div>
 
                 <x-toggle-switch id="is_independiente" :label="__('¿Puede registrarse fuera de un semestre?')" model="form.is_independiente"
@@ -151,9 +150,4 @@
         </form>
     </div>
 
-    @include('livewire.pages.evento.color-create-modal', [
-        'showCreateColorModal' => $showCreateColorModal,
-        'newColorName' => $newColorName,
-        'newColorCode' => $newColorCode,
-    ])
 </div>

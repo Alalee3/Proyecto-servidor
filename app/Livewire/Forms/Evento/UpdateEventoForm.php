@@ -10,8 +10,7 @@ class UpdateEventoForm extends Form
     #[Locked]
     public $id_evento = '';
 
-    public $id_color = '';
-    public $colorNombre = '';
+    public $codigo_color_evento = '';
     public $descripcion_evento = '';
     public $tipo_evento = '1';
     public $especial_evento = '';
@@ -32,8 +31,7 @@ class UpdateEventoForm extends Form
         $this->tipo_evento = $evento->tipo_evento;
         $this->especial_evento = $evento->especial_evento ?? '';
         $this->is_especial = !empty($evento->especial_evento);
-        $this->id_color = $evento->id_color;
-        $this->colorNombre = $evento->color_rel ? $evento->color_rel->nombre_color : '';
+        $this->codigo_color_evento = $evento->codigo_color_evento ?? '';
         $this->is_laborable = (bool) $evento->is_laborable_evento;
         $this->is_repetible = (bool) $evento->is_repetible_evento;
         $this->is_rango_dias = (bool) $evento->is_rango_dias_evento;
@@ -162,20 +160,15 @@ class UpdateEventoForm extends Form
                     }
                 }
             ],
-            'id_color' => [
-                'required_without:colorNombre',
+            'codigo_color_evento' => [
+                'required',
+                'string',
+                'size:7',
+                'regex:/^#[a-fA-F0-9]{6}$/',
                 function ($attribute, $value, $fail) {
-                    if (empty($value)) {
-                        return;
-                    }
-                    $color = \App\Models\Color::find($value);
-                    if (!$color) {
-                        $fail('El color seleccionado no es válido.');
-                        return;
-                    }
                     $repo = new \App\Repositories\Evento\EventoUpdateRepo();
                     if ($repo->existeColor($value, $this->id_evento)) {
-                        $fail('Este color ya está asignado a otro evento activo.');
+                        $fail('Este código de color ya está asignado a otro evento activo.');
                     }
                 }
             ],
@@ -217,12 +210,10 @@ class UpdateEventoForm extends Form
                         $fail('Si el evento no es repetible, solo puede seleccionar una (1) semana.');
                     }
                     
-                    // Filtrar valores vacíos
                     $semanasValidas = array_filter($value, function($val) {
                         return $val !== null && $val !== '';
                     });
                     
-                    // Comprobar duplicados
                     if (count($semanasValidas) !== count(array_unique($semanasValidas))) {
                         $fail('No puede seleccionar la misma semana más de una vez.');
                     }
@@ -250,7 +241,9 @@ class UpdateEventoForm extends Form
             'tipo_evento.in' => 'El tipo de evento no es válido.',
             'especial_evento.required_if' => 'Debe seleccionar qué tipo de evento especial es.',
             'especial_evento.in' => 'El evento especial seleccionado no es válido.',
-            'id_color.required_without' => 'El color es obligatorio.',
+            'codigo_color_evento.required' => 'El color es obligatorio.',
+            'codigo_color_evento.size' => 'El código de color debe tener 7 caracteres (ej: #FF0000).',
+            'codigo_color_evento.regex' => 'El formato del código de color debe ser hexadecimal (ej: #FF0000).',
             'is_laborable.boolean' => 'El valor de laborable debe ser booleano.',
             'is_repetible.boolean' => 'El valor de repetible debe ser booleano.',
             'is_superponible.boolean' => 'El valor de superponible debe ser booleano.',

@@ -75,13 +75,8 @@
                         <div>
                             <x-input-label value="Color Asignado:" />
                             <div class="flex items-center gap-3 mt-1">
-                                @if($evento->color_rel)
-                                    <div class="w-7 h-7 rounded-full border border-gray-400 shadow-sm" style="background-color: {{ $evento->color_rel->codigo_color }}"></div>
-                                    <p class="text-gray-700 dark:text-gray-300 font-semibold text-lg">{{ $evento->color_rel->nombre_color }}</p>
-                                @else
-                                    <div class="w-7 h-7 rounded-full border border-gray-400 shadow-sm" style="background-color: {{ $evento->color }}"></div>
-                                    <p class="text-gray-700 dark:text-gray-300 font-semibold italic">Color Predeterminado</p>
-                                @endif
+                                <div class="w-7 h-7 rounded-full border border-gray-400 shadow-sm" style="background-color: {{ $evento->codigo_color_evento ?? $evento->color }}"></div>
+                                <p class="text-gray-700 dark:text-gray-300 font-semibold text-lg font-mono">{{ $evento->codigo_color_evento ?? 'Color Predeterminado' }}</p>
                             </div>
                         </div>
 

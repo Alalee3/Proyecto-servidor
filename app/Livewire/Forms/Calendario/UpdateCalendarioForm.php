@@ -19,7 +19,7 @@ class UpdateCalendarioForm extends Form
 
     // Propiedades para registro rápido de eventos (Paridad con CreateCalendarioForm)
     public $nombreEventoTemporal = '';
-    public $nuevoColorId = '';
+    public $nuevoColorHex = '';
     public $nuevoTipo = '1';
     public $nuevoLaborable = false;
     public $nuevoRepetible = false;
@@ -115,9 +115,10 @@ class UpdateCalendarioForm extends Form
                         }
                     }
                 ],
-                'nuevoColorId' => [
+                'nuevoColorHex' => [
                     'required',
-                    'exists:color,id_color',
+                    'string',
+                    'regex:/^#[0-9A-Fa-f]{6}$/',
                     function ($attribute, $value, $fail) {
                         $repo = new \App\Repositories\Calendario\CalendarioUpdateRepo();
                         if ($repo->existeEventoConColor($value, $this->idEventoTemporal)) {
@@ -152,7 +153,7 @@ class UpdateCalendarioForm extends Form
             'nombreEventoTemporal.max' => 'La descripción no debe exceder 100 caracteres.',
             'nombreEventoTemporal.regex' => 'Formato inválido en la descripción.',
             'nuevoTipo.required' => 'El tipo de evento es obligatorio.',
-            'nuevoColorId.required' => 'El color es obligatorio.',
+            'nuevoColorHex.required' => 'El color es obligatorio.',
             'nuevoIsIndependiente.required' => 'El campo independiente es obligatorio.',
             'nuevoIsIndependiente.boolean' => 'El campo independiente debe ser un valor booleano.',
         ];

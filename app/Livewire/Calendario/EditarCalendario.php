@@ -23,7 +23,6 @@ class EditarCalendario extends Component
     public $bibliotecaEventos = [];
     public $currentYear;
     public $id_calendario;
-    public $colores = [];
     public $selectedYearTemporal = null;
 
     public function boot()
@@ -72,14 +71,7 @@ class EditarCalendario extends Component
         // Cargar la biblioteca de eventos (templates)
         $eventoRepo = new EventoIndexRepo();
         $this->bibliotecaEventos = $eventoRepo->obtenerBiblioteca();
-        $this->cargarColoresDisponibles();
         $this->actualizarMapaEventos();
-    }
-
-    public function cargarColoresDisponibles()
-    {
-        $eventoRepo = new EventoIndexRepo();
-        $this->colores = $eventoRepo->obtenerColoresDisponibles();
     }
 
     public function updated($propertyName)
@@ -137,8 +129,8 @@ class EditarCalendario extends Component
             }
         } else {
             $nombre = (string) $eventoInfo->nombre_evento;
-            // Intentar obtener el color desde la relación o fallback
-            $color = (string) ($eventoInfo->color_rel ? $eventoInfo->color_rel->codigo_color : $color);
+            // Obtener el color desde codigo_color_evento o fallback
+            $color = (string) ($eventoInfo->codigo_color_evento ?: $color);
             $tipo = (string) ($eventoInfo->tipo_evento ?? $tipo ?? '');
         }
 
@@ -172,8 +164,6 @@ class EditarCalendario extends Component
                 return;
             }
 
-            // Calcular número de semana para inicio y fin
-            // El Lapso Académico (2) sí debe reajustarse con las vacaciones (especial_evento=1)
             $incluirVacaciones = true;
 
             $semanaInicio = \App\Support\CalendarioLapsoSemanas::contarSemanas($lapsoActual['inicio'], $inicio, $this->eventosRegistrados, $incluirVacaciones);
@@ -220,7 +210,7 @@ class EditarCalendario extends Component
         $period = new \DatePeriod($start, $interval, (clone $end)->modify('+1 day'));
 
         foreach ($period as $date) {
-            $dayOfWeek = (int) $date->format('N'); // 1 (Lunes) a 7 (Domingo)
+            $dayOfWeek = (int) $date->format('N');
             if ($dayOfWeek >= 6) {
                 $contieneWeekend = true;
             } else {
@@ -336,22 +326,13 @@ class EditarCalendario extends Component
             return;
         }
 
-        $colorCache = [];
-        foreach ($eventosFinTemplates as $ev) {
-            if ($ev->id_color && !isset($colorCache[$ev->id_color])) {
-                $colorObj = DB::table('color')->where('id_color', $ev->id_color)->first();
-                $colorCache[$ev->id_color] = $colorObj ? $colorObj->codigo_color : '';
-            }
-        }
-
-        $generarFin = function ($inicioEv, $semanas, $templateKey) use ($calFin, $eventosFinTemplates, $colorCache) {
+        $generarFin = function ($inicioEv, $semanas, $templateKey) use ($calFin, $eventosFinTemplates) {
             if ($semanas < 1 || !isset($eventosFinTemplates[$templateKey])) {
                 return;
             }
             $template = $eventosFinTemplates[$templateKey];
 
             // Determinar si debemos incluir vacaciones colectivas (especial_evento = 1) en el conteo de semanas
-            // Se incluyen para Lapso Académico (3) y Lapso Introductorio (8), pero NO para Lapso Intensivo (10)
             $incluirVacaciones = in_array($templateKey, ['3', '8']);
 
             $fechaFinAuto = \App\Support\CalendarioLapsoSemanas::fechaFinLapso(
@@ -365,7 +346,7 @@ class EditarCalendario extends Component
                 return;
             }
 
-            $colorFin = $template->id_color ? ($colorCache[$template->id_color] ?? '') : '';
+            $colorFin = $template->codigo_color_evento ?? '';
 
             $this->eventosRegistrados[] = [
                 'id' => (int) $template->id_evento,
@@ -495,7 +476,7 @@ class EditarCalendario extends Component
         $this->guardarBorrador();
     }
 
-    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $id_color, $is_laborable, $is_repetible, $is_rango_dias, $rango_dias)
+    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $codigo_color_evento, $is_laborable, $is_repetible, $is_rango_dias, $rango_dias)
     {
         // Validar usando el objeto Form
         try {
@@ -542,7 +523,7 @@ class EditarCalendario extends Component
 
             $eventoRepo = new EventoIndexRepo();
             $id_evento = $this->calendarioRepository->crearTemplate([
-                'id_color' => $id_color,
+                'codigo_color_evento' => $codigo_color_evento,
                 'nombre' => $nombre,
                 'tipo' => $tipo,
                 'is_laborable' => $is_laborable,
@@ -552,11 +533,9 @@ class EditarCalendario extends Component
                 'is_independiente' => $this->form->nuevoIsIndependiente,
             ]);
 
-            $colorObj = $eventoRepo->obtenerColorPorId($id_color);
-            $colorHex = $colorObj ? $colorObj->codigo_color : '#808080';
+            $colorHex = $codigo_color_evento ?: '#808080';
 
             $this->bibliotecaEventos = $eventoRepo->obtenerBiblioteca();
-            $this->cargarColoresDisponibles();
 
             // Agregar al calendario (esto llamará a guardarBorrador)
             $this->agregarEvento($inicio, $fin, $id_evento, $nombre, $tipo, $colorHex);

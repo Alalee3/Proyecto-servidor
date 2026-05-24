@@ -253,7 +253,7 @@
                                     _savedCount: 0,
                                     _clickLock: false,
                                     showQuickModal: false,
-                                    nuevoColorId: @entangle('form.nuevoColorId'),
+                                    nuevoColorHex: @entangle('form.nuevoColorHex'),
                                     nuevoTipo: @entangle('form.nuevoTipo'),
                                     nuevoLaborable: @entangle('form.nuevoLaborable'),
                                      nuevoRepetible: @entangle('form.nuevoRepetible'),
@@ -783,7 +783,7 @@
                                     },
 
                                     confirmarNuevoEvento() {
-                                        if (!this.nuevoColorId) { alert('Debe seleccionar un color para el nuevo evento.'); return; }
+                                        if (!this.nuevoColorHex) { alert('Debe seleccionar un color para el nuevo evento.'); return; }
                                         if (this._clickLock) return;
                                         this._clickLock = true;
                                         
@@ -792,7 +792,7 @@
                                             this.selectedEventEnd, 
                                             this.eventoNombre, 
                                             this.nuevoTipo, 
-                                            this.nuevoColorId, 
+                                            this.nuevoColorHex, 
                                             this.nuevoLaborable, 
                                             this.nuevoRepetible,
                                             this.nuevoIsRangoDias,
@@ -819,7 +819,7 @@
                                          }
                                          this.selectedEventStart = ''; this.selectedEventEnd = ''; this.eventoNombre = '';
                                          this.eventoSeleccionado = ''; this.clickCount = 0;
-                                                                                   this.nuevoColorId = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false; this.nuevoIsRangoDias = false; this.nuevoRangoDias = ''; this.nuevoIsIndependiente = true; this.isCreatingEvento = false;
+                                                                                   this.nuevoColorHex = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false; this.nuevoIsRangoDias = false; this.nuevoRangoDias = ''; this.nuevoIsIndependiente = true; this.isCreatingEvento = false;
 
                                      },
                                     eliminarEventoDesdeTooltip(ev) {
