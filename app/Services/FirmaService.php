@@ -7,19 +7,8 @@ use Illuminate\Http\UploadedFile;
 class FirmaService
 {
     /**
-     * Transforma una imagen de firma a PNG con fondo transparente.
-     *
-     * Implementa el algoritmo:
-     *  1. Carga la imagen con GD
-     *  2. Binarización por umbral (High-threshold pixel separation)
-     *     → Todo lo que supere cierto nivel de oscuridad LOCAL = tinta negra pura (#000000)
-     *     → Todo lo demás = transparente absoluto (canal alfa)
-     *  3. trimImage equivalente en GD → escanea desde los 4 bordes hacia adentro
-     *     y recorta los píxeles 100% transparentes
-     *  4. Padding mínimo (95% canvas utilization, 1:1 square aspect ratio)
-     *
-     * @param  UploadedFile|string  $imagen  Archivo subido o ruta/blob binario
-     * @return string  Datos binarios del PNG resultante (transparent background)
+     * Transforma una imagen de firma a PNG con fondo transparente y enfoque dinámico robusto.
+     * Blindado contra manchas complejas y ruido en los extremos de los ejes X/Y.
      */
     public static function maikol_callate($imagen): string
     {
@@ -45,17 +34,17 @@ class FirmaService
                 throw new \RuntimeException('No se pudo leer la imagen.');
             }
 
-            $mime   = $info['mime'];
-            $width  = $info[0];
+            $mime = $info['mime'];
+            $width = $info[0];
             $height = $info[1];
 
             // --- 3. Crear recurso GD ---
             $src = match ($mime) {
                 'image/jpeg', 'image/jpg' => @imagecreatefromjpeg($rutaTemp),
-                'image/png'               => @imagecreatefrompng($rutaTemp),
-                'image/gif'               => @imagecreatefromgif($rutaTemp),
-                'image/webp'              => @imagecreatefromwebp($rutaTemp),
-                'image/bmp'               => @imagecreatefrombmp($rutaTemp),
+                'image/png' => @imagecreatefrompng($rutaTemp),
+                'image/gif' => @imagecreatefromgif($rutaTemp),
+                'image/webp' => @imagecreatefromwebp($rutaTemp),
+                'image/bmp' => @imagecreatefrombmp($rutaTemp),
                 default => throw new \RuntimeException("Formato no soportado: {$mime}"),
             };
 
@@ -63,11 +52,14 @@ class FirmaService
                 throw new \RuntimeException('GD no pudo abrir la imagen.');
             }
 
-            // --- 4. Redimensionar a máximo 1200px (alta resolución) ---
+            imagealphablending($src, false);
+            imagesavealpha($src, true);
+
+            // --- 4. Redimensionar a máximo 1200px ---
             $maxDim = 1200;
             if ($width > $maxDim || $height > $maxDim) {
-                $ratio     = min($maxDim / $width, $maxDim / $height);
-                $newWidth  = (int) round($width  * $ratio);
+                $ratio = min($maxDim / $width, $maxDim / $height);
+                $newWidth = (int) round($width * $ratio);
                 $newHeight = (int) round($height * $ratio);
 
                 $resized = imagecreatetruecolor($newWidth, $newHeight);
@@ -75,80 +67,78 @@ class FirmaService
                 imagesavealpha($resized, true);
                 imagecopyresampled($resized, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
                 imagedestroy($src);
-                $src    = $resized;
-                $width  = $newWidth;
+                $src = $resized;
+                $width = $newWidth;
                 $height = $newHeight;
             }
 
-            // --- 5. Construcción del Mapa de Iluminación Local (Fondo Adaptativo) ---
-            // Reducción extrema → las líneas finas (tinta) desaparecen, quedan las manchas de sombra
-            $factor      = 20;
-            $smallWidth  = max(1, (int) ($width  / $factor));
+            // --- 5a. Pre-procesado ---
+            imagefilter($src, IMG_FILTER_CONTRAST, 10);
+            imagefilter($src, IMG_FILTER_BRIGHTNESS, 5);
+
+            // --- 5b. Construcción del Mapa de Iluminación Local ---
+            $factor = 20;
+            $smallWidth = max(1, (int) ($width / $factor));
             $smallHeight = max(1, (int) ($height / $factor));
 
             $bgSmall = imagecreatetruecolor($smallWidth, $smallHeight);
             imagecopyresampled($bgSmall, $src, 0, 0, 0, 0, $smallWidth, $smallHeight, $width, $height);
 
-            // Escalar de vuelta al tamaño original → suavizado extremo = mapa de iluminación
             $bgMap = imagecreatetruecolor($width, $height);
             imagecopyresampled($bgMap, $bgSmall, 0, 0, 0, 0, $width, $height, $smallWidth, $smallHeight);
             imagedestroy($bgSmall);
 
-            // Desenfoque adicional para eliminar artefactos del mapa
-            imagefilter($bgMap, IMG_FILTER_GAUSSIAN_BLUR);
             imagefilter($bgMap, IMG_FILTER_GAUSSIAN_BLUR);
             imagefilter($bgMap, IMG_FILTER_GAUSSIAN_BLUR);
 
-            // --- 6. Binarización (thresholdImage equivalente) ---
-            // Decisión binaria pura: tinta (#000000) o transparente (alfa puro)
-            // High-threshold pixel separation: diff > INK_THRESHOLD → píxel de tinta
-            $INK_THRESHOLD = 22; // Umbral de diferencia de luminancia local
+            // --- 6. Binarización Pura Calibrada ---
+            $INK_THRESHOLD = 14;
 
             $dest = imagecreatetruecolor($width, $height);
             imagealphablending($dest, false);
             imagesavealpha($dest, true);
 
-            // Llenar con transparencia total
             $fullyTransparent = imagecolorallocatealpha($dest, 0, 0, 0, 127);
             imagefill($dest, 0, 0, $fullyTransparent);
 
-            $inkBlack = imagecolorallocatealpha($dest, 0, 0, 0, 0); // #000000, 100% opaco
+            $inkBlack = imagecolorallocatealpha($dest, 0, 0, 0, 0);
 
             for ($x = 0; $x < $width; $x++) {
                 for ($y = 0; $y < $height; $y++) {
-                    // Luminancia del píxel original
                     $rgb1 = imagecolorat($src, $x, $y);
-                    $l1   = 0.299 * (($rgb1 >> 16) & 0xFF)
-                          + 0.587 * (($rgb1 >>  8) & 0xFF)
-                          + 0.114 * ( $rgb1        & 0xFF);
 
-                    // Luminancia del mapa de fondo (sombra local)
+                    $alphaSrc = ($rgb1 >> 24) & 0x7F;
+                    if ($alphaSrc > 115) {
+                        continue;
+                    }
+
+                    $l1 = 0.299 * (($rgb1 >> 16) & 0xFF)
+                        + 0.587 * (($rgb1 >> 8) & 0xFF)
+                        + 0.114 * ($rgb1 & 0xFF);
+
                     $rgb2 = imagecolorat($bgMap, $x, $y);
-                    $l2   = 0.299 * (($rgb2 >> 16) & 0xFF)
-                          + 0.587 * (($rgb2 >>  8) & 0xFF)
-                          + 0.114 * ( $rgb2        & 0xFF);
+                    $l2 = 0.299 * (($rgb2 >> 16) & 0xFF)
+                        + 0.587 * (($rgb2 >> 8) & 0xFF)
+                        + 0.114 * ($rgb2 & 0xFF);
 
-                    // diff > umbral → este píxel es oscuro RESPECTO A SU ENTORNO → tinta
-                    if (($l2 - $l1) > $INK_THRESHOLD) {
+                    if (($l2 - $l1) > $INK_THRESHOLD && $l1 < 235) {
                         imagesetpixel($dest, $x, $y, $inkBlack);
                     }
-                    // else → queda transparente (ya lleno con fullyTransparent)
                 }
             }
 
             imagedestroy($src);
             imagedestroy($bgMap);
 
-            // --- 7. trimImage en GD: escanear desde los 4 bordes y recortar ---
-            // Equivalente exacto al Imagick::trimImage($fuzz)
-            $left   = self::findEdge($dest, $width, $height, 'left');
-            $right  = self::findEdge($dest, $width, $height, 'right');
-            $top    = self::findEdge($dest, $width, $height, 'top');
+            // --- 7. trimImage en GD Blindado de Alta Densidad ---
+            $left = self::findEdge($dest, $width, $height, 'left');
+            $right = self::findEdge($dest, $width, $height, 'right');
+            $top = self::findEdge($dest, $width, $height, 'top');
             $bottom = self::findEdge($dest, $width, $height, 'bottom');
 
             if ($left !== null && $right !== null && $top !== null && $bottom !== null) {
-                $cropW = $right  - $left  + 1;
-                $cropH = $bottom - $top   + 1;
+                $cropW = $right - $left + 1;
+                $cropH = $bottom - $top + 1;
 
                 $cropped = imagecreatetruecolor($cropW, $cropH);
                 imagealphablending($cropped, false);
@@ -160,12 +150,12 @@ class FirmaService
                 imagedestroy($dest);
                 $dest = $cropped;
 
-                // --- 8. Padding 1:1 cuadrado con 95% de canvas utilization ---
+                // --- 8. Padding Proporcional Perfecto en Ambos Ejes (95% Canvas Utilization) ---
                 $cW = imagesx($dest);
                 $cH = imagesy($dest);
 
-                $maxSide    = max($cW, $cH);
-                $targetSize = (int) ($maxSide / 0.95); // 5% de margen = 95% de la firma
+                $maxSide = max($cW, $cH);
+                $targetSize = (int) ($maxSide / 0.95);
 
                 $pX = ($targetSize - $cW) / 2;
                 $pY = ($targetSize - $cH) / 2;
@@ -181,11 +171,15 @@ class FirmaService
                 $dest = $padded;
             }
 
-            // --- 9. Exportar como PNG con máxima calidad ---
+            // --- 9. Exportar PNG ---
             ob_start();
-            imagepng($dest, null, 0); // Sin compresión → máxima nitidez
+            imagepng($dest, null, 9);
             $pngData = ob_get_clean();
             imagedestroy($dest);
+
+            if (strlen($pngData) > 1.5 * 1024 * 1024) {
+                throw new \RuntimeException('La imagen es demasiado pesada para guardar.');
+            }
 
             return $pngData;
 
@@ -197,10 +191,7 @@ class FirmaService
     }
 
     /**
-     * Escanea la imagen desde un borde hacia adentro y devuelve la coordenada
-     * del primer píxel NO completamente transparente.
-     *
-     * Equivalente a la lógica interna de Imagick::trimImage().
+     * Escanea los bordes validando mediante una matriz de densidad de área extendida.
      */
     private static function findEdge(\GdImage $img, int $width, int $height, string $edge): ?int
     {
@@ -208,28 +199,32 @@ class FirmaService
             case 'left':
                 for ($x = 0; $x < $width; $x++) {
                     for ($y = 0; $y < $height; $y++) {
-                        if (self::isInkPixel($img, $x, $y)) return $x;
+                        if (self::isRealStructure($img, $x, $y, $width, $height))
+                            return $x;
                     }
                 }
                 break;
             case 'right':
                 for ($x = $width - 1; $x >= 0; $x--) {
                     for ($y = 0; $y < $height; $y++) {
-                        if (self::isInkPixel($img, $x, $y)) return $x;
+                        if (self::isRealStructure($img, $x, $y, $width, $height))
+                            return $x;
                     }
                 }
                 break;
             case 'top':
                 for ($y = 0; $y < $height; $y++) {
                     for ($x = 0; $x < $width; $x++) {
-                        if (self::isInkPixel($img, $x, $y)) return $y;
+                        if (self::isRealStructure($img, $x, $y, $width, $height))
+                            return $y;
                     }
                 }
                 break;
             case 'bottom':
                 for ($y = $height - 1; $y >= 0; $y--) {
                     for ($x = 0; $x < $width; $x++) {
-                        if (self::isInkPixel($img, $x, $y)) return $y;
+                        if (self::isRealStructure($img, $x, $y, $width, $height))
+                            return $y;
                     }
                 }
                 break;
@@ -238,18 +233,43 @@ class FirmaService
     }
 
     /**
-     * Determina si un píxel tiene tinta (no es completamente transparente).
+     * Filtro de Densidad Macroscópico 5x5.
+     * Rompe y descarta agrupaciones de ruido de fondo, forzando el centrado real de la firma.
      */
+    private static function isRealStructure(\GdImage $img, int $x, int $y, int $width, int $height): bool
+    {
+        if (!self::isInkPixel($img, $x, $y)) {
+            return false;
+        }
+
+        $densityCount = 0;
+
+        // Escaneo perimetral en radio de 2 píxeles (bloque completo de 5x5)
+        for ($dx = -2; $dx <= 2; $dx++) {
+            for ($dy = -2; $dy <= 2; $dy++) {
+                $nx = $x + $dx;
+                $ny = $y + $dy;
+
+                if ($nx >= 0 && $nx < $width && $ny >= 0 && $ny < $height) {
+                    if (self::isInkPixel($img, $nx, $ny)) {
+                        $densityCount++;
+                    }
+                }
+            }
+        }
+
+        // Un clúster pequeño de ruido (manchas aisladas) dará un conteo máximo de 4 píxeles.
+        // Cualquier trazo real de firma cruzando este cuadrante sumará 6 o más píxeles activos.
+        return $densityCount >= 6;
+    }
+
     private static function isInkPixel(\GdImage $img, int $x, int $y): bool
     {
         $color = imagecolorat($img, $x, $y);
-        $alpha = ($color >> 24) & 0x7F; // 127 = totalmente transparente, 0 = opaco
-        return $alpha < 100; // Consideramos "tinta" si el canal alfa < 100
+        $alpha = ($color >> 24) & 0x7F;
+        return $alpha < 127;
     }
 
-    /**
-     * Convierte una imagen a PNG optimizado para firma (ya está procesada en maikol_callate).
-     */
     public static function optimizarParaFirma(string $pngData): string
     {
         return $pngData;
