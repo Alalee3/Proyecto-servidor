@@ -7,16 +7,17 @@ use Illuminate\Http\UploadedFile;
 class FirmaService
 {
     /**
-     * Transforma una imagen de firma aplicando un pipeline híbrido de visión artificial:
+     * Transforma una imagen de firma aplicando un pipeline profesional de precisión híbrida:
      * 1. Carga y super-muestreo (Upscaling) para maximizar la densidad del trazo.
-     * 2. Umbralización Adaptativa Local nativa para limpieza profunda de fondos y sombras.
-     * 3. Segmentación por Componentes Conectados (CCL) iterativo en memoria RAM de PHP.
-     * 4. Discriminación geométrica de masa (Desintegra islas de ruido y pelusas flotantes).
-     * 5. Recorte al ras sobre la imagen nítida original con geometría molecular real.
-     * 6. Fondo transparente con encuadre cuadrado equilibrado al centro (95% de uso).
+     * 2. Umbralización Adaptativa Local nativa para una extracción fiel del grosor original.
+     * 3. Segmentación por Componentes Conectados (CCL) iterativo en memoria de PHP.
+     * 4. Recorte milimétrico al ras basado en coordenadas ópticas reales mapeadas.
+     * 5. Reset estricto de lienzo virtual (Aplanamiento de página).
+     * 6. Padding proporcional simétrico (95% utilización) y encuadre cuadrado centrado.
+     * 7. Reducción óptima a PNG ligero (Nivel 9) y fondo transparente.
      *
      * @param  UploadedFile|string  $imagen  Archivo subido o ruta/blob binario
-     * @return string  Datos binarios del PNG resultante (Fondo transparente, ultra-ligero)
+     * @return string  Datos binarios del PNG resultante
      */
     public static function maikol_callate($imagen): string
     {
@@ -62,23 +63,26 @@ class FirmaService
             }
 
             // =================================================================
-            // PASO 2: EXTRACCIÓN ADAPTATIVA (BINARIZACIÓN PURA)
+            // PASO 2: EXTRACCIÓN ADAPTATIVA (FIEL AL GROSOR ORIGINAL)
             // =================================================================
             $imagick->setImageType(\Imagick::IMGTYPE_GRAYSCALE);
             $quantum = \Imagick::getQuantum();
+
+            // Extrae los bordes y el grosor real de la pluma de forma nativa
             $imagick->adaptiveThresholdImage(45, 45, -0.045 * $quantum);
             $imagick->thresholdImage(0.5 * $quantum);
 
             // =================================================================
-            // PASO 3: SEGMENTACIÓN DE COMPONENTES CONECTADOS (INTELIGENCIA CCL)
+            // PASO 3: ESCANEO ESTRUCTURAL POR MATRIZ SUB-MUESTREADA (CCL)
             // =================================================================
-            // Creamos una miniatura de control para mapear las estructuras moleculares de tinta
+            // Clonamos la imagen limpia pura para realizar el análisis geométrico inteligente
             $thumb = clone $imagick;
-            $thumbW = 300; // Escala perfecta: las motas se minimizan y los trazos mantienen continuidad
+
+            $thumbW = 300;
             $thumbH = (int) round($height * ($thumbW / $width));
             $thumb->resizeImage($thumbW, $thumbH, \Imagick::FILTER_BOX, 1);
 
-            // Exportamos los píxeles de luminancia (0 = negro/tinta, 255 = blanco/vacío)
+            // Exportamos los píxeles de luminancia (0 = negro/tinta, 255 = blanco)
             $pixels = $thumb->exportImagePixels(0, 0, $thumbW, $thumbH, "I", \Imagick::PIXEL_CHAR);
 
             $thumb->clear();
@@ -87,11 +91,10 @@ class FirmaService
             $components = [];
             $totalPixels = $thumbW * $thumbH;
 
-            // Algoritmo de Etiquetado de Componentes Conectados (CCL) mediante DFS iterativo
+            // Análisis de Componentes Conectados (CCL) mediante DFS iterativo en memoria
             for ($i = 0; $i < $totalPixels; $i++) {
-                if ($pixels[$i] < 127) { // Píxel negro (tinta detectada)
+                if ($pixels[$i] < 127) {
 
-                    // Inicializamos pila de control e invertimos a blanco para marcarlo como visitado
                     $stack = [$i];
                     $pixels[$i] = 255;
 
@@ -117,7 +120,6 @@ class FirmaService
                         if ($cy > $cMaxY)
                             $cMaxY = $cy;
 
-                        // Análisis de vecindad de 8 conectividades
                         for ($dx = -1; $dx <= 1; $dx++) {
                             for ($dy = -1; $dy <= 1; $dy++) {
                                 if ($dx === 0 && $dy === 0)
@@ -129,7 +131,7 @@ class FirmaService
                                 if ($nx >= 0 && $nx < $thumbW && $ny >= 0 && $ny < $thumbH) {
                                     $nIdx = ($ny * $thumbW) + $nx;
                                     if ($pixels[$nIdx] < 127) {
-                                        $pixels[$nIdx] = 255; // Marcamos visitado antes de apilar para optimizar RAM
+                                        $pixels[$nIdx] = 255;
                                         $stack[] = $nIdx;
                                     }
                                 }
@@ -137,7 +139,6 @@ class FirmaService
                         }
                     }
 
-                    // Guardamos la isla encontrada con su masa física de píxeles y límites
                     $components[] = [
                         'minX' => $cMinX,
                         'maxX' => $cMaxX,
@@ -148,16 +149,14 @@ class FirmaService
                 }
             }
 
-            unset($pixels); // Liberamos el mapa de bits de la memoria RAM de inmediato
+            unset($pixels);
 
             if (empty($components)) {
-                // Salvaguarda: si no se detecta tinta, mantenemos las dimensiones de trabajo
                 $finalCropX = 0;
                 $finalCropY = 0;
                 $finalCropW = $width;
                 $finalCropH = $height;
             } else {
-                // Identificamos el componente de máxima masa (El núcleo principal de la firma)
                 $maxCount = max(array_column($components, 'count'));
 
                 $validMinX = $thumbW;
@@ -166,10 +165,7 @@ class FirmaService
                 $validMaxY = 0;
                 $hasValidStructure = false;
 
-                // FILTRADO GEOMÉTRICO: Evaluamos qué islas pertenecen a la firma y cuáles son ruido
                 foreach ($components as $comp) {
-                    // Criterio inteligente: se aceptan componentes con al menos el 2.5% de la masa del bloque principal
-                    // (Esto rescata acentos, puntos de la 'i' o rúbricas segmentadas, eliminando motas de polvo aisladas)
                     if ($comp['count'] >= max(3, $maxCount * 0.025)) {
                         if ($comp['minX'] < $validMinX)
                             $validMinX = $comp['minX'];
@@ -183,7 +179,6 @@ class FirmaService
                     }
                 }
 
-                // Si todo el lienzo fue discriminado por el filtro, retrocedemos al componente más grande
                 if (!$hasValidStructure) {
                     foreach ($components as $comp) {
                         if ($comp['count'] === $maxCount) {
@@ -196,7 +191,6 @@ class FirmaService
                     }
                 }
 
-                // Escalamos los límites de la miniatura de vuelta a la alta resolución original
                 $scale = $width / $thumbW;
                 $cropLeft = (int) floor($validMinX * $scale);
                 $cropTop = (int) floor($validMinY * $scale);
@@ -206,7 +200,7 @@ class FirmaService
                 $cropW = $cropRight - $cropLeft;
                 $cropH = $cropBottom - $cropTop;
 
-                // Margen de seguridad quirúrgico de 15px para resguardar bordes antialias suavizados
+                // Margen de seguridad estándar para no cortar las curvas suaves del trazo original
                 $padding = 15;
                 $finalCropX = max(0, $cropLeft - $padding);
                 $finalCropY = max(0, $cropTop - $padding);
@@ -214,10 +208,10 @@ class FirmaService
                 $finalCropH = min($height - $finalCropY, $cropH + ($padding * 2));
             }
 
-            // Ejecutamos el recorte exacto libre de espacios vacíos artificiales
+            // Cortamos la imagen con el grosor intacto basándonos en los límites reales
             $imagick->cropImage($finalCropW, $finalCropH, $finalCropX, $finalCropY);
 
-            // Aplanar el lienzo físico para resetear coordenadas virtuales de página
+            // Aplanar estrictamente el lienzo para asimilar las nuevas dimensiones físicas
             $imagick->setImagePage(0, 0, 0, 0);
 
             // =================================================================
@@ -233,7 +227,6 @@ class FirmaService
             $cH = $imagick->getImageHeight();
             $maxSide = max($cW, $cH);
 
-            // Configuración al 95% de utilización para un encuadre estético e idóneo
             $targetSize = (int) ($maxSide / 0.95);
 
             $pX = (int) (($targetSize - $cW) / 2);
@@ -243,7 +236,6 @@ class FirmaService
             $paddedCanvas->newImage($targetSize, $targetSize, new \ImagickPixel('transparent'));
             $paddedCanvas->setImageFormat('png');
 
-            // Posicionamos la firma recortada en el centro absoluto del lienzo cuadrado
             $paddedCanvas->compositeImage($imagick, \Imagick::COMPOSITE_COPY, $pX, $pY);
 
             $imagick->clear();
