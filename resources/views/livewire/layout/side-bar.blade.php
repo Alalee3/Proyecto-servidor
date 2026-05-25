@@ -27,11 +27,24 @@
                 Inicio
             </a>
 
-            @if($roleCount > 1)
-                <!-- Rol -->
-                <a href="{{ route('perfil') }}" class="sogat-sidebar-item">
-                    Rol
-                </a>
+            @if($roleCount > 1 || auth()->user()->can('mi-firma'))
+                <!-- Perfil -->
+                <div>
+                    <button @click="openMenu === 'perfil' ? openMenu = null : openMenu = 'perfil'" class="sogat-sidebar-item">
+                        <span>Perfil</span>
+                        <svg class="w-4 h-4 ml-auto transition-transform duration-200" :class="openMenu === 'perfil' ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <ul x-show="openMenu === 'perfil'" x-collapse class="mt-0 space-y-0" style="display: none;">
+                        @if($roleCount > 1)
+                            <li><a href="{{ route('perfil') }}" class="sogat-sidebar-link">Seleccionar Rol</a></li>
+                        @endif
+                        @can('mi-firma')
+                            <li><a href="{{ route('firma/mi-firma') }}" class="sogat-sidebar-link">Mi Firma</a></li>
+                        @endcan
+                    </ul>
+                </div>
             @endif
 
 
@@ -260,14 +273,7 @@
                 </div>
             @endcan
 
-            @can('mi-firma')
-                <!-- Firmas -->
-                <div>
-                    <a href="{{ route('firma/mi-firma') }}" class="sogat-sidebar-item">
-                        <span>Mi Firma</span>
-                    </a>
-                </div>
-            @endcan
+
 
             @can('listar-bitacora')
                 <!-- Bitácora -->
