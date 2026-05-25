@@ -7,8 +7,16 @@ use Illuminate\Http\UploadedFile;
 class FirmaService
 {
     /**
-     * Transforma una imagen de firma a PNG con fondo transparente y enfoque dinámico robusto.
-     * Blindado contra manchas complejas y ruido en los extremos de los ejes X/Y.
+     * Transforma una imagen de firma aplicando un pipeline híbrido de visión artificial:
+     * 1. Carga y super-muestreo (Upscaling) para maximizar la densidad del trazo.
+     * 2. Umbralización Adaptativa Local nativa para limpieza profunda de fondos y sombras.
+     * 3. Segmentación por Componentes Conectados (CCL) iterativo en memoria RAM de PHP.
+     * 4. Discriminación geométrica de masa (Desintegra islas de ruido y pelusas flotantes).
+     * 5. Recorte al ras sobre la imagen nítida original con geometría molecular real.
+     * 6. Fondo transparente con encuadre cuadrado equilibrado al centro (95% de uso).
+     *
+     * @param  UploadedFile|string  $imagen  Archivo subido o ruta/blob binario
+     * @return string  Datos binarios del PNG resultante (Fondo transparente, ultra-ligero)
      */
     public static function maikol_callate($imagen): string
     {
@@ -28,161 +36,241 @@ class FirmaService
         }
 
         try {
-            // --- 2. Leer metadatos ---
-            $info = getimagesize($rutaTemp);
-            if (!$info) {
-                throw new \RuntimeException('No se pudo leer la imagen.');
+            // --- 2. Instanciar Imagick y leer la imagen ---
+            if (!class_exists('\Imagick')) {
+                throw new \RuntimeException('La extensión php-imagick no está habilitada en tu servidor PHP.');
             }
 
-            $mime = $info['mime'];
-            $width = $info[0];
-            $height = $info[1];
+            $imagick = new \Imagick();
+            $imagick->readImage($rutaTemp);
 
-            // --- 3. Crear recurso GD ---
-            $src = match ($mime) {
-                'image/jpeg', 'image/jpg' => @imagecreatefromjpeg($rutaTemp),
-                'image/png' => @imagecreatefrompng($rutaTemp),
-                'image/gif' => @imagecreatefromgif($rutaTemp),
-                'image/webp' => @imagecreatefromwebp($rutaTemp),
-                'image/bmp' => @imagecreatefrombmp($rutaTemp),
-                default => throw new \RuntimeException("Formato no soportado: {$mime}"),
-            };
+            // =================================================================
+            // PASO 1: SUPER-MUESTREO (RESOLUCIÓN ÓPTIMA DE TRABAJO)
+            // =================================================================
+            $srcWidth = $imagick->getImageWidth();
+            $srcHeight = $imagick->getImageHeight();
+            $superDim = 1200; // Resolución equilibrada para garantizar nitidez y escaneo veloz
 
-            if (!$src) {
-                throw new \RuntimeException('GD no pudo abrir la imagen.');
+            if ($srcWidth < $superDim && $srcHeight < $superDim) {
+                $ratio = $superDim / max($srcWidth, $srcHeight);
+                $width = (int) round($srcWidth * $ratio);
+                $height = (int) round($srcHeight * $ratio);
+                $imagick->resizeImage($width, $height, \Imagick::FILTER_CUBIC, 1);
+            } else {
+                $width = $srcWidth;
+                $height = $srcHeight;
             }
 
-            imagealphablending($src, false);
-            imagesavealpha($src, true);
+            // =================================================================
+            // PASO 2: EXTRACCIÓN ADAPTATIVA (BINARIZACIÓN PURA)
+            // =================================================================
+            $imagick->setImageType(\Imagick::IMGTYPE_GRAYSCALE);
+            $quantum = \Imagick::getQuantum();
+            $imagick->adaptiveThresholdImage(45, 45, -0.045 * $quantum);
+            $imagick->thresholdImage(0.5 * $quantum);
 
-            // --- 4. Redimensionar a máximo 1200px ---
-            $maxDim = 1200;
-            if ($width > $maxDim || $height > $maxDim) {
-                $ratio = min($maxDim / $width, $maxDim / $height);
-                $newWidth = (int) round($width * $ratio);
-                $newHeight = (int) round($height * $ratio);
+            // =================================================================
+            // PASO 3: SEGMENTACIÓN DE COMPONENTES CONECTADOS (INTELIGENCIA CCL)
+            // =================================================================
+            // Creamos una miniatura de control para mapear las estructuras moleculares de tinta
+            $thumb = clone $imagick;
+            $thumbW = 300; // Escala perfecta: las motas se minimizan y los trazos mantienen continuidad
+            $thumbH = (int) round($height * ($thumbW / $width));
+            $thumb->resizeImage($thumbW, $thumbH, \Imagick::FILTER_BOX, 1);
 
-                $resized = imagecreatetruecolor($newWidth, $newHeight);
-                imagealphablending($resized, false);
-                imagesavealpha($resized, true);
-                imagecopyresampled($resized, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                imagedestroy($src);
-                $src = $resized;
-                $width = $newWidth;
-                $height = $newHeight;
-            }
+            // Exportamos los píxeles de luminancia (0 = negro/tinta, 255 = blanco/vacío)
+            $pixels = $thumb->exportImagePixels(0, 0, $thumbW, $thumbH, "I", \Imagick::PIXEL_CHAR);
 
-            // --- 5a. Pre-procesado ---
-            imagefilter($src, IMG_FILTER_CONTRAST, 10);
-            imagefilter($src, IMG_FILTER_BRIGHTNESS, 5);
+            $thumb->clear();
+            $thumb->destroy();
 
-            // --- 5b. Construcción del Mapa de Iluminación Local ---
-            $factor = 20;
-            $smallWidth = max(1, (int) ($width / $factor));
-            $smallHeight = max(1, (int) ($height / $factor));
+            $components = [];
+            $totalPixels = $thumbW * $thumbH;
 
-            $bgSmall = imagecreatetruecolor($smallWidth, $smallHeight);
-            imagecopyresampled($bgSmall, $src, 0, 0, 0, 0, $smallWidth, $smallHeight, $width, $height);
+            // Algoritmo de Etiquetado de Componentes Conectados (CCL) mediante DFS iterativo
+            for ($i = 0; $i < $totalPixels; $i++) {
+                if ($pixels[$i] < 127) { // Píxel negro (tinta detectada)
 
-            $bgMap = imagecreatetruecolor($width, $height);
-            imagecopyresampled($bgMap, $bgSmall, 0, 0, 0, 0, $width, $height, $smallWidth, $smallHeight);
-            imagedestroy($bgSmall);
+                    // Inicializamos pila de control e invertimos a blanco para marcarlo como visitado
+                    $stack = [$i];
+                    $pixels[$i] = 255;
 
-            imagefilter($bgMap, IMG_FILTER_GAUSSIAN_BLUR);
-            imagefilter($bgMap, IMG_FILTER_GAUSSIAN_BLUR);
+                    $cMinX = $i % $thumbW;
+                    $cMaxX = $cMinX;
+                    $cMinY = (int) ($i / $thumbW);
+                    $cMaxY = $cMinY;
+                    $cCount = 0;
 
-            // --- 6. Binarización Pura Calibrada ---
-            $INK_THRESHOLD = 14;
+                    while (!empty($stack)) {
+                        $idx = array_pop($stack);
+                        $cCount++;
 
-            $dest = imagecreatetruecolor($width, $height);
-            imagealphablending($dest, false);
-            imagesavealpha($dest, true);
+                        $cx = $idx % $thumbW;
+                        $cy = (int) ($idx / $thumbW);
 
-            $fullyTransparent = imagecolorallocatealpha($dest, 0, 0, 0, 127);
-            imagefill($dest, 0, 0, $fullyTransparent);
+                        if ($cx < $cMinX)
+                            $cMinX = $cx;
+                        if ($cx > $cMaxX)
+                            $cMaxX = $cx;
+                        if ($cy < $cMinY)
+                            $cMinY = $cy;
+                        if ($cy > $cMaxY)
+                            $cMaxY = $cy;
 
-            $inkBlack = imagecolorallocatealpha($dest, 0, 0, 0, 0);
+                        // Análisis de vecindad de 8 conectividades
+                        for ($dx = -1; $dx <= 1; $dx++) {
+                            for ($dy = -1; $dy <= 1; $dy++) {
+                                if ($dx === 0 && $dy === 0)
+                                    continue;
 
-            for ($x = 0; $x < $width; $x++) {
-                for ($y = 0; $y < $height; $y++) {
-                    $rgb1 = imagecolorat($src, $x, $y);
+                                $nx = $cx + $dx;
+                                $ny = $cy + $dy;
 
-                    $alphaSrc = ($rgb1 >> 24) & 0x7F;
-                    if ($alphaSrc > 115) {
-                        continue;
+                                if ($nx >= 0 && $nx < $thumbW && $ny >= 0 && $ny < $thumbH) {
+                                    $nIdx = ($ny * $thumbW) + $nx;
+                                    if ($pixels[$nIdx] < 127) {
+                                        $pixels[$nIdx] = 255; // Marcamos visitado antes de apilar para optimizar RAM
+                                        $stack[] = $nIdx;
+                                    }
+                                }
+                            }
+                        }
                     }
 
-                    $l1 = 0.299 * (($rgb1 >> 16) & 0xFF)
-                        + 0.587 * (($rgb1 >> 8) & 0xFF)
-                        + 0.114 * ($rgb1 & 0xFF);
-
-                    $rgb2 = imagecolorat($bgMap, $x, $y);
-                    $l2 = 0.299 * (($rgb2 >> 16) & 0xFF)
-                        + 0.587 * (($rgb2 >> 8) & 0xFF)
-                        + 0.114 * ($rgb2 & 0xFF);
-
-                    if (($l2 - $l1) > $INK_THRESHOLD && $l1 < 235) {
-                        imagesetpixel($dest, $x, $y, $inkBlack);
-                    }
+                    // Guardamos la isla encontrada con su masa física de píxeles y límites
+                    $components[] = [
+                        'minX' => $cMinX,
+                        'maxX' => $cMaxX,
+                        'minY' => $cMinY,
+                        'maxY' => $cMaxY,
+                        'count' => $cCount
+                    ];
                 }
             }
 
-            imagedestroy($src);
-            imagedestroy($bgMap);
+            unset($pixels); // Liberamos el mapa de bits de la memoria RAM de inmediato
 
-            // --- 7. trimImage en GD Blindado de Alta Densidad ---
-            $left = self::findEdge($dest, $width, $height, 'left');
-            $right = self::findEdge($dest, $width, $height, 'right');
-            $top = self::findEdge($dest, $width, $height, 'top');
-            $bottom = self::findEdge($dest, $width, $height, 'bottom');
+            if (empty($components)) {
+                // Salvaguarda: si no se detecta tinta, mantenemos las dimensiones de trabajo
+                $finalCropX = 0;
+                $finalCropY = 0;
+                $finalCropW = $width;
+                $finalCropH = $height;
+            } else {
+                // Identificamos el componente de máxima masa (El núcleo principal de la firma)
+                $maxCount = max(array_column($components, 'count'));
 
-            if ($left !== null && $right !== null && $top !== null && $bottom !== null) {
-                $cropW = $right - $left + 1;
-                $cropH = $bottom - $top + 1;
+                $validMinX = $thumbW;
+                $validMaxX = 0;
+                $validMinY = $thumbH;
+                $validMaxY = 0;
+                $hasValidStructure = false;
 
-                $cropped = imagecreatetruecolor($cropW, $cropH);
-                imagealphablending($cropped, false);
-                imagesavealpha($cropped, true);
-                $t2 = imagecolorallocatealpha($cropped, 0, 0, 0, 127);
-                imagefill($cropped, 0, 0, $t2);
+                // FILTRADO GEOMÉTRICO: Evaluamos qué islas pertenecen a la firma y cuáles son ruido
+                foreach ($components as $comp) {
+                    // Criterio inteligente: se aceptan componentes con al menos el 2.5% de la masa del bloque principal
+                    // (Esto rescata acentos, puntos de la 'i' o rúbricas segmentadas, eliminando motas de polvo aisladas)
+                    if ($comp['count'] >= max(3, $maxCount * 0.025)) {
+                        if ($comp['minX'] < $validMinX)
+                            $validMinX = $comp['minX'];
+                        if ($comp['maxX'] > $validMaxX)
+                            $validMaxX = $comp['maxX'];
+                        if ($comp['minY'] < $validMinY)
+                            $validMinY = $comp['minY'];
+                        if ($comp['maxY'] > $validMaxY)
+                            $validMaxY = $comp['maxY'];
+                        $hasValidStructure = true;
+                    }
+                }
 
-                imagecopy($cropped, $dest, 0, 0, $left, $top, $cropW, $cropH);
-                imagedestroy($dest);
-                $dest = $cropped;
+                // Si todo el lienzo fue discriminado por el filtro, retrocedemos al componente más grande
+                if (!$hasValidStructure) {
+                    foreach ($components as $comp) {
+                        if ($comp['count'] === $maxCount) {
+                            $validMinX = $comp['minX'];
+                            $validMaxX = $comp['maxX'];
+                            $validMinY = $comp['minY'];
+                            $validMaxY = $comp['maxY'];
+                            break;
+                        }
+                    }
+                }
 
-                // --- 8. Padding Proporcional Perfecto en Ambos Ejes (95% Canvas Utilization) ---
-                $cW = imagesx($dest);
-                $cH = imagesy($dest);
+                // Escalamos los límites de la miniatura de vuelta a la alta resolución original
+                $scale = $width / $thumbW;
+                $cropLeft = (int) floor($validMinX * $scale);
+                $cropTop = (int) floor($validMinY * $scale);
+                $cropRight = (int) ceil(($validMaxX + 1) * $scale);
+                $cropBottom = (int) ceil(($validMaxY + 1) * $scale);
 
-                $maxSide = max($cW, $cH);
-                $targetSize = (int) ($maxSide / 0.95);
+                $cropW = $cropRight - $cropLeft;
+                $cropH = $cropBottom - $cropTop;
 
-                $pX = ($targetSize - $cW) / 2;
-                $pY = ($targetSize - $cH) / 2;
-
-                $padded = imagecreatetruecolor($targetSize, $targetSize);
-                imagealphablending($padded, false);
-                imagesavealpha($padded, true);
-                $t3 = imagecolorallocatealpha($padded, 0, 0, 0, 127);
-                imagefill($padded, 0, 0, $t3);
-
-                imagecopy($padded, $dest, (int) $pX, (int) $pY, 0, 0, $cW, $cH);
-                imagedestroy($dest);
-                $dest = $padded;
+                // Margen de seguridad quirúrgico de 15px para resguardar bordes antialias suavizados
+                $padding = 15;
+                $finalCropX = max(0, $cropLeft - $padding);
+                $finalCropY = max(0, $cropTop - $padding);
+                $finalCropW = min($width - $finalCropX, $cropW + ($padding * 2));
+                $finalCropH = min($height - $finalCropY, $cropH + ($padding * 2));
             }
 
-            // --- 9. Exportar PNG ---
-            ob_start();
-            imagepng($dest, null, 9);
-            $pngData = ob_get_clean();
-            imagedestroy($dest);
+            // Ejecutamos el recorte exacto libre de espacios vacíos artificiales
+            $imagick->cropImage($finalCropW, $finalCropH, $finalCropX, $finalCropY);
 
-            if (strlen($pngData) > 1.5 * 1024 * 1024) {
-                throw new \RuntimeException('La imagen es demasiado pesada para guardar.');
+            // Aplanar el lienzo físico para resetear coordenadas virtuales de página
+            $imagick->setImagePage(0, 0, 0, 0);
+
+            // =================================================================
+            // PASO 4: EXTRAER FONDO TRANSPARENTE
+            // =================================================================
+            $targetWhite = new \ImagickPixel('white');
+            $imagick->transparentPaintImage($targetWhite, 0, 0.05 * $quantum, false);
+
+            // =================================================================
+            // PASO 5: PADDING PROPORCIONAL Y ENCUADRE CUADRADO PERFECTO
+            // =================================================================
+            $cW = $imagick->getImageWidth();
+            $cH = $imagick->getImageHeight();
+            $maxSide = max($cW, $cH);
+
+            // Configuración al 95% de utilización para un encuadre estético e idóneo
+            $targetSize = (int) ($maxSide / 0.95);
+
+            $pX = (int) (($targetSize - $cW) / 2);
+            $pY = (int) (($targetSize - $cH) / 2);
+
+            $paddedCanvas = new \Imagick();
+            $paddedCanvas->newImage($targetSize, $targetSize, new \ImagickPixel('transparent'));
+            $paddedCanvas->setImageFormat('png');
+
+            // Posicionamos la firma recortada en el centro absoluto del lienzo cuadrado
+            $paddedCanvas->compositeImage($imagick, \Imagick::COMPOSITE_COPY, $pX, $pY);
+
+            $imagick->clear();
+            $imagick->destroy();
+            $imagick = $paddedCanvas;
+
+            // =================================================================
+            // PASO 6: REDUCCIÓN ÓPTIMA FINAL Y COMPRESIÓN PNG
+            // =================================================================
+            $finalDim = 800;
+            if ($imagick->getImageWidth() > $finalDim) {
+                $imagick->scaleImage($finalDim, 0);
             }
+
+            $imagick->setImageFormat('png');
+            $imagick->setCompressionQuality(9);
+            $imagick->stripImage();
+
+            $pngData = $imagick->getImageBlob();
+
+            $imagick->clear();
+            $imagick->destroy();
 
             return $pngData;
 
+        } catch (\ImagickException $e) {
+            throw new \RuntimeException('Error procesando la firma: ' . $e->getMessage());
         } finally {
             if (isset($deleteTmp) && $deleteTmp && isset($rutaTemp)) {
                 @unlink($rutaTemp);
@@ -191,85 +279,8 @@ class FirmaService
     }
 
     /**
-     * Escanea los bordes validando mediante una matriz de densidad de área extendida.
+     * Mantenemos el método por compatibilidad con tus controladores.
      */
-    private static function findEdge(\GdImage $img, int $width, int $height, string $edge): ?int
-    {
-        switch ($edge) {
-            case 'left':
-                for ($x = 0; $x < $width; $x++) {
-                    for ($y = 0; $y < $height; $y++) {
-                        if (self::isRealStructure($img, $x, $y, $width, $height))
-                            return $x;
-                    }
-                }
-                break;
-            case 'right':
-                for ($x = $width - 1; $x >= 0; $x--) {
-                    for ($y = 0; $y < $height; $y++) {
-                        if (self::isRealStructure($img, $x, $y, $width, $height))
-                            return $x;
-                    }
-                }
-                break;
-            case 'top':
-                for ($y = 0; $y < $height; $y++) {
-                    for ($x = 0; $x < $width; $x++) {
-                        if (self::isRealStructure($img, $x, $y, $width, $height))
-                            return $y;
-                    }
-                }
-                break;
-            case 'bottom':
-                for ($y = $height - 1; $y >= 0; $y--) {
-                    for ($x = 0; $x < $width; $x++) {
-                        if (self::isRealStructure($img, $x, $y, $width, $height))
-                            return $y;
-                    }
-                }
-                break;
-        }
-        return null;
-    }
-
-    /**
-     * Filtro de Densidad Macroscópico 5x5.
-     * Rompe y descarta agrupaciones de ruido de fondo, forzando el centrado real de la firma.
-     */
-    private static function isRealStructure(\GdImage $img, int $x, int $y, int $width, int $height): bool
-    {
-        if (!self::isInkPixel($img, $x, $y)) {
-            return false;
-        }
-
-        $densityCount = 0;
-
-        // Escaneo perimetral en radio de 2 píxeles (bloque completo de 5x5)
-        for ($dx = -2; $dx <= 2; $dx++) {
-            for ($dy = -2; $dy <= 2; $dy++) {
-                $nx = $x + $dx;
-                $ny = $y + $dy;
-
-                if ($nx >= 0 && $nx < $width && $ny >= 0 && $ny < $height) {
-                    if (self::isInkPixel($img, $nx, $ny)) {
-                        $densityCount++;
-                    }
-                }
-            }
-        }
-
-        // Un clúster pequeño de ruido (manchas aisladas) dará un conteo máximo de 4 píxeles.
-        // Cualquier trazo real de firma cruzando este cuadrante sumará 6 o más píxeles activos.
-        return $densityCount >= 6;
-    }
-
-    private static function isInkPixel(\GdImage $img, int $x, int $y): bool
-    {
-        $color = imagecolorat($img, $x, $y);
-        $alpha = ($color >> 24) & 0x7F;
-        return $alpha < 127;
-    }
-
     public static function optimizarParaFirma(string $pngData): string
     {
         return $pngData;
