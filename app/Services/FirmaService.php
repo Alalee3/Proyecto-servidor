@@ -7,250 +7,274 @@ use Illuminate\Http\UploadedFile;
 class FirmaService
 {
     /**
-     * Transforma una imagen subida a PNG sin fondo (fondo transparente).
-     * 
-     * Esta función recibe cualquier imagen (JPEG, PNG, GIF, WebP) y:
-     * 1. Redimensiona la imagen a un máximo de 400px para rendimiento óptimo
-     * 2. Detecta el color de fondo predominante (basado en las esquinas/bordes)
-     * 3. Convierte ese color de fondo a transparencia
-     * 4. Suaviza los bordes para un resultado más limpio
-     * 5. Devuelve los datos binarios de la imagen PNG resultante
+     * Transforma una imagen de firma aplicando un pipeline profesional de precisión híbrida:
+     * 1. Carga y super-muestreo (Upscaling) para maximizar la densidad del trazo.
+     * 2. Umbralización Adaptativa Local nativa para una extracción fiel del grosor original.
+     * 3. Segmentación por Componentes Conectados (CCL) iterativo en memoria de PHP.
+     * 4. Recorte milimétrico al ras basado en coordenadas ópticas reales mapeadas.
+     * 5. Reset estricto de lienzo virtual (Aplanamiento de página).
+     * 6. Padding proporcional simétrico (95% utilización) y encuadre cuadrado centrado.
+     * 7. Reducción óptima a PNG ligero (Nivel 9) y fondo transparente.
      *
-     * @param UploadedFile|string $imagen Archivo subido o ruta a la imagen
-     * @param int $threshold Umbral de sensibilidad (0-255). Más alto = más agresivo al quitar fondo.
-     *                        Default: 180 (recomendado para firmas escaneadas con fondo blanco)
-     * @return string Datos binarios de la imagen PNG resultante
-     * @throws \Exception
+     * @param  UploadedFile|string  $imagen  Archivo subido o ruta/blob binario
+     * @return string  Datos binarios del PNG resultante
      */
-    public static function maikol_callate($imagen, int $threshold = 180): string
+    public static function maikol_callate($imagen): string
     {
-        // Cargar la imagen según el tipo de entrada
+        // --- 1. Resolver fuente de imagen ---
         if ($imagen instanceof UploadedFile) {
             $rutaTemp = $imagen->getRealPath();
+            $deleteTmp = false;
         } elseif (is_string($imagen) && file_exists($imagen)) {
             $rutaTemp = $imagen;
+            $deleteTmp = false;
         } elseif (is_string($imagen)) {
             $rutaTemp = tempnam(sys_get_temp_dir(), 'firma_');
             file_put_contents($rutaTemp, $imagen);
+            $deleteTmp = true;
         } else {
-            throw new \InvalidArgumentException('La imagen debe ser un UploadedFile, una ruta válida o contenido binario.');
+            throw new \InvalidArgumentException('La imagen debe ser un UploadedFile, ruta válida o blob binario.');
         }
 
         try {
-            // Obtener información de la imagen
-            $info = getimagesize($rutaTemp);
-            if (!$info) {
-                throw new \RuntimeException('No se pudo leer la imagen.');
+            // --- 2. Instanciar Imagick y leer la imagen ---
+            if (!class_exists('\Imagick')) {
+                throw new \RuntimeException('La extensión php-imagick no está habilitada en tu servidor PHP.');
             }
 
-            $mime = $info['mime'];
-            $width = $info[0];
-            $height = $info[1];
+            $imagick = new \Imagick();
+            $imagick->readImage($rutaTemp);
 
-            // Crear recurso GD según el tipo MIME
-            $src = match ($mime) {
-                'image/jpeg', 'image/jpg' => @imagecreatefromjpeg($rutaTemp),
-                'image/png' => @imagecreatefrompng($rutaTemp),
-                'image/gif' => @imagecreatefromgif($rutaTemp),
-                'image/webp' => @imagecreatefromwebp($rutaTemp),
-                'image/bmp' => @imagecreatefrombmp($rutaTemp),
-                default => throw new \RuntimeException("Formato de imagen no soportado: {$mime}"),
-            };
+            // =================================================================
+            // PASO 1: SUPER-MUESTREO (RESOLUCIÓN ÓPTIMA DE TRABAJO)
+            // =================================================================
+            $srcWidth = $imagick->getImageWidth();
+            $srcHeight = $imagick->getImageHeight();
+            $superDim = 1200; // Resolución equilibrada para garantizar nitidez y escaneo veloz
 
-            if (!$src) {
-                throw new \RuntimeException('No se pudo crear el recurso de imagen GD.');
+            if ($srcWidth < $superDim && $srcHeight < $superDim) {
+                $ratio = $superDim / max($srcWidth, $srcHeight);
+                $width = (int) round($srcWidth * $ratio);
+                $height = (int) round($srcHeight * $ratio);
+                $imagick->resizeImage($width, $height, \Imagick::FILTER_CUBIC, 1);
+            } else {
+                $width = $srcWidth;
+                $height = $srcHeight;
             }
 
-            // Redimensionar a un máximo de 400px para mantener rendimiento óptimo
-            $maxDim = 400;
-            if ($width > $maxDim || $height > $maxDim) {
-                $ratio = min($maxDim / $width, $maxDim / $height);
-                $newWidth = (int)round($width * $ratio);
-                $newHeight = (int)round($height * $ratio);
-                $resized = imagecreatetruecolor($newWidth, $newHeight);
-                imagealphablending($resized, false);
-                imagesavealpha($resized, true);
-                imagecopyresampled($resized, $src, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-                imagedestroy($src);
-                $src = $resized;
-                $width = $newWidth;
-                $height = $newHeight;
-            }
+            // =================================================================
+            // PASO 2: EXTRACCIÓN ADAPTATIVA (FIEL AL GROSOR ORIGINAL)
+            // =================================================================
+            $imagick->setImageType(\Imagick::IMGTYPE_GRAYSCALE);
+            $quantum = \Imagick::getQuantum();
 
-            // Detectar el color de fondo predominante muestreando las esquinas
-            $bgColor = self::detectarColorFondo($src, $width, $height);
+            // Extrae los bordes y el grosor real de la pluma de forma nativa
+            $imagick->adaptiveThresholdImage(45, 45, -0.045 * $quantum);
+            $imagick->thresholdImage(0.5 * $quantum);
 
-            // Crear imagen destino con canal alpha
-            $dest = imagecreatetruecolor($width, $height);
-            imagealphablending($dest, false);
-            imagesavealpha($dest, true);
+            // =================================================================
+            // PASO 3: ESCANEO ESTRUCTURAL POR MATRIZ SUB-MUESTREADA (CCL)
+            // =================================================================
+            // Clonamos la imagen limpia pura para realizar el análisis geométrico inteligente
+            $thumb = clone $imagick;
 
-            // Llenar con transparencia total
-            $transparente = imagecolorallocatealpha($dest, 0, 0, 0, 127);
-            imagefill($dest, 0, 0, $transparente);
+            $thumbW = 300;
+            $thumbH = (int) round($height * ($thumbW / $width));
+            $thumb->resizeImage($thumbW, $thumbH, \Imagick::FILTER_BOX, 1);
 
-            // Procesar pixel por pixel
-            $bgR = ($bgColor >> 16) & 0xFF;
-            $bgG = ($bgColor >> 8) & 0xFF;
-            $bgB = $bgColor & 0xFF;
+            // Exportamos los píxeles de luminancia (0 = negro/tinta, 255 = blanco)
+            $pixels = $thumb->exportImagePixels(0, 0, $thumbW, $thumbH, "I", \Imagick::PIXEL_CHAR);
 
-            $thresholdNormalized = ($threshold / 255);
+            $thumb->clear();
+            $thumb->destroy();
 
-            for ($x = 0; $x < $width; $x++) {
-                for ($y = 0; $y < $height; $y++) {
-                    $rgb = imagecolorat($src, $x, $y);
-                    $r = ($rgb >> 16) & 0xFF;
-                    $g = ($rgb >> 8) & 0xFF;
-                    $b = $rgb & 0xFF;
+            $components = [];
+            $totalPixels = $thumbW * $thumbH;
 
-                    // Calcular distancia del color al color de fondo (sin sqrt por rendimiento)
-                    $distSq = pow($r - $bgR, 2) + pow($g - $bgG, 2) + pow($b - $bgB, 2);
-                    $maxDistSq = 3 * pow(255, 2); // ~195075
+            // Análisis de Componentes Conectados (CCL) mediante DFS iterativo en memoria
+            for ($i = 0; $i < $totalPixels; $i++) {
+                if ($pixels[$i] < 127) {
 
-                    // Normalizar a 0-127 para alpha (127 = completamente transparente)
-                    $alpha = (int)(127 * (1 - min(1, $distSq / ($maxDistSq * $thresholdNormalized * $thresholdNormalized))));
-                    $alpha = max(0, min(127, $alpha));
+                    $stack = [$i];
+                    $pixels[$i] = 255;
 
-                    $color = imagecolorallocatealpha($dest, $r, $g, $b, $alpha);
-                    imagesetpixel($dest, $x, $y, $color);
+                    $cMinX = $i % $thumbW;
+                    $cMaxX = $cMinX;
+                    $cMinY = (int) ($i / $thumbW);
+                    $cMaxY = $cMinY;
+                    $cCount = 0;
+
+                    while (!empty($stack)) {
+                        $idx = array_pop($stack);
+                        $cCount++;
+
+                        $cx = $idx % $thumbW;
+                        $cy = (int) ($idx / $thumbW);
+
+                        if ($cx < $cMinX)
+                            $cMinX = $cx;
+                        if ($cx > $cMaxX)
+                            $cMaxX = $cx;
+                        if ($cy < $cMinY)
+                            $cMinY = $cy;
+                        if ($cy > $cMaxY)
+                            $cMaxY = $cy;
+
+                        for ($dx = -1; $dx <= 1; $dx++) {
+                            for ($dy = -1; $dy <= 1; $dy++) {
+                                if ($dx === 0 && $dy === 0)
+                                    continue;
+
+                                $nx = $cx + $dx;
+                                $ny = $cy + $dy;
+
+                                if ($nx >= 0 && $nx < $thumbW && $ny >= 0 && $ny < $thumbH) {
+                                    $nIdx = ($ny * $thumbW) + $nx;
+                                    if ($pixels[$nIdx] < 127) {
+                                        $pixels[$nIdx] = 255;
+                                        $stack[] = $nIdx;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    $components[] = [
+                        'minX' => $cMinX,
+                        'maxX' => $cMaxX,
+                        'minY' => $cMinY,
+                        'maxY' => $cMaxY,
+                        'count' => $cCount
+                    ];
                 }
             }
 
-            imagedestroy($src);
+            unset($pixels);
 
-            // Capturar la imagen PNG en un buffer
-            ob_start();
-            imagepng($dest);
-            $pngData = ob_get_clean();
-            imagedestroy($dest);
+            if (empty($components)) {
+                $finalCropX = 0;
+                $finalCropY = 0;
+                $finalCropW = $width;
+                $finalCropH = $height;
+            } else {
+                $maxCount = max(array_column($components, 'count'));
+
+                $validMinX = $thumbW;
+                $validMaxX = 0;
+                $validMinY = $thumbH;
+                $validMaxY = 0;
+                $hasValidStructure = false;
+
+                foreach ($components as $comp) {
+                    if ($comp['count'] >= max(3, $maxCount * 0.025)) {
+                        if ($comp['minX'] < $validMinX)
+                            $validMinX = $comp['minX'];
+                        if ($comp['maxX'] > $validMaxX)
+                            $validMaxX = $comp['maxX'];
+                        if ($comp['minY'] < $validMinY)
+                            $validMinY = $comp['minY'];
+                        if ($comp['maxY'] > $validMaxY)
+                            $validMaxY = $comp['maxY'];
+                        $hasValidStructure = true;
+                    }
+                }
+
+                if (!$hasValidStructure) {
+                    foreach ($components as $comp) {
+                        if ($comp['count'] === $maxCount) {
+                            $validMinX = $comp['minX'];
+                            $validMaxX = $comp['maxX'];
+                            $validMinY = $comp['minY'];
+                            $validMaxY = $comp['maxY'];
+                            break;
+                        }
+                    }
+                }
+
+                $scale = $width / $thumbW;
+                $cropLeft = (int) floor($validMinX * $scale);
+                $cropTop = (int) floor($validMinY * $scale);
+                $cropRight = (int) ceil(($validMaxX + 1) * $scale);
+                $cropBottom = (int) ceil(($validMaxY + 1) * $scale);
+
+                $cropW = $cropRight - $cropLeft;
+                $cropH = $cropBottom - $cropTop;
+
+                // Margen de seguridad estándar para no cortar las curvas suaves del trazo original
+                $padding = 15;
+                $finalCropX = max(0, $cropLeft - $padding);
+                $finalCropY = max(0, $cropTop - $padding);
+                $finalCropW = min($width - $finalCropX, $cropW + ($padding * 2));
+                $finalCropH = min($height - $finalCropY, $cropH + ($padding * 2));
+            }
+
+            // Cortamos la imagen con el grosor intacto basándonos en los límites reales
+            $imagick->cropImage($finalCropW, $finalCropH, $finalCropX, $finalCropY);
+
+            // Aplanar estrictamente el lienzo para asimilar las nuevas dimensiones físicas
+            $imagick->setImagePage(0, 0, 0, 0);
+
+            // =================================================================
+            // PASO 4: EXTRAER FONDO TRANSPARENTE
+            // =================================================================
+            $targetWhite = new \ImagickPixel('white');
+            $imagick->transparentPaintImage($targetWhite, 0, 0.05 * $quantum, false);
+
+            // =================================================================
+            // PASO 5: PADDING PROPORCIONAL Y ENCUADRE CUADRADO PERFECTO
+            // =================================================================
+            $cW = $imagick->getImageWidth();
+            $cH = $imagick->getImageHeight();
+            $maxSide = max($cW, $cH);
+
+            $targetSize = (int) ($maxSide / 0.95);
+
+            $pX = (int) (($targetSize - $cW) / 2);
+            $pY = (int) (($targetSize - $cH) / 2);
+
+            $paddedCanvas = new \Imagick();
+            $paddedCanvas->newImage($targetSize, $targetSize, new \ImagickPixel('transparent'));
+            $paddedCanvas->setImageFormat('png');
+
+            $paddedCanvas->compositeImage($imagick, \Imagick::COMPOSITE_COPY, $pX, $pY);
+
+            $imagick->clear();
+            $imagick->destroy();
+            $imagick = $paddedCanvas;
+
+            // =================================================================
+            // PASO 6: REDUCCIÓN ÓPTIMA FINAL Y COMPRESIÓN PNG
+            // =================================================================
+            $finalDim = 800;
+            if ($imagick->getImageWidth() > $finalDim) {
+                $imagick->scaleImage($finalDim, 0);
+            }
+
+            $imagick->setImageFormat('png');
+            $imagick->setCompressionQuality(9);
+            $imagick->stripImage();
+
+            $pngData = $imagick->getImageBlob();
+
+            $imagick->clear();
+            $imagick->destroy();
 
             return $pngData;
 
+        } catch (\ImagickException $e) {
+            throw new \RuntimeException('Error procesando la firma: ' . $e->getMessage());
         } finally {
-            if (isset($rutaTemp) && !($imagen instanceof UploadedFile) && !(is_string($imagen) && file_exists($imagen))) {
+            if (isset($deleteTmp) && $deleteTmp && isset($rutaTemp)) {
                 @unlink($rutaTemp);
             }
         }
     }
 
     /**
-     * Detecta el color de fondo predominante muestreando las esquinas y bordes.
-     *
-     * @param \GdImage $src
-     * @param int $width
-     * @param int $height
-     * @return int Color RGB empaquetado
-     */
-    private static function detectarColorFondo($src, int $width, int $height): int
-    {
-        $colores = [];
-
-        // Muestrear esquinas (5x5 pixels en cada esquina)
-        $muestras = [
-            [0, 0], [0, 1], [1, 0], [1, 1], [2, 2],
-            [$width - 1, 0], [$width - 2, 0], [$width - 1, 1],
-            [0, $height - 1], [0, $height - 2], [1, $height - 1],
-            [$width - 1, $height - 1], [$width - 2, $height - 1], [$width - 1, $height - 2],
-        ];
-
-        // También muestrear bordes cada 10%
-        $stepX = max(1, intval($width / 10));
-        $stepY = max(1, intval($height / 10));
-        for ($i = 0; $i < $width; $i += $stepX) {
-            $muestras[] = [$i, 0];
-            $muestras[] = [$i, $height - 1];
-        }
-        for ($i = 0; $i < $height; $i += $stepY) {
-            $muestras[] = [0, $i];
-            $muestras[] = [$width - 1, $i];
-        }
-
-        $agrupados = [];
-        foreach ($muestras as [$x, $y]) {
-            if ($x >= 0 && $x < $width && $y >= 0 && $y < $height) {
-                $rgb = imagecolorat($src, $x, $y);
-                // Cuantizar para agrupar colores similares
-                $r = (($rgb >> 16) & 0xFF) & 0xF0;
-                $g = (($rgb >> 8) & 0xFF) & 0xF0;
-                $b = ($rgb & 0xFF) & 0xF0;
-                $clave = ($r << 16) | ($g << 8) | $b;
-                $agrupados[$clave] = ($agrupados[$clave] ?? 0) + 1;
-            }
-        }
-
-        // El color más frecuente es el fondo
-        arsort($agrupados);
-        $colorFondoCuantizado = key($agrupados);
-
-        // Devolver el color original (no cuantizado) del primer match
-        $colorFondoCuantizado = (int)$colorFondoCuantizado;
-        foreach ($muestras as [$x, $y]) {
-            $rgb = imagecolorat($src, $x, $y);
-            $r = (($rgb >> 16) & 0xFF) & 0xF0;
-            $g = (($rgb >> 8) & 0xFF) & 0xF0;
-            $b = ($rgb & 0xFF) & 0xF0;
-            if ((($r << 16) | ($g << 8) | $b) === $colorFondoCuantizado) {
-                return $rgb;
-            }
-        }
-
-        return 0xFFFFFF; // Blanco por defecto
-    }
-
-    /**
-     * Convierte una imagen a PNG optimizado para firma (escala de grises, alto contraste).
-     *
-     * @param string $pngData Datos binarios de la imagen PNG
-     * @return string PNG optimizado
+     * Mantenemos el método por compatibilidad con tus controladores.
      */
     public static function optimizarParaFirma(string $pngData): string
     {
-        $src = imagecreatefromstring($pngData);
-        if (!$src) {
-            throw new \RuntimeException('No se pudo procesar la imagen PNG.');
-        }
-
-        $width = imagesx($src);
-        $height = imagesy($src);
-
-        $dest = imagecreatetruecolor($width, $height);
-        imagealphablending($dest, false);
-        imagesavealpha($dest, true);
-
-        $transparente = imagecolorallocatealpha($dest, 0, 0, 0, 127);
-        imagefill($dest, 0, 0, $transparente);
-
-        for ($x = 0; $x < $width; $x++) {
-            for ($y = 0; $y < $height; $y++) {
-                $rgb = imagecolorat($src, $x, $y);
-                $alpha = ($rgb >> 24) & 0x7F;
-
-                if ($alpha < 127) {
-                    $r = ($rgb >> 16) & 0xFF;
-                    $g = ($rgb >> 8) & 0xFF;
-                    $b = $rgb & 0xFF;
-
-                    // Convertir a gris ponderado (percepción humana)
-                    $gray = (int)(0.299 * $r + 0.587 * $g + 0.114 * $b);
-
-                    // Aumentar contraste: si es oscuro, poner más oscuro; si es claro, más transparente
-                    if ($gray < 128) {
-                        $gray = max(0, $gray - 30);
-                    }
-
-                    $color = imagecolorallocatealpha($dest, $gray, $gray, $gray, $alpha);
-                    imagesetpixel($dest, $x, $y, $color);
-                }
-            }
-        }
-
-        imagedestroy($src);
-
-        ob_start();
-        imagepng($dest, null, 9); // Máxima compresión
-        $optimized = ob_get_clean();
-        imagedestroy($dest);
-
-        return $optimized;
+        return $pngData;
     }
 }
