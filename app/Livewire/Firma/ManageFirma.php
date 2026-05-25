@@ -38,17 +38,14 @@ class ManageFirma extends Component
             $pngData = FirmaService::optimizarParaFirma($pngData);
 
             DB::transaction(function () use ($pngData) {
-                // Inhabilitar firma anterior si existe
-                Firma::where('id_usuario', auth()->user()->usu_codigo)
-                    ->where('estatus', '1')
-                    ->update(['estatus' => '3']);
-
-                // Crear nueva firma
-                Firma::create([
-                    'id_usuario' => auth()->user()->usu_codigo,
-                    'foto_firma' => $pngData,
-                    'estatus' => '1'
-                ]);
+                // Actualizar la firma existente o crearla si no tiene una
+                Firma::updateOrCreate(
+                    ['id_usuario' => auth()->user()->usu_codigo],
+                    [
+                        'foto_firma' => $pngData,
+                        'estatus' => '1'
+                    ]
+                );
             });
 
             $this->reset('form.foto_firma');
