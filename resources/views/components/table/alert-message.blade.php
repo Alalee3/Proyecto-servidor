@@ -5,15 +5,23 @@
     alertType: 'success',
     alertMessage: '',
     redirectUrl: null,
+    onOkEvent: null,
     isSuccess() { return this.alertType === 'success' },
+    isWarning() { return this.alertType === 'warning' },
     showAlert(data) {
         this.alertType = data.type || 'success';
         this.alertMessage = data.message || 'Operación completada';
         this.redirectUrl = data.redirect || null;
+        this.onOkEvent = data.onOkEvent || null;
         this.show = true;
     },
     handleOk() {
         this.show = false;
+        if (this.onOkEvent) {
+            setTimeout(() => {
+                window.dispatchEvent(new CustomEvent(this.onOkEvent));
+            }, 10);
+        }
         if (this.redirectUrl) {
             setTimeout(() => { window.location.href = this.redirectUrl; }, 100);
         }
@@ -33,20 +41,20 @@ x-transition:leave-start="opacity-100 scale-100"
 x-transition:leave-end="opacity-0 scale-95">
     
     <div class="relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border-2"
-         :class="isSuccess() ? 'border-green-500' : 'border-red-500'">
+         :class="isSuccess() ? 'border-green-500' : (isWarning() ? 'border-yellow-500' : 'border-red-500')">
         
         <div class="h-24 flex items-center justify-center"
-             :class="isSuccess() ? 'bg-gradient-to-br from-green-400 to-emerald-600' : 'bg-gradient-to-br from-red-400 to-rose-600'">
+             :class="isSuccess() ? 'bg-gradient-to-br from-green-400 to-emerald-600' : (isWarning() ? 'bg-gradient-to-br from-yellow-400 to-amber-600' : 'bg-gradient-to-br from-red-400 to-rose-600')">
             <div class="bg-white/20 backdrop-blur-md rounded-full p-3">
                 <span class="material-icons text-white text-5xl" 
-                      x-text="isSuccess() ? 'check_circle' : 'report_problem'"></span>
+                      x-text="isSuccess() ? 'check_circle' : (isWarning() ? 'info' : 'report_problem')"></span>
             </div>
         </div>
 
         <div class="p-6 text-center">
             <h3 class="text-2xl font-black mb-3 tracking-tight" 
-                :class="isSuccess() ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'"
-                x-text="isSuccess() ? '¡GUARDADO EXITOSAMENTE!' : '¡HAY ERRORES!'"></h3>
+                :class="isSuccess() ? 'text-green-600 dark:text-green-400' : (isWarning() ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400')"
+                x-text="isSuccess() ? '¡GUARDADO EXITOSAMENTE!' : (isWarning() ? 'RECOMENDACIÓN' : '¡HAY ERRORES!')"></h3>
             
             <div class="mt-3 mb-6 max-h-[40vh] overflow-y-auto px-3 py-3 text-left bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
                 <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed" 
@@ -55,7 +63,7 @@ x-transition:leave-end="opacity-0 scale-95">
             
             <button type="button" @click="handleOk()"
                     class="w-full py-4 px-6 text-white rounded-xl font-black uppercase tracking-widest transition-all shadow-lg active:scale-95 text-base"
-                    :class="isSuccess() ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'">
+                    :class="isSuccess() ? 'bg-green-600 hover:bg-green-700' : (isWarning() ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-red-600 hover:bg-red-700')">
                 OK
             </button>
         </div>
