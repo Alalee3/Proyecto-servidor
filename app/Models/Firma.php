@@ -17,9 +17,9 @@ class Firma extends Model
     public $moduleName = 'Firmas';
 
     /**
-     * Campos a excluir de la bitácora (evita errores con datos binarios).
+     * Campos a excluir de la bitácora.
      */
-    public $auditExclude = ['foto_firma'];
+    public $auditExclude = [];
 
     /**
      * Relación con el usuario.

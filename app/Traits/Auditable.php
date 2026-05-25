@@ -53,9 +53,21 @@ trait Auditable
 
         if ($anteriores !== null) {
             $anteriores = array_diff_key($anteriores, array_flip($exclude));
+            // Codificar datos binarios a base64 para evitar errores de JSON
+            foreach ($anteriores as $key => $val) {
+                if (is_string($val) && !mb_check_encoding($val, 'UTF-8')) {
+                    $anteriores[$key] = 'base64:' . base64_encode($val);
+                }
+            }
         }
         if ($nuevos !== null) {
             $nuevos = array_diff_key($nuevos, array_flip($exclude));
+            // Codificar datos binarios a base64 para evitar errores de JSON
+            foreach ($nuevos as $key => $val) {
+                if (is_string($val) && !mb_check_encoding($val, 'UTF-8')) {
+                    $nuevos[$key] = 'base64:' . base64_encode($val);
+                }
+            }
         }
 
         Bitacora::create([
