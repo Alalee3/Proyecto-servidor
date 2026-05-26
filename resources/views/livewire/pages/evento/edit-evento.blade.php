@@ -61,16 +61,16 @@
                     <x-input-error :messages="$errors->first('form.codigo_color_evento')" class="mt-2" />
                 </div>
 
-                <x-toggle-switch id="is_independiente_edit" :label="__('¿Puede registrarse fuera de un semestre?')"
-                    model="form.is_independiente" :disabled="$deshabilitarIndependienteLaborable" required />
-
                 <x-toggle-switch id="is_laborable_edit" :label="__('¿Es Laborable?')" model="form.is_laborable"
                     :disabled="$deshabilitarIndependienteLaborable" required />
 
-                <x-toggle-switch id="is_superponible_edit" :label="__('¿Puede asignarse en la misma fecha que días de vacaciones?')" model="form.is_superponible" :disabled="$deshabilitarSuperponible" required />
-
                 <x-toggle-switch id="is_repetible_edit" :label="__('¿Se puede repetir?')" model="form.is_repetible"
                     :disabled="true" required />
+
+                <x-toggle-switch id="is_independiente_edit" :label="__('¿Puede registrarse fuera de un semestre?')"
+                    model="form.is_independiente" :disabled="$deshabilitarIndependienteLaborable" required />
+
+                <x-toggle-switch id="is_superponible_edit" :label="__('¿Puede asignarse en la misma fecha que días de vacaciones?')" model="form.is_superponible" :disabled="$deshabilitarSuperponible" required />
 
                 <x-toggle-switch id="is_rango_dias_edit" :label="__('¿Tiene cantidad especifica días de duración?')"
                     model="form.is_rango_dias" :disabled="$deshabilitarRangoDias" required />
