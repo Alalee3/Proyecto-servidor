@@ -348,7 +348,11 @@
                                                 clickDay: (e, self) => {
                                                     if (this._clickLock) return;
                                                     this._clickLock = true;
-                                                    setTimeout(() => { this._clickLock = false; }, 200);
+                                                    document.querySelectorAll('.sogat-datepicker-container').forEach(c => c.style.pointerEvents = 'none');
+                                                    setTimeout(() => { 
+                                                        this._clickLock = false; 
+                                                        document.querySelectorAll('.sogat-datepicker-container').forEach(c => c.style.pointerEvents = '');
+                                                    }, 1000);
                                                     let btn = e.target.closest('.vanilla-calendar-day__btn');
                                                     let clickedDate = btn ? btn.dataset.calendarDay : null;
                                                     if (!clickedDate) return;
