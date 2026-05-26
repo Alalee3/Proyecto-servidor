@@ -7,7 +7,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\Firma;
 use App\Services\FirmaService;
-use Illuminate\Support\Facades\DB;
+use App\Repositories\Firma\ManageFirmaRepo;
 use Exception;
 
 class ManageFirma extends Component
@@ -16,6 +16,12 @@ class ManageFirma extends Component
 
     public CreateFirmaForm $form;
     public $firmaActual = null;
+    protected ManageFirmaRepo $repo;
+
+    public function boot(ManageFirmaRepo $repo)
+    {
+        $this->repo = $repo;
+    }
 
     public function mount()
     {
@@ -24,9 +30,17 @@ class ManageFirma extends Component
 
     public function cargarFirmaActual()
     {
-        $this->firmaActual = Firma::where('id_usuario', auth()->user()->usu_codigo)
-            ->where('estatus', '1')
-            ->first();
+        $this->firmaActual = $this->repo->obtenerFirmaActual(auth()->user()->usu_codigo);
+    }
+
+    public function updatedFormFotoFirma()
+    {
+        try {
+            $this->form->validateOnly('foto_firma');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->reset('form.foto_firma');
+            $this->showAlert('warning', $e->validator->errors()->first('foto_firma'));
+        }
     }
 
     public function guardar()
@@ -37,16 +51,7 @@ class ManageFirma extends Component
             $pngData = FirmaService::maikol_callate($this->form->foto_firma);
             $pngData = FirmaService::optimizarParaFirma($pngData);
 
-            DB::transaction(function () use ($pngData) {
-                // Actualizar la firma existente o crearla si no tiene una
-                Firma::updateOrCreate(
-                    ['id_usuario' => auth()->user()->usu_codigo],
-                    [
-                        'foto_firma' => $pngData,
-                        'estatus' => '1'
-                    ]
-                );
-            });
+            $this->repo->guardarFirma(auth()->user()->usu_codigo, $pngData);
 
             $this->reset('form.foto_firma');
             $this->cargarFirmaActual();
