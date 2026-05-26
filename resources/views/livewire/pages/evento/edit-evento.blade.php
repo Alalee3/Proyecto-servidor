@@ -14,9 +14,11 @@
                 @php
                     $deshabilitarIndependienteLaborable = $form->is_especial
                         || in_array($form->tipo_evento, ['1', '2', '6'], true);
-                    $deshabilitarSuperponible = in_array($form->tipo_evento, ['1', '2', '6'], true);
+                    $deshabilitarSuperponible = in_array($form->tipo_evento, ['1', '2', '6'], true)
+                        || ($form->is_especial && $form->especial_evento == '1');
                     $deshabilitarRangoDias = $form->is_especial;
                     $deshabilitarCantidadRango = $form->is_especial || !$form->is_rango_dias;
+                    $deshabilitarSemanaEvento = in_array($form->tipo_evento, ['1', '2', '6'], true);
                 @endphp
 
                 <div class="w-full">
@@ -62,7 +64,7 @@
                 <x-toggle-switch id="is_independiente_edit" :label="__('¿Puede registrarse fuera de un semestre?')"
                     model="form.is_independiente" :disabled="$deshabilitarIndependienteLaborable" required />
 
-                <x-toggle-switch id="is_superponible_edit" :label="__('¿Puede solaparse con otros eventos? (Superponible)')" model="form.is_superponible" :disabled="$deshabilitarSuperponible" required />
+                <x-toggle-switch id="is_superponible_edit" :label="__('¿Puede asignarse en la misma fecha que días de vacaciones?')" model="form.is_superponible" :disabled="$deshabilitarSuperponible" required />
 
                 <x-toggle-switch id="is_laborable_edit" :label="__('¿Es Laborable?')" model="form.is_laborable"
                     :disabled="$deshabilitarIndependienteLaborable" required />
@@ -73,17 +75,19 @@
                 <x-toggle-switch id="is_rango_dias_edit" :label="__('¿Tiene cantidad especifica días de duración?')"
                     model="form.is_rango_dias" :disabled="$deshabilitarRangoDias" required />
 
+                @if($form->is_rango_dias)
                 <div class="w-full">
                     <x-input-label for="rango_dias_edit" :value="__('Cantidad de días que debe durar el evento')" />
                     <x-text-input id="rango_dias_edit" type="number" min="1" max="90" class="w-full"
                         wire:model.live="form.rango_dias" placeholder="Ej: 5" :disabled="$deshabilitarCantidadRango" required />
                     <x-input-error :messages="$errors->first('form.rango_dias')" class="mt-2" />
                 </div>
+                @endif
+
+                <x-toggle-switch id="is_semana_evento_edit" :label="__('¿Ocurre en semanas específicas?')" model="form.is_semana_evento" :disabled="$deshabilitarSemanaEvento" required />
 
                 <x-toggle-switch id="is_especial_edit" :label="__('¿Es un Evento Especial?')"
                     model="form.is_especial" required />
-
-                <x-toggle-switch id="is_semana_evento_edit" :label="__('¿Ocurre en semanas específicas?')" model="form.is_semana_evento" required />
 
                 @if($form->is_especial)
                     <div class="w-full">

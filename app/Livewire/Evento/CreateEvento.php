@@ -70,6 +70,7 @@ class CreateEvento extends Component
                 $this->form->is_rango_dias = false;
                 $this->form->rango_dias = '';
                 $this->form->is_independiente = true;
+                $this->form->is_superponible = false;
                 $this->form->cantidad_dias_evento = 60;
             } elseif ($this->form->especial_evento == '4') { // Semana Santa
                 $this->form->is_laborable = false;
@@ -118,6 +119,7 @@ class CreateEvento extends Component
             if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                 $this->form->is_independiente = true;
                 $this->form->is_superponible = true;
+                $this->form->is_semana_evento = false;
             } else {
                 $this->form->is_independiente = false;
             }
@@ -152,10 +154,12 @@ class CreateEvento extends Component
                 $this->form->is_superponible = true;
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = false;
+                $this->form->is_semana_evento = false;
             } else {
                 $this->form->is_independiente = false;
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = true;
+                $this->form->is_superponible = false;
             }
             $this->form->is_rango_dias = false;
             $this->form->rango_dias = '';

@@ -61,6 +61,15 @@ class CreateEventoForm extends Form
                     }
                 }
             ],
+            'is_semana_evento' => [
+                'required',
+                'boolean',
+                function ($attribute, $value, $fail) {
+                    if (in_array($this->tipo_evento, ['1', '2', '6']) && $value) {
+                        $fail('Para los feriados, el evento no puede ocurrir en semanas específicas.');
+                    }
+                }
+            ],
             'descripcion_evento' => [
                 'required',
                 'string',
