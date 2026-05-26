@@ -23,54 +23,64 @@
             {{ __('Eventos Asignados') }}
         </h3>
         
-        <div class="mb-4">
-            <div class="relative">
+        <div class="flex flex-col pb-4 bg-white dark:bg-gray-800">
+            <div class="relative w-full">
                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <span class="material-icons text-gray-400 text-sm">search</span>
                 </div>
                 <input type="text" x-model="searchListQuery" 
-                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 transition-colors" 
-                    placeholder="Buscar evento por nombre...">
+                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" 
+                    placeholder="Buscar evento...">
             </div>
         </div>
-        
-        <div class="overflow-y-auto flex-1 pr-2 space-y-3 custom-scrollbar">
-            <template x-for="(evento, index) in eventosAlpine.filter(e => (e.nombre_evento || e.nombre || '').toLowerCase().includes(searchListQuery.toLowerCase()))" :key="index">
-                <div class="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border border-gray-100 dark:border-gray-600 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row justify-between sm:items-center gap-3 relative overflow-hidden group">
-                    
-                    <!-- Color Line Indicator -->
-                    <div class="absolute left-0 top-0 bottom-0 w-1.5" :style="'background-color: ' + (evento.codigo_color_evento || evento.color || '#6c757d')"></div>
-                    
-                    <div class="pl-2">
-                        <h4 class="font-bold text-sm text-gray-800 dark:text-gray-200 uppercase tracking-wide" x-text="evento.nombre_evento || evento.nombre"></h4>
-                    </div>
-                    
-                    <div class="flex items-center gap-3 bg-white dark:bg-gray-800 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 shadow-inner">
-                        <div class="flex flex-col items-center">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Inicio</span>
-                            <span class="text-xs font-semibold text-gray-700 dark:text-gray-300" x-text="evento.inicio"></span>
-                        </div>
-                        <span class="material-icons text-gray-300 dark:text-gray-500 text-sm">arrow_forward</span>
-                        <div class="flex flex-col items-center">
-                            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Fin</span>
-                            <span class="text-xs font-semibold text-gray-700 dark:text-gray-300" x-text="evento.fin"></span>
-                        </div>
-                    </div>
-                </div>
-            </template>
 
-            <!-- Estados vacíos -->
-            <div x-show="eventosAlpine.length === 0" class="text-center py-10 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-                <span class="material-icons text-5xl text-gray-300 dark:text-gray-600 mb-3">event_busy</span>
-                <p class="font-bold uppercase tracking-wider text-sm">No hay eventos asignados</p>
-                <p class="text-xs mt-1">Haga clic en los días del calendario para asignar eventos.</p>
-            </div>
+        <div class="custom-scrollbar overflow-y-auto flex-1 mb-4">
             
-            <div x-show="eventosAlpine.length > 0 && eventosAlpine.filter(e => (e.nombre_evento || e.nombre || '').toLowerCase().includes(searchListQuery.toLowerCase())).length === 0" class="text-center py-10 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-                <span class="material-icons text-5xl text-gray-300 dark:text-gray-600 mb-3">search_off</span>
-                <p class="font-bold uppercase tracking-wider text-sm">No se encontraron resultados</p>
-                <p class="text-xs mt-1">Intente buscar con otro nombre.</p>
-            </div>
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0 z-10 shadow-sm">
+                    <tr>
+                        <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Nombre</th>
+                        <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Color</th>
+                        <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Inicio</th>
+                        <th scope="col" class="px-4 py-3 font-medium text-gray-900 dark:text-white">Fin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="(evento, index) in eventosAlpine.filter(e => (e.nombre_evento || e.nombre || '').toLowerCase().includes(searchListQuery.toLowerCase()))" :key="index">
+                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                            <td class="px-4 py-4 text-gray-900 dark:text-white break-words" x-text="evento.nombre_evento || evento.nombre"></td>
+                            <td class="px-4 py-4 text-gray-900 dark:text-white">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm" :style="'background-color: ' + (evento.codigo_color_evento || evento.color || '#6c757d')"></span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4 text-gray-900 dark:text-white" x-text="evento.inicio"></td>
+                            <td class="px-4 py-4 text-gray-900 dark:text-white" x-text="evento.fin"></td>
+                        </tr>
+                    </template>
+
+                    <!-- Estados vacíos -->
+                    <tr x-show="eventosAlpine.length === 0" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                        <td colspan="4" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                            <div class="flex flex-col items-center justify-center">
+                                <span class="material-icons text-5xl text-gray-300 dark:text-gray-600 mb-3">event_busy</span>
+                                <p class="font-bold uppercase tracking-wider text-sm">No hay eventos asignados</p>
+                                <p class="text-xs mt-1">Haga clic en los días del calendario para asignar eventos.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <tr x-show="eventosAlpine.length > 0 && eventosAlpine.filter(e => (e.nombre_evento || e.nombre || '').toLowerCase().includes(searchListQuery.toLowerCase())).length === 0" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                        <td colspan="4" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                            <div class="flex flex-col items-center justify-center">
+                                <span class="material-icons text-5xl text-gray-300 dark:text-gray-600 mb-3">search_off</span>
+                                <p class="font-bold uppercase tracking-wider text-sm">No se encontraron resultados</p>
+                                <p class="text-xs mt-1">Intente buscar con otro nombre.</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
         <div class="mt-6 flex justify-end pt-4 border-t border-gray-100 dark:border-gray-700">
