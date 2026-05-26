@@ -274,6 +274,7 @@
                                       nuevoIsRangoDias: @entangle('form.nuevoIsRangoDias'),
                                       nuevoRangoDias: @entangle('form.nuevoRangoDias'),
                                       nuevoIsIndependiente: @entangle('form.nuevoIsIndependiente'),
+                                      nuevoIsSuperponible: @entangle('form.nuevoIsSuperponible'),
 
                                      isCreatingEvento: @entangle('form.isCreatingEvento'),
 
@@ -389,14 +390,19 @@
                                         this.$watch('inicio', (val) => { if(val && fin) this.setupCalendar(); });
                                         this.$watch('fin', (val) => { if(val && inicio) this.setupCalendar(); });
                                         this.$watch('nuevoTipo', (val) => {
-                                            if (val == '1' || val == '2') {
+                                            if (val == '1' || val == '2' || val == '6') {
                                                 this.nuevoLaborable = false;
                                                 this.nuevoRepetible = false;
                                                 this.nuevoIsRangoDias = false;
                                                 this.nuevoRangoDias = '';
                                                 this.nuevoIsIndependiente = true;
+                                                this.nuevoIsSuperponible = true;
                                             } else {
+                                                this.nuevoLaborable = false;
                                                 this.nuevoRepetible = true;
+                                                this.nuevoIsRangoDias = false;
+                                                this.nuevoRangoDias = '';
+                                                this.nuevoIsIndependiente = false;
                                             }
                                         });
                                         this.$watch('mapaEventosAlpine', () => {
@@ -810,7 +816,8 @@
                                             this.nuevoLaborable, 
                                             this.nuevoRepetible,
                                             this.nuevoIsRangoDias,
-                                            this.nuevoRangoDias
+                                            this.nuevoRangoDias,
+                                            this.nuevoIsSuperponible
                                         ).then(success => {
                                             this._clickLock = false;
                                             if (success) {
@@ -833,7 +840,7 @@
                                          }
                                          this.selectedEventStart = ''; this.selectedEventEnd = ''; this.eventoNombre = '';
                                          this.eventoSeleccionado = ''; this.clickCount = 0;
-                                                                                   this.nuevoColorHex = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false; this.nuevoIsRangoDias = false; this.nuevoRangoDias = ''; this.nuevoIsIndependiente = true; this.isCreatingEvento = false;
+                                                                                   this.nuevoColorHex = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false; this.nuevoIsRangoDias = false; this.nuevoRangoDias = ''; this.nuevoIsIndependiente = true; this.nuevoIsSuperponible = true; this.isCreatingEvento = false;
 
                                      },
                                     eliminarEventoDesdeTooltip(ev) {

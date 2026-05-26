@@ -65,6 +65,7 @@ $wireKey = $wireKey ?? 'datalist-calendario';
             @php
             $deshabilitarIndependienteLaborable = in_array($form->nuevoTipo, ['1', '2', '6'], true);
             $deshabilitarCantidadRango = !$form->nuevoIsRangoDias;
+            $deshabilitarSuperponible = in_array($form->nuevoTipo, ['1', '2', '6'], true);
             @endphp
 
             {{-- Cuadrícula Principal de 3 Columnas (3x3) --}}
@@ -139,12 +140,16 @@ $wireKey = $wireKey ?? 'datalist-calendario';
                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">{{ __('Cantidad de días que debe durar el evento') }}</label>
                     <x-text-input id="{{ $wireKey }}_rango_dias_input" type="number"
                         class="w-full block" wire:model.live="form.nuevoRangoDias"
-                        placeholder="{{ __('EJ: 5') }}" min="1" max="90" :disabled="$deshabilitarCantidadRango" />
+                        placeholder="{{ __('EJ: 5') }}" min="1" max="365" :disabled="$deshabilitarCantidadRango" />
                     <x-input-error :messages="$errors->get('form.nuevoRangoDias')" class="mt-2" />
                 </div>
 
-                {{-- Columna 3: Div vacío para mantener la simetría --}}
-                <div class="hidden lg:block"></div>
+                {{-- Columna 3: ¿Puede asignarse en la misma fecha que días de vacaciones? --}}
+                <div>
+                    <x-toggle-switch id="{{ $wireKey }}_is_superponible_switch" :label="__('¿Puede asignarse en la misma fecha que días de vacaciones?')"
+                        model="form.nuevoIsSuperponible" :disabled="$deshabilitarSuperponible" />
+                    <x-input-error :messages="$errors->get('form.nuevoIsSuperponible')" class="mt-2" />
+                </div>
 
             </div>
         </div>

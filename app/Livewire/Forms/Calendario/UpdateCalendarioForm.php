@@ -26,6 +26,7 @@ class UpdateCalendarioForm extends Form
     public $nuevoIsRangoDias = false;
     public $nuevoRangoDias = '';
     public $nuevoIsIndependiente = true;
+    public $nuevoIsSuperponible = true;
     public $idEventoTemporal = null;
     public $isCreatingEvento = false;
 
@@ -101,17 +102,35 @@ class UpdateCalendarioForm extends Form
                 'nuevoIsRangoDias' => ['required', 'boolean'],
                 'nuevoRangoDias' => [
                     'nullable',
-                    'required_if:nuevoIsRangoDias,true',
-                    'numeric',
-                    'min:1',
-                    'max:90'
+                    function ($attribute, $value, $fail) {
+                        if ($this->nuevoIsRangoDias) {
+                            if (empty($value) && $value !== '0' && $value !== 0) {
+                                $fail('La cantidad de días es obligatoria.');
+                            } elseif (!is_numeric($value) || $value < 1 || $value > 365) {
+                                $fail('La cantidad de días debe ser un número entero entre 1 y 365.');
+                            }
+                        } else {
+                            if ($value !== null && $value !== '' && $value !== 0 && $value !== '0') {
+                                $fail('No se permite asignar una cantidad de días si la opción no está habilitada.');
+                            }
+                        }
+                    }
                 ],
                 'nuevoIsIndependiente' => [
                     'required',
                     'boolean',
                     function ($attribute, $value, $fail) {
-                        if (in_array($this->nuevoTipo, ['1', '2']) && !$value) {
-                            $fail('Para los feriados nacionales y locales, el evento debe ser obligatoriamente Independiente.');
+                        if (in_array($this->nuevoTipo, ['1', '2', '6']) && !$value) {
+                            $fail('Para los feriados, el evento debe ser obligatoriamente Independiente.');
+                        }
+                    }
+                ],
+                'nuevoIsSuperponible' => [
+                    'required',
+                    'boolean',
+                    function ($attribute, $value, $fail) {
+                        if (in_array($this->nuevoTipo, ['1', '2', '6']) && !$value) {
+                            $fail('Para los feriados, el evento debe ser obligatoriamente Superponible.');
                         }
                     }
                 ],
@@ -156,6 +175,8 @@ class UpdateCalendarioForm extends Form
             'nuevoColorHex.required' => 'El color es obligatorio.',
             'nuevoIsIndependiente.required' => 'El campo independiente es obligatorio.',
             'nuevoIsIndependiente.boolean' => 'El campo independiente debe ser un valor booleano.',
+            'nuevoIsSuperponible.required' => 'El campo superponible es obligatorio.',
+            'nuevoIsSuperponible.boolean' => 'El campo superponible debe ser un valor booleano.',
         ];
     }
 
@@ -313,12 +334,12 @@ class UpdateCalendarioForm extends Form
                 $evento = $eventosDb[$id];
 
                 // Validar duración exacta de cada instancia si el evento tiene rango de días específico
-                if ($evento->is_rango_dias_evento) {
+                if ($evento->is_cantidad_dias_evento) {
                     $inicio = new \DateTime($reg['inicio']);
                     $fin = new \DateTime($reg['fin']);
                     $diferencia = $inicio->diff($fin)->days + 1;
-                    if ($diferencia != $evento->rango_dias_evento) {
-                        $msg = "Cada instancia del evento \"{$evento->nombre_evento}\" debe durar exactamente {$evento->rango_dias_evento} días (actualmente dura {$diferencia} días).";
+                    if ($diferencia != $evento->cantidad_dias_evento) {
+                        $msg = "Cada instancia del evento \"{$evento->nombre_evento}\" debe durar exactamente {$evento->cantidad_dias_evento} días (actualmente dura {$diferencia} días).";
                         $this->addError('eventosRegistrados', $msg);
                         $errores[] = [$msg];
                     }

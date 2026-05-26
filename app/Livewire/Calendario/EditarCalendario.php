@@ -61,8 +61,8 @@ class EditarCalendario extends Component
                 'nombre_evento' => (string) $ev->nombre,
                 'tipo' => (string) $ev->tipo,
                 'color' => (string) $ev->color,
-                'is_rango_dias_evento' => (bool) ($ev->is_rango_dias_evento ?? false),
-                'rango_dias_evento' => $ev->rango_dias_evento ?? null,
+                'is_cantidad_dias_evento' => (bool) ($ev->is_cantidad_dias_evento ?? false),
+                'cantidad_dias_evento' => $ev->cantidad_dias_evento ?? null,
                 'especial_evento' => isset($ev->especial_evento) ? (string) $ev->especial_evento : null,
                 'is_superponible_evento' => (bool) ($ev->is_superponible_evento ?? false),
             ];
@@ -266,8 +266,8 @@ class EditarCalendario extends Component
                 'nombre_evento' => (string) $nombre,
                 'tipo' => (string) $tipo,
                 'color' => (string) $color,
-                'is_rango_dias_evento' => $eventoInfo ? (bool) $eventoInfo->is_rango_dias_evento : false,
-                'rango_dias_evento' => $eventoInfo ? $eventoInfo->rango_dias_evento : null,
+                'is_cantidad_dias_evento' => $eventoInfo ? (bool) $eventoInfo->is_cantidad_dias_evento : false,
+                'cantidad_dias_evento' => $eventoInfo ? $eventoInfo->cantidad_dias_evento : null,
                 'especial_evento' => $eventoInfo ? (string) $eventoInfo->especial_evento : null,
                 'is_superponible_evento' => $eventoInfo ? (bool) $eventoInfo->is_superponible_evento : false,
             ];
@@ -355,8 +355,8 @@ class EditarCalendario extends Component
                 'nombre_evento' => (string) $template->nombre_evento,
                 'tipo' => (string) $template->tipo_evento,
                 'color' => (string) $colorFin,
-                'is_rango_dias_evento' => (bool) $template->is_rango_dias_evento,
-                'rango_dias_evento' => $template->rango_dias_evento,
+                'is_cantidad_dias_evento' => (bool) $template->is_cantidad_dias_evento,
+                'cantidad_dias_evento' => $template->cantidad_dias_evento,
                 'especial_evento' => $templateKey,
             ];
         };
@@ -476,7 +476,7 @@ class EditarCalendario extends Component
         $this->guardarBorrador();
     }
 
-    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $codigo_color_evento, $is_laborable, $is_repetible, $is_rango_dias, $rango_dias)
+    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $codigo_color_evento, $is_laborable, $is_repetible, $is_rango_dias, $rango_dias, $is_superponible = true)
     {
         // Validar usando el objeto Form
         try {
@@ -531,6 +531,7 @@ class EditarCalendario extends Component
                 'is_rango_dias' => $is_rango_dias,
                 'rango_dias' => $rango_dias,
                 'is_independiente' => $this->form->nuevoIsIndependiente,
+                'is_superponible' => $is_superponible,
             ]);
 
             $colorHex = $codigo_color_evento ?: '#808080';
