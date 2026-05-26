@@ -191,7 +191,7 @@
                         @elseif(isset($evento->isSubHeader))
                             <td colspan="4" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Evento</td>
                             <td colspan="3" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Fecha</td>
-                            <td colspan="2" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Condición</td>
+                            <td colspan="2" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">¿Laborable?</td>
                         @elseif(isset($evento->isSpacer))
                             <td colspan="9"></td>
                         @elseif(isset($evento->isHeader))
@@ -203,7 +203,7 @@
                                 {{ \Carbon\Carbon::parse($evento->dia_inicio_evento)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}
                             </td>
                             <td colspan="2" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
-                                {{ $evento->is_laborable_evento ? 'Laborable' : 'No Laborable' }}
+                                {{ $evento->is_laborable_evento ? 'Sí' : 'No' }}
                             </td>
                         @endif
                         @php $eventoIndex++; @endphp
@@ -250,7 +250,7 @@
                         @elseif(isset($evento->isSubHeader))
                             <td colspan="4" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Evento</td>
                             <td colspan="3" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Fecha</td>
-                            <td colspan="2" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Condición</td>
+                            <td colspan="2" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">¿Laborable?</td>
                         @elseif(isset($evento->isSpacer))
                             <td colspan="9"></td>
                         @elseif(isset($evento->isHeader))
@@ -262,7 +262,7 @@
                                 {{ \Carbon\Carbon::parse($evento->dia_inicio_evento)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}
                             </td>
                             <td colspan="2" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
-                                {{ $evento->is_laborable_evento ? 'Laborable' : 'No Laborable' }}
+                                {{ $evento->is_laborable_evento ? 'Sí' : 'No' }}
                             </td>
                         @endif
                         @php $eventoIndex++; @endphp
@@ -291,7 +291,7 @@
                         @elseif(isset($evento->isSubHeader))
                             <td colspan="4" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Evento</td>
                             <td colspan="3" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Fecha</td>
-                            <td colspan="2" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Condición</td>
+                            <td colspan="2" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">¿Laborable?</td>
                         @elseif(isset($evento->isSpacer))
                             <td colspan="9"></td>
                         @elseif(isset($evento->isHeader))
@@ -303,7 +303,7 @@
                                 {{ \Carbon\Carbon::parse($evento->dia_inicio_evento)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}
                             </td>
                             <td colspan="2" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
-                                {{ $evento->is_laborable_evento ? 'Laborable' : 'No Laborable' }}
+                                {{ $evento->is_laborable_evento ? 'Sí' : 'No' }}
                             </td>
                         @endif
                         @php $eventoIndex++; @endphp
@@ -364,7 +364,7 @@
                             {{ \Carbon\Carbon::parse($evento->dia_inicio_evento)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}
                         </td>
                         <td colspan="2" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
-                            {{ $evento->is_laborable_evento ? 'Laborable' : 'No Laborable' }}
+                            {{ $evento->is_laborable_evento ? 'Sí' : 'No' }}
                         </td>
                     @endif
                     @php $eventoIndex++; @endphp
@@ -461,7 +461,7 @@
                         @elseif(isset($evento->isSubHeader))
                             <td colspan="4" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Evento</td>
                             <td colspan="3" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Fecha</td>
-                            <td colspan="2" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Condición</td>
+                            <td colspan="2" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">¿Laborable?</td>
                         @elseif(isset($evento->isSpacer))
                             <td colspan="9"></td>
                         @elseif(isset($evento->isHeader))
@@ -476,7 +476,7 @@
                                 {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}
                             </td>
                             <td colspan="2" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
-                                {{ $evento->is_laborable_evento ? 'Laborable' : 'No Laborable' }}
+                                {{ $evento->is_laborable_evento ? 'Sí' : 'No' }}
                             </td>
                         @endif
                         @php $eventoIndex++; @endphp
@@ -507,7 +507,7 @@
                 @elseif(isset($evento->isSubHeader))
                     <td colspan="4" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Evento</td>
                     <td colspan="3" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Fecha</td>
-                    <td colspan="2" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Condición</td>
+                    <td colspan="2" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">¿Laborable?</td>
                 @elseif(isset($evento->isSpacer))
                     <td colspan="9"></td>
                 @elseif(isset($evento->isHeader))
@@ -522,7 +522,7 @@
                         {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}
                     </td>
                     <td colspan="2" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
-                        {{ $evento->is_laborable_evento ? 'Laborable' : 'No Laborable' }}
+                        {{ $evento->is_laborable_evento ? 'Sí' : 'No' }}
                     </td>
                 @endif
                 @php $eventoIndex++; @endphp
