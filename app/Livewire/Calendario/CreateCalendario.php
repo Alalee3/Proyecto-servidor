@@ -207,7 +207,26 @@ class CreateCalendario extends Component
         $duracionReal = 0;
         $start = new \DateTime($inicio);
         $end = new \DateTime($fin);
-        $duracionReal = $start->diff($end)->days + 1;
+        
+        $isTodoWeekend = true;
+        $tempInterval = new \DateInterval('P1D');
+        $tempPeriod = new \DatePeriod($start, $tempInterval, (clone $end)->modify('+1 day'));
+        foreach ($tempPeriod as $date) {
+            if ((int) $date->format('N') < 6) {
+                $isTodoWeekend = false;
+                break;
+            }
+        }
+        
+        $ignorarFinesDeSemana = !in_array($tipo, ['1', '2', '6']) && !$isTodoWeekend;
+
+        $period = new \DatePeriod($start, $tempInterval, (clone $end)->modify('+1 day'));
+        foreach ($period as $date) {
+            if ($ignorarFinesDeSemana && (int) $date->format('N') >= 6) {
+                continue;
+            }
+            $duracionReal++;
+        }
 
         // VALIDACIÓN DE is_cantidad_dias_evento
         if ($eventoInfo && $eventoInfo->is_cantidad_dias_evento) {
