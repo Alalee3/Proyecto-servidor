@@ -239,21 +239,6 @@ class UpdateCalendarioForm extends Form
             $this->addError('dia_fin_calendario_academico', $msg);
             throw \Illuminate\Validation\ValidationException::withMessages(['form.dia_fin_calendario_academico' => [$msg]]);
         }
-
-        // Validar que la duración física del calendario sea suficiente para albergar los lapsos
-        $semanasFechas = ceil(($inicioReal->diffInDays($finReal) + 1) / 7);
-        $semanasLapso1 = (int) $this->semana_lapso_uno_calendario_academico;
-        $semanasLapso2 = (int) $this->semana_lapso_dos_calendario_academico;
-        $semanasIntro1 = (int) $this->semana_lapso_uno_introductorio_calendario_academico;
-        $semanasIntro2 = (int) $this->semana_lapso_dos_introductorio_calendario_academico;
-        $semanasIntensivo = (int) $this->semana_intensibo_introductorio_calendario_academico;
-        $totalSemanasLapsos = $semanasLapso1 + $semanasLapso2 + $semanasIntro1 + $semanasIntro2 + $semanasIntensivo;
-
-        if ($semanasFechas < $totalSemanasLapsos) {
-            $msg = "El período seleccionado solo dura {$semanasFechas} semanas físicas, lo cual no es suficiente para albergar las {$totalSemanasLapsos} semanas sumadas de los periodos. Extienda la fecha de fin o reduzca las semanas de los periodos.";
-            $this->addError('dia_fin_calendario_academico', $msg);
-            throw \Illuminate\Validation\ValidationException::withMessages(['form.dia_fin_calendario_academico' => [$msg]]);
-        }
     }
 
     public function validarFormularioCompleto($eventosRegistrados)
@@ -559,9 +544,23 @@ class UpdateCalendarioForm extends Form
                     $start = new \DateTime($reg['inicio']);
                     $end = new \DateTime($reg['fin']);
 
+                    $isTodoWeekend = true;
+                    $tempInterval = new \DateInterval('P1D');
+                    $tempPeriod = new \DatePeriod($start, $tempInterval, (clone $end)->modify('+1 day'));
+                    foreach ($tempPeriod as $date) {
+                        if ((int) $date->format('N') < 6) {
+                            $isTodoWeekend = false;
+                            break;
+                        }
+                    }
+                    $ignorarFinesDeSemana = !in_array($reg['tipo'] ?? '1', ['1', '2', '6']) && !$isTodoWeekend;
+
                     $interval = new \DateInterval('P1D');
                     $period = new \DatePeriod($start, $interval, (clone $end)->modify('+1 day'));
                     foreach ($period as $date) {
+                        if ($ignorarFinesDeSemana && (int) $date->format('N') >= 6) {
+                            continue;
+                        }
                         $year = $date->format('Y');
                         if (!isset($diasPorAnio[$year])) {
                             $diasPorAnio[$year] = 0;

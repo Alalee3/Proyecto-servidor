@@ -280,9 +280,22 @@ class EditarCalendario extends Component
                         $sReg = new \DateTime($reg['inicio']);
                         $eReg = new \DateTime($reg['fin']);
                         
+                        $isTodoWeekendReg = true;
                         $tempInterval = new \DateInterval('P1D');
+                        $tempPeriod = new \DatePeriod($sReg, $tempInterval, (clone $eReg)->modify('+1 day'));
+                        foreach ($tempPeriod as $date) {
+                            if ((int) $date->format('N') < 6) {
+                                $isTodoWeekendReg = false;
+                                break;
+                            }
+                        }
+                        $ignorarFinesDeSemanaReg = !in_array($reg['tipo'] ?? '1', ['1', '2', '6']) && !$isTodoWeekendReg;
+
                         $periodReg = new \DatePeriod($sReg, $tempInterval, (clone $eReg)->modify('+1 day'));
                         foreach ($periodReg as $date) {
+                            if ($ignorarFinesDeSemanaReg && (int) $date->format('N') >= 6) {
+                                continue;
+                            }
                             if ($date->format('Y') == $targetYear) {
                                 $diasRegistrados++;
                             }
@@ -783,9 +796,23 @@ class EditarCalendario extends Component
                 $start = new \DateTime($reg['inicio']);
                 $end = new \DateTime($reg['fin']);
 
+                $isTodoWeekend = true;
+                $tempInterval = new \DateInterval('P1D');
+                $tempPeriod = new \DatePeriod($start, $tempInterval, (clone $end)->modify('+1 day'));
+                foreach ($tempPeriod as $date) {
+                    if ((int) $date->format('N') < 6) {
+                        $isTodoWeekend = false;
+                        break;
+                    }
+                }
+                $ignorarFinesDeSemana = !in_array($reg['tipo'] ?? '1', ['1', '2', '6']) && !$isTodoWeekend;
+
                 $interval = new \DateInterval('P1D');
                 $period = new \DatePeriod($start, $interval, (clone $end)->modify('+1 day'));
                 foreach ($period as $date) {
+                    if ($ignorarFinesDeSemana && (int) $date->format('N') >= 6) {
+                        continue;
+                    }
                     if ($date->format('Y') == $targetYear) {
                         $diasActuales++;
                     }
