@@ -505,7 +505,8 @@ class CreateCalendarioForm extends Form
             }
 
             // Validar cantidad de semanas asignadas
-            $semanasReales = \App\Support\CalendarioLapsoSemanas::contarSemanas($periodo['inicio'], $periodo['fin'], $eventosRegistrados);
+            $incluirVacaciones = $periodo['nombre'] !== 'Curso Intensivo';
+            $semanasReales = \App\Support\CalendarioLapsoSemanas::contarSemanas($periodo['inicio'], $periodo['fin'], $eventosRegistrados, $incluirVacaciones);
             if ($semanasReales != $periodo['semanas_configuradas']) {
                 $msg = "Las fechas asignadas para '{$periodo['nombre']}' abarcan {$semanasReales} semanas, pero se estipularon {$periodo['semanas_configuradas']}.";
                 $this->addError('eventosRegistrados', $msg);
