@@ -155,14 +155,14 @@ class UpdateCalendarioForm extends Form
     public function messages()
     {
         return [
-            'semana_lapso_uno_calendario_academico.required' => 'Las semanas para el lapso 1 son obligatorias.',
-            'semana_lapso_uno_calendario_academico.integer' => 'Las semanas para el lapso 1 deben ser un número.',
-            'semana_lapso_uno_calendario_academico.min' => 'El mínimo de semanas para el lapso 1 es 1.',
-            'semana_lapso_uno_calendario_academico.max' => 'El máximo de semanas para el lapso 1 es 99.',
-            'semana_lapso_dos_calendario_academico.required' => 'Las semanas para el lapso 2 son obligatorias.',
-            'semana_lapso_dos_calendario_academico.integer' => 'Las semanas para el lapso 2 deben ser un número.',
-            'semana_lapso_dos_calendario_academico.min' => 'El mínimo de semanas para el lapso 2 es 1.',
-            'semana_lapso_dos_calendario_academico.max' => 'El máximo de semanas para el lapso 2 es 99.',
+            'semana_lapso_uno_calendario_academico.required' => 'Las semanas para el lapso académico 1 son obligatorias.',
+            'semana_lapso_uno_calendario_academico.integer' => 'Las semanas para el lapso académico 1 deben ser un número.',
+            'semana_lapso_uno_calendario_academico.min' => 'El mínimo de semanas para el lapso académico 1 es 1.',
+            'semana_lapso_uno_calendario_academico.max' => 'El máximo de semanas para el lapso académico 1 es 99.',
+            'semana_lapso_dos_calendario_academico.required' => 'Las semanas para el lapso académico 2 son obligatorias.',
+            'semana_lapso_dos_calendario_academico.integer' => 'Las semanas para el lapso académico 2 deben ser un número.',
+            'semana_lapso_dos_calendario_academico.min' => 'El mínimo de semanas para el lapso académico 2 es 1.',
+            'semana_lapso_dos_calendario_academico.max' => 'El máximo de semanas para el lapso académico 2 es 99.',
             'dia_inicio_calendario_academico.required' => 'La fecha de inicio es obligatoria.',
             'dia_inicio_calendario_academico.date' => 'La fecha de inicio debe ser válida.',
             'dia_fin_calendario_academico.required' => 'La fecha de fin es obligatoria.',
@@ -500,8 +500,8 @@ class UpdateCalendarioForm extends Form
         $periodosRegistrados = [];
 
         if (count($inicios) === 2 && count($fines) === 2) {
-            $periodosRegistrados['Lapso 1'] = ['nombre' => 'Lapso 1', 'inicio' => $inicios[0], 'fin' => $fines[0], 'semanas_configuradas' => $this->semana_lapso_uno_calendario_academico];
-            $periodosRegistrados['Lapso 2'] = ['nombre' => 'Lapso 2', 'inicio' => $inicios[1], 'fin' => $fines[1], 'semanas_configuradas' => $this->semana_lapso_dos_calendario_academico];
+            $periodosRegistrados['Lapso 1'] = ['nombre' => 'Lapso Académico 1', 'inicio' => $inicios[0], 'fin' => $fines[0], 'semanas_configuradas' => $this->semana_lapso_uno_calendario_academico];
+            $periodosRegistrados['Lapso 2'] = ['nombre' => 'Lapso Académico 2', 'inicio' => $inicios[1], 'fin' => $fines[1], 'semanas_configuradas' => $this->semana_lapso_dos_calendario_academico];
         }
         if (count($inicios_intro) > 0 && count($fines_intro) > 0 && count($inicios_intro) === count($fines_intro)) {
             if (isset($inicios_intro[0]) && isset($fines_intro[0]) && $this->semana_lapso_uno_introductorio_calendario_academico > 0) {

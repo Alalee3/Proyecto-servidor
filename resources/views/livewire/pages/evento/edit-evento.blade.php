@@ -42,9 +42,8 @@
 
                 <div class="w-full">
                     <x-input-label for="descripcion_evento" :value="__('Nombre del Evento')" />
-                    <x-text-input id="descripcion_evento" type="text"
-                        wire:model.live="form.descripcion_evento" placeholder="Ej: Congreso Nacional" required
-                        :disabled="$form->is_especial" />
+                    <x-text-input id="descripcion_evento" type="text" wire:model.live="form.descripcion_evento"
+                        placeholder="Ej: Congreso Nacional" required :disabled="$form->is_especial" />
                     <x-input-error :messages="$errors->first('form.descripcion_evento')" class="mt-2" />
                 </div>
 
@@ -76,18 +75,20 @@
                     model="form.is_rango_dias" :disabled="$deshabilitarRangoDias" required />
 
                 @if($form->is_rango_dias)
-                <div class="w-full">
-                    <x-input-label for="rango_dias_edit" :value="__('Cantidad de días que debe durar el evento')" />
-                    <x-text-input id="rango_dias_edit" type="number" min="1" max="90" class="w-full"
-                        wire:model.live="form.rango_dias" placeholder="Ej: 5" :disabled="$deshabilitarCantidadRango" required />
-                    <x-input-error :messages="$errors->first('form.rango_dias')" class="mt-2" />
-                </div>
+                    <div class="w-full">
+                        <x-input-label for="rango_dias_edit" :value="__('Cantidad de días que debe durar el evento')" />
+                        <x-text-input id="rango_dias_edit" type="number" min="1" max="90" class="w-full"
+                            wire:model.live="form.rango_dias" placeholder="Ej: 5" :disabled="$deshabilitarCantidadRango"
+                            required />
+                        <x-input-error :messages="$errors->first('form.rango_dias')" class="mt-2" />
+                    </div>
                 @endif
 
-                <x-toggle-switch id="is_semana_evento_edit" :label="__('¿Ocurre en semanas específicas?')" model="form.is_semana_evento" :disabled="$deshabilitarSemanaEvento" required />
+                <x-toggle-switch id="is_semana_evento_edit" :label="__('¿Ocurre en semanas específicas?')"
+                    model="form.is_semana_evento" :disabled="$deshabilitarSemanaEvento" required />
 
-                <x-toggle-switch id="is_especial_edit" :label="__('¿Es un Evento Especial?')"
-                    model="form.is_especial" required />
+                <x-toggle-switch id="is_especial_edit" :label="__('¿Es un Evento Especial?')" model="form.is_especial"
+                    required />
 
                 @if($form->is_especial)
                     <div class="w-full">
@@ -126,10 +127,9 @@
                 @if($form->is_semana_evento)
                     <div class="w-full mt-4 col-span-1 md:col-span-2 lg:col-span-3">
                         <div class="flex justify-between items-center mb-2">
-                            <x-input-label :value="__('Semanas en las que debe suceder el evento *')" />
+                            <x-input-label :value="__('Semanas en las que debe suceder el evento')" />
                             @if($form->is_repetible && !$form->is_especial)
-                                <button type="button" wire:click="agregarSemana"
-                                    @disabled(count(array_filter($form->semanas, fn($v) => $v !== null && $v !== '')) >= 4)
+                                <button type="button" wire:click="agregarSemana" @disabled(is_array($form->semanas) && count($form->semanas) >= 4)
                                     class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -144,7 +144,7 @@
                             @foreach($form->semanas as $index => $semana)
                                 <div wire:key="semana-item-{{ $index }}">
                                     <div class="flex items-center gap-2">
-                                        <x-text-input type="number" min="1" max="99" class="w-full"
+                                        <x-text-input type="number" min="1" max="18" class="w-full"
                                             wire:model.live="form.semanas.{{ $index }}" placeholder="Ej: 1"
                                             :disabled="$form->is_especial" required />
                                         @if($form->is_repetible && count($form->semanas) > 1 && !$form->is_especial)

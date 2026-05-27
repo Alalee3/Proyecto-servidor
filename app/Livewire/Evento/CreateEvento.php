@@ -201,8 +201,7 @@ class CreateEvento extends Component
     public function agregarSemana()
     {
         if ($this->form->is_repetible) {
-            $semanasValidas = array_filter($this->form->semanas ?? [], fn($v) => $v !== null && $v !== '');
-            if (count($semanasValidas) >= 4) {
+            if (count($this->form->semanas ?? []) >= 4) {
                 return;
             }
             $this->form->semanas[] = '';

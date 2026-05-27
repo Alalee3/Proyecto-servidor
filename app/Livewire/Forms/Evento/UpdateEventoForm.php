@@ -231,8 +231,7 @@ class UpdateEventoForm extends Form
                         $fail('Si el evento no es repetible, solo puede seleccionar una (1) semana.');
                     }
                     
-                    $semanasNoVacias = array_filter($value, fn($v) => $v !== null && $v !== '');
-                    if (count($semanasNoVacias) > 4) {
+                    if (count($value) > 4) {
                         $fail('Un evento puede tener máximo 4 semanas asignadas.');
                     }
                     
@@ -243,16 +242,14 @@ class UpdateEventoForm extends Form
                     if (count($semanasValidas) !== count(array_unique($semanasValidas))) {
                         $fail('No puede seleccionar la misma semana más de una vez.');
                     }
-                    
-                    foreach ($value as $semana) {
-                        if ($semana !== null && $semana !== '') {
-                            if (!is_numeric($semana) || $semana < 1 || $semana > 99) {
-                                $fail('Las semanas seleccionadas deben ser un número válido entre 1 y 99.');
-                            }
-                        }
-                    }
                 }
             ],
+            'semanas.*' => $this->is_semana_evento ? [
+                'required',
+                'numeric',
+                'min:1',
+                'max:18'
+            ] : [],
         ];
     }
 
@@ -280,6 +277,10 @@ class UpdateEventoForm extends Form
             'rango_dias.max' => 'La cantidad de días no debe superar los 90 días.',
             'semanas.required_if' => 'Debe seleccionar al menos una semana cuando el evento está asociado a semanas específicas.',
             'semanas.array' => 'Formato inválido de semanas.',
+            'semanas.*.required' => 'La semana no puede estar vacía.',
+            'semanas.*.numeric' => 'La semana debe ser un número.',
+            'semanas.*.min' => 'La semana debe ser mayor o igual a 1.',
+            'semanas.*.max' => 'La semana no debe superar 18.',
             'is_independiente.required' => 'El campo independiente es obligatorio.',
             'is_independiente.boolean' => 'El campo independiente debe ser un valor booleano.',
             'is_superponible.required' => 'El campo superponible es obligatorio.',

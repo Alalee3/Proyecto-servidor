@@ -151,19 +151,11 @@
                                 class="mt-2" />
                         </div>
                         <div class="w-full">
-                            <x-input-label for="semana_lapso_uno_calendario_academico" :value="__('Semanas del Lapso 1')" />
+                            <x-input-label for="semana_lapso_uno_calendario_academico" :value="__('Semanas del Lapso Académico 1')" />
                             <x-text-input id="semana_lapso_uno_calendario_academico" type="number" min="1" max="99"
                                 wire:model.live="form.semana_lapso_uno_calendario_academico" class="w-full mt-1"
                                 placeholder="Ej: 18" required />
                             <x-input-error :messages="$errors->first('form.semana_lapso_uno_calendario_academico')"
-                                class="mt-2" />
-                        </div>
-                        <div class="w-full">
-                            <x-input-label for="semana_lapso_dos_calendario_academico" :value="__('Semanas del Lapso 2')" />
-                            <x-text-input id="semana_lapso_dos_calendario_academico" type="number" min="1" max="99"
-                                wire:model.live="form.semana_lapso_dos_calendario_academico" class="w-full mt-1"
-                                placeholder="Ej: 18" required />
-                            <x-input-error :messages="$errors->first('form.semana_lapso_dos_calendario_academico')"
                                 class="mt-2" />
                         </div>
                         <div class="w-full">
@@ -176,21 +168,29 @@
                                 class="mt-2" />
                         </div>
                         <div class="w-full">
-                            <x-input-label for="semana_lapso_dos_introductorio_calendario_academico" :value="__('Semanas del Lapso Académico Trayecto Inicial 2')" />
-                            <x-text-input id="semana_lapso_dos_introductorio_calendario_academico" type="number" min="0"
-                                max="99" wire:model.live="form.semana_lapso_dos_introductorio_calendario_academico"
-                                class="w-full mt-1" placeholder="Ej: 18" required />
-                            <x-input-error
-                                :messages="$errors->first('form.semana_lapso_dos_introductorio_calendario_academico')"
-                                class="mt-2" />
-                        </div>
-                        <div class="w-full">
                             <x-input-label for="semana_intensibo_introductorio_calendario_academico" :value="__('Semanas del curso Intensivo')" />
                             <x-text-input id="semana_intensibo_introductorio_calendario_academico" type="number" min="0"
                                 max="99" wire:model.live="form.semana_intensibo_introductorio_calendario_academico"
                                 class="w-full mt-1" placeholder="Ej: 18" required />
                             <x-input-error
                                 :messages="$errors->first('form.semana_intensibo_introductorio_calendario_academico')"
+                                class="mt-2" />
+                        </div>
+                        <div class="w-full">
+                            <x-input-label for="semana_lapso_dos_calendario_academico" :value="__('Semanas del Lapso Académico 2')" />
+                            <x-text-input id="semana_lapso_dos_calendario_academico" type="number" min="1" max="99"
+                                wire:model.live="form.semana_lapso_dos_calendario_academico" class="w-full mt-1"
+                                placeholder="Ej: 18" required />
+                            <x-input-error :messages="$errors->first('form.semana_lapso_dos_calendario_academico')"
+                                class="mt-2" />
+                        </div>
+                        <div class="w-full">
+                            <x-input-label for="semana_lapso_dos_introductorio_calendario_academico" :value="__('Semanas del Lapso Académico Trayecto Inicial 2')" />
+                            <x-text-input id="semana_lapso_dos_introductorio_calendario_academico" type="number" min="0"
+                                max="99" wire:model.live="form.semana_lapso_dos_introductorio_calendario_academico"
+                                class="w-full mt-1" placeholder="Ej: 18" required />
+                            <x-input-error
+                                :messages="$errors->first('form.semana_lapso_dos_introductorio_calendario_academico')"
                                 class="mt-2" />
                         </div>
                     </div>
