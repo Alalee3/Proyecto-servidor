@@ -667,29 +667,42 @@ class CreateCalendario extends Component
             $targetYear = date('Y');
         }
 
-        // Obtener IDs de eventos asignados EN EL AÑO SELECCIONADO del calendario actual
+        // Obtener IDs y CONTEOS de eventos asignados EN TODO EL CALENDARIO ACTUAL
+        $conteosAsignadosTotal = [];
         $idsAsignadosEsteAnio = [];
         foreach ($this->eventosRegistrados as $ev) {
-            $evStart = $ev['inicio'] ?? null;
-            if ($evStart) {
-                $evYear = date('Y', strtotime($evStart));
-                if ((int) $evYear === (int) $targetYear) {
-                    $idsAsignadosEsteAnio[] = $ev['id'] ?? null;
+            $idEv = $ev['id'] ?? null;
+            if ($idEv) {
+                $conteosAsignadosTotal[$idEv] = ($conteosAsignadosTotal[$idEv] ?? 0) + 1;
+                
+                $evStart = $ev['inicio'] ?? null;
+                if ($evStart) {
+                    $evYear = date('Y', strtotime($evStart));
+                    if ((int) $evYear === (int) $targetYear) {
+                        $idsAsignadosEsteAnio[] = $idEv;
+                    }
                 }
             }
         }
         $idsAsignadosEsteAnio = array_filter(array_unique($idsAsignadosEsteAnio));
 
-        return $biblioteca->filter(function ($evento) use ($idsAsignadosEsteAnio) {
-            // Si es un evento especial de tipo 2 (Inicio) o 3 (Fin) y ya está asignado en este año, no lo mostramos
+        return $biblioteca->filter(function ($evento) use ($idsAsignadosEsteAnio, $conteosAsignadosTotal) {
             $especial = $evento->especial_evento ?? null;
-            if (in_array($especial, ['2', '3']) && in_array($evento->id_evento, $idsAsignadosEsteAnio)) {
-                return false;
+            $id = $evento->id_evento;
+
+            // Lapsos Académicos (2, 3) e Introductorios (7, 8) -> Hasta 2 veces en el calendario general
+            if (in_array($especial, ['2', '3', '7', '8'])) {
+                return ($conteosAsignadosTotal[$id] ?? 0) < 2;
+            }
+
+            // Curso Intensivo (9, 10) -> Hasta 1 vez en el calendario general
+            if (in_array($especial, ['9', '10'])) {
+                return ($conteosAsignadosTotal[$id] ?? 0) < 1;
             }
 
             // Si el evento es repetible, siempre aparece.
             // Si NO es repetible, solo aparece si NO ha sido asignado aún en este año.
-            return $evento->is_repetible_evento || !in_array($evento->id_evento, $idsAsignadosEsteAnio);
+            return $evento->is_repetible_evento || !in_array($id, $idsAsignadosEsteAnio);
         })->values();
     }
 
