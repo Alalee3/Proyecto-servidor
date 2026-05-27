@@ -178,7 +178,7 @@
                         </div>
                         <div class="w-full">
                             <x-input-label for="semana_lapso_dos_introductorio_calendario_academico"
-                                :value="__('Semanas del Lapso Introductorio 2" />
+                                :value="__('Semanas del Lapso Introductorio 2')" />
                             <x-text-input id="semana_lapso_dos_introductorio_calendario_academico" type="number" min="0"
                                 max="99" wire:model.live="form.semana_lapso_dos_introductorio_calendario_academico"
                                 class="w-full mt-1" placeholder="Ej: 18" required />
