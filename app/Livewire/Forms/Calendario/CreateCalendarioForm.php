@@ -281,6 +281,7 @@ class CreateCalendarioForm extends Form
         $fines_intro = [];
         $inicios_intensi = [];
         $fines_intensi = [];
+        $visitados = [];
 
         foreach ($eventosRegistrados as $reg) {
             $id = $reg['id'] ?? null;
