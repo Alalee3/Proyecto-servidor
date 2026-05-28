@@ -22,8 +22,10 @@
                                     <x-input 
                                         label="Buscar" 
                                         name="search" 
-                                        placeholder="CÉDULA, NOMBRE O SECCIÓN..." 
+                                        placeholder="CÉDULA..." 
                                         wire:model.live.debounce.300ms="search" 
+                                        maxlength="12"
+                                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                     />
                                 </div>
                                 
