@@ -167,7 +167,7 @@ class CreateCalendario extends Component
         $this->bibliotecaEventos = $eventoRepo->obtenerBiblioteca();
     }
 
-    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false, $confirmadoIncorporacion = false, $confirmadoDuracion = false)
+    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false, $confirmadoIncorporacion = false, $confirmadoDuracion = false, $confirmadoIntroductorio = false)
     {
         $eventoInfo = \App\Models\Evento::find($id_evento);
 
@@ -243,6 +243,25 @@ class CreateCalendario extends Component
                     'cancelText' => 'Cancelar',
                     'okText' => 'Continuar',
                     'onOkEvent' => 'confirmar-agregar-evento-incorporacion'
+                ]);
+                return;
+            }
+        }
+
+        // VALIDAR SI ES LAPSO INTRODUCTORIO (EVENTO 7) SIN LAPSO ACADÉMICO
+        if (!$confirmadoIntroductorio && $especial === '7') {
+            $hayLapsoAcademico = collect($this->eventosRegistrados)
+                ->contains(fn($ev) => ($ev['especial_evento'] ?? '') === '2');
+
+            if (!$hayLapsoAcademico) {
+                $this->tempEventoAgregar = func_get_args();
+                $this->dispatch('show-alert', [
+                    'type' => 'warning',
+                    'message' => 'El "Lapso Académico Trayecto Inicial" debería registrarse dentro de un Lapso Académico. ¿Desea continuar de todas formas?',
+                    'showCancelButton' => true,
+                    'cancelText' => 'Cancelar',
+                    'okText' => 'Continuar',
+                    'onOkEvent' => 'confirmar-agregar-evento-introductorio'
                 ]);
                 return;
             }
@@ -970,6 +989,20 @@ class CreateCalendario extends Component
                 $args[] = false;
             }
             $args[8] = true; // $confirmadoDuracion
+            $this->agregarEvento(...$args);
+            $this->tempEventoAgregar = null;
+        }
+    }
+
+    #[On('confirmar-agregar-evento-introductorio')]
+    public function confirmarAgregarEventoIntroductorio()
+    {
+        if ($this->tempEventoAgregar) {
+            $args = $this->tempEventoAgregar;
+            while (count($args) < 10) {
+                $args[] = false;
+            }
+            $args[9] = true; // $confirmadoIntroductorio
             $this->agregarEvento(...$args);
             $this->tempEventoAgregar = null;
         }
