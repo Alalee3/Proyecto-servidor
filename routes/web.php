@@ -100,6 +100,7 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     Route::get('tema/show/{id}', ShowTema::class)->middleware('can:ver-tema')->name('tema/show');
 
     Route::get('planificacion/list', ListPlanificacion::class)->middleware('can:listar-planificacion')->name('planificacion/listar');
+    Route::get('planificacion/historial', \App\Livewire\Planificacion\HistoryPlanificacion::class)->middleware('can:listar-planificacion')->name('planificacion.historial');
     Route::get('planificacion/create', CreatePlanificacion::class)->middleware('can:crear-planificacion')->name('planificacion/crear');
     Route::get('planificacion/update/{planificacionId}', UpdatePlanificacion::class)->middleware('can:editar-planificacion')->name('planificaciones.update');
     Route::get('planificacion/show/{planificacionId}', ShowPlanificacion::class)->middleware('can:ver-planificacion')->name('planificacion/show');
