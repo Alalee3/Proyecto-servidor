@@ -31,7 +31,10 @@ class UpdateEvento extends Component
         $this->form->setEvento($evento);
         $this->refreshEventos();
         if (empty($this->form->semanas)) {
-            $this->form->semanas = [''];
+            $this->form->semanas = [
+                ['lapso' => 1, 'semana' => ''],
+                ['lapso' => 2, 'semana' => ''],
+            ];
         }
     }
 
@@ -177,6 +180,23 @@ class UpdateEvento extends Component
             $this->resetErrorBag('form.rango_dias');
         }
 
+        // Si se activa is_semana_evento, asegurar que existen instancias para ambos lapsos
+        if ($propertyName === 'form.is_semana_evento' && $this->form->is_semana_evento) {
+            $hasLapso1 = false;
+            $hasLapso2 = false;
+            foreach ($this->form->semanas as $s) {
+                $lapso = is_array($s) ? ($s['lapso'] ?? 1) : 1;
+                if ($lapso == 1) $hasLapso1 = true;
+                if ($lapso == 2) $hasLapso2 = true;
+            }
+            if (!$hasLapso1) {
+                $this->form->semanas[] = ['lapso' => 1, 'semana' => ''];
+            }
+            if (!$hasLapso2) {
+                $this->form->semanas[] = ['lapso' => 2, 'semana' => ''];
+            }
+        }
+
         // 2. FINALMENTE VALIDAMOS EL CAMPO
         $this->form->validateOnly($field);
     }
@@ -207,13 +227,14 @@ class UpdateEvento extends Component
         return redirect()->route('evento/listar');
     }
 
-    public function agregarSemana()
+    public function agregarSemana($lapso = 1)
     {
         if ($this->form->is_repetible) {
-            if (count($this->form->semanas ?? []) >= 4) {
+            $semanasLapso = array_filter($this->form->semanas ?? [], fn($s) => (is_array($s) ? ($s['lapso'] ?? 1) : 1) == $lapso);
+            if (count($semanasLapso) >= 4) {
                 return;
             }
-            $this->form->semanas[] = '';
+            $this->form->semanas[] = ['lapso' => (int) $lapso, 'semana' => ''];
         }
     }
 

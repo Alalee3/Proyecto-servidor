@@ -205,20 +205,37 @@ class CreateEventoForm extends Form
                         $fail('Si el evento no es repetible, solo puede seleccionar una (1) semana.');
                     }
                     
-                    if (count($value) > 4) {
-                        $fail('Un evento puede tener máximo 4 semanas asignadas.');
+                    // Validar que no haya más de 4 semanas por lapso
+                    $semanasLapso1 = array_filter($value, fn($s) => (is_array($s) ? ($s['lapso'] ?? 1) : 1) == 1);
+                    $semanasLapso2 = array_filter($value, fn($s) => (is_array($s) ? ($s['lapso'] ?? 1) : 1) == 2);
+                    
+                    if (count($semanasLapso1) > 4) {
+                        $fail('Un evento puede tener máximo 4 semanas en el Lapso 1.');
+                    }
+                    if (count($semanasLapso2) > 4) {
+                        $fail('Un evento puede tener máximo 4 semanas en el Lapso 2.');
                     }
                     
-                    $semanasValidas = array_filter($value, function($val) {
-                        return $val !== null && $val !== '';
-                    });
+                    // Validar semanas únicas dentro de cada lapso
+                    $semanasValidas1 = array_filter($semanasLapso1, fn($s) => !empty($s['semana']) && $s['semana'] !== null && $s['semana'] !== '');
+                    $semanasValidas2 = array_filter($semanasLapso2, fn($s) => !empty($s['semana']) && $s['semana'] !== null && $s['semana'] !== '');
                     
-                    if (count($semanasValidas) !== count(array_unique($semanasValidas))) {
-                        $fail('No puede seleccionar la misma semana más de una vez.');
+                    $nums1 = array_map(fn($s) => (string) $s['semana'], $semanasValidas1);
+                    $nums2 = array_map(fn($s) => (string) $s['semana'], $semanasValidas2);
+                    
+                    if (count($nums1) !== count(array_unique($nums1))) {
+                        $fail('No puede seleccionar la misma semana más de una vez en el Lapso 1.');
+                    }
+                    if (count($nums2) !== count(array_unique($nums2))) {
+                        $fail('No puede seleccionar la misma semana más de una vez en el Lapso 2.');
                     }
                 }
             ],
-            'semanas.*' => $this->is_semana_evento ? [
+            'semanas.*.lapso' => $this->is_semana_evento ? [
+                'required',
+                'in:1,2'
+            ] : [],
+            'semanas.*.semana' => $this->is_semana_evento ? [
                 'required',
                 'numeric',
                 'min:1',
@@ -247,10 +264,12 @@ class CreateEventoForm extends Form
             'is_cantidad_dias_evento.boolean' => 'El valor de cantidad de días debe ser booleano.',
             'semanas.required_if' => 'Debe seleccionar al menos una semana cuando el evento está asociado a semanas específicas.',
             'semanas.array' => 'Formato inválido de semanas.',
-            'semanas.*.required' => 'La semana no puede estar vacía.',
-            'semanas.*.numeric' => 'La semana debe ser un número.',
-            'semanas.*.min' => 'La semana debe ser mayor o igual a 1.',
-            'semanas.*.max' => 'La semana no debe superar 18.',
+            'semanas.*.semana.required' => 'La semana :position no puede estar vacía.',
+            'semanas.*.semana.numeric' => 'La semana :position debe ser un número.',
+            'semanas.*.semana.min' => 'La semana :position debe ser mayor o igual a 1.',
+            'semanas.*.semana.max' => 'La semana :position no debe superar 18.',
+            'semanas.*.lapso.required' => 'El lapso de la semana :position es obligatorio.',
+            'semanas.*.lapso.in' => 'El lapso de la semana :position no es válido (debe ser 1 o 2).',
             'is_cantidad_dias_evento.required' => 'El campo cantidad de días es obligatorio.',
             'is_independiente.required' => 'El campo independiente es obligatorio.',
             'is_independiente.boolean' => 'El campo independiente debe ser un valor booleano.',
