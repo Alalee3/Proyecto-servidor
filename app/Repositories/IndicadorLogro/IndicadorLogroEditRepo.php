@@ -1,3 +1,4 @@
+PHP
 <?php
 
 namespace App\Repositories\IndicadorLogro;
@@ -16,10 +17,12 @@ class IndicadorLogroEditRepo
 
     public function actualizar($id, array $data)
     {
-            return $indicador->update([
-                'nombre_indicador_logro' => $data['nombre_indicador_logro']
+        // Usamos DB::table directamente apuntando al ID que queremos actualizar
+        return DB::table('indicador_logro')
+            ->where('id_indicador_logro', $id)
+            ->update([
+                'nombre_indicador_logro' => $data['nombre_indicador_logro'],
+                // 'updated_at' => Carbon::now() // Opcional: Al usar DB::table, Laravel no maneja los timestamps automáticamente
             ]);
-        }
-        return false;
     }
 }

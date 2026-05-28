@@ -20,7 +20,7 @@
     @endif
     <div class="flex items-center gap-1">
         <input type="{{ $type }}" id="{{ $name }}" name="{{ $name }}" placeholder="{{ $placeholder }}"
-            {{ $attributes->merge(['class' => 'mt-1 block border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 ' . ($required ? 'flex-1' : 'w-full')]) }} />
+            {{ $attributes->merge(['class' => 'mt-1 block border-black rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 ' . ($required ? 'flex-1' : 'w-full')]) }} />
         @if ($required)
             <span class="text-red-500 font-bold">*</span>
         @endif

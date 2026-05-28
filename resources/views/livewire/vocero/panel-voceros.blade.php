@@ -1,14 +1,14 @@
 <div>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight uppercase text-center">
-            {{ __('Módulo de Voceros') }}
+            {{ __('ASIGNACIÓN DE VOCEROS') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-xl sm:rounded-lg">
-                <div class="p-6">
+            <div class="sogat-card">
+                <div>
 
                     @if (session()->has('message'))
                         <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
@@ -18,33 +18,40 @@
 
                     @if($isCoordinador)
                         <div class="mb-6">
-                            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200 uppercase mb-2">Asignación de Voceros por Sección</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Seleccione a un estudiante para que sea el vocero principal de su sección. Solo puede haber un vocero activo por sección.</p>
+                            <h3 class="text-lg font-bold text-gray-800 dark:text-gray-200 uppercase mb-2">SELECCIONE A LOS ESTUDIANTES QUE VAN A SER VOCEROS</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Seleccione a un estudiante para que sea el vocero principal de su sección. y dos ayudantes de vocero</p>
                             
                             <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Buscar</label>
-                                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cédula, Nombre o Sección..." class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <div class="w-full">
+                                    <x-input 
+                                        label="Buscar" 
+                                        name="search" 
+                                        placeholder="CÉDULA, NOMBRE O SECCIÓN..." 
+                                        wire:model.live.debounce.300ms="search" 
+                                    />
                                 </div>
                                 
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filtrar por Trayecto</label>
-                                    <select wire:model.live="trayectoSeleccionado" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                        <option value="">Todos los trayectos</option>
-                                        @foreach($trayectosDisponibles as $trayecto)
-                                            <option value="{{ $trayecto }}">{{ $trayecto }}</option>
-                                        @endforeach
-                                    </select>
+                                <div class="w-full">
+                                    <x-select 
+                                        label="Filtrar por Trayecto" 
+                                        wireModel="trayectoSeleccionado" 
+                                        :options="$trayectosDisponibles" 
+                                        valueField="id" 
+                                        textField="nombre" 
+                                        placeholder="TODOS LOS TRAYECTOS" 
+                                    />
                                 </div>
 
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Filtrar por Sección</label>
-                                    <select wire:model.live="seccionSeleccionada" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" @if(empty($trayectoSeleccionado)) disabled title="Seleccione un trayecto primero" @endif>
-                                        <option value="">Todas las secciones</option>
-                                        @foreach($seccionesDisponibles as $cod => $nombre)
-                                            <option value="{{ $cod }}">{{ $nombre }}</option>
-                                        @endforeach
-                                    </select>
+                                <div class="w-full">
+                                    <x-select 
+                                        label="Filtrar por Sección" 
+                                        wireModel="seccionSeleccionada" 
+                                        :options="$seccionesDisponibles" 
+                                        valueField="codigo" 
+                                        textField="nombre" 
+                                        placeholder="TODAS LAS SECCIONES" 
+                                        :disabled="empty($trayectoSeleccionado)"
+                                    />
                                 </div>
                             </div>
 
@@ -53,20 +60,19 @@
                                     <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
                                         <div class="flex justify-between items-center mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
                                             <h4 class="font-bold text-md text-blue-600 dark:text-blue-400 uppercase">
-                                                <span class="material-icons text-sm align-middle mr-1">class</span>
                                                 Sección: {{ $seccion['sec_nombre'] }}
                                             </h4>
-                                            <span class="text-xs font-semibold text-gray-500 uppercase">{{ $seccion['trayecto_nombre'] }}</span>
+                                            <span class="text-xs font-bold text-gray-800 dark:text-gray-200 uppercase">{{ $seccion['trayecto_nombre'] }}</span>
                                         </div>
 
                                         <div class="overflow-x-auto">
                                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                                                 <thead class="bg-gray-100 dark:bg-gray-800">
                                                     <tr>
-                                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cédula</th>
-                                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiante</th>
-                                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol Actual</th>
-                                                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                                                        <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">Cédula</th>
+                                                        <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">Estudiante</th>
+                                                        <th class="px-4 py-2 text-left text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">Estado Actual</th>
+                                                        <th class="px-4 py-2 text-right text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">Acción</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -84,13 +90,13 @@
                                                                         @elseif($est['tipo_vocero'] == 3)
                                                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800 border border-orange-200 w-max">Vocero Terciario</span>
                                                                         @endif
-                                                                        <span class="text-[10px] text-gray-400 mt-1" title="Fecha de asignación">
-                                                                            <span class="material-icons text-[10px] align-middle">calendar_today</span>
+                                                                        <span class="text-[10px] text-gray-600 dark:text-gray-400 mt-1 font-bold" title="Fecha de asignación">
+                                                                            <span class="material-icons text-[10px] align-middle font-bold">calendar_today</span>
                                                                             {{ $est['fecha_asignacion'] }}
                                                                         </span>
                                                                     </div>
                                                                 @else
-                                                                    <span class="text-gray-500 text-xs">Estudiante</span>
+                                                                    <span class="text-gray-700 dark:text-gray-300 text-xs font-bold">Estudiante</span>
                                                                 @endif
                                                                 </td>
                                                             <td class="px-4 py-2 whitespace-nowrap text-right text-sm font-medium">

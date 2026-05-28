@@ -125,14 +125,32 @@ class PanelVocero extends Component
         $this->secciones = array_values($agrupados);
         
         // Extraer trayectos disponibles
-        $this->trayectosDisponibles = collect($estudiantes)->pluck('trayecto_nombre')->unique()->values()->toArray();
+        $this->trayectosDisponibles = collect($estudiantes)
+            ->pluck('trayecto_nombre')
+            ->unique()
+            ->values()
+            ->map(function($t) {
+                return (object)[
+                    'id' => $t,
+                    'nombre' => $t
+                ];
+            })
+            ->toArray();
         
         // Filtrar por trayecto si está seleccionado
         if (!empty($this->trayectoSeleccionado)) {
             $this->secciones = array_filter($this->secciones, function($s) {
                 return $s['trayecto_nombre'] === $this->trayectoSeleccionado;
             });
-            $this->seccionesDisponibles = collect($this->secciones)->pluck('sec_nombre', 'sec_codigo')->toArray();
+            $this->seccionesDisponibles = collect($this->secciones)
+                ->map(function($s) {
+                    return (object)[
+                        'codigo' => $s['sec_codigo'],
+                        'nombre' => $s['sec_nombre']
+                    ];
+                })
+                ->values()
+                ->toArray();
         } else {
             $this->seccionesDisponibles = [];
         }

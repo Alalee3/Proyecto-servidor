@@ -256,7 +256,7 @@
                 <!-- Voceros -->
                 <div>
                     <a href="{{ route('voceros.panel') }}" class="sogat-sidebar-item">
-                        Voceros
+                        Asignación de Voceros
                     </a>
                 </div>
             @endif
