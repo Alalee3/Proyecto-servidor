@@ -69,8 +69,8 @@
                                 <td class="px-4 py-4">
                                     <div class="flex items-center justify-end space-x-2">
                                         <button wire:click="selectPlanificacionParaDuplicar({{ $planificacion->planificacion_id }})"
-                                            class="flex items-center gap-1 bg-sogat-blue border border-sogat-blue text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-blue-700 transition duration-150 shadow-sm">
-                                            <span class="material-icons text-sm">content_copy</span>
+                                            class="flex items-center gap-1 bg-blue-600 text-white text-xs font-medium px-2.5 py-1 rounded-md hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 shadow-sm transition-colors">
+                                            <span class="material-icons" style="font-size: 16px;">content_copy</span>
                                             {{ __('Duplicar') }}
                                         </button>
                                     </div>
@@ -124,8 +124,8 @@
                         </div>
                         <div class="flex justify-end mt-3">
                             <button wire:click="selectPlanificacionParaDuplicar({{ $planificacion->planificacion_id }})"
-                                class="flex items-center gap-1 bg-sogat-blue border border-sogat-blue text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-blue-700 transition duration-150 shadow-sm">
-                                <span class="material-icons text-sm">content_copy</span>
+                                class="flex items-center gap-1 bg-blue-600 text-white text-xs font-medium px-2.5 py-1 rounded-md hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 shadow-sm transition-colors">
+                                <span class="material-icons" style="font-size: 16px;">content_copy</span>
                                 {{ __('Duplicar') }}
                             </button>
                         </div>
