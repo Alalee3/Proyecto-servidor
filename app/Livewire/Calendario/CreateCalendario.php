@@ -333,6 +333,42 @@ class CreateCalendario extends Component
         $is_superponible = $eventoInfo ? (bool) $eventoInfo->is_superponible_evento : false;
         $is_vacaciones = ($eventoInfo->especial_evento ?? '') === '1';
 
+        // VALIDAR SOLAPAMIENTO DE LAPSOS ACADÉMICOS
+        if ($especial === '2') {
+            $iniciosLapso = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
+                ->sortBy('inicio')
+                ->values();
+            $finesLapso = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '3')
+                ->sortBy('inicio')
+                ->values();
+
+            foreach ($iniciosLapso as $index => $inicioLapso) {
+                $fechaInicioLapso = $inicioLapso['inicio'];
+                $fechaFinLapso = isset($finesLapso[$index]) ? $finesLapso[$index]['inicio'] : null;
+
+                if ($fechaFinLapso) {
+                    if ($inicio >= $fechaInicioLapso && $inicio <= $fechaFinLapso) {
+                        $this->dispatch('show-alert', [
+                            'type' => 'error',
+                            'message' => 'No se puede registrar un Lapso Académico en esta fecha porque cae dentro del período de un Lapso Académico ya existente.'
+                        ]);
+                        return;
+                    }
+                } else {
+                    // Si por alguna razón no tiene fin calculado aún, al menos chequeamos colisión directa con el evento de inicio
+                    if ($inicio <= $inicioLapso['fin'] && $fin >= $inicioLapso['inicio']) {
+                        $this->dispatch('show-alert', [
+                            'type' => 'error',
+                            'message' => 'No se puede registrar un Lapso Académico en las fechas seleccionadas porque ya existe otro Lapso Académico en ese período.'
+                        ]);
+                        return;
+                    }
+                }
+            }
+        }
+
         if (!$is_superponible && !$is_vacaciones) {
             foreach ($this->eventosRegistrados as $evReg) {
                 if (($evReg['especial_evento'] ?? '') === '1') {
