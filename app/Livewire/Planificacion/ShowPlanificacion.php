@@ -97,11 +97,7 @@ class ShowPlanificacion extends Component
 
     public function eliminarMotivoRechazo($detalleId)
     {
-<<<<<<< HEAD
-        if (!Gate::allows('cambiar-estatus-planificacion')) {
-=======
-        if (!Gate::allows('editar-planificacion') && !Gate::allows('aprobacion-vocero-planificacion')) {
->>>>>>> 9724ceca76f4b4a24edf6aa3bb514ad5b954f980
+        if (!Gate::allows('cambiar-estatus-planificacion') && !Gate::allows('aprobacion-vocero-planificacion')) {
             session()->flash('error', 'No tienes permisos para eliminar motivos de rechazo.');
             return;
         }
@@ -114,11 +110,7 @@ class ShowPlanificacion extends Component
 
     public function mostrarTextareaMotivo($detalleId)
     {
-<<<<<<< HEAD
-        if (!Gate::allows('cambiar-estatus-planificacion')) {
-=======
-        if (!Gate::allows('editar-planificacion') && !Gate::allows('aprobacion-vocero-planificacion')) {
->>>>>>> 9724ceca76f4b4a24edf6aa3bb514ad5b954f980
+        if (!Gate::allows('cambiar-estatus-planificacion') && !Gate::allows('aprobacion-vocero-planificacion')) {
             session()->flash('error', 'No tienes permisos para rechazar planificaciones.');
             return;
         }
@@ -134,11 +126,7 @@ class ShowPlanificacion extends Component
 
     public function confirmarRechazoCorte($detalleId)
     {
-<<<<<<< HEAD
-        if (!Gate::allows('cambiar-estatus-planificacion')) {
-=======
-        if (!Gate::allows('editar-planificacion') && !Gate::allows('aprobacion-vocero-planificacion')) {
->>>>>>> 9724ceca76f4b4a24edf6aa3bb514ad5b954f980
+        if (!Gate::allows('cambiar-estatus-planificacion') && !Gate::allows('aprobacion-vocero-planificacion')) {
             session()->flash('error', 'No tienes permisos para rechazar planificaciones.');
             return;
         }
@@ -176,11 +164,7 @@ class ShowPlanificacion extends Component
 
     public function aprobarCorte($detalleId)
     {
-<<<<<<< HEAD
-        if (!Gate::allows('cambiar-estatus-planificacion')) {
-=======
-        if (!Gate::allows('editar-planificacion') && !Gate::allows('aprobacion-vocero-planificacion')) {
->>>>>>> 9724ceca76f4b4a24edf6aa3bb514ad5b954f980
+        if (!Gate::allows('cambiar-estatus-planificacion') && !Gate::allows('aprobacion-vocero-planificacion')) {
             session()->flash('error', 'No tienes permisos para aprobar planificaciones.');
             return;
         }

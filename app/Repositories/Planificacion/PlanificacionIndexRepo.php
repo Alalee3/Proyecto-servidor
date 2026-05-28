@@ -36,9 +36,7 @@ class PlanificacionIndexRepo
                 's.sec_nombre as nombre_seccion',
                 'p.estatus',
                 'pr.pro_nombre as nombre_pnf',
-                'tr.tra_nombre as trayecto_unidad_curricular',
-                'u.usu_codigo as docente_usu_codigo',
-                'u.usu_cedula as docente_usu_cedula'
+                'tr.tra_nombre as trayecto_unidad_curricular'
             )
             ->distinct();
 
