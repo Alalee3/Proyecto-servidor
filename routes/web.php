@@ -65,6 +65,8 @@ use App\Livewire\Calendario\EditarCalendario;
 
 use App\Livewire\Bitacora\ListBitacora;
 
+use App\Livewire\Vocero\PanelVocero;
+
 use Illuminate\Support\Facades\Route;
 
 Route::get('login', [\App\Http\Controllers\Auth\ExternalLoginController::class, 'login'])->name('login');
@@ -170,9 +172,13 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
 
     // Rutas para Firmas
     Route::get('firma/mi-firma', \App\Livewire\Firma\ManageFirma::class)->middleware('auth')->name('firma/mi-firma');
+
+    // Módulo Voceros
+    Route::get('voceros', PanelVocero::class)->name('voceros.panel');
 });
 
 Route::middleware(['auth'])->group(function () { });
 
 
 require __DIR__ . '/auth.php';
+
