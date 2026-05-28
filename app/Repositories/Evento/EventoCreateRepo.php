@@ -20,7 +20,9 @@ class EventoCreateRepo
             'cantidad_dias_evento'  => $data['is_cantidad_dias_evento'] ? ($data['cantidad_dias_evento'] ?? null) : null,
             'is_superponible_evento' => $data['is_superponible'] ?? false,
             'is_semana_evento' => $data['is_semana_evento'] ?? (!empty($data['semanas'])),
-            'semana_evento' => (($data['is_semana_evento'] ?? !empty($data['semanas'])) && !empty($data['semanas']) && is_array($data['semanas'])) ? json_encode(array_values($data['semanas'])) : null,
+            'semana_evento' => (($data['is_semana_evento'] ?? !empty($data['semanas'])) && !empty($data['semanas']) && is_array($data['semanas'])) 
+                ? json_encode(array_values(array_filter($data['semanas'], fn($v) => is_array($v) && !empty($v['semana']) && $v['semana'] !== null && $v['semana'] !== ''))) 
+                : null,
             'estatus'       => '1',
         ];
 

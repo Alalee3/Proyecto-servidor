@@ -33,19 +33,29 @@ class CreateCalendarioForm extends Form
     public function rules()
     {
         $rules = [
-            'semana_lapso_uno_calendario_academico' => ['required', 'integer', 'min:1', 'max:99'],
-            'semana_lapso_dos_calendario_academico' => ['required', 'integer', 'min:1', 'max:99'],
-            'semana_lapso_uno_introductorio_calendario_academico' => ['required', 'integer', 'min:0', 'max:99'],
-            'semana_lapso_dos_introductorio_calendario_academico' => ['required', 'integer', 'min:0', 'max:99'],
-            'semana_intensibo_introductorio_calendario_academico' => ['required', 'integer', 'min:0', 'max:99'],
+            'semana_lapso_uno_calendario_academico' => ['required', 'integer', 'min:1', 'max:20'],
+            'semana_lapso_dos_calendario_academico' => ['required', 'integer', 'min:1', 'max:20'],
+            'semana_lapso_uno_introductorio_calendario_academico' => ['required', 'integer', 'min:0', 'max:20'],
+            'semana_lapso_dos_introductorio_calendario_academico' => ['required', 'integer', 'min:0', 'max:20'],
+            'semana_intensibo_introductorio_calendario_academico' => ['required', 'integer', 'min:0', 'max:20'],
             'dia_inicio_calendario_academico' => [
                 'required',
                 'date',
                 function ($attribute, $value, $fail) {
-                    $year = date('Y', strtotime($value));
-                    $currentYear = date('Y');
-                    if ($year < $currentYear - 2 || $year > $currentYear + 2) {
-                        $fail('La fecha de inicio no puede ser más de 2 años anterior ni posterior al año actual (' . $currentYear . ').');
+                    $year = (int) date('Y', strtotime($value));
+                    
+                    $ultimoCalendario = \App\Models\CalendarioAcademico::where('estatus', '!=', '4')
+                        ->orderBy('id_calendario_academico', 'desc')
+                        ->first();
+                        
+                    if ($ultimoCalendario) {
+                        $ultimoEvento = $ultimoCalendario->detalles()->orderBy('dia_fin_detalle_evento', 'desc')->first();
+                        $fechaCorte = $ultimoEvento ? $ultimoEvento->dia_fin_detalle_evento : $ultimoCalendario->dia_fin_calendario_academico;
+                        $anioAnterior = (int) date('Y', strtotime($fechaCorte));
+                        
+                        if ($year < $anioAnterior) {
+                            $fail('El año de inicio no puede ser anterior al año de cierre del calendario anterior (' . $anioAnterior . ').');
+                        }
                     }
                 }
             ],
@@ -54,10 +64,18 @@ class CreateCalendarioForm extends Form
                 'date',
                 'after_or_equal:dia_inicio_calendario_academico',
                 function ($attribute, $value, $fail) {
-                    $year = date('Y', strtotime($value));
-                    $currentYear = date('Y');
-                    if ($year < $currentYear - 2 || $year > $currentYear + 2) {
-                        $fail('La fecha de fin no puede ser más de 2 años anterior ni posterior al año actual (' . $currentYear . ').');
+                    $yearFin = (int) date('Y', strtotime($value));
+                    
+                    if (!empty($this->dia_inicio_calendario_academico)) {
+                        $yearInicio = (int) date('Y', strtotime($this->dia_inicio_calendario_academico));
+                        if ($yearFin > $yearInicio + 2) {
+                            $fail('El año de fin del calendario solo puede ser hasta 2 años superior a su fecha de inicio (' . $yearInicio . ').');
+                        }
+                        
+                        $minFin = \Carbon\Carbon::parse($this->dia_inicio_calendario_academico)->addMonthsNoOverflow(9);
+                        if (\Carbon\Carbon::parse($value)->lessThan($minFin)) {
+                            $fail('La fecha de fin no puede ser inferior a 9 meses después de su fecha de inicio.');
+                        }
                     }
                 }
             ],
@@ -158,11 +176,11 @@ class CreateCalendarioForm extends Form
             'semana_lapso_uno_calendario_academico.required' => 'Las semanas para el lapso académico 1 son obligatorias.',
             'semana_lapso_uno_calendario_academico.integer' => 'Las semanas para el lapso académico 1 deben ser un número.',
             'semana_lapso_uno_calendario_academico.min' => 'El mínimo de semanas para el lapso académico 1 es 1.',
-            'semana_lapso_uno_calendario_academico.max' => 'El máximo de semanas para el lapso académico 1 es 99.',
+            'semana_lapso_uno_calendario_academico.max' => 'El máximo de semanas para el lapso académico 1 es 20.',
             'semana_lapso_dos_calendario_academico.required' => 'Las semanas para el lapso académico 2 son obligatorias.',
             'semana_lapso_dos_calendario_academico.integer' => 'Las semanas para el lapso académico 2 deben ser un número.',
             'semana_lapso_dos_calendario_academico.min' => 'El mínimo de semanas para el lapso académico 2 es 1.',
-            'semana_lapso_dos_calendario_academico.max' => 'El máximo de semanas para el lapso académico 2 es 99.',
+            'semana_lapso_dos_calendario_academico.max' => 'El máximo de semanas para el lapso académico 2 es 20.',
             'dia_inicio_calendario_academico.required' => 'La fecha de inicio es obligatoria.',
             'dia_inicio_calendario_academico.date' => 'La fecha de inicio debe ser válida.',
             'dia_fin_calendario_academico.required' => 'La fecha de fin es obligatoria.',
@@ -171,15 +189,15 @@ class CreateCalendarioForm extends Form
             'semana_lapso_uno_introductorio_calendario_academico.required' => 'Las semanas para el lapso académico trayecto inicial 1 son obligatorias.',
             'semana_lapso_uno_introductorio_calendario_academico.integer' => 'Las semanas para el lapso académico trayecto inicial 1 deben ser un número.',
             'semana_lapso_uno_introductorio_calendario_academico.min' => 'El mínimo de semanas para el lapso académico trayecto inicial 1 es 0.',
-            'semana_lapso_uno_introductorio_calendario_academico.max' => 'El máximo de semanas para el lapso académico trayecto inicial 1 es 99.',
+            'semana_lapso_uno_introductorio_calendario_academico.max' => 'El máximo de semanas para el lapso académico trayecto inicial 1 es 20.',
             'semana_lapso_dos_introductorio_calendario_academico.required' => 'Las semanas para el lapso académico trayecto inicial 2 son obligatorias.',
             'semana_lapso_dos_introductorio_calendario_academico.integer' => 'Las semanas para el lapso académico trayecto inicial 2 deben ser un número.',
             'semana_lapso_dos_introductorio_calendario_academico.min' => 'El mínimo de semanas para el lapso académico trayecto inicial 2 es 0.',
-            'semana_lapso_dos_introductorio_calendario_academico.max' => 'El máximo de semanas para el lapso académico trayecto inicial 2 es 99.',
+            'semana_lapso_dos_introductorio_calendario_academico.max' => 'El máximo de semanas para el lapso académico trayecto inicial 2 es 20.',
             'semana_intensibo_introductorio_calendario_academico.required' => 'Las semanas para el curso intensivo son obligatorias.',
             'semana_intensibo_introductorio_calendario_academico.integer' => 'Las semanas para el curso intensivo deben ser un número.',
             'semana_intensibo_introductorio_calendario_academico.min' => 'El mínimo de semanas para el curso intensivo es 0.',
-            'semana_intensibo_introductorio_calendario_academico.max' => 'El máximo de semanas para el curso intensivo es 99.',
+            'semana_intensibo_introductorio_calendario_academico.max' => 'El máximo de semanas para el curso intensivo es 20.',
             // Mensajes para registro rápido
             'nombreEventoTemporal.required' => 'La descripción es obligatoria.',
             'nombreEventoTemporal.max' => 'La descripción no debe exceder 100 caracteres.',
@@ -283,7 +301,28 @@ class CreateCalendarioForm extends Form
         $eventosObligatorios = \App\Models\Evento::where('estatus', '1')
             ->get();
 
-        $idsRegistrados = collect($eventosRegistrados)->pluck('id')->all();
+        $inicioCalendario = $this->dia_inicio_calendario_academico;
+        $eventosParaValidar = [];
+        
+        foreach ($eventosRegistrados as $ev) {
+            $esHeredado = false;
+            if (isset($ev['is_heredado']) && $ev['is_heredado']) {
+                $esHeredado = true;
+            } else if ($inicioCalendario && isset($ev['fin']) && $ev['fin'] < $inicioCalendario) {
+                $esHeredado = true;
+            }
+            
+            // Excepción: las vacaciones (especial_evento == '1') SÍ cuentan para validación aunque sean heredadas
+            if ($esHeredado && isset($ev['especial_evento']) && (string)$ev['especial_evento'] === '1') {
+                $esHeredado = false;
+            }
+            
+            if (!$esHeredado) {
+                $eventosParaValidar[] = $ev;
+            }
+        }
+
+        $idsRegistrados = collect($eventosParaValidar)->pluck('id')->all();
 
         foreach ($eventosObligatorios as $obligatorio) {
             // 2.1 Validar que el evento esté registrado
@@ -305,7 +344,7 @@ class CreateCalendarioForm extends Form
         $fines_intensi = [];
         $visitados = [];
 
-        foreach ($eventosRegistrados as $reg) {
+        foreach ($eventosParaValidar as $reg) {
             $id = $reg['id'] ?? null;
             if ($id && isset($eventosDb[$id])) {
                 $evento = $eventosDb[$id];
@@ -339,7 +378,7 @@ class CreateCalendarioForm extends Form
         sort($inicios_intensi);
         sort($fines_intensi);
 
-        foreach ($eventosRegistrados as $reg) {
+        foreach ($eventosParaValidar as $reg) {
             $id = $reg['id'] ?? null;
             if ($id && isset($eventosDb[$id])) {
                 $evento = $eventosDb[$id];
@@ -529,7 +568,7 @@ class CreateCalendarioForm extends Form
 
             // Validar cantidad de semanas asignadas
             $incluirVacaciones = $periodo['nombre'] !== 'Curso Intensivo';
-            $semanasReales = \App\Support\CalendarioLapsoSemanas::contarSemanas($periodo['inicio'], $periodo['fin'], $eventosRegistrados, $incluirVacaciones);
+            $semanasReales = \App\Support\CalendarioLapsoSemanas::contarSemanas($periodo['inicio'], $periodo['fin'], $eventosParaValidar, $incluirVacaciones);
             if ($semanasReales != $periodo['semanas_configuradas']) {
                 $msg = "Las fechas asignadas para '{$periodo['nombre']}' abarcan {$semanasReales} semanas, pero se estipularon {$periodo['semanas_configuradas']}.";
                 $this->addError('eventosRegistrados', $msg);
@@ -567,7 +606,7 @@ class CreateCalendarioForm extends Form
         $eventoVacaciones = $repo->obtenerEventoVacacionesActivo();
         if ($eventoVacaciones) {
             $diasPorAnio = [];
-            foreach ($eventosRegistrados as $reg) {
+            foreach ($eventosParaValidar as $reg) {
                 if (($reg['id'] ?? null) == $eventoVacaciones->id_evento) {
                     $start = new \DateTime($reg['inicio']);
                     $end = new \DateTime($reg['fin']);

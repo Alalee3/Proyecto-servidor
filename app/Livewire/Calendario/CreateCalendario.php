@@ -23,6 +23,11 @@ class CreateCalendario extends Component
 
     public $id_calendario_borrador = null;
     public $selectedYearTemporal = null;
+    public $esProsecucion = false;
+    public $minFechaInicio = null;
+
+    public $tempEventoAgregar = null;
+    public $tempEventoCrear = null;
 
     public function boot()
     {
@@ -72,6 +77,14 @@ class CreateCalendario extends Component
     {
         $this->currentYear = date('Y');
 
+        if (!$id) {
+            $repo = new \App\Repositories\Calendario\CalendarioCreateRepo();
+            if ($repo->contarCalendariosActivos() >= 2) {
+                session()->flash('error', 'Solo se pueden tener máximo dos calendarios activos a la vez. Inactive uno para crear otro.');
+                return redirect()->route('calendario.list');
+            }
+        }
+
         if ($id) {
             $this->id_calendario_borrador = $id;
             $calendario = $this->calendarioRepository->obtenerPorId($id);
@@ -98,8 +111,55 @@ class CreateCalendario extends Component
                 $this->actualizarMapaEventos();
             }
         } else {
-            $this->form->dia_inicio_calendario_academico = date('Y-01-01');
-            $this->form->dia_fin_calendario_academico = date('Y-12-31');
+            // Verificar si hay prosecución (último calendario)
+            $ultimoCalendario = \App\Models\CalendarioAcademico::where('estatus', '!=', '4')
+                ->orderBy('id_calendario_academico', 'desc')
+                ->first();
+
+            if ($ultimoCalendario) {
+                $this->esProsecucion = true;
+
+                // Cargar eventos del calendario anterior como heredados
+                $eventosAnteriores = $this->calendarioRepository->obtenerEventosDetalle($ultimoCalendario->id_calendario_academico);
+
+                $maxFechaFin = null;
+                foreach ($eventosAnteriores as $ev) {
+                    $this->eventosRegistrados[] = [
+                        'id' => $ev->id,
+                        'inicio' => $ev->inicio,
+                        'fin' => $ev->fin,
+                        'nombre' => $ev->nombre,
+                        'tipo' => $ev->tipo,
+                        'color' => $ev->color,
+                        'especial_evento' => isset($ev->especial_evento) ? (string) $ev->especial_evento : null,
+                        'is_superponible_evento' => (bool) ($ev->is_superponible_evento ?? false),
+                        'is_heredado' => true,
+                    ];
+
+                    if (!$maxFechaFin || $ev->fin > $maxFechaFin) {
+                        $maxFechaFin = $ev->fin;
+                    }
+                }
+
+                $this->actualizarMapaEventos();
+
+                // Forzar fecha de inicio visual (minFechaInicio) a partir del último día con evento
+                if ($maxFechaFin) {
+                    $nuevaFechaInicio = date('Y-m-d', strtotime($maxFechaFin . ' + 1 day'));
+                    $this->minFechaInicio = $nuevaFechaInicio;
+                    // El inicio del periodo por defecto es el primer día del año en que terminó el calendario anterior
+                    $anioNuevo = date('Y', strtotime($maxFechaFin));
+                    $this->form->dia_inicio_calendario_academico = $anioNuevo . '-01-01';
+                    // Sugerir fecha fin 1 año después
+                    $this->form->dia_fin_calendario_academico = $anioNuevo . '-12-31';
+                } else {
+                    $this->form->dia_inicio_calendario_academico = date('Y-01-01');
+                    $this->form->dia_fin_calendario_academico = date('Y-12-31');
+                }
+            } else {
+                $this->form->dia_inicio_calendario_academico = date('Y-01-01');
+                $this->form->dia_fin_calendario_academico = date('Y-12-31');
+            }
         }
 
         // Cargar la biblioteca de eventos (templates)
@@ -107,7 +167,7 @@ class CreateCalendario extends Component
         $this->bibliotecaEventos = $eventoRepo->obtenerBiblioteca();
     }
 
-    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null)
+    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false)
     {
         $eventoInfo = \App\Models\Evento::find($id_evento);
 
@@ -127,6 +187,33 @@ class CreateCalendario extends Component
             // Obtener el color desde codigo_color_evento o fallback
             $color = (string) ($eventoInfo->codigo_color_evento ?: $color);
             $tipo = (string) ($eventoInfo->tipo_evento ?? $tipo ?? '');
+        }
+
+        // VALIDAR SI ES INTENSIVO FUERA DE AGOSTO
+        $especial = $eventoInfo ? (string) ($eventoInfo->especial_evento ?? '') : '';
+        if (!$confirmadoIntensivo && in_array($especial, ['9', '10'])) {
+            $fechaInicio = \Carbon\Carbon::parse($inicio);
+            $fechaFin = \Carbon\Carbon::parse($fin);
+            $cruzaAgosto = false;
+            for ($d = $fechaInicio->copy(); $d->lte($fechaFin); $d->addDay()) {
+                if ($d->month === 8) {
+                    $cruzaAgosto = true;
+                    break;
+                }
+            }
+
+            if (!$cruzaAgosto) {
+                $this->tempEventoAgregar = func_get_args();
+                $this->dispatch('show-alert', [
+                    'type' => 'warning',
+                    'message' => '¿Está seguro de registrar el intensivo fuera de agosto?',
+                    'showCancelButton' => true,
+                    'cancelText' => 'Cancelar',
+                    'okText' => 'Continuar',
+                    'onOkEvent' => 'confirmar-agregar-evento-intensivo'
+                ]);
+                return;
+            }
         }
 
         // VALIDACIÓN DE SEMANAS ESPECÍFICAS
@@ -207,7 +294,7 @@ class CreateCalendario extends Component
         $duracionReal = 0;
         $start = new \DateTime($inicio);
         $end = new \DateTime($fin);
-        
+
         $isTodoWeekend = true;
         $tempInterval = new \DateInterval('P1D');
         $tempPeriod = new \DatePeriod($start, $tempInterval, (clone $end)->modify('+1 day'));
@@ -217,7 +304,7 @@ class CreateCalendario extends Component
                 break;
             }
         }
-        
+
         $ignorarFinesDeSemana = !in_array($tipo, ['1', '2', '6']) && !$isTodoWeekend;
 
         $period = new \DatePeriod($start, $tempInterval, (clone $end)->modify('+1 day'));
@@ -236,12 +323,12 @@ class CreateCalendario extends Component
             if ($is_vacaciones) {
                 $diasRegistrados = 0;
                 $targetYear = date('Y', strtotime($inicio));
-                
+
                 foreach ($this->eventosRegistrados as $reg) {
                     if (($reg['id'] ?? null) == $eventoInfo->id_evento) {
                         $sReg = new \DateTime($reg['inicio']);
                         $eReg = new \DateTime($reg['fin']);
-                        
+
                         $isTodoWeekendReg = true;
                         $tempInterval = new \DateInterval('P1D');
                         $tempPeriod = new \DatePeriod($sReg, $tempInterval, (clone $eReg)->modify('+1 day'));
@@ -264,7 +351,7 @@ class CreateCalendario extends Component
                         }
                     }
                 }
-                
+
                 if (($diasRegistrados + $duracionReal) > $cantidadRequerida) {
                     $disponibles = max(0, $cantidadRequerida - $diasRegistrados);
                     $this->showAlert('error', "No puedes registrar {$duracionReal} día(s) de Vacaciones Colectivas porque solo quedan {$disponibles} día(s) disponibles de los {$cantidadRequerida} permitidos en el año {$targetYear}.");
@@ -496,9 +583,13 @@ class CreateCalendario extends Component
         $this->guardarBorrador();
     }
 
-    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $codigo_color_evento, $is_laborable, $is_repetible, $is_rango_dias, $rango_dias, $is_superponible = true)
+    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $codigo_color_evento, $is_laborable, $is_repetible, $is_rango_dias, $rango_dias, $is_superponible = true, $confirmadoIntensivo = false)
     {
-        // Validar usando el objeto Form
+        if (strtotime($inicio) > strtotime($fin)) {
+            $this->showAlert('error', 'La fecha de fin no puede ser menor a la fecha de inicio.');
+            return false;
+        }
+
         try {
             $this->form->validarRangoEvento($inicio, $fin, $tipo);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -595,10 +686,72 @@ class CreateCalendario extends Component
     public function validarSeccionFechas()
     {
         $this->form->validarSeccionFechas();
+
+        $mensajes = [];
+
+        $lapsoUno = (int) $this->form->semana_lapso_uno_calendario_academico;
+        if ($lapsoUno < 16) {
+            $mensajes[] = "¿Está seguro de registrar el Lapso Académico 1 con una cantidad inferior a 16 semanas?";
+        } elseif ($lapsoUno > 18) {
+            $mensajes[] = "¿Está seguro de registrar el Lapso Académico 1 con una cantidad superior a 18 semanas?";
+        }
+
+        $lapsoDos = (int) $this->form->semana_lapso_dos_calendario_academico;
+        if ($lapsoDos < 16) {
+            $mensajes[] = "¿Está seguro de registrar el Lapso Académico 2 con una cantidad inferior a 16 semanas?";
+        } elseif ($lapsoDos > 18) {
+            $mensajes[] = "¿Está seguro de registrar el Lapso Académico 2 con una cantidad superior a 18 semanas?";
+        }
+
+        $inicialUno = (int) $this->form->semana_lapso_uno_introductorio_calendario_academico;
+        if ($inicialUno < 12) {
+            $mensajes[] = "¿Está seguro de registrar el Lapso Académico Trayecto Inicial 1 con una cantidad inferior a 12 semanas?";
+        } elseif ($inicialUno > 12) {
+            $mensajes[] = "¿Está seguro de registrar el Lapso Académico Trayecto Inicial 1 con una cantidad superior a 12 semanas?";
+        }
+
+        $inicialDos = (int) $this->form->semana_lapso_dos_introductorio_calendario_academico;
+        if ($inicialDos < 12) {
+            $mensajes[] = "¿Está seguro de registrar el Lapso Académico Trayecto Inicial 2 con una cantidad inferior a 12 semanas?";
+        } elseif ($inicialDos > 12) {
+            $mensajes[] = "¿Está seguro de registrar el Lapso Académico Trayecto Inicial 2 con una cantidad superior a 12 semanas?";
+        }
+
+        $intensivo = (int) $this->form->semana_intensibo_introductorio_calendario_academico;
+        if ($intensivo < 6) {
+            $mensajes[] = "¿Está seguro de registrar las Semanas del curso Intensivo con una cantidad inferior a 6 semanas?";
+        } elseif ($intensivo > 6) {
+            $mensajes[] = "¿Está seguro de registrar las Semanas del curso Intensivo con una cantidad superior a 6 semanas?";
+        }
+
+        if (!empty($mensajes)) {
+            $mensajeFinal = "";
+            if (count($mensajes) > 1) {
+                foreach ($mensajes as $i => $msg) {
+                    $mensajeFinal .= "• " . $msg;
+                    if ($i < count($mensajes) - 1) {
+                        $mensajeFinal .= "\n\n";
+                    }
+                }
+            } else {
+                $mensajeFinal = $mensajes[0];
+            }
+
+            $this->dispatch('show-alert', [
+                'type' => 'warning',
+                'message' => $mensajeFinal,
+                'showCancelButton' => true,
+                'cancelText' => 'Cancelar',
+                'okText' => 'Continuar',
+                'onOkEvent' => 'seccion-fechas-validada'
+            ]);
+            return;
+        }
+
         $this->dispatch('seccion-fechas-validada');
     }
 
-    public function save()
+    public function save($confirmado = false)
     {
         if (!Gate::allows('crear-calendario')) {
             abort(403);
@@ -618,6 +771,62 @@ class CreateCalendario extends Component
             $msg = "Hay errores en el formulario:\n\n• " . implode("\n• ", $validacion['errores']);
             $this->showAlert('error', $msg);
             return;
+        }
+
+        if (!$confirmado) {
+            $tieneVacacionesEnAgosto = false;
+            $tieneIntensivoEnAgosto = false;
+
+            foreach ($this->eventosRegistrados as $ev) {
+                $fechaInicio = \Carbon\Carbon::parse($ev['dia_inicio_detalle_evento']);
+                $fechaFin = \Carbon\Carbon::parse($ev['dia_fin_detalle_evento']);
+                $cruzaAgosto = false;
+                
+                for ($d = $fechaInicio->copy(); $d->lte($fechaFin); $d->addDay()) {
+                    if ($d->month === 8) {
+                        $cruzaAgosto = true;
+                        break;
+                    }
+                }
+
+                if ($cruzaAgosto) {
+                    if ($ev['especial_evento'] == 1) {
+                        $tieneVacacionesEnAgosto = true;
+                    }
+                    if ($ev['especial_evento'] == 9 || $ev['especial_evento'] == 10) {
+                        $tieneIntensivoEnAgosto = true;
+                    }
+                }
+            }
+
+            $mensajesAgosto = [];
+            if (!$tieneVacacionesEnAgosto) {
+                $mensajesAgosto[] = "¿Está seguro de guardar la planificación sin haber asignado días de vacaciones colectivas en agosto?";
+            }
+
+            if (!empty($mensajesAgosto)) {
+                $mensajeFinal = "";
+                if (count($mensajesAgosto) > 1) {
+                    foreach ($mensajesAgosto as $i => $msg) {
+                        $mensajeFinal .= "• " . $msg;
+                        if ($i < count($mensajesAgosto) - 1) {
+                            $mensajeFinal .= "\n\n";
+                        }
+                    }
+                } else {
+                    $mensajeFinal = $mensajesAgosto[0];
+                }
+
+                $this->dispatch('show-alert', [
+                    'type' => 'warning',
+                    'message' => $mensajeFinal,
+                    'showCancelButton' => true,
+                    'cancelText' => 'Cancelar',
+                    'okText' => 'Continuar',
+                    'onOkEvent' => 'confirmar-guardado-calendario'
+                ]);
+                return;
+            }
         }
 
         try {
@@ -649,7 +858,24 @@ class CreateCalendario extends Component
 
     public function cancelar()
     {
-        return redirect()->route('calendario.list');
+        return redirect()->to('/calendario/list');
+    }
+
+    #[\Livewire\Attributes\On('confirmar-guardado-calendario')]
+    public function confirmarGuardado()
+    {
+        $this->save(true);
+    }
+
+    #[\Livewire\Attributes\On('confirmar-agregar-evento-intensivo')]
+    public function confirmarAgregarEventoIntensivo()
+    {
+        if ($this->tempEventoAgregar) {
+            $args = $this->tempEventoAgregar;
+            $args[6] = true; // $confirmadoIntensivo
+            $this->agregarEvento(...$args);
+            $this->tempEventoAgregar = null;
+        }
     }
 
     #[Computed]
@@ -674,7 +900,7 @@ class CreateCalendario extends Component
             $idEv = $ev['id'] ?? null;
             if ($idEv) {
                 $conteosAsignadosTotal[$idEv] = ($conteosAsignadosTotal[$idEv] ?? 0) + 1;
-                
+
                 $evStart = $ev['inicio'] ?? null;
                 if ($evStart) {
                     $evYear = date('Y', strtotime($evStart));

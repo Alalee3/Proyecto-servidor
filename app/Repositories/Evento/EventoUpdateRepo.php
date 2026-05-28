@@ -27,7 +27,9 @@ class EventoUpdateRepo
                         : null),
                 'is_superponible_evento'=> $data['is_superponible'] ?? false,
                 'is_semana_evento' => $data['is_semana_evento'] ?? (!empty($data['semanas'])),
-                'semana_evento' => (($data['is_semana_evento'] ?? !empty($data['semanas'])) && !empty($data['semanas']) && is_array($data['semanas'])) ? json_encode(array_values(array_filter($data['semanas'], fn($v) => $v !== null && $v !== ''))) : null,
+                'semana_evento' => (($data['is_semana_evento'] ?? !empty($data['semanas'])) && !empty($data['semanas']) && is_array($data['semanas'])) 
+                ? json_encode(array_values(array_filter($data['semanas'], fn($v) => is_array($v) && !empty($v['semana']) && $v['semana'] !== null && $v['semana'] !== ''))) 
+                : null,
             ];
 
             // Guardar is_independiente de forma dinámica según la columna que exista en la BD
