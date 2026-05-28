@@ -101,16 +101,15 @@ $wireKey = $wireKey ?? 'datalist-calendario';
                 </div>
 
                 {{-- Columna 3: Selección de Color con input nativo --}}
-                <div>
+                <div class="w-full">
                     <label class="block uppercase font-bold text-sm text-gray-900 dark:text-white mb-1">{{ __('Color del Evento') }}</label>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 mt-1">
                         <input type="color" x-model="nuevoColorHex" wire:model.live="form.nuevoColorHex"
-                            class="w-12 h-10 rounded-md border border-gray-300 dark:border-gray-700 cursor-pointer shadow-sm bg-white dark:bg-gray-900 p-1"
+                            class="w-12 h-10 flex-shrink-0 rounded-md border border-black dark:border-gray-700 cursor-pointer shadow-sm bg-white dark:bg-gray-900 p-1"
                             title="{{ __('Seleccione un color') }}">
-                        <input type="text" x-model="nuevoColorHex" wire:model.live="form.nuevoColorHex"
-                            class="flex-1 border-black dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm text-sm font-mono"
-                            placeholder="#000000" maxlength="7" pattern="#[0-9A-Fa-f]{6}">
-                        <span class="text-red-500 font-bold">*</span>
+                        <x-text-input type="text" x-model="nuevoColorHex" wire:model.live="form.nuevoColorHex"
+                            class="flex-1 font-mono border border-black" placeholder="#000000" maxlength="7" pattern="#[0-9A-Fa-f]{6}" />
+                        <span class="text-red-500 font-bold flex-shrink-0">*</span>
                     </div>
                     <x-input-error :messages="$errors->first('form.nuevoColorHex')" class="mt-2" />
                 </div>

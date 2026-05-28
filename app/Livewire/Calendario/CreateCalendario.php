@@ -26,6 +26,9 @@ class CreateCalendario extends Component
     public $esProsecucion = false;
     public $minFechaInicio = null;
 
+    public $tempEventoAgregar = null;
+    public $tempEventoCrear = null;
+
     public function boot()
     {
         $this->calendarioRepository = new CalendarioCreateRepo();
@@ -164,7 +167,7 @@ class CreateCalendario extends Component
         $this->bibliotecaEventos = $eventoRepo->obtenerBiblioteca();
     }
 
-    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null)
+    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false)
     {
         $eventoInfo = \App\Models\Evento::find($id_evento);
 
@@ -184,6 +187,33 @@ class CreateCalendario extends Component
             // Obtener el color desde codigo_color_evento o fallback
             $color = (string) ($eventoInfo->codigo_color_evento ?: $color);
             $tipo = (string) ($eventoInfo->tipo_evento ?? $tipo ?? '');
+        }
+
+        // VALIDAR SI ES INTENSIVO FUERA DE AGOSTO
+        $especial = $eventoInfo ? (string) ($eventoInfo->especial_evento ?? '') : '';
+        if (!$confirmadoIntensivo && in_array($especial, ['9', '10'])) {
+            $fechaInicio = \Carbon\Carbon::parse($inicio);
+            $fechaFin = \Carbon\Carbon::parse($fin);
+            $cruzaAgosto = false;
+            for ($d = $fechaInicio->copy(); $d->lte($fechaFin); $d->addDay()) {
+                if ($d->month === 8) {
+                    $cruzaAgosto = true;
+                    break;
+                }
+            }
+
+            if (!$cruzaAgosto) {
+                $this->tempEventoAgregar = func_get_args();
+                $this->dispatch('show-alert', [
+                    'type' => 'warning',
+                    'message' => '¿Está seguro de registrar el intensivo fuera de agosto?',
+                    'showCancelButton' => true,
+                    'cancelText' => 'Cancelar',
+                    'okText' => 'Continuar',
+                    'onOkEvent' => 'confirmar-agregar-evento-intensivo'
+                ]);
+                return;
+            }
         }
 
         // VALIDACIÓN DE SEMANAS ESPECÍFICAS
@@ -553,9 +583,13 @@ class CreateCalendario extends Component
         $this->guardarBorrador();
     }
 
-    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $codigo_color_evento, $is_laborable, $is_repetible, $is_rango_dias, $rango_dias, $is_superponible = true)
+    public function crearYAgregarEvento($inicio, $fin, $nombre, $tipo, $codigo_color_evento, $is_laborable, $is_repetible, $is_rango_dias, $rango_dias, $is_superponible = true, $confirmadoIntensivo = false)
     {
-        // Validar usando el objeto Form
+        if (strtotime($inicio) > strtotime($fin)) {
+            $this->showAlert('error', 'La fecha de fin no puede ser menor a la fecha de inicio.');
+            return false;
+        }
+
         try {
             $this->form->validarRangoEvento($inicio, $fin, $tipo);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -769,9 +803,6 @@ class CreateCalendario extends Component
             if (!$tieneVacacionesEnAgosto) {
                 $mensajesAgosto[] = "¿Está seguro de guardar la planificación sin haber asignado días de vacaciones colectivas en agosto?";
             }
-            if (!$tieneIntensivoEnAgosto) {
-                $mensajesAgosto[] = "¿Está seguro de guardar el calendario sin haber asignado intensivos en agosto?";
-            }
 
             if (!empty($mensajesAgosto)) {
                 $mensajeFinal = "";
@@ -834,6 +865,17 @@ class CreateCalendario extends Component
     public function confirmarGuardado()
     {
         $this->save(true);
+    }
+
+    #[\Livewire\Attributes\On('confirmar-agregar-evento-intensivo')]
+    public function confirmarAgregarEventoIntensivo()
+    {
+        if ($this->tempEventoAgregar) {
+            $args = $this->tempEventoAgregar;
+            $args[6] = true; // $confirmadoIntensivo
+            $this->agregarEvento(...$args);
+            $this->tempEventoAgregar = null;
+        }
     }
 
     #[Computed]
