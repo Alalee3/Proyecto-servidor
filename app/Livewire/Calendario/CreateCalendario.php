@@ -982,15 +982,16 @@ class CreateCalendario extends Component
         return redirect()->to('/calendario/list');
     }
 
-    #[On('confirmar-guardado-calendario')]
+    #[\Livewire\Attributes\On('confirmar-guardado-calendario')]
     public function confirmarGuardado()
     {
         $this->save(true);
     }
 
-    #[On('confirmar-agregar-evento-intensivo')]
+    #[\Livewire\Attributes\On('confirmar-agregar-evento-intensivo')]
     public function confirmarAgregarEventoIntensivo()
     {
+        \Illuminate\Support\Facades\Log::info("Confirmar intensivo, tempEventoAgregar: " . json_encode($this->tempEventoAgregar));
         if ($this->tempEventoAgregar) {
             $args = $this->tempEventoAgregar;
             while (count($args) < 7) {
@@ -1002,9 +1003,10 @@ class CreateCalendario extends Component
         }
     }
 
-    #[On('confirmar-agregar-evento-incorporacion')]
+    #[\Livewire\Attributes\On('confirmar-agregar-evento-incorporacion')]
     public function confirmarAgregarEventoIncorporacion()
     {
+        \Illuminate\Support\Facades\Log::info("Confirmar incorporacion, tempEventoAgregar: " . json_encode($this->tempEventoAgregar));
         if ($this->tempEventoAgregar) {
             $args = $this->tempEventoAgregar;
             while (count($args) < 8) {
@@ -1016,7 +1018,7 @@ class CreateCalendario extends Component
         }
     }
 
-    #[On('confirmar-agregar-evento-duracion')]
+    #[\Livewire\Attributes\On('confirmar-agregar-evento-duracion')]
     public function confirmarAgregarEventoDuracion()
     {
         if ($this->tempEventoAgregar) {
@@ -1030,7 +1032,7 @@ class CreateCalendario extends Component
         }
     }
 
-    #[On('confirmar-agregar-evento-introductorio')]
+    #[\Livewire\Attributes\On('confirmar-agregar-evento-introductorio')]
     public function confirmarAgregarEventoIntroductorio()
     {
         if ($this->tempEventoAgregar) {

@@ -1086,6 +1086,7 @@ class EditarCalendario extends Component
     #[\Livewire\Attributes\On('confirmar-agregar-evento-intensivo')]
     public function confirmarAgregarEventoIntensivo()
     {
+        \Illuminate\Support\Facades\Log::info("Confirmar intensivo (Editar), tempEventoAgregar: " . json_encode($this->tempEventoAgregar));
         if ($this->tempEventoAgregar) {
             $args = $this->tempEventoAgregar;
             while (count($args) < 7) {
@@ -1100,6 +1101,7 @@ class EditarCalendario extends Component
     #[\Livewire\Attributes\On('confirmar-agregar-evento-incorporacion')]
     public function confirmarAgregarEventoIncorporacion()
     {
+        \Illuminate\Support\Facades\Log::info("Confirmar incorporacion (Editar), tempEventoAgregar: " . json_encode($this->tempEventoAgregar));
         if ($this->tempEventoAgregar) {
             $args = $this->tempEventoAgregar;
             while (count($args) < 8) {
@@ -1128,6 +1130,7 @@ class EditarCalendario extends Component
     #[\Livewire\Attributes\On('confirmar-agregar-evento-introductorio')]
     public function confirmarAgregarEventoIntroductorio()
     {
+        \Illuminate\Support\Facades\Log::info("Confirmar introductorio (Editar), tempEventoAgregar: " . json_encode($this->tempEventoAgregar));
         if ($this->tempEventoAgregar) {
             $args = $this->tempEventoAgregar;
             while (count($args) < 10) {
