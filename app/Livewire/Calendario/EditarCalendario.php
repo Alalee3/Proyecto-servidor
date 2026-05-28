@@ -201,9 +201,27 @@ class EditarCalendario extends Component
             $semanaInicio = \App\Support\CalendarioLapsoSemanas::contarSemanas($lapsoActual['inicio'], $inicio, $this->eventosRegistrados, $incluirVacaciones);
             $semanaFin = \App\Support\CalendarioLapsoSemanas::contarSemanas($lapsoActual['inicio'], $fin, $this->eventosRegistrados, $incluirVacaciones);
 
-            if (!in_array($semanaInicio, $semanasPermitidas) || !in_array($semanaFin, $semanasPermitidas)) {
-                $semanasStr = implode(', ', $semanasPermitidas);
-                $this->showAlert('error', "El evento solo puede registrarse en la(s) semana(s): {$semanasStr} del Lapso Académico. (Semana seleccionada: {$semanaInicio}" . ($semanaInicio != $semanaFin ? " a {$semanaFin}" : "") . ")");
+            // Determinar qué número de lapso es (Lapso 1 o Lapso 2)
+            $lapsosAsc = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
+                ->sortBy('inicio')->values();
+            
+            $numeroLapsoActual = 1;
+            foreach ($lapsosAsc as $index => $lapso) {
+                // Identificamos el lapso actual por su inicio (ya que los IDs pueden variar si aún no están guardados)
+                if ($lapso['inicio'] === $lapsoActual['inicio']) {
+                    $numeroLapsoActual = $index + 1;
+                    break;
+                }
+            }
+
+            // Filtrar las semanas permitidas para el lapso actual
+            $semanasPermitidasLapso = array_filter($semanasPermitidas, fn($s) => (is_array($s) ? ($s['lapso'] ?? 1) : 1) == $numeroLapsoActual);
+            $semanasPermitidasValores = array_map(fn($s) => is_array($s) ? (int) $s['semana'] : (int) $s, $semanasPermitidasLapso);
+
+            if (empty($semanasPermitidasValores) || !in_array($semanaInicio, $semanasPermitidasValores) || !in_array($semanaFin, $semanasPermitidasValores)) {
+                $semanasStr = empty($semanasPermitidasValores) ? 'Ninguna' : implode(', ', $semanasPermitidasValores);
+                $this->showAlert('error', "El evento solo puede registrarse en la(s) semana(s): {$semanasStr} del Lapso Académico {$numeroLapsoActual}. (Semana seleccionada: {$semanaInicio}" . ($semanaInicio != $semanaFin ? " a {$semanaFin}" : "") . ")");
                 return;
             }
         }

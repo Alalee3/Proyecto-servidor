@@ -15,10 +15,10 @@
                     $deshabilitarIndependienteLaborable = $form->is_especial
                         || in_array($form->tipo_evento, ['1', '2', '6'], true);
                     $deshabilitarSuperponible = (in_array($form->tipo_evento, ['1', '2', '6'], true) && !($form->is_especial && in_array($form->especial_evento, ['4', '5'])))
-                        || ($form->is_especial && $form->especial_evento == '1');
+                        || ($form->is_especial && in_array($form->especial_evento, ['1', '11']));
                     $deshabilitarIsCantidadDias = $form->is_especial;
                     $deshabilitarSemanaEvento = in_array($form->tipo_evento, ['1', '2', '6'], true) || $form->is_especial;
-                    $deshabilitarInputDias = $form->is_especial && in_array($form->especial_evento, ['2', '3', '4', '5', '7', '8', '9', '10']);
+                    $deshabilitarInputDias = $form->is_especial && in_array($form->especial_evento, ['2', '3', '4', '5', '7', '8', '9', '10', '11']);
                 @endphp
 
                 <div class="w-full">
@@ -92,20 +92,24 @@
                     <div class="w-full">
                         <x-input-label for="especial" :value="__('Seleccione el tipo de Evento Especial')" />
                         <div class="flex items-center gap-1 w-full">
+                            @php
+                                $usados = $this->eventosEspecialesUsados;
+                            @endphp
                             <select id="especial" wire:model.live="form.especial_evento" @disabled(!$form->is_especial) @class([
                                 'flex-1 min-w-0 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm',
                                 'opacity-60 cursor-not-allowed' => !$form->is_especial,
                             ])>
                                 <option value="">Seleccione...</option>
-                                <option value="1">Vacaciones Colectivas</option>
-                                <option value="2">Inicio del Lapso Académico</option>
-                                <option value="3">Fin del Lapso Académico</option>
-                                <option value="4">Semana Santa</option>
-                                <option value="5">Carnaval</option>
-                                <option value="7">Inicio del Lapso Académico Trayecto Inicial</option>
-                                <option value="8">Fin del Lapso Académico Trayecto Inicial</option>
-                                <option value="9">Inicio del Curso Intensivo</option>
-                                <option value="10">Fin del Curso Intensivo</option>
+                                <option value="1" @if(in_array('1', $usados)) hidden @endif>Vacaciones Colectivas</option>
+                                <option value="2" @if(in_array('2', $usados)) hidden @endif>Inicio del Lapso Académico</option>
+                                <option value="3" @if(in_array('3', $usados)) hidden @endif>Fin del Lapso Académico</option>
+                                <option value="4" @if(in_array('4', $usados)) hidden @endif>Semana Santa</option>
+                                <option value="5" @if(in_array('5', $usados)) hidden @endif>Carnaval</option>
+                                <option value="7" @if(in_array('7', $usados)) hidden @endif>Inicio del Lapso Académico Trayecto Inicial</option>
+                                <option value="8" @if(in_array('8', $usados)) hidden @endif>Fin del Lapso Académico Trayecto Inicial</option>
+                                <option value="9" @if(in_array('9', $usados)) hidden @endif>Inicio del Curso Intensivo</option>
+                                <option value="10" @if(in_array('10', $usados)) hidden @endif>Fin del Curso Intensivo</option>
+                                <option value="11" @if(in_array('11', $usados)) hidden @endif>Incorporación después del Receso Vacacional</option>
                             </select>
                             <span class="text-red-500 font-bold">*</span>
                         </div>

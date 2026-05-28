@@ -4,6 +4,7 @@ namespace App\Livewire\Evento;
 
 use App\Livewire\Forms\Evento\CreateEventoForm;
 use Livewire\Component;
+use Livewire\Attributes\Computed;
 use App\Repositories\Evento\EventoCreateRepo;
 use Exception;
 
@@ -87,6 +88,15 @@ class CreateEvento extends Component
                 $this->form->is_independiente = true;
                 $this->form->is_superponible = true;
                 $this->form->cantidad_dias_evento = 2;
+            } elseif ($this->form->especial_evento == '11') { // Incorporación
+                $this->form->tipo_evento = '5';
+                $this->form->is_laborable = true;
+                $this->form->is_repetible = true;
+                $this->form->is_superponible = false;
+                $this->form->is_cantidad_dias_evento = true;
+                $this->form->cantidad_dias_evento = 1;
+                $this->form->is_semana_evento = false;
+                $this->form->semanas = [];
             } else {
                 $this->form->cantidad_dias_evento = 0;
             }
@@ -100,6 +110,7 @@ class CreateEvento extends Component
                 '8' => 'Fin del Lapso Académico Trayecto Inicial',
                 '9' => 'Inicio del Curso Intensivo',
                 '10' => 'Fin del Curso Intensivo',
+                '11' => 'Incorporación después del Receso Vacacional',
             ];
 
             if (isset($nombresEspeciales[$this->form->especial_evento])) {
@@ -124,7 +135,7 @@ class CreateEvento extends Component
                 $this->form->is_independiente = false;
             }
 
-            if (!in_array($this->form->especial_evento, ['1', '2', '3', '4', '5', '7', '8', '9', '10'])) {
+            if (!in_array($this->form->especial_evento, ['1', '2', '3', '4', '5', '7', '8', '9', '10', '11'])) {
                 if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                     $this->form->is_laborable = false;
                     $this->form->is_repetible = false;
@@ -260,6 +271,15 @@ class CreateEvento extends Component
     {
         unset($this->form->semanas[$index]);
         $this->form->semanas = array_values($this->form->semanas);
+    }
+
+    #[Computed]
+    public function eventosEspecialesUsados()
+    {
+        return \Illuminate\Support\Facades\DB::table('evento')
+            ->whereNotNull('especial_evento')
+            ->pluck('especial_evento')
+            ->toArray();
     }
 
     public function render()

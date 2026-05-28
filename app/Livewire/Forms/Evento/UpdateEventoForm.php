@@ -94,6 +94,9 @@ class UpdateEventoForm extends Form
                             $fail('Para los feriados, el evento debe ser obligatoriamente superponible.');
                         }
                     }
+                    if ($this->is_especial && in_array($this->especial_evento, ['1', '11']) && $value) {
+                        $fail('Para este evento especial, no puede ser superponible.');
+                    }
                 }
             ],
             'is_semana_evento' => [
@@ -124,8 +127,8 @@ class UpdateEventoForm extends Form
                     if ($this->is_especial) {
                         if (in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10']) && $value != '4') {
                             $fail('Para este evento especial, el tipo de evento debe ser obligatoriamente Académico.');
-                        } elseif ($this->especial_evento == '1' && $value != '5') {
-                            $fail('Para Vacaciones Colectivas, el tipo de evento debe ser obligatoriamente Administrativo/Académico.');
+                        } elseif (in_array($this->especial_evento, ['1', '11']) && $value != '5') {
+                            $fail('Para este evento especial, el tipo de evento debe ser obligatoriamente Administrativo/Académico.');
                         } elseif (in_array($this->especial_evento, ['4', '5']) && $value != '6') {
                             $fail('Para Semana Santa y Carnaval, el tipo de evento debe ser Feriado Mundial.');
                         }
@@ -139,7 +142,7 @@ class UpdateEventoForm extends Form
             'especial_evento' => [
                 'required_if:is_especial,true',
                 'nullable',
-                'in:1,2,3,4,5,6,7,8,9,10',
+                'in:1,2,3,4,5,6,7,8,9,10,11',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial && !empty($value)) {
                         $exists = \Illuminate\Support\Facades\DB::table('evento')
@@ -157,7 +160,7 @@ class UpdateEventoForm extends Form
                 'boolean',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial) {
-                        if (in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10']) && !$value) {
+                        if (in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10', '11']) && !$value) {
                             $fail('Para este evento especial, debe ser obligatoriamente Laborable.');
                         } elseif (in_array($this->especial_evento, ['1', '4', '5']) && $value) {
                             $fail('Para este evento especial, no debe ser Laborable.');
@@ -175,7 +178,7 @@ class UpdateEventoForm extends Form
                         }
                     }
                     if ($this->is_especial) {
-                        if (in_array($this->especial_evento, ['1', '2', '3', '7', '8']) && !$value) {
+                        if (in_array($this->especial_evento, ['1', '2', '3', '7', '8', '11']) && !$value) {
                              $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');
                         } elseif (in_array($this->especial_evento, ['4', '5', '9', '10']) && $value) {
                              $fail('Para este tipo de evento, debe ser obligatoriamente No Repetible.');
@@ -200,7 +203,7 @@ class UpdateEventoForm extends Form
                 'boolean',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial) {
-                        if (in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10']) && !$value) {
+                        if (in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10', '11']) && !$value) {
                             $fail('Para este evento especial, debe tener obligatoriamente cantidad específica de días.');
                         } elseif ($this->especial_evento == '1' && $value) {
                             $fail('Para este evento especial, no debe tener cantidad específica de días.');
@@ -218,7 +221,7 @@ class UpdateEventoForm extends Form
                 'max:90',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial) {
-                        if (in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10']) && $value != 1) {
+                        if (in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10', '11']) && $value != 1) {
                             $fail('Para este evento especial, la cantidad de días debe ser obligatoriamente 1.');
                         } elseif ($this->especial_evento == '1' && !empty($value)) {
                             $fail('Para este evento especial, no se debe definir cantidad de días.');
