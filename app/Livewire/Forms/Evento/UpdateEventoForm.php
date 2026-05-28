@@ -280,6 +280,28 @@ class UpdateEventoForm extends Form
         ];
     }
 
+    public function validationAttributes()
+    {
+        $attributes = [];
+        $lapso1Count = 1;
+        $lapso2Count = 1;
+
+        foreach ($this->semanas as $index => $semana) {
+            $lapso = is_array($semana) && isset($semana['lapso']) ? $semana['lapso'] : 1;
+            if ($lapso == 1) {
+                $attributes["semanas.{$index}.semana"] = "{$lapso1Count} del Lapso 1";
+                $attributes["semanas.{$index}.lapso"] = "{$lapso1Count} del Lapso 1";
+                $lapso1Count++;
+            } else {
+                $attributes["semanas.{$index}.semana"] = "{$lapso2Count} del Lapso 2";
+                $attributes["semanas.{$index}.lapso"] = "{$lapso2Count} del Lapso 2";
+                $lapso2Count++;
+            }
+        }
+
+        return $attributes;
+    }
+
     protected function messages()
     {
         return [
@@ -304,12 +326,12 @@ class UpdateEventoForm extends Form
             'rango_dias.max' => 'La cantidad de días no debe superar los 90 días.',
             'semanas.required_if' => 'Debe seleccionar al menos una semana cuando el evento está asociado a semanas específicas.',
             'semanas.array' => 'Formato inválido de semanas.',
-            'semanas.*.semana.required' => 'La semana :position no puede estar vacía.',
-            'semanas.*.semana.numeric' => 'La semana :position debe ser un número.',
-            'semanas.*.semana.min' => 'La semana :position debe ser mayor o igual a 1.',
-            'semanas.*.semana.max' => 'La semana :position no debe superar 18.',
-            'semanas.*.lapso.required' => 'El lapso de la semana :position es obligatorio.',
-            'semanas.*.lapso.in' => 'El lapso de la semana :position no es válido (debe ser 1 o 2).',
+            'semanas.*.semana.required' => 'La semana :attribute no puede estar vacía.',
+            'semanas.*.semana.numeric' => 'La semana :attribute debe ser un número.',
+            'semanas.*.semana.min' => 'La semana :attribute debe ser mayor o igual a 1.',
+            'semanas.*.semana.max' => 'La semana :attribute no debe superar 18.',
+            'semanas.*.lapso.required' => 'El lapso de la semana :attribute es obligatorio.',
+            'semanas.*.lapso.in' => 'El lapso de la semana :attribute no es válido (debe ser 1 o 2).',
             'is_independiente.required' => 'El campo independiente es obligatorio.',
             'is_independiente.boolean' => 'El campo independiente debe ser un valor booleano.',
             'is_superponible.required' => 'El campo superponible es obligatorio.',

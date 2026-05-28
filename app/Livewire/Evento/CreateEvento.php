@@ -112,6 +112,7 @@ class CreateEvento extends Component
         // Si cambia is_especial
         if ($propertyName === 'form.is_especial' && $this->form->is_especial) {
             $this->form->is_independiente = true;
+            $this->form->is_semana_evento = false;
         }
 
         if ($propertyName === 'form.tipo_evento') {
@@ -139,9 +140,23 @@ class CreateEvento extends Component
             }
         }
 
-        // Si no es repetible, recortar semanas a 1
-        if (!$this->form->is_repetible && is_array($this->form->semanas) && count($this->form->semanas) > 1) {
-            $this->form->semanas = array_slice($this->form->semanas, 0, 1);
+        // Si no es repetible, recortar a máximo 1 semana por lapso
+        if (!$this->form->is_repetible && is_array($this->form->semanas)) {
+            $nuevoSemanas = [];
+            $has1 = false;
+            $has2 = false;
+            foreach ($this->form->semanas as $s) {
+                $lapso = is_array($s) ? ($s['lapso'] ?? 1) : 1;
+                if ($lapso == 1 && !$has1) {
+                    $nuevoSemanas[] = $s;
+                    $has1 = true;
+                }
+                if ($lapso == 2 && !$has2) {
+                    $nuevoSemanas[] = $s;
+                    $has2 = true;
+                }
+            }
+            $this->form->semanas = $nuevoSemanas;
         }
 
         // Si se activa is_semana_evento, asegurar que existen instancias para ambos lapsos
@@ -159,6 +174,12 @@ class CreateEvento extends Component
             if (!$hasLapso2) {
                 $this->form->semanas[] = ['lapso' => 2, 'semana' => ''];
             }
+        }
+
+        // Si se desactiva is_semana_evento, limpiar todas las semanas
+        if ($propertyName === 'form.is_semana_evento' && !$this->form->is_semana_evento) {
+            $this->form->semanas = [];
+            $this->resetErrorBag('form.semanas');
         }
 
         // Limpiar especial_evento si el switch se apaga
@@ -196,6 +217,9 @@ class CreateEvento extends Component
     public function guardar()
     {
         try {
+            if (!$this->form->is_semana_evento) {
+                $this->form->semanas = [];
+            }
             $this->form->validate();
             $id_repo = $this->eventoRepository->crear($this->form->all());
 

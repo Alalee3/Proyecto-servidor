@@ -127,6 +127,7 @@ class UpdateEvento extends Component
         // Si cambia is_especial
         if ($propertyName === 'form.is_especial' && $this->form->is_especial) {
             $this->form->is_independiente = true;
+            $this->form->is_semana_evento = false;
         }
 
         // Si cambia el tipo de evento
@@ -148,6 +149,25 @@ class UpdateEvento extends Component
                     $this->form->is_repetible = true;
                 }
             }
+        }
+
+        // Si no es repetible, recortar a máximo 1 semana por lapso
+        if (!$this->form->is_repetible && is_array($this->form->semanas)) {
+            $nuevoSemanas = [];
+            $has1 = false;
+            $has2 = false;
+            foreach ($this->form->semanas as $s) {
+                $lapso = is_array($s) ? ($s['lapso'] ?? 1) : 1;
+                if ($lapso == 1 && !$has1) {
+                    $nuevoSemanas[] = $s;
+                    $has1 = true;
+                }
+                if ($lapso == 2 && !$has2) {
+                    $nuevoSemanas[] = $s;
+                    $has2 = true;
+                }
+            }
+            $this->form->semanas = $nuevoSemanas;
         }
 
         // Limpiar especial_evento si el switch se apaga
@@ -197,6 +217,12 @@ class UpdateEvento extends Component
             }
         }
 
+        // Si se desactiva is_semana_evento, limpiar todas las semanas
+        if ($propertyName === 'form.is_semana_evento' && !$this->form->is_semana_evento) {
+            $this->form->semanas = [];
+            $this->resetErrorBag('form.semanas');
+        }
+
         // 2. FINALMENTE VALIDAMOS EL CAMPO
         $this->form->validateOnly($field);
     }
@@ -204,6 +230,9 @@ class UpdateEvento extends Component
     public function guardar()
     {
         try {
+            if (!$this->form->is_semana_evento) {
+                $this->form->semanas = [];
+            }
             $this->form->validate();
             $this->eventoRepository->actualizar($this->form->id_evento, $this->form->all());
             $this->showAlert('success', 'Evento actualizado correctamente.', '/evento/list');

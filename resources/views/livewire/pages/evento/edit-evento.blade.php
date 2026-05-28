@@ -18,7 +18,7 @@
                         || ($form->is_especial && $form->especial_evento == '1');
                     $deshabilitarRangoDias = $form->is_especial;
                     $deshabilitarCantidadRango = $form->is_especial || !$form->is_rango_dias;
-                    $deshabilitarSemanaEvento = in_array($form->tipo_evento, ['1', '2', '6'], true);
+                    $deshabilitarSemanaEvento = in_array($form->tipo_evento, ['1', '2', '6'], true) || $form->is_especial;
                 @endphp
 
                 <div class="w-full">
