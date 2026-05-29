@@ -113,7 +113,8 @@ class CalendarioCreateRepo
                 'e.nombre_evento as nombre',
                 'e.tipo_evento as tipo',
                 'e.codigo_color_evento as color',
-                'e.especial_evento as especial_evento'
+                'e.is_superponible_evento',
+                'e.id_especial_evento as especial_evento'
             )
             ->get();
     }
@@ -246,7 +247,7 @@ class CalendarioCreateRepo
     public function obtenerEventoVacacionesActivo()
     {
         return DB::table('evento')
-            ->where('especial_evento', '1')
+            ->where('id_especial_evento', '1')
             ->where('estatus', '1')
             ->first();
     }

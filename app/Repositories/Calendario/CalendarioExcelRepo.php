@@ -96,7 +96,7 @@ class CalendarioExcelRepo
         $semanasFestivasIntensivo = [];
 
         foreach ($eventosRaw as $ev) {
-            $esp = $ev->tipo_evento == 4 || $ev->tipo_evento == 5 || $ev->tipo_evento == 6 ? collect(DB::select('SELECT especial_evento FROM evento WHERE id_evento = ?', [$ev->id_evento]))->first()->especial_evento ?? null : null;
+            $esp = $ev->tipo_evento == 4 || $ev->tipo_evento == 5 || $ev->tipo_evento == 6 ? collect(DB::select('SELECT id_especial_evento FROM evento WHERE id_evento = ?', [$ev->id_evento]))->first()->id_especial_evento ?? null : null;
             
             // Si el evento ya viene con especial_evento podemos usarlo, pero si no, hay que extraerlo.
             // Para simplificar, obtenemos todos los especial_evento en una consulta
@@ -105,13 +105,13 @@ class CalendarioExcelRepo
         // Mejor obtener los detalles completos de los eventos para tener 'especial_evento'
         $eventosCompletos = DB::table('evento')
             ->join('detalle_evento', 'evento.id_evento', '=', 'detalle_evento.id_evento')
-            ->select('evento.especial_evento', 'detalle_evento.dia_inicio_detalle_evento', 'detalle_evento.dia_fin_detalle_evento')
+            ->select('evento.id_especial_evento', 'detalle_evento.dia_inicio_detalle_evento', 'detalle_evento.dia_fin_detalle_evento')
             ->where('detalle_evento.id_calendario_academico', $calendario->id_calendario_academico)
             ->where('evento.estatus', 1)
             ->get();
 
         foreach ($eventosCompletos as $ev) {
-            $esp = (string) $ev->especial_evento;
+            $esp = (string) $ev->id_especial_evento;
             if ($esp === '2') $iniciosLapso[] = $ev->dia_inicio_detalle_evento;
             elseif ($esp === '3') $finesLapso[] = $ev->dia_fin_detalle_evento;
             elseif ($esp === '7') $iniciosIntro[] = $ev->dia_inicio_detalle_evento;

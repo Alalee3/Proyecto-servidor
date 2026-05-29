@@ -22,6 +22,8 @@ class Evento extends Model
         'is_independiente_evento' => 'boolean',
         'is_superponible_evento' => 'boolean',
         'is_semana_evento' => 'boolean',
+        'is_dia_evento' => 'boolean',
+        'dia_evento' => 'date',
         'semana_evento' => 'array',
         'cantidad_dias_evento' => 'integer',
     ];
@@ -29,6 +31,19 @@ class Evento extends Model
     public function detalles()
     {
         return $this->hasMany(DetalleEvento::class, 'id_evento');
+    }
+
+    public function especialEvento()
+    {
+        return $this->belongsTo(EspecialEvento::class, 'id_especial_evento', 'id_especial_evento');
+    }
+
+    /**
+     * Accessor para compatibilidad con código que usa el antiguo campo ENUM especial_evento
+     */
+    public function getEspecialEventoAttribute()
+    {
+        return $this->id_especial_evento ? (string) $this->id_especial_evento : null;
     }
 
     /**

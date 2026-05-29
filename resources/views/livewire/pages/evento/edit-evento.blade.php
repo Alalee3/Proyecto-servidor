@@ -14,8 +14,8 @@
                 @php
                     $deshabilitarIndependienteLaborable = $form->is_especial
                         || in_array($form->tipo_evento, ['1', '2', '6'], true);
-                    $deshabilitarSuperponible = (in_array($form->tipo_evento, ['1', '2', '6'], true) && !($form->is_especial && in_array($form->especial_evento, ['4', '5'])))
-                        || ($form->is_especial && in_array($form->especial_evento, ['1', '11']));
+                    $deshabilitarSuperponible = (in_array($form->tipo_evento, ['1', '2', '6'], true) && !($form->is_especial && in_array($form->id_especial_evento, ['4', '5'])))
+                        || ($form->is_especial && in_array($form->id_especial_evento, ['1', '11']));
                     $deshabilitarRangoDias = $form->is_especial;
                     $deshabilitarCantidadRango = $form->is_especial || !$form->is_rango_dias;
                     $deshabilitarSemanaEvento = in_array($form->tipo_evento, ['1', '2', '6'], true) || $form->is_especial;
@@ -97,33 +97,25 @@
                             @php
                                 $usados = $this->eventosEspecialesUsados;
                             @endphp
-                            <select id="especial" wire:model.live="form.especial_evento" @disabled(!$form->is_especial) @class([
-                                'flex-1 min-w-0 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm',
-                                'opacity-60 cursor-not-allowed' => !$form->is_especial,
-                            ])>
-                                <option value="">Seleccione...</option>
-                                <option value="1" @if(in_array('1', $usados)) hidden @endif>Vacaciones Colectivas</option>
-                                <option value="2" @if(in_array('2', $usados)) hidden @endif>Inicio del Lapso Académico</option>
-                                <option value="3" @if(in_array('3', $usados)) hidden @endif>Fin del Lapso Académico</option>
-                                <option value="4" @if(in_array('4', $usados)) hidden @endif>Semana Santa</option>
-                                <option value="5" @if(in_array('5', $usados)) hidden @endif>Carnaval</option>
-                                <option value="7" @if(in_array('7', $usados)) hidden @endif>Inicio del Lapso Académico Trayecto Inicial</option>
-                                <option value="8" @if(in_array('8', $usados)) hidden @endif>Fin del Lapso Académico Trayecto Inicial</option>
-                                <option value="9" @if(in_array('9', $usados)) hidden @endif>Inicio del Curso Intensivo</option>
-                                <option value="10" @if(in_array('10', $usados)) hidden @endif>Fin del Curso Intensivo</option>
-                                <option value="11" @if(in_array('11', $usados)) hidden @endif>Incorporación después del Receso Vacacional</option>
-                            </select>
+                            <select id="especial" wire:model.live="form.id_especial_evento" @disabled(!$form->
+                        <option value="">-- Seleccione Especial --</option>
+                        @foreach(\App\Models\EspecialEvento::orderBy('especial_evento_name')->get() as $esp)
+                            @if(!in_array($esp->id_especial_evento, $usados) || $form->id_especial_evento == $esp->id_especial_evento)
+                                <option value="{{ $esp->id_especial_evento }}">{{ $esp->especial_evento_name }}</option>
+                            @endif
+                        @endforeach
+                    </select>
                             <span class="text-red-500 font-bold">*</span>
                         </div>
-                        <x-input-error :messages="$errors->first('form.especial_evento')" class="mt-2" />
+                        <x-input-error :messages="$errors->first('form.id_especial_evento')" class="mt-2" />
                     </div>
                 @endif
 
-                @if($form->is_especial && $form->especial_evento == '1')
+                @if($form->is_especial && $form->id_especial_evento == '1')
                     <div class="w-full">
                         <x-input-label for="cantidad_dias_evento" :value="__('Cantidad de Días de Vacaciones')" />
                         <x-text-input id="cantidad_dias_evento" type="number" min="1" max="365" class="w-full"
-                            wire:model.live="form.cantidad_dias_evento" placeholder="Ej: 15" :disabled="!$form->is_especial || $form->especial_evento != '1'" required />
+                            wire:model.live="form.cantidad_dias_evento" placeholder="Ej: 15" :disabled="!$form->is_especial || $form->id_especial_evento != '1'" required />
                         <x-input-error :messages="$errors->first('form.cantidad_dias_evento')" class="mt-2" />
                     </div>
                 @endif

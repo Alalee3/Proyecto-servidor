@@ -42,29 +42,29 @@ class CreateEvento extends Component
         // 1. APLICAR TODA LA LÓGICA DINÁMICA DE ESTADO PRIMERO
 
         // Si cambia especial_evento y es Inicio (2) o Fin (3) del Lapso, aplicamos valores por defecto. Si es Vacaciones Colectivas (1) aplicamos los suyos.
-        if ($propertyName === 'form.especial_evento') {
-            if ($this->form->especial_evento == '2' || $this->form->especial_evento == '3') {
+        if ($propertyName === 'form.id_especial_evento') {
+            if ($this->form->id_especial_evento == '2' || $this->form->id_especial_evento == '3') {
                 $this->form->is_laborable = true;
                 $this->form->is_repetible = true;
                 $this->form->tipo_evento = '4';
                 $this->form->is_cantidad_dias_evento = true;
                 $this->form->is_independiente = true;
                 $this->form->cantidad_dias_evento = 1;
-            } elseif (in_array($this->form->especial_evento, ['7', '8'])) {
+            } elseif (in_array($this->form->id_especial_evento, ['7', '8'])) {
                 $this->form->is_laborable = true;
                 $this->form->is_repetible = true;
                 $this->form->tipo_evento = '4';
                 $this->form->is_cantidad_dias_evento = true;
                 $this->form->is_independiente = true;
                 $this->form->cantidad_dias_evento = 1;
-            } elseif (in_array($this->form->especial_evento, ['9', '10'])) {
+            } elseif (in_array($this->form->id_especial_evento, ['9', '10'])) {
                 $this->form->is_laborable = true;
                 $this->form->is_repetible = false;
                 $this->form->tipo_evento = '4';
                 $this->form->is_cantidad_dias_evento = true;
                 $this->form->is_independiente = true;
                 $this->form->cantidad_dias_evento = 1;
-            } elseif ($this->form->especial_evento == '1') {
+            } elseif ($this->form->id_especial_evento == '1') {
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = true;
                 $this->form->tipo_evento = '5';
@@ -72,7 +72,7 @@ class CreateEvento extends Component
                 $this->form->is_independiente = true;
                 $this->form->is_superponible = false;
                 $this->form->cantidad_dias_evento = 60;
-            } elseif ($this->form->especial_evento == '4') { // Semana Santa
+            } elseif ($this->form->id_especial_evento == '4') { // Semana Santa
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = false;
                 $this->form->tipo_evento = '6';
@@ -80,7 +80,7 @@ class CreateEvento extends Component
                 $this->form->is_independiente = true;
                 $this->form->is_superponible = true;
                 $this->form->cantidad_dias_evento = 2;
-            } elseif ($this->form->especial_evento == '5') { // Carnaval
+            } elseif ($this->form->id_especial_evento == '5') { // Carnaval
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = false;
                 $this->form->tipo_evento = '6';
@@ -88,7 +88,7 @@ class CreateEvento extends Component
                 $this->form->is_independiente = true;
                 $this->form->is_superponible = true;
                 $this->form->cantidad_dias_evento = 2;
-            } elseif ($this->form->especial_evento == '11') { // Incorporación
+            } elseif ($this->form->id_especial_evento == '11') { // Incorporación
                 $this->form->tipo_evento = '5';
                 $this->form->is_laborable = true;
                 $this->form->is_repetible = true;
@@ -100,21 +100,10 @@ class CreateEvento extends Component
             } else {
                 $this->form->cantidad_dias_evento = 0;
             }
-            $nombresEspeciales = [
-                '1' => 'Vacaciones Colectivas',
-                '2' => 'Inicio del Lapso Académico',
-                '3' => 'Fin del Lapso Académico',
-                '4' => 'Semana Santa',
-                '5' => 'Carnaval',
-                '7' => 'Inicio del Lapso Académico Trayecto Inicial',
-                '8' => 'Fin del Lapso Académico Trayecto Inicial',
-                '9' => 'Inicio del Curso Intensivo',
-                '10' => 'Fin del Curso Intensivo',
-                '11' => 'Incorporación después del Receso Vacacional',
-            ];
+            $nombresEspeciales = \App\Models\EspecialEvento::pluck('especial_evento_name', 'id_especial_evento')->toArray();
 
-            if (isset($nombresEspeciales[$this->form->especial_evento])) {
-                $this->form->descripcion_evento = $nombresEspeciales[$this->form->especial_evento];
+            if (isset($nombresEspeciales[$this->form->id_especial_evento])) {
+                $this->form->descripcion_evento = $nombresEspeciales[$this->form->id_especial_evento];
             } else {
                 $this->form->descripcion_evento = '';
             }
@@ -135,7 +124,7 @@ class CreateEvento extends Component
                 $this->form->is_independiente = false;
             }
 
-            if (!in_array($this->form->especial_evento, ['1', '2', '3', '4', '5', '7', '8', '9', '10', '11'])) {
+            if (!in_array($this->form->id_especial_evento, ['1', '2', '3', '4', '5', '7', '8', '9', '10', '11'])) {
                 if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                     $this->form->is_laborable = false;
                     $this->form->is_repetible = false;
@@ -195,9 +184,9 @@ class CreateEvento extends Component
 
         // Limpiar especial_evento si el switch se apaga
         if ($propertyName === 'form.is_especial' && !$this->form->is_especial) {
-            $this->form->especial_evento = '';
+            $this->form->id_especial_evento = '';
             $this->form->cantidad_dias_evento = 0;
-            $this->resetErrorBag('form.especial_evento');
+            $this->resetErrorBag('form.id_especial_evento');
             $this->resetErrorBag('form.cantidad_dias_evento');
 
             // Reestablecer valores por defecto según el tipo de evento actual
@@ -234,7 +223,7 @@ class CreateEvento extends Component
             $this->form->validate();
             $id_repo = $this->eventoRepository->crear($this->form->all());
 
-            $this->reset('form.descripcion_evento', 'form.tipo_evento', 'form.codigo_color_evento', 'form.especial_evento', 'form.is_especial', 'form.cantidad_dias_evento');
+            $this->reset('form.descripcion_evento', 'form.tipo_evento', 'form.codigo_color_evento', 'form.id_especial_evento', 'form.is_especial', 'form.cantidad_dias_evento');
             $this->form->semanas = [
                 ['lapso' => 1, 'semana' => ''],
                 ['lapso' => 2, 'semana' => ''],
@@ -277,8 +266,8 @@ class CreateEvento extends Component
     public function eventosEspecialesUsados()
     {
         return \Illuminate\Support\Facades\DB::table('evento')
-            ->whereNotNull('especial_evento')
-            ->pluck('especial_evento')
+            ->whereNotNull('id_especial_evento')
+            ->pluck('id_especial_evento')
             ->toArray();
     }
 
