@@ -97,14 +97,17 @@
                             @php
                                 $usados = $this->eventosEspecialesUsados;
                             @endphp
-                            <select id="especial" wire:model.live="form.id_especial_evento" @disabled(!$form->
-                        <option value="">-- Seleccione Especial --</option>
-                        @foreach(\App\Models\EspecialEvento::orderBy('especial_evento_name')->get() as $esp)
-                            @if(!in_array($esp->id_especial_evento, $usados) || $form->id_especial_evento == $esp->id_especial_evento)
-                                <option value="{{ $esp->id_especial_evento }}">{{ $esp->especial_evento_name }}</option>
-                            @endif
-                        @endforeach
-                    </select>
+                            <select id="especial" wire:model.live="form.id_especial_evento" @disabled(!$form->is_especial) @class([
+                                'flex-1 min-w-0 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm',
+                                'opacity-60 cursor-not-allowed' => !$form->is_especial,
+                            ])>
+                                <option value="">-- Seleccione Especial --</option>
+                                @foreach(\App\Models\EspecialEvento::orderBy('especial_evento_name')->get() as $esp)
+                                    @if(!in_array($esp->id_especial_evento, $usados) || $form->id_especial_evento == $esp->id_especial_evento)
+                                        <option value="{{ $esp->id_especial_evento }}">{{ $esp->especial_evento_name }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
                             <span class="text-red-500 font-bold">*</span>
                         </div>
                         <x-input-error :messages="$errors->first('form.id_especial_evento')" class="mt-2" />
