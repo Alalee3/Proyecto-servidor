@@ -252,6 +252,41 @@ class EditarCalendario extends Component
             }
         }
 
+        // VALIDAR SOLAPAMIENTO DE TRAYECTO INICIAL
+        if ($especial === '7') {
+            $iniciosLapso = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '7')
+                ->sortBy('inicio')
+                ->values();
+            $finesLapso = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '8')
+                ->sortBy('inicio')
+                ->values();
+
+            foreach ($iniciosLapso as $index => $inicioLapso) {
+                $fechaInicioLapso = $inicioLapso['inicio'];
+                $fechaFinLapso = isset($finesLapso[$index]) ? $finesLapso[$index]['inicio'] : null;
+
+                if ($fechaFinLapso) {
+                    if ($inicio >= $fechaInicioLapso && $inicio <= $fechaFinLapso) {
+                        $this->dispatch('show-alert', [
+                            'type' => 'error',
+                            'message' => 'No se puede registrar un Lapso Académico Trayecto Inicial en esta fecha porque cae dentro del período de un Trayecto Inicial ya existente.'
+                        ]);
+                        return;
+                    }
+                } else {
+                    if ($inicio <= $inicioLapso['fin'] && $fin >= $inicioLapso['inicio']) {
+                        $this->dispatch('show-alert', [
+                            'type' => 'error',
+                            'message' => 'No se puede registrar un Lapso Académico Trayecto Inicial en las fechas seleccionadas porque ya existe otro Trayecto Inicial en ese período.'
+                        ]);
+                        return;
+                    }
+                }
+            }
+        }
+
         // VALIDACIÓN DE SEMANAS ESPECÍFICAS
         $semanasPermitidas = [];
         if ($eventoInfo && $eventoInfo->is_semana_evento) {
