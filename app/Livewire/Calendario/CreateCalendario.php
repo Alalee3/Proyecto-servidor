@@ -82,8 +82,8 @@ class CreateCalendario extends Component
 
         if (!$id) {
             $repo = new \App\Repositories\Calendario\CalendarioCreateRepo();
-            if ($repo->contarCalendariosActivos() >= 2) {
-                session()->flash('error', 'Solo se pueden tener máximo dos calendarios activos a la vez. Inactive uno para crear otro.');
+            if ($repo->contarCalendariosActivos() > 0) {
+                session()->flash('error', 'Solo puede existir un calendario a la vez. El calendario actual debe finalizar para poder crear otro.');
                 return redirect()->route('calendario.list');
             }
         }
