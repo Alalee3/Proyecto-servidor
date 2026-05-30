@@ -76,12 +76,12 @@
                     model="form.is_dia_evento" :disabled="$deshabilitarDiaEvento" required />
 
                 @if($form->is_dia_evento)
-                <div class="w-full">
-                    <x-input-label for="dia_evento_edit" :value="__('Día Específico del Evento')" />
-                    <x-text-input id="dia_evento_edit" type="date" class="w-full"
-                        wire:model.live="form.dia_evento" required />
-                    <x-input-error :messages="$errors->first('form.dia_evento')" class="mt-2" />
-                </div>
+                    <div class="w-full">
+                        <x-input-label for="dia_evento_edit" :value="__('Día Específico del Evento')" />
+                        <x-text-input id="dia_evento_edit" type="date" class="w-full" wire:model.live="form.dia_evento"
+                            required />
+                        <x-input-error :messages="$errors->first('form.dia_evento')" class="mt-2" />
+                    </div>
                 @endif
 
                 <x-toggle-switch id="is_rango_dias_edit" :label="__('¿Tiene cantidad especifica días de duración?')"
@@ -143,15 +143,16 @@
                     @endphp
 
                     {{-- Lapso 1 --}}
-                    <div class="w-full mt-4 col-span-1 md:col-span-2 lg:col-span-3 border border-gray-300 dark:border-gray-700 rounded-lg p-4">
+                    <div
+                        class="w-full mt-4 col-span-1 md:col-span-2 lg:col-span-3 border border-gray-300 dark:border-gray-700 rounded-lg p-4">
                         <div class="flex justify-between items-center mb-3">
                             <x-input-label :value="__('Lapso 1 - Semanas en las que debe suceder el evento')" />
                             @if($form->is_repetible && !$form->is_especial)
-                                <button type="button" wire:click="agregarSemana(1)"
-                                    @disabled(count($semanasLapso1) >= 4)
+                                <button type="button" wire:click="agregarSemana(1)" @disabled(count($semanasLapso1) >= 4)
                                     class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4"></path>
                                     </svg>
                                     Agregar Semana (máx. 4)
                                 </button>
@@ -186,15 +187,16 @@
                     </div>
 
                     {{-- Lapso 2 --}}
-                    <div class="w-full col-span-1 md:col-span-2 lg:col-span-3 border border-gray-300 dark:border-gray-700 rounded-lg p-4">
+                    <div
+                        class="w-full col-span-1 md:col-span-2 lg:col-span-3 border border-gray-300 dark:border-gray-700 rounded-lg p-4">
                         <div class="flex justify-between items-center mb-3">
                             <x-input-label :value="__('Lapso 2 - Semanas en las que debe suceder el evento')" />
                             @if($form->is_repetible && !$form->is_especial)
-                                <button type="button" wire:click="agregarSemana(2)"
-                                    @disabled(count($semanasLapso2) >= 4)
+                                <button type="button" wire:click="agregarSemana(2)" @disabled(count($semanasLapso2) >= 4)
                                     class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4"></path>
                                     </svg>
                                     Agregar Semana (máx. 4)
                                 </button>
