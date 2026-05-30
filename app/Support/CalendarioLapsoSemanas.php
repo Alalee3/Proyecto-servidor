@@ -36,7 +36,7 @@ class CalendarioLapsoSemanas
         $festivos = [];
 
         if (!empty($ids)) {
-            foreach (Evento::whereIn('id_evento', $ids)->get(['id_evento', 'especial_evento', 'nombre_evento']) as $evento) {
+            foreach (Evento::whereIn('id_evento', $ids)->get(['id_evento', 'id_especial_evento', 'nombre_evento']) as $evento) {
                 if (self::eventoModeloEsFestivo($evento, $incluirVacaciones)) {
                     $festivos[(int) $evento->id_evento] = true;
                 }

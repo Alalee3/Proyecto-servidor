@@ -25,6 +25,8 @@ class UpdateCalendarioForm extends Form
     public $nuevoRepetible = false;
     public $nuevoIsRangoDias = false;
     public $nuevoRangoDias = '';
+    public $nuevoIsDiaEvento = false;
+    public $nuevoDiaEvento = '';
     public $nuevoIsIndependiente = true;
     public $nuevoIsSuperponible = true;
     public $idEventoTemporal = null;
@@ -135,6 +137,27 @@ class UpdateCalendarioForm extends Form
                         } else {
                             if ($value !== null && $value !== '' && $value !== 0 && $value !== '0') {
                                 $fail('No se permite asignar una cantidad de días si la opción no está habilitada.');
+                            }
+                        }
+                    }
+                ],
+                'nuevoIsDiaEvento' => [
+                    'required', 
+                    'boolean',
+                    function ($attribute, $value, $fail) {
+                        if ($value && !in_array($this->nuevoTipo, ['1', '2', '6'])) {
+                            $fail('Solo los feriados pueden ocurrir en un día específico.');
+                        }
+                    }
+                ],
+                'nuevoDiaEvento' => [
+                    'nullable',
+                    function ($attribute, $value, $fail) {
+                        if ($this->nuevoIsDiaEvento) {
+                            if (empty($value)) {
+                                $fail('El día específico es obligatorio si se habilitó esta opción.');
+                            } elseif (!strtotime($value)) {
+                                $fail('El día específico debe ser una fecha válida.');
                             }
                         }
                     }
@@ -577,8 +600,6 @@ class UpdateCalendarioForm extends Form
 
         $paresNoSolapables = [
             ['Lapso 1', 'Lapso 2'],
-            ['Lapso 1', 'Curso Intensivo'],
-            ['Lapso 2', 'Curso Intensivo'],
             ['Lapso 1 Académico Trayecto Inicial', 'Lapso 2 Académico Trayecto Inicial'],
             ['Lapso 1 Académico Trayecto Inicial', 'Curso Intensivo'],
             ['Lapso 2 Académico Trayecto Inicial', 'Curso Intensivo']
@@ -597,6 +618,60 @@ class UpdateCalendarioForm extends Form
                     $this->addError('eventosRegistrados', $msg);
                     $errores[] = [$msg];
                 }
+            }
+        }
+
+        // Validar que el Curso Intensivo, si choca con un lapso regular, esté completamente dentro de Vacaciones Colectivas
+        if (isset($periodosRegistrados['Curso Intensivo'])) {
+            $intensivo = $periodosRegistrados['Curso Intensivo'];
+            $overlapsWithLapso = false;
+            
+            foreach (['Lapso 1', 'Lapso 2'] as $lapsoName) {
+                if (isset($periodosRegistrados[$lapsoName])) {
+                    $lapso = $periodosRegistrados[$lapsoName];
+                    if (max($intensivo['inicio'], $lapso['inicio']) <= min($intensivo['fin'], $lapso['fin'])) {
+                        $overlapsWithLapso = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($overlapsWithLapso) {
+                $dentroDeVacaciones = false;
+                $vacaciones = collect($eventosParaValidar)->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '1')->values();
+                foreach ($vacaciones as $vac) {
+                    if ($intensivo['inicio'] >= $vac['inicio'] && $intensivo['fin'] <= $vac['fin']) {
+                        $dentroDeVacaciones = true;
+                        break;
+                    }
+                }
+
+                if (!$dentroDeVacaciones) {
+                    $msg = "El Curso Intensivo no puede solaparse con un Lapso Académico regular a menos que esté programado completamente dentro de un período de Vacaciones Colectivas.";
+                    $this->addError('eventosRegistrados', $msg);
+                    $errores[] = [$msg];
+                }
+            }
+        }
+
+        // Validar que los lapsos introductorios estén dentro de los lapsos regulares correspondientes
+        if (isset($periodosRegistrados['Lapso 1']) && isset($periodosRegistrados['Lapso 1 Académico Trayecto Inicial'])) {
+            $reg = $periodosRegistrados['Lapso 1'];
+            $intro = $periodosRegistrados['Lapso 1 Académico Trayecto Inicial'];
+            if ($intro['inicio'] < $reg['inicio'] || $intro['fin'] > $reg['fin']) {
+                $msg = "El Lapso 1 Académico Trayecto Inicial ({$intro['inicio']} al {$intro['fin']}) debe estar contenido completamente dentro del Lapso Académico 1 ({$reg['inicio']} al {$reg['fin']}).";
+                $this->addError('eventosRegistrados', $msg);
+                $errores[] = [$msg];
+            }
+        }
+
+        if (isset($periodosRegistrados['Lapso 2']) && isset($periodosRegistrados['Lapso 2 Académico Trayecto Inicial'])) {
+            $reg = $periodosRegistrados['Lapso 2'];
+            $intro = $periodosRegistrados['Lapso 2 Académico Trayecto Inicial'];
+            if ($intro['inicio'] < $reg['inicio'] || $intro['fin'] > $reg['fin']) {
+                $msg = "El Lapso 2 Académico Trayecto Inicial ({$intro['inicio']} al {$intro['fin']}) debe estar contenido completamente dentro del Lapso Académico 2 ({$reg['inicio']} al {$reg['fin']}).";
+                $this->addError('eventosRegistrados', $msg);
+                $errores[] = [$msg];
             }
         }
 

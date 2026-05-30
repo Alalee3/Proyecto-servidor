@@ -14,11 +14,12 @@
                 @php
                     $deshabilitarIndependienteLaborable = $form->is_especial
                         || in_array($form->tipo_evento, ['1', '2', '6'], true);
-                    $deshabilitarSuperponible = (in_array($form->tipo_evento, ['1', '2', '6'], true) && !($form->is_especial && in_array($form->especial_evento, ['4', '5'])))
-                        || ($form->is_especial && $form->especial_evento == '1');
+                    $deshabilitarSuperponible = (in_array($form->tipo_evento, ['1', '2', '6'], true) && !($form->is_especial && in_array($form->id_especial_evento, ['4', '5'])))
+                        || ($form->is_especial && in_array($form->id_especial_evento, ['1', '9', '10', '11']));
                     $deshabilitarRangoDias = $form->is_especial;
                     $deshabilitarCantidadRango = $form->is_especial || !$form->is_rango_dias;
-                    $deshabilitarSemanaEvento = in_array($form->tipo_evento, ['1', '2', '6'], true);
+                    $deshabilitarSemanaEvento = in_array($form->tipo_evento, ['1', '2', '6'], true) || $form->is_especial;
+                    $deshabilitarDiaEvento = !in_array($form->tipo_evento, ['1', '2', '6'], true);
                 @endphp
 
                 <div class="w-full">
@@ -71,6 +72,18 @@
 
                 <x-toggle-switch id="is_superponible_edit" :label="__('¿Puede asignarse en la misma fecha que días de vacaciones?')" model="form.is_superponible" :disabled="$deshabilitarSuperponible" required />
 
+                <x-toggle-switch id="is_dia_evento_edit" :label="__('¿Ocurre en un día específico?')"
+                    model="form.is_dia_evento" :disabled="$deshabilitarDiaEvento" required />
+
+                @if($form->is_dia_evento)
+                    <div class="w-full">
+                        <x-input-label for="dia_evento_edit" :value="__('Día Específico del Evento')" />
+                        <x-text-input id="dia_evento_edit" type="date" class="w-full" wire:model.live="form.dia_evento"
+                            required />
+                        <x-input-error :messages="$errors->first('form.dia_evento')" class="mt-2" />
+                    </div>
+                @endif
+
                 <x-toggle-switch id="is_rango_dias_edit" :label="__('¿Tiene cantidad especifica días de duración?')"
                     model="form.is_rango_dias" :disabled="$deshabilitarRangoDias" required />
 
@@ -94,32 +107,31 @@
                     <div class="w-full">
                         <x-input-label for="especial" :value="__('Seleccione el tipo de Evento Especial')" />
                         <div class="flex items-center gap-1 w-full">
-                            <select id="especial" wire:model.live="form.especial_evento" @disabled(!$form->is_especial) @class([
+                            @php
+                                $usados = $this->eventosEspecialesUsados;
+                            @endphp
+                            <select id="especial" wire:model.live="form.id_especial_evento" @disabled(!$form->is_especial) @class([
                                 'flex-1 min-w-0 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm',
                                 'opacity-60 cursor-not-allowed' => !$form->is_especial,
                             ])>
-                                <option value="">Seleccione...</option>
-                                <option value="1">Vacaciones Colectivas</option>
-                                <option value="2">Inicio del Lapso Académico</option>
-                                <option value="3">Fin del Lapso Académico</option>
-                                <option value="4">Semana Santa</option>
-                                <option value="5">Carnaval</option>
-                                <option value="7">Inicio del Lapso Académico Trayecto Inicial</option>
-                                <option value="8">Fin del Lapso Académico Trayecto Inicial</option>
-                                <option value="9">Inicio del Curso Intensivo</option>
-                                <option value="10">Fin del Curso Intensivo</option>
+                                <option value="">-- Seleccione Especial --</option>
+                                @foreach(\App\Models\EspecialEvento::orderBy('especial_evento_name')->get() as $esp)
+                                    @if(!in_array($esp->id_especial_evento, $usados) || $form->id_especial_evento == $esp->id_especial_evento)
+                                        <option value="{{ $esp->id_especial_evento }}">{{ $esp->especial_evento_name }}</option>
+                                    @endif
+                                @endforeach
                             </select>
                             <span class="text-red-500 font-bold">*</span>
                         </div>
-                        <x-input-error :messages="$errors->first('form.especial_evento')" class="mt-2" />
+                        <x-input-error :messages="$errors->first('form.id_especial_evento')" class="mt-2" />
                     </div>
                 @endif
 
-                @if($form->is_especial && $form->especial_evento == '1')
+                @if($form->is_especial && $form->id_especial_evento == '1')
                     <div class="w-full">
                         <x-input-label for="cantidad_dias_evento" :value="__('Cantidad de Días de Vacaciones')" />
                         <x-text-input id="cantidad_dias_evento" type="number" min="1" max="365" class="w-full"
-                            wire:model.live="form.cantidad_dias_evento" placeholder="Ej: 15" :disabled="!$form->is_especial || $form->especial_evento != '1'" required />
+                            wire:model.live="form.cantidad_dias_evento" placeholder="Ej: 15" :disabled="!$form->is_especial || $form->id_especial_evento != '1'" required />
                         <x-input-error :messages="$errors->first('form.cantidad_dias_evento')" class="mt-2" />
                     </div>
                 @endif
@@ -131,15 +143,16 @@
                     @endphp
 
                     {{-- Lapso 1 --}}
-                    <div class="w-full mt-4 col-span-1 md:col-span-2 lg:col-span-3 border border-gray-300 dark:border-gray-700 rounded-lg p-4">
+                    <div
+                        class="w-full mt-4 col-span-1 md:col-span-2 lg:col-span-3 border border-gray-300 dark:border-gray-700 rounded-lg p-4">
                         <div class="flex justify-between items-center mb-3">
                             <x-input-label :value="__('Lapso 1 - Semanas en las que debe suceder el evento')" />
                             @if($form->is_repetible && !$form->is_especial)
-                                <button type="button" wire:click="agregarSemana(1)"
-                                    @disabled(count($semanasLapso1) >= 4)
+                                <button type="button" wire:click="agregarSemana(1)" @disabled(count($semanasLapso1) >= 4)
                                     class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4"></path>
                                     </svg>
                                     Agregar Semana (máx. 4)
                                 </button>
@@ -174,15 +187,16 @@
                     </div>
 
                     {{-- Lapso 2 --}}
-                    <div class="w-full col-span-1 md:col-span-2 lg:col-span-3 border border-gray-300 dark:border-gray-700 rounded-lg p-4">
+                    <div
+                        class="w-full col-span-1 md:col-span-2 lg:col-span-3 border border-gray-300 dark:border-gray-700 rounded-lg p-4">
                         <div class="flex justify-between items-center mb-3">
                             <x-input-label :value="__('Lapso 2 - Semanas en las que debe suceder el evento')" />
                             @if($form->is_repetible && !$form->is_especial)
-                                <button type="button" wire:click="agregarSemana(2)"
-                                    @disabled(count($semanasLapso2) >= 4)
+                                <button type="button" wire:click="agregarSemana(2)" @disabled(count($semanasLapso2) >= 4)
                                     class="px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4"></path>
                                     </svg>
                                     Agregar Semana (máx. 4)
                                 </button>

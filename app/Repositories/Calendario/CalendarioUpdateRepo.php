@@ -32,7 +32,8 @@ class CalendarioUpdateRepo
                 'e.nombre_evento as nombre',
                 'e.tipo_evento as tipo',
                 'e.codigo_color_evento as color',
-                'e.especial_evento as especial_evento'
+                'e.is_superponible_evento',
+                'e.id_especial_evento as especial_evento'
             )
             ->get();
     }
@@ -152,6 +153,14 @@ class CalendarioUpdateRepo
             $insert['is_superponible_evento'] = $data['is_superponible'] ?? true;
         }
 
+        if (in_array('is_dia_evento', $columns)) {
+            $insert['is_dia_evento'] = $data['is_dia_evento'] ?? false;
+        }
+
+        if (in_array('dia_evento', $columns)) {
+            $insert['dia_evento'] = $data['dia_evento'] ?? null;
+        }
+
         return DB::table('evento')->insertGetId($insert);
     }
 
@@ -161,7 +170,7 @@ class CalendarioUpdateRepo
     public function obtenerEventoVacacionesActivo()
     {
         return DB::table('evento')
-            ->where('especial_evento', '1')
+            ->where('id_especial_evento', '1')
             ->where('estatus', '1')
             ->first();
     }

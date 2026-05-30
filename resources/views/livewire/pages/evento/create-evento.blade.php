@@ -14,11 +14,12 @@
                 @php
                     $deshabilitarIndependienteLaborable = $form->is_especial
                         || in_array($form->tipo_evento, ['1', '2', '6'], true);
-                    $deshabilitarSuperponible = (in_array($form->tipo_evento, ['1', '2', '6'], true) && !($form->is_especial && in_array($form->especial_evento, ['4', '5'])))
-                        || ($form->is_especial && $form->especial_evento == '1');
+                    $deshabilitarSuperponible = (in_array($form->tipo_evento, ['1', '2', '6'], true) && !($form->is_especial && in_array($form->id_especial_evento, ['4', '5'])))
+                        || ($form->is_especial && in_array($form->id_especial_evento, ['1', '9', '10', '11']));
                     $deshabilitarIsCantidadDias = $form->is_especial;
-                    $deshabilitarSemanaEvento = in_array($form->tipo_evento, ['1', '2', '6'], true);
-                    $deshabilitarInputDias = $form->is_especial && in_array($form->especial_evento, ['2', '3', '4', '5', '7', '8', '9', '10']);
+                    $deshabilitarSemanaEvento = in_array($form->tipo_evento, ['1', '2', '6'], true) || $form->is_especial;
+                    $deshabilitarInputDias = $form->is_especial && in_array($form->id_especial_evento, ['2', '3', '4', '5', '7', '8', '9', '10', '11']);
+                    $deshabilitarDiaEvento = !in_array($form->tipo_evento, ['1', '2', '6'], true);
                 @endphp
 
                 <div class="w-full">
@@ -73,6 +74,18 @@
                 <x-toggle-switch id="is_superponible" :label="__('¿Puede asignarse en la misma fecha que días de vacaciones?')"
                     model="form.is_superponible" :disabled="$deshabilitarSuperponible" required />
 
+                <x-toggle-switch id="is_dia_evento" :label="__('¿Ocurre en un día específico?')"
+                    model="form.is_dia_evento" :disabled="$deshabilitarDiaEvento" required />
+
+                @if($form->is_dia_evento)
+                <div class="w-full">
+                    <x-input-label for="dia_evento" :value="__('Día Específico del Evento')" />
+                    <x-text-input id="dia_evento" type="date" class="w-full"
+                        wire:model.live="form.dia_evento" required />
+                    <x-input-error :messages="$errors->first('form.dia_evento')" class="mt-2" />
+                </div>
+                @endif
+
                 <x-toggle-switch id="is_cantidad_dias_evento" :label="__('¿Tiene una duración de días específica?')"
                     model="form.is_cantidad_dias_evento" :disabled="$deshabilitarIsCantidadDias" required />
 
@@ -92,24 +105,23 @@
                     <div class="w-full">
                         <x-input-label for="especial" :value="__('Seleccione el tipo de Evento Especial')" />
                         <div class="flex items-center gap-1 w-full">
-                            <select id="especial" wire:model.live="form.especial_evento" @disabled(!$form->is_especial) @class([
+                            @php
+                                $usados = $this->eventosEspecialesUsados;
+                            @endphp
+                            <select id="especial" wire:model.live="form.id_especial_evento" @disabled(!$form->is_especial) @class([
                                 'flex-1 min-w-0 border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm',
                                 'opacity-60 cursor-not-allowed' => !$form->is_especial,
                             ])>
-                                <option value="">Seleccione...</option>
-                                <option value="1">Vacaciones Colectivas</option>
-                                <option value="2">Inicio del Lapso Académico</option>
-                                <option value="3">Fin del Lapso Académico</option>
-                                <option value="4">Semana Santa</option>
-                                <option value="5">Carnaval</option>
-                                <option value="7">Inicio del Lapso Académico Trayecto Inicial</option>
-                                <option value="8">Fin del Lapso Académico Trayecto Inicial</option>
-                                <option value="9">Inicio del Curso Intensivo</option>
-                                <option value="10">Fin del Curso Intensivo</option>
+                                <option value="">-- Seleccione Especial --</option>
+                                @foreach(\App\Models\EspecialEvento::orderBy('especial_evento_name')->get() as $esp)
+                                    @if(!in_array($esp->id_especial_evento, $usados) || $form->id_especial_evento == $esp->id_especial_evento)
+                                        <option value="{{ $esp->id_especial_evento }}">{{ $esp->especial_evento_name }}</option>
+                                    @endif
+                                @endforeach
                             </select>
                             <span class="text-red-500 font-bold">*</span>
                         </div>
-                        <x-input-error :messages="$errors->first('form.especial_evento')" class="mt-2" />
+                        <x-input-error :messages="$errors->first('form.id_especial_evento')" class="mt-2" />
                     </div>
                 @endif
 

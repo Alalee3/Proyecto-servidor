@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 
 class EditarCalendario extends Component
 {
@@ -22,6 +23,9 @@ class EditarCalendario extends Component
     public $eventosPorFecha = []; // Mapa de eventos agrupados por fecha
     public $bibliotecaEventos = [];
     public $currentYear;
+
+    public $selectedYearTemporal = null;
+    public $esProsecucion = false;
 
     public $id_calendario;
     public $estatus_calendario;
@@ -96,6 +100,8 @@ class EditarCalendario extends Component
                 $this->form->nuevoLaborable = false;
                 $this->form->nuevoRepetible = true;
                 $this->form->nuevoIsIndependiente = false;
+                $this->form->nuevoIsDiaEvento = false;
+                $this->form->nuevoDiaEvento = null;
             }
         }
     }
@@ -117,7 +123,7 @@ class EditarCalendario extends Component
         $this->actualizarMapaEventos();
     }
 
-    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false)
+    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false, $confirmadoIncorporacion = false, $confirmadoDuracion = false, $confirmadoIntroductorio = false)
     {
         $eventoInfo = \App\Models\Evento::find($id_evento);
 
@@ -166,6 +172,142 @@ class EditarCalendario extends Component
             }
         }
 
+        // VALIDAR SI ES INCORPORACIÓN FUERA DE FECHA (EVENTO 11)
+        if (!$confirmadoIncorporacion && $especial === '11') {
+            $esDespuesVacaciones = false;
+            $fechaInicioEvento = \Carbon\Carbon::parse($inicio);
+            
+            foreach ($this->eventosRegistrados as $evReg) {
+                if (($evReg['especial_evento'] ?? '') === '1') {
+                    $fechaFinVacaciones = \Carbon\Carbon::parse($evReg['fin']);
+                    $diffDays = $fechaFinVacaciones->diffInDays($fechaInicioEvento, false);
+                    
+                    // Si el inicio es de 1 a 3 días después de las vacaciones (para cubrir fines de semana)
+                    if ($diffDays >= 1 && $diffDays <= 3 && $fechaInicioEvento->gt($fechaFinVacaciones)) {
+                        $esDespuesVacaciones = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$esDespuesVacaciones) {
+                $this->tempEventoAgregar = func_get_args();
+                $this->dispatch('show-alert', [
+                    'type' => 'warning',
+                    'message' => 'El evento "Incorporación después del Receso Vacacional" solo debería registrarse inmediatamente después de unas Vacaciones Colectivas. ¿Está seguro de registrarlo en esta fecha?',
+                    'showCancelButton' => true,
+                    'cancelText' => 'Cancelar',
+                    'okText' => 'Continuar',
+                    'onOkEvent' => 'confirmar-agregar-evento-incorporacion'
+                ]);
+                return;
+            }
+        }
+
+
+        // VALIDAR SOLAPAMIENTO DE LAPSOS ACADÉMICOS
+        if ($especial === '2') {
+            $iniciosLapso = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
+                ->sortBy('inicio')
+                ->values();
+            $finesLapso = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '3')
+                ->sortBy('inicio')
+                ->values();
+
+            foreach ($iniciosLapso as $index => $inicioLapso) {
+                $fechaInicioLapso = $inicioLapso['inicio'];
+                $fechaFinLapso = isset($finesLapso[$index]) ? $finesLapso[$index]['inicio'] : null;
+
+                if ($fechaFinLapso) {
+                    if ($inicio >= $fechaInicioLapso && $inicio <= $fechaFinLapso) {
+                        $this->dispatch('show-alert', [
+                            'type' => 'error',
+                            'message' => 'No se puede registrar un Lapso Académico en esta fecha porque cae dentro del período de un Lapso Académico ya existente.'
+                        ]);
+                        return;
+                    }
+                } else {
+                    if ($inicio <= $inicioLapso['fin'] && $fin >= $inicioLapso['inicio']) {
+                        $this->dispatch('show-alert', [
+                            'type' => 'error',
+                            'message' => 'No se puede registrar un Lapso Académico en las fechas seleccionadas porque ya existe otro Lapso Académico en ese período.'
+                        ]);
+                        return;
+                    }
+                }
+            }
+        }
+
+        // VALIDAR SOLAPAMIENTO DE TRAYECTO INICIAL
+        if ($especial === '7') {
+            $iniciosLapso = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '7')
+                ->sortBy('inicio')
+                ->values();
+            $finesLapso = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '8')
+                ->sortBy('inicio')
+                ->values();
+
+            foreach ($iniciosLapso as $index => $inicioLapso) {
+                $fechaInicioLapso = $inicioLapso['inicio'];
+                $fechaFinLapso = isset($finesLapso[$index]) ? $finesLapso[$index]['inicio'] : null;
+
+                if ($fechaFinLapso) {
+                    if ($inicio >= $fechaInicioLapso && $inicio <= $fechaFinLapso) {
+                        $this->dispatch('show-alert', [
+                            'type' => 'error',
+                            'message' => 'No se puede registrar un Lapso Académico Trayecto Inicial en esta fecha porque cae dentro del período de un Trayecto Inicial ya existente.'
+                        ]);
+                        return;
+                    }
+                } else {
+                    if ($inicio <= $inicioLapso['fin'] && $fin >= $inicioLapso['inicio']) {
+                        $this->dispatch('show-alert', [
+                            'type' => 'error',
+                            'message' => 'No se puede registrar un Lapso Académico Trayecto Inicial en las fechas seleccionadas porque ya existe otro Trayecto Inicial en ese período.'
+                        ]);
+                        return;
+                    }
+                }
+            }
+        }
+
+        // VALIDAR QUE TRAYECTO INICIAL CAIGA DENTRO DE UN LAPSO REGULAR
+        if (in_array($especial, ['7', '8'])) {
+            $iniciosLapsoReg = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
+                ->sortBy('inicio')
+                ->values();
+            $finesLapsoReg = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '3')
+                ->sortBy('inicio')
+                ->values();
+
+            $dentroDeAlgunLapso = false;
+            foreach ($iniciosLapsoReg as $index => $inicioReg) {
+                $fechaInicioReg = $inicioReg['inicio'];
+                $fechaFinReg = isset($finesLapsoReg[$index]) ? $finesLapsoReg[$index]['inicio'] : null;
+
+                if ($fechaFinReg) {
+                    if ($inicio >= $fechaInicioReg && $inicio <= $fechaFinReg) {
+                        $dentroDeAlgunLapso = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$dentroDeAlgunLapso) {
+                $this->dispatch('show-alert', [
+                    'type' => 'error',
+                    'message' => 'El Lapso Académico Trayecto Inicial debe estar dentro del período de un Lapso Académico regular previamente registrado.'
+                ]);
+                return;
+            }
+        }
+
         // VALIDACIÓN DE SEMANAS ESPECÍFICAS
         $semanasPermitidas = [];
         if ($eventoInfo && $eventoInfo->is_semana_evento) {
@@ -201,9 +343,39 @@ class EditarCalendario extends Component
             $semanaInicio = \App\Support\CalendarioLapsoSemanas::contarSemanas($lapsoActual['inicio'], $inicio, $this->eventosRegistrados, $incluirVacaciones);
             $semanaFin = \App\Support\CalendarioLapsoSemanas::contarSemanas($lapsoActual['inicio'], $fin, $this->eventosRegistrados, $incluirVacaciones);
 
-            if (!in_array($semanaInicio, $semanasPermitidas) || !in_array($semanaFin, $semanasPermitidas)) {
-                $semanasStr = implode(', ', $semanasPermitidas);
-                $this->showAlert('error', "El evento solo puede registrarse en la(s) semana(s): {$semanasStr} del Lapso Académico. (Semana seleccionada: {$semanaInicio}" . ($semanaInicio != $semanaFin ? " a {$semanaFin}" : "") . ")");
+            // Determinar qué número de lapso es (Lapso 1 o Lapso 2)
+            $lapsosAsc = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
+                ->sortBy('inicio')->values();
+            
+            $numeroLapsoActual = 1;
+            foreach ($lapsosAsc as $index => $lapso) {
+                // Identificamos el lapso actual por su inicio (ya que los IDs pueden variar si aún no están guardados)
+                if ($lapso['inicio'] === $lapsoActual['inicio']) {
+                    $numeroLapsoActual = $index + 1;
+                    break;
+                }
+            }
+
+            // Filtrar las semanas permitidas para el lapso actual
+            $semanasPermitidasLapso = array_filter($semanasPermitidas, fn($s) => (is_array($s) ? ($s['lapso'] ?? 1) : 1) == $numeroLapsoActual);
+            $semanasPermitidasValores = array_map(fn($s) => is_array($s) ? (int) $s['semana'] : (int) $s, $semanasPermitidasLapso);
+
+            if (empty($semanasPermitidasValores) || !in_array($semanaInicio, $semanasPermitidasValores) || !in_array($semanaFin, $semanasPermitidasValores)) {
+                $semanasStr = empty($semanasPermitidasValores) ? 'Ninguna' : implode(', ', $semanasPermitidasValores);
+                $this->showAlert('error', "El evento solo puede registrarse en la(s) semana(s): {$semanasStr} del Lapso Académico {$numeroLapsoActual}. (Semana seleccionada: {$semanaInicio}" . ($semanaInicio != $semanaFin ? " a {$semanaFin}" : "") . ")");
+                return;
+            }
+        }
+
+        // VALIDACIÓN DE DÍA ESPECÍFICO (is_dia_evento)
+        if ($eventoInfo && $eventoInfo->is_dia_evento && !empty($eventoInfo->dia_evento)) {
+            $diaEspecifico = \Carbon\Carbon::parse($eventoInfo->dia_evento);
+            $diaInicioAsignado = \Carbon\Carbon::parse($inicio);
+            
+            // Comparamos el mes y día (ignorando el año para permitir recursividad anual)
+            if ($diaEspecifico->format('m-d') !== $diaInicioAsignado->format('m-d')) {
+                $this->showAlert('error', "El evento \"{$nombre}\" tiene una fecha fija configurada. Solo puede registrarse en los días " . $diaEspecifico->format('d/m') . " de cualquier año.");
                 return;
             }
         }
@@ -211,6 +383,52 @@ class EditarCalendario extends Component
         // VALIDAR REGLA DE SUPERPOSICIÓN CON VACACIONES COLECTIVAS
         $is_superponible = $eventoInfo ? (bool) $eventoInfo->is_superponible_evento : false;
         $is_vacaciones = ($eventoInfo->especial_evento ?? '') === '1';
+        // VALIDAR REGLA DEL CURSO INTENSIVO (9)
+        if (in_array($especial, ['9', '10'])) {
+            $iniciosLapsoReg = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
+                ->sortBy('inicio')
+                ->values();
+            $finesLapsoReg = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '3')
+                ->sortBy('inicio')
+                ->values();
+
+            $overlapsWithLapso = false;
+            foreach ($iniciosLapsoReg as $index => $inicioReg) {
+                $fechaInicioReg = $inicioReg['inicio'];
+                $fechaFinReg = isset($finesLapsoReg[$index]) ? $finesLapsoReg[$index]['inicio'] : null;
+
+                if ($fechaFinReg) {
+                    if ($inicio >= $fechaInicioReg && $inicio <= $fechaFinReg) {
+                        $overlapsWithLapso = true;
+                        break;
+                    }
+                }
+            }
+
+            if ($overlapsWithLapso) {
+                $dentroDeVacaciones = false;
+                $vacaciones = collect($this->eventosRegistrados)
+                    ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '1')
+                    ->values();
+                
+                foreach ($vacaciones as $vac) {
+                    if ($inicio >= $vac['inicio'] && $inicio <= $vac['fin']) {
+                        $dentroDeVacaciones = true;
+                        break;
+                    }
+                }
+
+                if (!$dentroDeVacaciones) {
+                    $this->dispatch('show-alert', [
+                        'type' => 'error',
+                        'message' => 'El Curso Intensivo no puede estar directamente dentro de un Lapso Académico regular, a menos que esté dentro de un período de Vacaciones Colectivas.'
+                    ]);
+                    return;
+                }
+            }
+        }
 
         if (!$is_superponible && !$is_vacaciones) {
             foreach ($this->eventosRegistrados as $evReg) {
@@ -342,8 +560,24 @@ class EditarCalendario extends Component
                 }
             } else {
                 if ($duracionReal != $cantidadRequerida) {
-                    $this->showAlert('error', "El evento '{$nombre}' debe durar exactamente {$cantidadRequerida} día(s) por cada selección. Has seleccionado {$duracionReal} día(s).");
-                    return;
+                    // Si el evento requiere exactamente 1 día, error bloqueante (rojo)
+                    if ($cantidadRequerida == 1) {
+                        $this->showAlert('error', "El evento '{$nombre}' debe durar exactamente {$cantidadRequerida} día(s) por cada selección. Has seleccionado {$duracionReal} día(s).");
+                        return;
+                    }
+                    // Para eventos de más de 1 día, alerta amarilla con confirmación
+                    if (!$confirmadoDuracion) {
+                        $this->tempEventoAgregar = func_get_args();
+                        $this->dispatch('show-alert', [
+                            'type' => 'warning',
+                            'message' => "El evento '{$nombre}' debería durar exactamente {$cantidadRequerida} día(s) por cada selección, pero has seleccionado {$duracionReal} día(s). ¿Desea continuar de todas formas?",
+                            'showCancelButton' => true,
+                            'cancelText' => 'Cancelar',
+                            'okText' => 'Continuar',
+                            'onOkEvent' => 'confirmar-agregar-evento-duracion'
+                        ]);
+                        return;
+                    }
                 }
             }
         }
@@ -407,10 +641,10 @@ class EditarCalendario extends Component
             fn($ev) => !in_array($ev['especial_evento'] ?? '', ['3', '8', '10'])
         ));
 
-        $eventosFinTemplates = \App\Models\Evento::whereIn('especial_evento', ['3', '8', '10'])
+        $eventosFinTemplates = \App\Models\Evento::whereIn('id_especial_evento', ['3', '8', '10'])
             ->where('estatus', '1')
             ->get()
-            ->keyBy('especial_evento');
+            ->keyBy('id_especial_evento');
 
         if ($eventosFinTemplates->isEmpty()) {
             return;
@@ -547,6 +781,7 @@ class EditarCalendario extends Component
         }
 
         $removido = $this->eventosRegistrados[$index];
+
         $idsFestivos = \App\Support\CalendarioLapsoSemanas::idsEventosFestivos($this->eventosRegistrados);
         $eraFestivo = \App\Support\CalendarioLapsoSemanas::registroEsFestivo($removido, $idsFestivos) || ($removido['especial_evento'] ?? '') === '1';
         $eraInicioLapso = in_array($removido['especial_evento'] ?? '', ['2', '7', '9']);
@@ -622,6 +857,8 @@ class EditarCalendario extends Component
                 'rango_dias' => $rango_dias,
                 'is_independiente' => $this->form->nuevoIsIndependiente,
                 'is_superponible' => $is_superponible,
+                'is_dia_evento' => $this->form->nuevoIsDiaEvento,
+                'dia_evento' => $this->form->nuevoDiaEvento,
             ]);
 
             $colorHex = $codigo_color_evento ?: '#808080';
@@ -715,6 +952,8 @@ class EditarCalendario extends Component
                 $mensajeFinal = $mensajes[0];
             }
 
+            $this->guardarBorrador();
+
             $this->dispatch('show-alert', [
                 'type' => 'warning',
                 'message' => $mensajeFinal,
@@ -726,7 +965,14 @@ class EditarCalendario extends Component
             return;
         }
 
+        $this->guardarBorrador();
         $this->dispatch('seccion-fechas-validada');
+    }
+
+    #[On('seccion-fechas-validada')]
+    public function alContinuarAEventos()
+    {
+        $this->guardarBorrador();
     }
 
     public function aprobar($confirmadoAgosto = false, $confirmadoIrreversible = false)
@@ -966,9 +1212,57 @@ class EditarCalendario extends Component
     #[\Livewire\Attributes\On('confirmar-agregar-evento-intensivo')]
     public function confirmarAgregarEventoIntensivo()
     {
+        \Illuminate\Support\Facades\Log::info("Confirmar intensivo (Editar), tempEventoAgregar: " . json_encode($this->tempEventoAgregar));
         if ($this->tempEventoAgregar) {
             $args = $this->tempEventoAgregar;
+            while (count($args) < 7) {
+                $args[] = false;
+            }
             $args[6] = true; // $confirmadoIntensivo
+            $this->agregarEvento(...$args);
+            $this->tempEventoAgregar = null;
+        }
+    }
+
+    #[\Livewire\Attributes\On('confirmar-agregar-evento-incorporacion')]
+    public function confirmarAgregarEventoIncorporacion()
+    {
+        \Illuminate\Support\Facades\Log::info("Confirmar incorporacion (Editar), tempEventoAgregar: " . json_encode($this->tempEventoAgregar));
+        if ($this->tempEventoAgregar) {
+            $args = $this->tempEventoAgregar;
+            while (count($args) < 8) {
+                $args[] = false;
+            }
+            $args[7] = true; // $confirmadoIncorporacion
+            $this->agregarEvento(...$args);
+            $this->tempEventoAgregar = null;
+        }
+    }
+
+    #[\Livewire\Attributes\On('confirmar-agregar-evento-duracion')]
+    public function confirmarAgregarEventoDuracion()
+    {
+        if ($this->tempEventoAgregar) {
+            $args = $this->tempEventoAgregar;
+            while (count($args) < 9) {
+                $args[] = false;
+            }
+            $args[8] = true; // $confirmadoDuracion
+            $this->agregarEvento(...$args);
+            $this->tempEventoAgregar = null;
+        }
+    }
+
+    #[\Livewire\Attributes\On('confirmar-agregar-evento-introductorio')]
+    public function confirmarAgregarEventoIntroductorio()
+    {
+        \Illuminate\Support\Facades\Log::info("Confirmar introductorio (Editar), tempEventoAgregar: " . json_encode($this->tempEventoAgregar));
+        if ($this->tempEventoAgregar) {
+            $args = $this->tempEventoAgregar;
+            while (count($args) < 10) {
+                $args[] = false;
+            }
+            $args[9] = true; // $confirmadoIntroductorio
             $this->agregarEvento(...$args);
             $this->tempEventoAgregar = null;
         }

@@ -15,17 +15,19 @@ class EventoUpdateRepo
             $params = [
                 'nombre_evento' => $data['descripcion_evento'],
                 'tipo_evento'   => $data['tipo_evento'],
-                'especial_evento' => ($data['is_especial'] ?? false) ? (empty($data['especial_evento']) ? null : $data['especial_evento']) : null,
+                'id_especial_evento' => ($data['is_especial'] ?? false) ? (empty($data['id_especial_evento']) ? null : $data['id_especial_evento']) : null,
                 'codigo_color_evento' => $data['codigo_color_evento'] ?? null,
                 'is_laborable_evento'  => $data['is_laborable'],
                 'is_repetible_evento'  => $data['is_repetible'],
                 'is_cantidad_dias_evento' => $data['is_rango_dias'],
                 'cantidad_dias_evento'  => ($data['is_rango_dias'] ?? false)
                     ? ($data['rango_dias'] ?? null)
-                    : ((($data['is_especial'] ?? false) && ($data['especial_evento'] ?? '') == '1')
+                    : ((($data['is_especial'] ?? false) && ($data['id_especial_evento'] ?? '') == '1')
                         ? ($data['cantidad_dias_evento'] ?? null)
                         : null),
                 'is_superponible_evento'=> $data['is_superponible'] ?? false,
+                'is_dia_evento' => $data['is_dia_evento'] ?? false,
+                'dia_evento' => ($data['is_dia_evento'] ?? false) ? ($data['dia_evento'] ?? null) : null,
                 'is_semana_evento' => $data['is_semana_evento'] ?? (!empty($data['semanas'])),
                 'semana_evento' => (($data['is_semana_evento'] ?? !empty($data['semanas'])) && !empty($data['semanas']) && is_array($data['semanas'])) 
                 ? json_encode(array_values(array_filter($data['semanas'], fn($v) => is_array($v) && !empty($v['semana']) && $v['semana'] !== null && $v['semana'] !== ''))) 

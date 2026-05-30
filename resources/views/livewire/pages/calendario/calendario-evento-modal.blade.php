@@ -66,6 +66,7 @@ $wireKey = $wireKey ?? 'datalist-calendario';
             $deshabilitarIndependienteLaborable = in_array($form->nuevoTipo, ['1', '2', '6'], true);
             $deshabilitarCantidadRango = !$form->nuevoIsRangoDias;
             $deshabilitarSuperponible = in_array($form->nuevoTipo, ['1', '2', '6'], true);
+            $deshabilitarDiaEvento = !in_array($form->nuevoTipo, ['1', '2', '6'], true);
             @endphp
 
             {{-- Cuadrícula Principal de 3 Columnas (3x3) --}}
@@ -142,6 +143,23 @@ $wireKey = $wireKey ?? 'datalist-calendario';
                     <x-input-error :messages="$errors->get('form.nuevoIsSuperponible')" class="mt-2" />
                 </div>
 
+                {{-- Columna 2: ¿Ocurre en un día específico? --}}
+                <div>
+                    <x-toggle-switch id="{{ $wireKey }}_is_dia_evento_switch" :label="__('¿Ocurre en un día específico?')"
+                        model="form.nuevoIsDiaEvento" :disabled="$deshabilitarDiaEvento" required />
+                </div>
+                
+                {{-- Si es en un día específico, Input date (oculto dinámicamente con x-show) --}}
+                <div class="w-full" x-show="$wire.form.nuevoIsDiaEvento" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+                    <label class="block uppercase font-bold text-sm text-gray-900 dark:text-white mb-1">{{ __('Día Específico del Evento') }}</label>
+                    <div class="flex items-center gap-1 mt-1">
+                        <x-text-input id="{{ $wireKey }}_nuevoDiaEvento" type="date" class="flex-1 min-w-0 block"
+                            wire:model.live="form.nuevoDiaEvento" required />
+                        <span class="text-red-500 font-bold">*</span>
+                    </div>
+                    <x-input-error :messages="$errors->first('form.nuevoDiaEvento')" class="mt-2" />
+                </div>
+
                 {{-- Columna 2: ¿Tiene cantidad específica de días de duración? (último switch) --}}
                 <div>
                     <x-toggle-switch id="{{ $wireKey }}_is_rango_dias_switch" :label="__('¿Tiene una duración de días específica?')"
@@ -149,7 +167,7 @@ $wireKey = $wireKey ?? 'datalist-calendario';
                 </div>
 
                 {{-- Columna 3: Cantidad de Días (oculto dinámicamente con x-show) --}}
-                <div class="w-full" x-show="nuevoIsRangoDias" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+                <div class="w-full" x-show="$wire.form.nuevoIsRangoDias" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
                     <label class="block uppercase font-bold text-sm text-gray-900 dark:text-white mb-1">{{ __('Cantidad de días que debe durar el evento') }}</label>
                     <div class="flex items-center gap-1 mt-1">
                         <x-text-input id="{{ $wireKey }}_rango_dias_input" type="number"

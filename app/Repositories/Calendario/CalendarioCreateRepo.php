@@ -113,7 +113,8 @@ class CalendarioCreateRepo
                 'e.nombre_evento as nombre',
                 'e.tipo_evento as tipo',
                 'e.codigo_color_evento as color',
-                'e.especial_evento as especial_evento'
+                'e.is_superponible_evento',
+                'e.id_especial_evento as especial_evento'
             )
             ->get();
     }
@@ -132,7 +133,8 @@ class CalendarioCreateRepo
                 'dia_fin_calendario_academico' => $data['dia_fin_calendario_academico'],
                 'semana_lapso_uno_calendario_academico' => $data['semana_lapso_uno_calendario_academico'] ?? 0,
                 'semana_lapso_dos_calendario_academico' => $data['semana_lapso_dos_calendario_academico'] ?? 0,
-                'semana_lapso_introductorio_calendario_academico' => $data['semana_lapso_uno_introductorio_calendario_academico'] ?? null,
+                'semana_lapso_uno_introductorio_calendario_academico' => $data['semana_lapso_uno_introductorio_calendario_academico'] ?? null,
+                'semana_lapso_dos_introductorio_calendario_academico' => $data['semana_lapso_dos_introductorio_calendario_academico'] ?? null,
                 'semana_intensibo_introductorio_calendario_academico' => $data['semana_intensibo_introductorio_calendario_academico'] ?? null,
                 'estatus' => $data['estatus'] ?? '4' // Por defecto incompleto
             ];
@@ -237,6 +239,14 @@ class CalendarioCreateRepo
             $insert['is_superponible_evento'] = $data['is_superponible'] ?? true;
         }
 
+        if (in_array('is_dia_evento', $columns)) {
+            $insert['is_dia_evento'] = $data['is_dia_evento'] ?? false;
+        }
+
+        if (in_array('dia_evento', $columns)) {
+            $insert['dia_evento'] = $data['dia_evento'] ?? null;
+        }
+
         return DB::table('evento')->insertGetId($insert);
     }
 
@@ -246,7 +256,7 @@ class CalendarioCreateRepo
     public function obtenerEventoVacacionesActivo()
     {
         return DB::table('evento')
-            ->where('especial_evento', '1')
+            ->where('id_especial_evento', '1')
             ->where('estatus', '1')
             ->first();
     }

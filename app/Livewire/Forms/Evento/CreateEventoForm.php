@@ -9,7 +9,7 @@ class CreateEventoForm extends Form
     public $codigo_color_evento = '#000000';
     public $descripcion_evento = '';
     public $tipo_evento = '1';
-    public $especial_evento = '';
+    public $id_especial_evento = '';
     public $is_especial = false;
     public $is_laborable = false;
     public $is_repetible = false;
@@ -17,6 +17,8 @@ class CreateEventoForm extends Form
     public $is_independiente = true;
     public $is_superponible = true;
     public $is_semana_evento = false;
+    public $is_dia_evento = false;
+    public $dia_evento = null;
     public $cantidad_dias_evento = 0;
     public $semanas = [];
 
@@ -27,11 +29,11 @@ class CreateEventoForm extends Form
                 'nullable',
                 function ($attribute, $value, $fail) {
                     if ($this->is_cantidad_dias_evento) {
-                        if ($this->is_especial && in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10'])) {
+                        if ($this->is_especial && in_array($this->id_especial_evento, ['2', '3', '7', '8', '9', '10', '11'])) {
                             if ($value != 1) {
                                 $fail('La cantidad de días debe ser obligatoriamente 1 para este evento especial.');
                             }
-                        } elseif ($this->is_especial && in_array($this->especial_evento, ['4', '5'])) {
+                        } elseif ($this->is_especial && in_array($this->id_especial_evento, ['4', '5'])) {
                             if ($value != 2) {
                                 $fail('Para Semana Santa y Carnaval, la cantidad de días debe ser obligatoriamente 2.');
                             }
@@ -54,15 +56,15 @@ class CreateEventoForm extends Form
                 'boolean',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial) {
-                        if ($this->especial_evento == '1') {
+                        if ($this->id_especial_evento == '1') {
                             if (!$value) {
                                 $fail('Para las vacaciones, debe habilitarse la cantidad de días obligatoriamente.');
                             }
-                        } elseif (in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10'])) {
+                        } elseif (in_array($this->id_especial_evento, ['2', '3', '7', '8', '9', '10', '11'])) {
                             if (!$value) {
                                 $fail('Este evento especial requiere cantidad de días obligatoriamente (1 día).');
                             }
-                        } elseif (in_array($this->especial_evento, ['4', '5'])) {
+                        } elseif (in_array($this->id_especial_evento, ['4', '5'])) {
                             if (!$value) {
                                 $fail('Para Semana Santa y Carnaval, debe habilitarse la cantidad de días obligatoriamente.');
                             }
@@ -87,9 +89,15 @@ class CreateEventoForm extends Form
                 'boolean',
                 function ($attribute, $value, $fail) {
                     if (in_array($this->tipo_evento, ['1', '2', '6']) && !$value) {
-                        if (!($this->is_especial && in_array($this->especial_evento, ['4', '5']))) {
+                        if (!($this->is_especial && in_array($this->id_especial_evento, ['4', '5']))) {
                             $fail('Para los feriados, el evento debe ser obligatoriamente superponible.');
                         }
+                    }
+                    if ($this->is_especial && in_array($this->id_especial_evento, ['1', '11']) && $value) {
+                        $fail('Para este evento especial, no puede ser superponible.');
+                    }
+                    if ($this->is_especial && in_array($this->id_especial_evento, ['9', '10']) && !$value) {
+                        $fail('Para el inicio y fin del curso intensivo, el evento debe ser obligatoriamente superponible.');
                     }
                 }
             ],
@@ -119,11 +127,11 @@ class CreateEventoForm extends Form
                 'in:1,2,3,4,5,6',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial) {
-                        if (in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10']) && $value != '4') {
+                        if (in_array($this->id_especial_evento, ['2', '3', '7', '8', '9', '10']) && $value != '4') {
                             $fail('Para este evento especial, el tipo de evento debe ser obligatoriamente Académico.');
-                        } elseif ($this->especial_evento == '1' && $value != '5') {
-                            $fail('Para Vacaciones Colectivas, el tipo de evento debe ser obligatoriamente Administrativo/Académico.');
-                        } elseif (in_array($this->especial_evento, ['4', '5']) && !in_array($value, ['6'])) {
+                        } elseif (in_array($this->id_especial_evento, ['1', '11']) && $value != '5') {
+                            $fail('Para este evento especial, el tipo de evento debe ser obligatoriamente Administrativo/Académico.');
+                        } elseif (in_array($this->id_especial_evento, ['4', '5']) && !in_array($value, ['6'])) {
                             $fail('Para Semana Santa y Carnaval, el tipo de evento debe ser Feriado Mundial.');
                         }
                     }
@@ -133,14 +141,14 @@ class CreateEventoForm extends Form
                 'required',
                 'boolean'
             ],
-            'especial_evento' => [
+            'id_especial_evento' => [
                 'required_if:is_especial,true',
                 'nullable',
-                'in:1,2,3,4,5,6,7,8,9,10',
+                'in:1,2,3,4,5,6,7,8,9,10,11',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial && !empty($value)) {
                         $exists = \Illuminate\Support\Facades\DB::table('evento')
-                            ->where('especial_evento', $value)
+                            ->where('id_especial_evento', $value)
                             ->exists();
                         if ($exists) {
                             $fail('Ya existe un evento registrado con el tipo especial seleccionado.');
@@ -153,9 +161,9 @@ class CreateEventoForm extends Form
                 'boolean',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial) {
-                        if (in_array($this->especial_evento, ['2', '3', '7', '8', '9', '10']) && !$value) {
+                        if (in_array($this->id_especial_evento, ['2', '3', '7', '8', '9', '10', '11']) && !$value) {
                             $fail('Para este evento especial, debe ser obligatoriamente Laborable.');
-                        } elseif (in_array($this->especial_evento, ['1', '4', '5']) && $value) {
+                        } elseif (in_array($this->id_especial_evento, ['1', '4', '5']) && $value) {
                             $fail('Para este evento especial, no debe ser Laborable.');
                         }
                     }
@@ -166,14 +174,14 @@ class CreateEventoForm extends Form
                 'boolean',
                 function ($attribute, $value, $fail) {
                     if (in_array($this->tipo_evento, ['3', '4', '5']) && !$value) {
-                        if (!($this->is_especial && in_array($this->especial_evento, ['9', '10']))) {
+                        if (!($this->is_especial && in_array($this->id_especial_evento, ['9', '10']))) {
                             $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');
                         }
                     }
                     if ($this->is_especial) {
-                        if (in_array($this->especial_evento, ['1', '2', '3', '7', '8']) && !$value) {
+                        if (in_array($this->id_especial_evento, ['1', '2', '3', '7', '8', '11']) && !$value) {
                              $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');
-                        } elseif (in_array($this->especial_evento, ['4', '5', '9', '10']) && $value) {
+                        } elseif (in_array($this->id_especial_evento, ['4', '5', '9', '10']) && $value) {
                              $fail('Para este tipo de evento, debe ser obligatoriamente No Repetible.');
                         }
                     }
@@ -190,6 +198,21 @@ class CreateEventoForm extends Form
                         $fail('Este código de color ya está asignado a otro evento activo.');
                     }
                 }
+            ],
+
+            'is_dia_evento' => [
+                'required',
+                'boolean',
+                function ($attribute, $value, $fail) {
+                    if ($value && !in_array($this->tipo_evento, ['1', '2', '6'])) {
+                        $fail('Solo los feriados pueden ocurrir en un día específico.');
+                    }
+                }
+            ],
+            'dia_evento' => [
+                'required_if:is_dia_evento,true',
+                'nullable',
+                'date'
             ],
 
             'semanas' => [
@@ -244,6 +267,28 @@ class CreateEventoForm extends Form
         ];
     }
 
+    public function validationAttributes()
+    {
+        $attributes = [];
+        $lapso1Count = 1;
+        $lapso2Count = 1;
+
+        foreach ($this->semanas as $index => $semana) {
+            $lapso = is_array($semana) && isset($semana['lapso']) ? $semana['lapso'] : 1;
+            if ($lapso == 1) {
+                $attributes["semanas.{$index}.semana"] = "{$lapso1Count} del Lapso 1";
+                $attributes["semanas.{$index}.lapso"] = "{$lapso1Count} del Lapso 1";
+                $lapso1Count++;
+            } else {
+                $attributes["semanas.{$index}.semana"] = "{$lapso2Count} del Lapso 2";
+                $attributes["semanas.{$index}.lapso"] = "{$lapso2Count} del Lapso 2";
+                $lapso2Count++;
+            }
+        }
+
+        return $attributes;
+    }
+
     protected function messages()
     {
         return [
@@ -253,8 +298,8 @@ class CreateEventoForm extends Form
             'descripcion_evento.regex' => 'Formato inválido en la descripción.',
             'tipo_evento.required' => 'El tipo de evento es obligatorio.',
             'tipo_evento.in' => 'El tipo de evento no es válido.',
-            'especial_evento.required_if' => 'Debe seleccionar qué tipo de evento especial es.',
-            'especial_evento.in' => 'El evento especial seleccionado no es válido.',
+            'id_especial_evento.required_if' => 'Debe seleccionar qué tipo de evento especial es.',
+            'id_especial_evento.in' => 'El evento especial seleccionado no es válido.',
             'codigo_color_evento.required' => 'El color es obligatorio.',
             'codigo_color_evento.size' => 'El código de color debe tener 7 caracteres (ej: #FF0000).',
             'codigo_color_evento.regex' => 'El formato del código de color debe ser hexadecimal (ej: #FF0000).',
@@ -264,12 +309,12 @@ class CreateEventoForm extends Form
             'is_cantidad_dias_evento.boolean' => 'El valor de cantidad de días debe ser booleano.',
             'semanas.required_if' => 'Debe seleccionar al menos una semana cuando el evento está asociado a semanas específicas.',
             'semanas.array' => 'Formato inválido de semanas.',
-            'semanas.*.semana.required' => 'La semana :position no puede estar vacía.',
-            'semanas.*.semana.numeric' => 'La semana :position debe ser un número.',
-            'semanas.*.semana.min' => 'La semana :position debe ser mayor o igual a 1.',
-            'semanas.*.semana.max' => 'La semana :position no debe superar 18.',
-            'semanas.*.lapso.required' => 'El lapso de la semana :position es obligatorio.',
-            'semanas.*.lapso.in' => 'El lapso de la semana :position no es válido (debe ser 1 o 2).',
+            'semanas.*.semana.required' => 'La semana :attribute no puede estar vacía.',
+            'semanas.*.semana.numeric' => 'La semana :attribute debe ser un número.',
+            'semanas.*.semana.min' => 'La semana :attribute debe ser mayor o igual a 1.',
+            'semanas.*.semana.max' => 'La semana :attribute no debe superar 18.',
+            'semanas.*.lapso.required' => 'El lapso de la semana :attribute es obligatorio.',
+            'semanas.*.lapso.in' => 'El lapso de la semana :attribute no es válido (debe ser 1 o 2).',
             'is_cantidad_dias_evento.required' => 'El campo cantidad de días es obligatorio.',
             'is_independiente.required' => 'El campo independiente es obligatorio.',
             'is_independiente.boolean' => 'El campo independiente debe ser un valor booleano.',

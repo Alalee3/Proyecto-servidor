@@ -46,7 +46,7 @@ class AppServiceProvider extends ServiceProvider
         DB::extend('external_fallback_driver', function ($config, $name) {
             try {
                 // Intentar conectar solo en este instante
-                DB::connection('pgsql_daece')->getPdo();
+                DB::connection('emulacion_sogac_2')->getPdo();
                 return DB::connection('emulacion_sogac_2');
             } catch (Exception $e) {
                 Log::warning('Fallo la conexión a pgsql_daece (Conexión diferida). Usando emulacion_sogac_2. Error: ' . $e->getMessage());
