@@ -204,24 +204,6 @@ class EditarCalendario extends Component
             }
         }
 
-        // VALIDAR SI ES LAPSO INTRODUCTORIO (EVENTO 7) SIN LAPSO ACADÉMICO
-        if (!$confirmadoIntroductorio && $especial === '7') {
-            $hayLapsoAcademico = collect($this->eventosRegistrados)
-                ->contains(fn($ev) => ($ev['especial_evento'] ?? '') === '2');
-
-            if (!$hayLapsoAcademico) {
-                $this->tempEventoAgregar = func_get_args();
-                $this->dispatch('show-alert', [
-                    'type' => 'warning',
-                    'message' => 'El "Lapso Académico Trayecto Inicial" debería registrarse dentro de un Lapso Académico. ¿Desea continuar de todas formas?',
-                    'showCancelButton' => true,
-                    'cancelText' => 'Cancelar',
-                    'okText' => 'Continuar',
-                    'onOkEvent' => 'confirmar-agregar-evento-introductorio'
-                ]);
-                return;
-            }
-        }
 
         // VALIDAR SOLAPAMIENTO DE LAPSOS ACADÉMICOS
         if ($especial === '2') {
@@ -290,6 +272,39 @@ class EditarCalendario extends Component
                         return;
                     }
                 }
+            }
+        }
+
+        // VALIDAR QUE TRAYECTO INICIAL CAIGA DENTRO DE UN LAPSO REGULAR
+        if ($especial === '7') {
+            $iniciosLapsoReg = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
+                ->sortBy('inicio')
+                ->values();
+            $finesLapsoReg = collect($this->eventosRegistrados)
+                ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '3')
+                ->sortBy('inicio')
+                ->values();
+
+            $dentroDeAlgunLapso = false;
+            foreach ($iniciosLapsoReg as $index => $inicioReg) {
+                $fechaInicioReg = $inicioReg['inicio'];
+                $fechaFinReg = isset($finesLapsoReg[$index]) ? $finesLapsoReg[$index]['inicio'] : null;
+
+                if ($fechaFinReg) {
+                    if ($inicio >= $fechaInicioReg && $inicio <= $fechaFinReg) {
+                        $dentroDeAlgunLapso = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$dentroDeAlgunLapso) {
+                $this->dispatch('show-alert', [
+                    'type' => 'error',
+                    'message' => 'El Lapso Académico Trayecto Inicial debe iniciar dentro del período de un Lapso Académico regular previamente registrado.'
+                ]);
+                return;
             }
         }
 
@@ -580,10 +595,10 @@ class EditarCalendario extends Component
             fn($ev) => !in_array($ev['especial_evento'] ?? '', ['3', '8', '10'])
         ));
 
-        $eventosFinTemplates = \App\Models\Evento::whereIn('especial_evento', ['3', '8', '10'])
+        $eventosFinTemplates = \App\Models\Evento::whereIn('id_especial_evento', ['3', '8', '10'])
             ->where('estatus', '1')
             ->get()
-            ->keyBy('especial_evento');
+            ->keyBy('id_especial_evento');
 
         if ($eventosFinTemplates->isEmpty()) {
             return;
@@ -720,6 +735,7 @@ class EditarCalendario extends Component
         }
 
         $removido = $this->eventosRegistrados[$index];
+
         $idsFestivos = \App\Support\CalendarioLapsoSemanas::idsEventosFestivos($this->eventosRegistrados);
         $eraFestivo = \App\Support\CalendarioLapsoSemanas::registroEsFestivo($removido, $idsFestivos) || ($removido['especial_evento'] ?? '') === '1';
         $eraInicioLapso = in_array($removido['especial_evento'] ?? '', ['2', '7', '9']);

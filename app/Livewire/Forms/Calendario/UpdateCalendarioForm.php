@@ -623,6 +623,27 @@ class UpdateCalendarioForm extends Form
             }
         }
 
+        // Validar que los lapsos introductorios estén dentro de los lapsos regulares correspondientes
+        if (isset($periodosRegistrados['Lapso 1']) && isset($periodosRegistrados['Lapso 1 Académico Trayecto Inicial'])) {
+            $reg = $periodosRegistrados['Lapso 1'];
+            $intro = $periodosRegistrados['Lapso 1 Académico Trayecto Inicial'];
+            if ($intro['inicio'] < $reg['inicio'] || $intro['fin'] > $reg['fin']) {
+                $msg = "El Lapso 1 Académico Trayecto Inicial ({$intro['inicio']} al {$intro['fin']}) debe estar contenido completamente dentro del Lapso Académico 1 ({$reg['inicio']} al {$reg['fin']}).";
+                $this->addError('eventosRegistrados', $msg);
+                $errores[] = [$msg];
+            }
+        }
+
+        if (isset($periodosRegistrados['Lapso 2']) && isset($periodosRegistrados['Lapso 2 Académico Trayecto Inicial'])) {
+            $reg = $periodosRegistrados['Lapso 2'];
+            $intro = $periodosRegistrados['Lapso 2 Académico Trayecto Inicial'];
+            if ($intro['inicio'] < $reg['inicio'] || $intro['fin'] > $reg['fin']) {
+                $msg = "El Lapso 2 Académico Trayecto Inicial ({$intro['inicio']} al {$intro['fin']}) debe estar contenido completamente dentro del Lapso Académico 2 ({$reg['inicio']} al {$reg['fin']}).";
+                $this->addError('eventosRegistrados', $msg);
+                $errores[] = [$msg];
+            }
+        }
+
         // 4. Validar suma de días de vacaciones colectivas (evento especial 1) por año
         $repo = new \App\Repositories\Calendario\CalendarioUpdateRepo();
         $eventoVacaciones = $repo->obtenerEventoVacacionesActivo();
