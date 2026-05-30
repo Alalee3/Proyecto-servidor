@@ -95,6 +95,11 @@ class CreateCalendario extends Component
             if ($calendario) {
                 $this->form->dia_inicio_calendario_academico = $calendario->dia_inicio_calendario_academico;
                 $this->form->dia_fin_calendario_academico = $calendario->dia_fin_calendario_academico;
+                $this->form->semana_lapso_uno_calendario_academico = $calendario->semana_lapso_uno_calendario_academico;
+                $this->form->semana_lapso_dos_calendario_academico = $calendario->semana_lapso_dos_calendario_academico;
+                $this->form->semana_lapso_uno_introductorio_calendario_academico = $calendario->semana_lapso_uno_introductorio_calendario_academico;
+                $this->form->semana_lapso_dos_introductorio_calendario_academico = $calendario->semana_lapso_dos_introductorio_calendario_academico;
+                $this->form->semana_intensibo_introductorio_calendario_academico = $calendario->semana_intensibo_introductorio_calendario_academico;
 
                 // Cargar eventos registrados desde el repositorio
                 $eventos = $this->calendarioRepository->obtenerEventosDetalle($id);

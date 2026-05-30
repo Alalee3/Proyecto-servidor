@@ -153,7 +153,7 @@
                         </div>
                         <div class="w-full">
                             <x-input-label for="semana_lapso_uno_calendario_academico" :value="__('Semanas del Lapso Académico 1')" />
-                            <x-text-input id="semana_lapso_uno_calendario_academico" type="number" min="1" max="20" oninput="if(this.value > 20) this.value = 20;"
+                            <x-text-input id="semana_lapso_uno_calendario_academico" type="number" autocomplete="off" min="1" max="20" oninput="if(this.value > 20) this.value = 20;"
                                 wire:model.live="form.semana_lapso_uno_calendario_academico" class="w-full mt-1"
                                 placeholder="Ej: 18" required />
                             <x-input-error :messages="$errors->first('form.semana_lapso_uno_calendario_academico')"
@@ -162,7 +162,7 @@
                         <div class="w-full">
                             <x-input-label for="semana_lapso_uno_introductorio_calendario_academico"
                                 :value="__('Semanas del Lapso Académico Trayecto Inicial 1')" />
-                            <x-text-input id="semana_lapso_uno_introductorio_calendario_academico" type="number" min="0"
+                            <x-text-input id="semana_lapso_uno_introductorio_calendario_academico" type="number" autocomplete="off" min="0"
                                 max="20" oninput="if(this.value > 20) this.value = 20;" wire:model.live="form.semana_lapso_uno_introductorio_calendario_academico"
                                 class="w-full mt-1" placeholder="Ej: 18" required />
                             <x-input-error
@@ -171,7 +171,7 @@
                         </div>
                         <div class="w-full">
                             <x-input-label for="semana_intensibo_introductorio_calendario_academico" :value="__('Semanas del curso Intensivo')" />
-                            <x-text-input id="semana_intensibo_introductorio_calendario_academico" type="number" min="0"
+                            <x-text-input id="semana_intensibo_introductorio_calendario_academico" type="number" autocomplete="off" min="0"
                                 max="20" oninput="if(this.value > 20) this.value = 20;" wire:model.live="form.semana_intensibo_introductorio_calendario_academico"
                                 class="w-full mt-1" placeholder="Ej: 18" required />
                             <x-input-error
@@ -180,7 +180,7 @@
                         </div>
                         <div class="w-full">
                             <x-input-label for="semana_lapso_dos_calendario_academico" :value="__('Semanas del Lapso Académico 2')" />
-                            <x-text-input id="semana_lapso_dos_calendario_academico" type="number" min="1" max="20" oninput="if(this.value > 20) this.value = 20;"
+                            <x-text-input id="semana_lapso_dos_calendario_academico" type="number" autocomplete="off" min="1" max="20" oninput="if(this.value > 20) this.value = 20;"
                                 wire:model.live="form.semana_lapso_dos_calendario_academico" class="w-full mt-1"
                                 placeholder="Ej: 18" required />
                             <x-input-error :messages="$errors->first('form.semana_lapso_dos_calendario_academico')"
@@ -189,7 +189,7 @@
                         <div class="w-full">
                             <x-input-label for="semana_lapso_dos_introductorio_calendario_academico"
                                 :value="__('Semanas del Lapso Académico Trayecto Inicial 2')" />
-                            <x-text-input id="semana_lapso_dos_introductorio_calendario_academico" type="number" min="0"
+                            <x-text-input id="semana_lapso_dos_introductorio_calendario_academico" type="number" autocomplete="off" min="0"
                                 max="20" oninput="if(this.value > 20) this.value = 20;" wire:model.live="form.semana_lapso_dos_introductorio_calendario_academico"
                                 class="w-full mt-1" placeholder="Ej: 18" required />
                             <x-input-error
