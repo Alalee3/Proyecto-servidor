@@ -50,12 +50,13 @@ class CreateEvento extends Component
                 $this->form->is_cantidad_dias_evento = true;
                 $this->form->is_independiente = true;
                 $this->form->cantidad_dias_evento = 1;
-            } elseif (in_array($this->form->id_especial_evento, ['7', '8'])) {
+            } elseif (in_array($this->form->id_especial_evento, ['7', '8', '13', '14'])) {
                 $this->form->is_laborable = true;
                 $this->form->is_repetible = true;
                 $this->form->tipo_evento = '4';
                 $this->form->is_cantidad_dias_evento = true;
-                $this->form->is_independiente = true;
+                $this->form->is_independiente = false;
+                $this->form->is_superponible = false;
                 $this->form->cantidad_dias_evento = 1;
             } elseif (in_array($this->form->id_especial_evento, ['9', '10'])) {
                 $this->form->is_laborable = true;
@@ -65,6 +66,15 @@ class CreateEvento extends Component
                 $this->form->is_independiente = true;
                 $this->form->is_superponible = true;
                 $this->form->cantidad_dias_evento = 1;
+            } elseif ($this->form->id_especial_evento == '12') {
+                $this->form->is_laborable = false;
+                $this->form->is_repetible = true;
+                $this->form->tipo_evento = '5';
+                $this->form->codigo_color_evento = '#28a745';
+                $this->form->is_independiente = true;
+                $this->form->is_superponible = true;
+                $this->form->is_cantidad_dias_evento = false;
+                $this->form->cantidad_dias_evento = null;
             } elseif ($this->form->id_especial_evento == '1') {
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = true;
@@ -127,7 +137,7 @@ class CreateEvento extends Component
                 $this->form->dia_evento = null;
             }
 
-            if (!in_array($this->form->id_especial_evento, ['1', '2', '3', '4', '5', '7', '8', '9', '10', '11'])) {
+            if (!in_array($this->form->id_especial_evento, ['1', '2', '3', '4', '5', '7', '8', '9', '10', '11', '12', '13', '14'])) {
                 if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                     $this->form->is_laborable = false;
                     $this->form->is_repetible = false;
