@@ -482,38 +482,16 @@ class UpdateCalendarioForm extends Form
                 // Validar que eventos con is_independiente false estén dentro del rango de alguno de los periodos académicos
                 $isIndependiente = $evento->is_independiente ?? $evento->is_independiente_evento ?? false;
                 if (!$isIndependiente) {
-                    $dentroDeAlgunPeriodo = false;
+                    $dentroDeAlgunLapso = false;
 
                     // Comprobar Lapsos 1 y 2
                     if (count($inicios) === 2 && count($fines) === 2) {
-                        $dentroDeAlgunPeriodo = $dentroDeAlgunPeriodo || ($regInicio && $regInicio >= $inicios[0] && $regFin && $regFin <= $fines[0]);
-                        $dentroDeAlgunPeriodo = $dentroDeAlgunPeriodo || ($regInicio && $regInicio >= $inicios[1] && $regFin && $regFin <= $fines[1]);
-                    }
-                    // Comprobar Trayecto Inicial
-                    if (count($inicios_intro) > 0 && count($fines_intro) > 0 && count($inicios_intro) === count($fines_intro)) {
-                        if (isset($inicios_intro[0]) && isset($fines_intro[0])) {
-                            $dentroDeAlgunPeriodo = $dentroDeAlgunPeriodo || ($regInicio && $regInicio >= $inicios_intro[0] && $regFin && $regFin <= $fines_intro[0]);
-                        }
-                        if (isset($inicios_intro[1]) && isset($fines_intro[1])) {
-                            $dentroDeAlgunPeriodo = $dentroDeAlgunPeriodo || ($regInicio && $regInicio >= $inicios_intro[1] && $regFin && $regFin <= $fines_intro[1]);
-                        }
-                    }
-                    // Comprobar Intensivo
-                    if (count($inicios_intensi) === 1 && count($fines_intensi) === 1) {
-                        $dentroDeAlgunPeriodo = $dentroDeAlgunPeriodo || ($regInicio && $regInicio >= $inicios_intensi[0] && $regFin && $regFin <= $fines_intensi[0]);
-                    }
-                    // Comprobar Períodos
-                    if (count($inicios_per) > 0 && count($fines_per) > 0 && count($inicios_per) === count($fines_per)) {
-                        if (isset($inicios_per[0]) && isset($fines_per[0])) {
-                            $dentroDeAlgunPeriodo = $dentroDeAlgunPeriodo || ($regInicio && $regInicio >= $inicios_per[0] && $regFin && $regFin <= $fines_per[0]);
-                        }
-                        if (isset($inicios_per[1]) && isset($fines_per[1])) {
-                            $dentroDeAlgunPeriodo = $dentroDeAlgunPeriodo || ($regInicio && $regInicio >= $inicios_per[1] && $regFin && $regFin <= $fines_per[1]);
-                        }
+                        $dentroDeAlgunLapso = $dentroDeAlgunLapso || ($regInicio && $regInicio >= $inicios[0] && $regFin && $regFin <= $fines[0]);
+                        $dentroDeAlgunLapso = $dentroDeAlgunLapso || ($regInicio && $regInicio >= $inicios[1] && $regFin && $regFin <= $fines[1]);
                     }
 
-                    if (!$dentroDeAlgunPeriodo) {
-                        $msg = "El evento \"{$evento->nombre_evento}\" debe estar comprendido dentro de alguno de los periodos académicos (Lapsos, Trayecto Inicial, Intensivo o Períodos).";
+                    if (!$dentroDeAlgunLapso) {
+                        $msg = "El evento \"{$evento->nombre_evento}\" debe estar dentro del período de un Lapso Académico regular previamente registrado.";
                         $this->addError('eventosRegistrados', $msg);
                         $errores[] = [$msg];
                     }
@@ -722,26 +700,7 @@ class UpdateCalendarioForm extends Form
             }
         }
 
-        // Validar que los lapsos introductorios estén dentro de los lapsos regulares correspondientes
-        if (isset($periodosRegistrados['Lapso 1']) && isset($periodosRegistrados['Lapso 1 Académico Trayecto Inicial'])) {
-            $reg = $periodosRegistrados['Lapso 1'];
-            $intro = $periodosRegistrados['Lapso 1 Académico Trayecto Inicial'];
-            if ($intro['inicio'] < $reg['inicio'] || $intro['fin'] > $reg['fin']) {
-                $msg = "El Lapso 1 Académico Trayecto Inicial ({$intro['inicio']} al {$intro['fin']}) debe estar contenido completamente dentro del Lapso Académico 1 ({$reg['inicio']} al {$reg['fin']}).";
-                $this->addError('eventosRegistrados', $msg);
-                $errores[] = [$msg];
-            }
-        }
 
-        if (isset($periodosRegistrados['Lapso 2']) && isset($periodosRegistrados['Lapso 2 Académico Trayecto Inicial'])) {
-            $reg = $periodosRegistrados['Lapso 2'];
-            $intro = $periodosRegistrados['Lapso 2 Académico Trayecto Inicial'];
-            if ($intro['inicio'] < $reg['inicio'] || $intro['fin'] > $reg['fin']) {
-                $msg = "El Lapso 2 Académico Trayecto Inicial ({$intro['inicio']} al {$intro['fin']}) debe estar contenido completamente dentro del Lapso Académico 2 ({$reg['inicio']} al {$reg['fin']}).";
-                $this->addError('eventosRegistrados', $msg);
-                $errores[] = [$msg];
-            }
-        }
 
         // 4. Validar suma de días de vacaciones colectivas (evento especial 1) por año
         $repo = new \App\Repositories\Calendario\CalendarioUpdateRepo();

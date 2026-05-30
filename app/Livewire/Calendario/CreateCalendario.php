@@ -409,8 +409,10 @@ class CreateCalendario extends Component
             }
         }
 
-        // VALIDAR QUE TRAYECTO INICIAL CAIGA DENTRO DE UN LAPSO REGULAR
-        if (in_array($especial, ['7', '8'])) {
+        // VALIDAR QUE LOS EVENTOS DEPENDIENTES CAIGAN DENTRO DE UN LAPSO REGULAR
+        $isIndependiente = $eventoInfo ? (bool) ($eventoInfo->is_independiente ?? $eventoInfo->is_independiente_evento ?? false) : false;
+        
+        if (!$isIndependiente) {
             $iniciosLapsoReg = collect($this->eventosRegistrados)
                 ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
                 ->sortBy('inicio')
@@ -436,11 +438,13 @@ class CreateCalendario extends Component
             if (!$dentroDeAlgunLapso) {
                 $this->dispatch('show-alert', [
                     'type' => 'error',
-                    'message' => 'El Lapso Académico Trayecto Inicial debe estar dentro del período de un Lapso Académico regular previamente registrado.'
+                    'message' => "El evento \"{$nombre}\" debe estar dentro del período de un Lapso Académico regular previamente registrado."
                 ]);
                 return;
             }
         }
+
+
 
         // VALIDAR REGLA DEL CURSO INTENSIVO (9)
         if (in_array($especial, ['9', '10'])) {
