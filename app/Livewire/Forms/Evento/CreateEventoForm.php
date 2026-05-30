@@ -199,7 +199,12 @@ class CreateEventoForm extends Form
 
             'is_dia_evento' => [
                 'required',
-                'boolean'
+                'boolean',
+                function ($attribute, $value, $fail) {
+                    if ($value && !in_array($this->tipo_evento, ['1', '2', '6'])) {
+                        $fail('Solo los feriados pueden ocurrir en un día específico.');
+                    }
+                }
             ],
             'dia_evento' => [
                 'required_if:is_dia_evento,true',

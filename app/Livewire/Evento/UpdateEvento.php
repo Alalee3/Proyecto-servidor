@@ -140,6 +140,8 @@ class UpdateEvento extends Component
                 $this->form->is_semana_evento = false;
             } else {
                 $this->form->is_independiente = false;
+                $this->form->is_dia_evento = false;
+                $this->form->dia_evento = null;
             }
 
             if (!in_array($this->form->id_especial_evento, ['1', '2', '3', '4', '5', '7', '8', '9', '10', '11'])) {

@@ -23,6 +23,8 @@ class CreateCalendarioForm extends Form
     public $nuevoRepetible = false;
     public $nuevoIsRangoDias = false;
     public $nuevoRangoDias = '';
+    public $nuevoIsDiaEvento = false;
+    public $nuevoDiaEvento = '';
 
     public $nuevoIsIndependiente = true;
     public $nuevoIsSuperponible = true;
@@ -130,6 +132,27 @@ class CreateCalendarioForm extends Form
                         } else {
                             if ($value !== null && $value !== '' && $value !== 0 && $value !== '0') {
                                 $fail('No se permite asignar una cantidad de días si la opción no está habilitada.');
+                            }
+                        }
+                    }
+                ],
+                'nuevoIsDiaEvento' => [
+                    'required', 
+                    'boolean',
+                    function ($attribute, $value, $fail) {
+                        if ($value && !in_array($this->nuevoTipo, ['1', '2', '6'])) {
+                            $fail('Solo los feriados pueden ocurrir en un día específico.');
+                        }
+                    }
+                ],
+                'nuevoDiaEvento' => [
+                    'nullable',
+                    function ($attribute, $value, $fail) {
+                        if ($this->nuevoIsDiaEvento) {
+                            if (empty($value)) {
+                                $fail('El día específico es obligatorio si se habilitó esta opción.');
+                            } elseif (!strtotime($value)) {
+                                $fail('El día específico debe ser una fecha válida.');
                             }
                         }
                     }

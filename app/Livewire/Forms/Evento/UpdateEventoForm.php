@@ -42,6 +42,8 @@ class UpdateEventoForm extends Form
         $this->is_independiente = (bool) ($evento->is_independiente ?? $evento->is_independiente_evento ?? false);
         $this->is_superponible = (bool) ($evento->is_superponible_evento ?? false);
         $this->is_semana_evento = (bool) ($evento->is_semana_evento ?? false);
+        $this->is_dia_evento = (bool) ($evento->is_dia_evento ?? false);
+        $this->dia_evento = $evento->dia_evento ? \Carbon\Carbon::parse($evento->dia_evento)->format('Y-m-d') : null;
         $this->cantidad_dias_evento = $evento->cantidad_dias_evento;
         $rawSemanas = is_array($evento->semana_evento) ? $evento->semana_evento : (json_decode($evento->semana_evento, true) ?? []);
         // Convertir formato antiguo (simple array de números) a nuevo formato (objetos con lapso+semana)
@@ -235,7 +237,12 @@ class UpdateEventoForm extends Form
             ],
             'is_dia_evento' => [
                 'required',
-                'boolean'
+                'boolean',
+                function ($attribute, $value, $fail) {
+                    if ($value && !in_array($this->tipo_evento, ['1', '2', '6'])) {
+                        $fail('Solo los feriados pueden ocurrir en un día específico.');
+                    }
+                }
             ],
             'dia_evento' => [
                 'required_if:is_dia_evento,true',

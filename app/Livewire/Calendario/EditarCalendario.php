@@ -96,6 +96,8 @@ class EditarCalendario extends Component
                 $this->form->nuevoLaborable = false;
                 $this->form->nuevoRepetible = true;
                 $this->form->nuevoIsIndependiente = false;
+                $this->form->nuevoIsDiaEvento = false;
+                $this->form->nuevoDiaEvento = null;
             }
         }
     }
@@ -343,6 +345,18 @@ class EditarCalendario extends Component
             if (empty($semanasPermitidasValores) || !in_array($semanaInicio, $semanasPermitidasValores) || !in_array($semanaFin, $semanasPermitidasValores)) {
                 $semanasStr = empty($semanasPermitidasValores) ? 'Ninguna' : implode(', ', $semanasPermitidasValores);
                 $this->showAlert('error', "El evento solo puede registrarse en la(s) semana(s): {$semanasStr} del Lapso Académico {$numeroLapsoActual}. (Semana seleccionada: {$semanaInicio}" . ($semanaInicio != $semanaFin ? " a {$semanaFin}" : "") . ")");
+                return;
+            }
+        }
+
+        // VALIDACIÓN DE DÍA ESPECÍFICO (is_dia_evento)
+        if ($eventoInfo && $eventoInfo->is_dia_evento && !empty($eventoInfo->dia_evento)) {
+            $diaEspecifico = \Carbon\Carbon::parse($eventoInfo->dia_evento);
+            $diaInicioAsignado = \Carbon\Carbon::parse($inicio);
+            
+            // Comparamos el mes y día (ignorando el año para permitir recursividad anual)
+            if ($diaEspecifico->format('m-d') !== $diaInicioAsignado->format('m-d')) {
+                $this->showAlert('error', "El evento \"{$nombre}\" tiene una fecha fija configurada. Solo puede registrarse en los días " . $diaEspecifico->format('d/m') . " de cualquier año.");
                 return;
             }
         }
@@ -777,6 +791,8 @@ class EditarCalendario extends Component
                 'rango_dias' => $rango_dias,
                 'is_independiente' => $this->form->nuevoIsIndependiente,
                 'is_superponible' => $is_superponible,
+                'is_dia_evento' => $this->form->nuevoIsDiaEvento,
+                'dia_evento' => $this->form->nuevoDiaEvento,
             ]);
 
             $colorHex = $codigo_color_evento ?: '#808080';

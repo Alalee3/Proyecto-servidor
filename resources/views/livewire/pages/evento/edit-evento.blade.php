@@ -19,6 +19,7 @@
                     $deshabilitarRangoDias = $form->is_especial;
                     $deshabilitarCantidadRango = $form->is_especial || !$form->is_rango_dias;
                     $deshabilitarSemanaEvento = in_array($form->tipo_evento, ['1', '2', '6'], true) || $form->is_especial;
+                    $deshabilitarDiaEvento = !in_array($form->tipo_evento, ['1', '2', '6'], true);
                 @endphp
 
                 <div class="w-full">
@@ -70,6 +71,18 @@
                     model="form.is_independiente" :disabled="$deshabilitarIndependienteLaborable" required />
 
                 <x-toggle-switch id="is_superponible_edit" :label="__('¿Puede asignarse en la misma fecha que días de vacaciones?')" model="form.is_superponible" :disabled="$deshabilitarSuperponible" required />
+
+                <x-toggle-switch id="is_dia_evento_edit" :label="__('¿Ocurre en un día específico?')"
+                    model="form.is_dia_evento" :disabled="$deshabilitarDiaEvento" required />
+
+                @if($form->is_dia_evento)
+                <div class="w-full">
+                    <x-input-label for="dia_evento_edit" :value="__('Día Específico del Evento')" />
+                    <x-text-input id="dia_evento_edit" type="date" class="w-full"
+                        wire:model.live="form.dia_evento" required />
+                    <x-input-error :messages="$errors->first('form.dia_evento')" class="mt-2" />
+                </div>
+                @endif
 
                 <x-toggle-switch id="is_rango_dias_edit" :label="__('¿Tiene cantidad especifica días de duración?')"
                     model="form.is_rango_dias" :disabled="$deshabilitarRangoDias" required />

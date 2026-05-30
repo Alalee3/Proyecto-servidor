@@ -238,6 +238,14 @@ class CalendarioCreateRepo
             $insert['is_superponible_evento'] = $data['is_superponible'] ?? true;
         }
 
+        if (in_array('is_dia_evento', $columns)) {
+            $insert['is_dia_evento'] = $data['is_dia_evento'] ?? false;
+        }
+
+        if (in_array('dia_evento', $columns)) {
+            $insert['dia_evento'] = $data['dia_evento'] ?? null;
+        }
+
         return DB::table('evento')->insertGetId($insert);
     }
 
