@@ -457,7 +457,7 @@ class CreateCalendarioForm extends Form
                 }
 
                 if ($todoEsWeekend && !in_array($tipo, ['1', '2', '6'])) {
-                    $msg = "El evento \"{$evento->nombre_evento}\" está asignado en fin de semana, lo cual solo se permite para Feriados Nacionales o Locales.";
+                    $msg = "El evento \"{$evento->nombre_evento}\" está asignado en fin de semana, lo cual solo se permite para Feriados Nacionales, Locales o Mundiales.";
                     $this->addError('eventosRegistrados', $msg);
                     $errores[] = [$msg];
                 }
@@ -786,7 +786,7 @@ class CreateCalendarioForm extends Form
         }
 
         if ($todoEsWeekend && !in_array($tipo, ['1', '2', '6'])) {
-            $msg = "Los fines de semana (sábados y domingos) solo admiten eventos de tipo Feriado Nacional o Feriado Local.";
+            $msg = "Los fines de semana (sábados y domingos) solo admiten eventos de tipo Feriado Nacional, Local o Mundial.";
             $this->addError('eventosRegistrados', $msg);
             throw \Illuminate\Validation\ValidationException::withMessages(['eventosRegistrados' => [$msg]]);
         }
