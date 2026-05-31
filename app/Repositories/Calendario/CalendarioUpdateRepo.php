@@ -33,7 +33,8 @@ class CalendarioUpdateRepo
                 'e.tipo_evento as tipo',
                 'e.codigo_color_evento as color',
                 'e.is_superponible_evento',
-                'e.id_especial_evento as especial_evento'
+                'e.id_especial_evento as especial_evento',
+                'e.is_laborable_evento'
             )
             ->get();
     }
@@ -55,6 +56,8 @@ class CalendarioUpdateRepo
                 'semana_lapso_uno_introductorio_calendario_academico' => $data['semana_lapso_uno_introductorio_calendario_academico'] ?? null,
                 'semana_lapso_dos_introductorio_calendario_academico' => $data['semana_lapso_dos_introductorio_calendario_academico'] ?? null,
                 'semana_intensibo_introductorio_calendario_academico' => $data['semana_intensibo_introductorio_calendario_academico'] ?? null,
+                'semana_per_uno_calendario_academico' => $data['semana_per_uno_calendario_academico'] ?? null,
+                'semana_per_dos_calendario_academico' => $data['semana_per_dos_calendario_academico'] ?? null,
                 'estatus' => $data['estatus'] ?? '2' // En revisión por defecto en update
             ];
 

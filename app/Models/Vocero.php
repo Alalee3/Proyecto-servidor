@@ -27,6 +27,6 @@ class Vocero extends Model
      */
     public function estudiante()
     {
-        return $this->setConnection('emulacion_sogac_2')->belongsTo(User::class, 'id_estudiante', 'usu_cedula');
+        return $this->setConnection('external_db')->belongsTo(User::class, 'id_estudiante', 'usu_cedula');
     }
 }

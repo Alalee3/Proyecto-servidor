@@ -14,7 +14,7 @@ class User extends Authenticatable
     use Auditable;
     public $timestamps = false;
 
-    protected $connection = 'emulacion_sogac_2';
+    protected $connection = 'external_db';
     protected $table = 'usuario';
     protected $primaryKey = 'usu_codigo';
 
@@ -70,7 +70,7 @@ class User extends Authenticatable
 
         try {
             // Si no hay selección manual en sesión, buscamos el rol en emulación
-            $emulacionRol = \DB::connection('emulacion_sogac_2')
+            $emulacionRol = \DB::connection('external_db')
                 ->table('usuario')
                 ->where('usu_cedula', $this->usu_cedula)
                 ->where('usu_estatus', 'A')
@@ -130,7 +130,7 @@ class User extends Authenticatable
      */
     public function obtenerRolesAsociados()
     {
-        return \DB::connection('emulacion_sogac_2')
+        return \DB::connection('external_db')
             ->table('usuario as u')
             ->join('rol as r', 'u.usu_cod_rol', '=', 'r.rol_codigo')
             ->where('u.usu_cedula', $this->usu_cedula)

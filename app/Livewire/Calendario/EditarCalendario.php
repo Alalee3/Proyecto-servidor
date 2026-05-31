@@ -74,6 +74,7 @@ class EditarCalendario extends Component
                 'cantidad_dias_evento' => $ev->cantidad_dias_evento ?? null,
                 'especial_evento' => isset($ev->especial_evento) ? (string) $ev->especial_evento : null,
                 'is_superponible_evento' => (bool) ($ev->is_superponible_evento ?? false),
+                'is_laborable_evento' => (bool) ($ev->is_laborable_evento ?? true),
             ];
         }
 
@@ -123,7 +124,7 @@ class EditarCalendario extends Component
         $this->actualizarMapaEventos();
     }
 
-    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false, $confirmadoIncorporacion = false, $confirmadoDuracion = false, $confirmadoIntroductorio = false)
+    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false, $confirmadoIncorporacion = false, $confirmadoDuracion = false, $confirmadoIntroductorio = false, $confirmadoFeriadoLocal = false)
     {
         $eventoInfo = \App\Models\Evento::find($id_evento);
 
@@ -275,8 +276,10 @@ class EditarCalendario extends Component
             }
         }
 
-        // VALIDAR QUE TRAYECTO INICIAL CAIGA DENTRO DE UN LAPSO REGULAR
-        if (in_array($especial, ['7', '8'])) {
+        // VALIDAR QUE LOS EVENTOS DEPENDIENTES CAIGAN DENTRO DE UN LAPSO REGULAR
+        $isIndependiente = $eventoInfo ? (bool) ($eventoInfo->is_independiente ?? $eventoInfo->is_independiente_evento ?? false) : false;
+        
+        if (!$isIndependiente) {
             $iniciosLapsoReg = collect($this->eventosRegistrados)
                 ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
                 ->sortBy('inicio')
@@ -302,7 +305,7 @@ class EditarCalendario extends Component
             if (!$dentroDeAlgunLapso) {
                 $this->dispatch('show-alert', [
                     'type' => 'error',
-                    'message' => 'El Lapso Académico Trayecto Inicial debe estar dentro del período de un Lapso Académico regular previamente registrado.'
+                    'message' => "El evento \"{$nombre}\" debe estar dentro del período de un Lapso Académico regular previamente registrado."
                 ]);
                 return;
             }
@@ -383,6 +386,7 @@ class EditarCalendario extends Component
         // VALIDAR REGLA DE SUPERPOSICIÓN CON VACACIONES COLECTIVAS
         $is_superponible = $eventoInfo ? (bool) $eventoInfo->is_superponible_evento : false;
         $is_vacaciones = ($eventoInfo->especial_evento ?? '') === '1';
+        $is_laborable = $eventoInfo ? (bool) $eventoInfo->is_laborable_evento : true;
         // VALIDAR REGLA DEL CURSO INTENSIVO (9)
         if (in_array($especial, ['9', '10'])) {
             $iniciosLapsoReg = collect($this->eventosRegistrados)
@@ -430,21 +434,46 @@ class EditarCalendario extends Component
             }
         }
 
-        if (!$is_superponible && !$is_vacaciones) {
-            foreach ($this->eventosRegistrados as $evReg) {
-                if (($evReg['especial_evento'] ?? '') === '1') {
-                    if ($inicio <= $evReg['fin'] && $fin >= $evReg['inicio']) {
-                        $this->showAlert('error', "El evento '{$nombre}' no es superponible y no puede registrarse en la misma fecha que las Vacaciones Colectivas.");
-                        return;
-                    }
+        $is_no_laborable = !$is_laborable || $is_vacaciones;
+
+        foreach ($this->eventosRegistrados as $evReg) {
+            $evRegNoSuperponible = isset($evReg['is_superponible_evento']) && !$evReg['is_superponible_evento'];
+            
+            if ($inicio <= $evReg['fin'] && $fin >= $evReg['inicio']) {
+                $nombreChoca = $evReg['nombre_evento'] ?? $evReg['nombre'] ?? 'Sin nombre';
+
+                $esFeriadoLocalOverlap = false;
+                if (!$is_superponible && ($evReg['tipo'] ?? '') === '2') {
+                    $esFeriadoLocalOverlap = true;
                 }
-            }
-        } else if ($is_vacaciones) {
-            foreach ($this->eventosRegistrados as $evReg) {
-                if (isset($evReg['is_superponible_evento']) && !$evReg['is_superponible_evento']) {
-                    if ($inicio <= $evReg['fin'] && $fin >= $evReg['inicio']) {
-                        $this->showAlert('error', "No se pueden registrar Vacaciones Colectivas en estas fechas porque choca con el evento '{$evReg['nombre_evento']}', el cual no es superponible.");
-                        return;
+                if ($evRegNoSuperponible && $tipo === '2') {
+                    $esFeriadoLocalOverlap = true;
+                }
+
+                if (!$is_superponible || $evRegNoSuperponible) {
+                    if ($esFeriadoLocalOverlap) {
+                        if (!$confirmadoFeriadoLocal) {
+                            $this->tempEventoAgregar = func_get_args();
+                            $this->dispatch('show-alert', [
+                                'type' => 'warning',
+                                'message' => "¿Está seguro de asignar el evento '{$nombre}' el mismo día que el feriado local '{$nombreChoca}'?",
+                                'showCancelButton' => true,
+                                'cancelText' => 'Cancelar',
+                                'okText' => 'Continuar',
+                                'onOkEvent' => 'confirmar-agregar-evento-feriado-local'
+                            ]);
+                            return;
+                        }
+                    } else {
+                        if (!$is_superponible) {
+                            $this->showAlert('error', "El evento '{$nombre}' no es superponible y no puede registrarse en la misma fecha que el evento '{$nombreChoca}'.");
+                            return;
+                        }
+        
+                        if ($evRegNoSuperponible) {
+                            $this->showAlert('error', "No se puede registrar el evento '{$nombre}' en estas fechas porque choca con el evento '{$nombreChoca}', el cual no es superponible.");
+                            return;
+                        }
                     }
                 }
             }
@@ -594,6 +623,7 @@ class EditarCalendario extends Component
                 'cantidad_dias_evento' => $eventoInfo ? $eventoInfo->cantidad_dias_evento : null,
                 'especial_evento' => $eventoInfo ? (string) $eventoInfo->especial_evento : null,
                 'is_superponible_evento' => $eventoInfo ? (bool) $eventoInfo->is_superponible_evento : false,
+                'is_laborable_evento' => $eventoInfo ? (bool) $eventoInfo->is_laborable_evento : true,
             ];
 
             $this->eventosRegistrados[] = $nuevoEvento;
@@ -611,7 +641,7 @@ class EditarCalendario extends Component
     protected function debeRecalcularFinesLapso(?\App\Models\Evento $eventoInfo): bool
     {
         $hayInicios = collect($this->eventosRegistrados)->contains(
-            fn($e) => in_array($e['especial_evento'] ?? '', ['2', '7', '9'])
+            fn($e) => in_array($e['especial_evento'] ?? '', ['2', '7', '9', '13'])
         );
 
         if (!$hayInicios || !$eventoInfo) {
@@ -623,10 +653,11 @@ class EditarCalendario extends Component
         return $esp === '2'
             || $esp === '7'
             || $esp === '9'
+            || $esp === '13'
             || $esp === '4'
             || $esp === '5'
             || $esp === '1'
-            || \App\Support\CalendarioLapsoSemanas::eventoModeloEsFestivo($eventoInfo);
+            || !$eventoInfo->is_laborable_evento;
     }
 
     protected function recalcularFinesLapso(): void
@@ -638,10 +669,10 @@ class EditarCalendario extends Component
 
         $this->eventosRegistrados = array_values(array_filter(
             $this->eventosRegistrados,
-            fn($ev) => !in_array($ev['especial_evento'] ?? '', ['3', '8', '10'])
+            fn($ev) => !in_array($ev['especial_evento'] ?? '', ['3', '8', '10', '14'])
         ));
 
-        $eventosFinTemplates = \App\Models\Evento::whereIn('id_especial_evento', ['3', '8', '10'])
+        $eventosFinTemplates = \App\Models\Evento::whereIn('id_especial_evento', ['3', '8', '10', '14'])
             ->where('estatus', '1')
             ->get()
             ->keyBy('id_especial_evento');
@@ -657,7 +688,7 @@ class EditarCalendario extends Component
             $template = $eventosFinTemplates[$templateKey];
 
             // Determinar si debemos incluir vacaciones colectivas (especial_evento = 1) en el conteo de semanas
-            $incluirVacaciones = in_array($templateKey, ['3', '8']);
+            $incluirVacaciones = in_array($templateKey, ['3', '8', '14']);
 
             $fechaFinAuto = \App\Support\CalendarioLapsoSemanas::fechaFinLapso(
                 $inicioEv['inicio'],
@@ -722,6 +753,19 @@ class EditarCalendario extends Component
             $generarFin($inicioEv, $semanas, '10');
         }
 
+        // Períodos (13 -> 14)
+        $iniciosPer = collect($this->eventosRegistrados)
+            ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '13')
+            ->sortBy('inicio')
+            ->values();
+
+        foreach ($iniciosPer as $index => $inicioEv) {
+            $semanas = $index === 0
+                ? (int) $this->form->semana_per_uno_calendario_academico
+                : (int) $this->form->semana_per_dos_calendario_academico;
+            $generarFin($inicioEv, $semanas, '14');
+        }
+
         $this->actualizarMapaEventos();
     }
 
@@ -782,8 +826,8 @@ class EditarCalendario extends Component
 
         $removido = $this->eventosRegistrados[$index];
 
-        $idsFestivos = \App\Support\CalendarioLapsoSemanas::idsEventosFestivos($this->eventosRegistrados);
-        $eraFestivo = \App\Support\CalendarioLapsoSemanas::registroEsFestivo($removido, $idsFestivos) || ($removido['especial_evento'] ?? '') === '1';
+        $isLaborable = (bool) ($removido['is_laborable_evento'] ?? true);
+        $eraFestivo = !$isLaborable || ($removido['especial_evento'] ?? '') === '1';
         $eraInicioLapso = in_array($removido['especial_evento'] ?? '', ['2', '7', '9']);
 
         unset($this->eventosRegistrados[$index]);
@@ -891,6 +935,8 @@ class EditarCalendario extends Component
                 'semana_lapso_uno_introductorio_calendario_academico' => $this->form->semana_lapso_uno_introductorio_calendario_academico,
                 'semana_lapso_dos_introductorio_calendario_academico' => $this->form->semana_lapso_dos_introductorio_calendario_academico,
                 'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
+                'semana_per_uno_calendario_academico' => $this->form->semana_per_uno_calendario_academico,
+                'semana_per_dos_calendario_academico' => $this->form->semana_per_dos_calendario_academico,
                 'estatus' => '2' // Sigue en revisión
             ], $this->eventosRegistrados, $this->id_calendario);
         } catch (Exception $e) {
@@ -1063,13 +1109,7 @@ class EditarCalendario extends Component
 
         try {
             DB::transaction(function () {
-                // Verificar si ya existe un calendario activo (estatus 1)
-                $calendarioActivo = DB::table('calendario_academico')
-                    ->where('estatus', '1')
-                    ->where('id_calendario_academico', '!=', $this->id_calendario)
-                    ->first();
-
-                $nuevoEstatus = $calendarioActivo ? '4' : '1';
+                $nuevoEstatus = '1'; // Siempre se activa porque ya no hay lista de espera
 
                 $this->calendarioRepository->actualizarEstatus($this->id_calendario, $nuevoEstatus, [
                     'dia_inicio_calendario_academico' => $this->form->dia_inicio_calendario_academico,
@@ -1079,20 +1119,14 @@ class EditarCalendario extends Component
                     'semana_lapso_uno_introductorio_calendario_academico' => $this->form->semana_lapso_uno_introductorio_calendario_academico,
                     'semana_lapso_dos_introductorio_calendario_academico' => $this->form->semana_lapso_dos_introductorio_calendario_academico,
                     'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
+                    'semana_per_uno_calendario_academico' => $this->form->semana_per_uno_calendario_academico,
+                    'semana_per_dos_calendario_academico' => $this->form->semana_per_dos_calendario_academico,
                 ]);
 
                 $this->calendarioRepository->sincronizarEventos($this->id_calendario, $this->eventosRegistrados);
-
-                // Guardar el estatus resultante para usarlo en el mensaje
-                session()->flash('calendario_nuevo_estatus', $nuevoEstatus);
             });
 
-            $nuevoEstatus = session('calendario_nuevo_estatus');
-            if ($nuevoEstatus === '4') {
-                $this->showAlert('success', 'Calendario aprobado. Pasó a estatus "En Espera" hasta que finalice el calendario actual.', '/calendario/list');
-            } else {
-                $this->showAlert('success', 'Calendario aprobado y activado correctamente.', '/calendario/list');
-            }
+            $this->showAlert('success', 'Calendario aprobado y activado correctamente.', '/calendario/list');
         } catch (Exception $e) {
             $this->showAlert('error', 'Error al aprobar el calendario: ' . $e->getMessage());
         }
@@ -1181,6 +1215,8 @@ class EditarCalendario extends Component
                     'semana_lapso_uno_introductorio_calendario_academico' => $this->form->semana_lapso_uno_introductorio_calendario_academico,
                     'semana_lapso_dos_introductorio_calendario_academico' => $this->form->semana_lapso_dos_introductorio_calendario_academico,
                     'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
+                    'semana_per_uno_calendario_academico' => $this->form->semana_per_uno_calendario_academico,
+                    'semana_per_dos_calendario_academico' => $this->form->semana_per_dos_calendario_academico,
                 ]);
 
                 $this->calendarioRepository->sincronizarEventos($this->id_calendario, $this->eventosRegistrados);
@@ -1242,6 +1278,7 @@ class EditarCalendario extends Component
     #[\Livewire\Attributes\On('confirmar-agregar-evento-duracion')]
     public function confirmarAgregarEventoDuracion()
     {
+        \Illuminate\Support\Facades\Log::info("Confirmar duracion (Editar), tempEventoAgregar: " . json_encode($this->tempEventoAgregar));
         if ($this->tempEventoAgregar) {
             $args = $this->tempEventoAgregar;
             while (count($args) < 9) {
@@ -1252,6 +1289,21 @@ class EditarCalendario extends Component
             $this->tempEventoAgregar = null;
         }
     }
+
+    #[\Livewire\Attributes\On('confirmar-agregar-evento-feriado-local')]
+    public function confirmarAgregarEventoFeriadoLocal()
+    {
+        if ($this->tempEventoAgregar) {
+            $args = $this->tempEventoAgregar;
+            while (count($args) < 11) {
+                $args[] = false;
+            }
+            $args[10] = true; // $confirmadoFeriadoLocal
+            $this->agregarEvento(...$args);
+            $this->tempEventoAgregar = null;
+        }
+    }
+
 
     #[\Livewire\Attributes\On('confirmar-agregar-evento-introductorio')]
     public function confirmarAgregarEventoIntroductorio()

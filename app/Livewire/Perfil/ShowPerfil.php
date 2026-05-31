@@ -32,7 +32,7 @@ class ShowPerfil extends Component
         $user = Auth::user();
         
         // Verificamos que el usuario posea este rol en la base de datos de emulación
-        $existe = \DB::connection('emulacion_sogac_2')
+        $existe = \DB::connection('external_db')
             ->table('usuario')
             ->where('usu_cedula', $user->usu_cedula)
             ->where('usu_cod_rol', $rolId)

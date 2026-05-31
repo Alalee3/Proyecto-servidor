@@ -46,12 +46,12 @@ class PanelVocero extends Component
         // El PNF del coordinador de Informática es el 4.
         $pnfCoordinador = 4; // Esto debería ser dinámico dependiendo del coordinador
 
-        $dbSogc = config('database.connections.emulacion_sogac_2.database');
+        $dbSogc = DB::connection('external_db')->getDatabaseName();
 
         // Buscar secciones activas y sus estudiantes inscritos
         // El usuario proporcionó: "la tabla inscripcion tiene la relacion entre el estudiante y la seccion mediante la tabla seccion_unidad_docente"
         
-        $seccionesQuery = DB::connection('emulacion_sogac_2')
+        $seccionesQuery = DB::connection('external_db')
             ->table('seccion as s')
             ->join('seccion_unidad_docente as sud', 's.sec_codigo', '=', 'sud.sud_cod_seccion')
             ->join('inscripcion as i', 'sud.sud_codigo', '=', 'i.ins_cod_seccion_unidad_docente')

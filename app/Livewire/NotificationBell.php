@@ -20,7 +20,7 @@ class NotificationBell extends Component
         if (Auth::check()) {
             $userId = Auth::id(); // usu_codigo
             
-            $dbSogc = config('database.connections.emulacion_sogac_2.database');
+            $dbSogc = DB::connection('external_db')->getDatabaseName();
             
             $this->planificacionesAceptadas = DB::table('planificacion as p')
                 ->join("$dbSogc.seccion_unidad_docente as sud", 'p.id_profesor_asignado', '=', 'sud.sud_codigo')

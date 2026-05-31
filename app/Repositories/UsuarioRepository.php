@@ -91,7 +91,7 @@ class UsuarioRepository
      */
     public function getRolesPorCedula(string $cedula)
     {
-        return DB::connection('emulacion_sogac_2')
+        return DB::connection('external_db')
             ->table('usuario as u')
             ->join('rol as r', 'u.usu_cod_rol', '=', 'r.rol_codigo')
             ->where('u.usu_cedula', $cedula)
@@ -117,9 +117,10 @@ class UsuarioRepository
                 continue;
             }
 
+
             // 2. Estudiante (ID: 3) - Pertenece a Informática si está inscrito en programa 1 o 4
             if ($rolId == 3) {
-                $esEstudianteInf = DB::connection('emulacion_sogac_2')
+                $esEstudianteInf = DB::connection('external_db')
                     ->table('estudiante')
                     ->where('est_cedula', $cedula)
                     ->whereIn('est_cod_programa', [1, 4])
@@ -130,9 +131,9 @@ class UsuarioRepository
                 continue;
             }
 
-            // 3. Docente (ID: 2) - Pertenece a Informática si tiene carga activa en programa 1 o 4
+
             if ($rolId == 2) {
-                $esDocenteInf = DB::connection('emulacion_sogac_2')
+                $esDocenteInf = DB::connection('external_db')
                     ->table('seccion_unidad_docente as sud')
                     ->join('unidad_curricular as uc', 'sud.sud_cod_unidad', '=', 'uc.ucu_codigo')
                     ->join('malla as m', 'uc.ucu_cod_malla', '=', 'm.mal_codigo')
@@ -161,7 +162,7 @@ class UsuarioRepository
      */
     public function tieneRol3(string $cedula): bool
     {
-        return DB::connection('emulacion_sogac_2')
+        return DB::connection('external_db')
             ->table('usuario')
             ->where('usu_cedula', $cedula)
             ->where('usu_cod_rol', 3)
@@ -174,7 +175,7 @@ class UsuarioRepository
      */
     public function getUsuCodigo(string $cedula, int $rolId)
     {
-        return DB::connection('emulacion_sogac_2')
+        return DB::connection('external_db')
             ->table('usuario')
             ->where('usu_cedula', $cedula)
             ->where('usu_cod_rol', $rolId)

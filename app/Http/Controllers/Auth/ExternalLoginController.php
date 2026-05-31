@@ -78,7 +78,7 @@ class ExternalLoginController extends Controller
 
             // 6. Si solo tiene un rol de Informática, buscamos ese usuario específico y hacemos login
             $singleRole = $rolesList->first();
-            $user = User::on('emulacion_sogac_2')
+            $user = User::on('external_db')
                 ->where('usu_cedula', $data['cedula'])
                 ->where('usu_cod_rol', $singleRole->usu_cod_rol)
                 ->where('usu_estatus', 'A')

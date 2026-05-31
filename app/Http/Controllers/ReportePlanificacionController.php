@@ -85,7 +85,7 @@ class ReportePlanificacionController extends Controller
             ->where('id_planificacion', $id)
             ->value('id_profesor_asignado');
 
-        $dbSogc = config('database.connections.emulacion_sogac_2.database');
+        $dbSogc = \Illuminate\Support\Facades\DB::connection('external_db')->getDatabaseName();
         
         $queryEstudiantes = \Illuminate\Support\Facades\DB::table("$dbSogc.inscripcion as ins")
             ->join("$dbSogc.persona as per", 'ins.ins_cedula', '=', 'per.per_cedula')

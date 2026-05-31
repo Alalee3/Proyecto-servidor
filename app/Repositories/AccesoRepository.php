@@ -21,7 +21,7 @@ class AccesoRepository
             return false;
         }
 
-        // El rol ahora viene directamente del modelo User (conectado a emulacion_sogac_2)
+        // El rol ahora viene directamente del modelo User (conectado a external_db)
         return Auth::user()->usu_cod_rol == $rolId && Auth::user()->usu_estatus == 'A';
     }
 

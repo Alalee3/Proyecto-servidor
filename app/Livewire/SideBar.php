@@ -53,7 +53,7 @@ class SideBar extends Component
         if ($user && $user->can('listar-calendario')) {
             $repo = new \App\Repositories\Calendario\CalendarioCreateRepo();
             $hayCalendarioActivo = $repo->hayCalendarioActivo();
-            $puedoCrearCalendario = $repo->contarCalendariosActivos() < 2;
+            $puedoCrearCalendario = $repo->contarCalendariosActivos() == 0;
         }
 
         return view('livewire.layout.side-bar', [

@@ -21,7 +21,7 @@ class ReporteController extends Controller
             abort(403, 'Acceso denegado. Este módulo está restringido al rol de Coordinador.');
         }
 
-        $dbSogc = config('database.connections.emulacion_sogac_2.database');
+        $dbSogc = \Illuminate\Support\Facades\DB::connection('external_db')->getDatabaseName();
 
         // 2. Obtener todos los periodos / calendarios académicos para el filtro
         // Inactivar calendarios vencidos antes de listarlos

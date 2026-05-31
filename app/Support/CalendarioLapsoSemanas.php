@@ -20,81 +20,9 @@ class CalendarioLapsoSemanas
     }
 
     /**
-     * @param  array<int, array<string, mixed>>  $eventosRegistrados
-     * @return array<int, true>  id_evento => true
-     */
-    public static function idsEventosFestivos(array $eventosRegistrados, bool $incluirVacaciones = false): array
-    {
-        $ids = collect($eventosRegistrados)
-            ->pluck('id')
-            ->filter()
-            ->map(fn ($id) => (int) $id)
-            ->unique()
-            ->values()
-            ->all();
-
-        $festivos = [];
-
-        if (!empty($ids)) {
-            foreach (Evento::whereIn('id_evento', $ids)->get(['id_evento', 'id_especial_evento', 'nombre_evento']) as $evento) {
-                if (self::eventoModeloEsFestivo($evento, $incluirVacaciones)) {
-                    $festivos[(int) $evento->id_evento] = true;
-                }
-            }
-        }
-
-        return $festivos;
-    }
-
-    public static function eventoModeloEsFestivo(Evento $evento, bool $incluirVacaciones = false): bool
-    {
-        $esp = (string) ($evento->especial_evento ?? '');
-        if (in_array($esp, ['4', '5'], true)) {
-            return true;
-        }
-        if ($incluirVacaciones && $esp === '1') {
-            return true;
-        }
-
-        return self::nombreIndicaSemanaFestiva((string) $evento->nombre_evento);
-    }
-
-    /**
-     * @param  array<string, mixed>  $ev
-     * @param  array<int, true>  $idsFestivos
-     */
-    public static function registroEsFestivo(array $ev, array $idsFestivos, bool $incluirVacaciones = false): bool
-    {
-        $id = (int) ($ev['id'] ?? 0);
-        if ($id && isset($idsFestivos[$id])) {
-            return true;
-        }
-
-        $esp = (string) ($ev['especial_evento'] ?? '');
-        if (in_array($esp, ['4', '5'], true)) {
-            return true;
-        }
-        if ($incluirVacaciones && $esp === '1') {
-            return true;
-        }
-
-        $nombre = (string) ($ev['nombre_evento'] ?? $ev['nombre'] ?? '');
-
-        return self::nombreIndicaSemanaFestiva($nombre);
-    }
-
-    public static function nombreIndicaSemanaFestiva(string $nombre): bool
-    {
-        $nombre = mb_strtolower($nombre);
-
-        return str_contains($nombre, 'semana santa')
-            || str_contains($nombre, 'carnaval')
-            || str_contains($nombre, 'viernes santo')
-            || str_contains($nombre, 'jueves santo');
-    }
-
-    /**
      * Lunes (Y-m-d) de cada semana festiva según eventos ya asignados al calendario.
+     * Una semana se considera festiva si los 5 días laborables (lunes a viernes)
+     * están completamente cubiertos por eventos no laborables.
      *
      * @param  array<int, array<string, mixed>>  $eventosRegistrados
      * @return array<string, true>
@@ -102,26 +30,75 @@ class CalendarioLapsoSemanas
     public static function lunesSemanasFestivas(array $eventosRegistrados, bool $incluirVacaciones = false): array
     {
         $festivas = [];
-        $idsFestivos = self::idsEventosFestivos($eventosRegistrados, $incluirVacaciones);
-
+        
+        $minDate = null;
+        $maxDate = null;
+        $eventosNoLaborables = [];
+        
         foreach ($eventosRegistrados as $ev) {
-            if (!self::registroEsFestivo($ev, $idsFestivos, $incluirVacaciones)) {
+            // Asegurar que leemos el atributo (si no existe, asumimos laborable por seguridad)
+            $isLaborable = (bool) ($ev['is_laborable_evento'] ?? true);
+            $esp = (string) ($ev['especial_evento'] ?? '');
+            
+            // Excepción para Vacaciones Colectivas: solo son no-laborables si la bandera lo dicta
+            if ($esp === '1' && !$incluirVacaciones) {
                 continue;
             }
-
-            $inicio = $ev['inicio'] ?? null;
-            $fin = $ev['fin'] ?? $inicio;
-            if (!$inicio) {
-                continue;
+            
+            // Si el evento es explícitamente no laborable (o es Vacaciones y $incluirVacaciones es true)
+            if (!$isLaborable || ($esp === '1' && $incluirVacaciones)) {
+                $inicio = $ev['inicio'] ?? null;
+                $fin = $ev['fin'] ?? $inicio;
+                if (!$inicio) continue;
+                
+                $dtInicio = Carbon::parse($inicio)->startOfDay();
+                $dtFin = Carbon::parse($fin)->endOfDay();
+                
+                if (!$minDate || $dtInicio->lt($minDate)) $minDate = $dtInicio->copy();
+                if (!$maxDate || $dtFin->gt($maxDate)) $maxDate = $dtFin->copy();
+                
+                $eventosNoLaborables[] = [
+                    'inicio' => $dtInicio,
+                    'fin' => $dtFin,
+                ];
             }
-
-            $lunes = self::lunesDeSemana($inicio);
-            $lunesFin = self::lunesDeSemana($fin);
-
-            while ($lunes->lte($lunesFin)) {
-                $festivas[$lunes->format('Y-m-d')] = true;
-                $lunes->addWeek();
+        }
+        
+        if (empty($eventosNoLaborables)) {
+            return [];
+        }
+        
+        // Evaluar semana a semana dentro del rango de los eventos
+        $lunesActual = self::lunesDeSemana($minDate->format('Y-m-d'));
+        $lunesFinal = self::lunesDeSemana($maxDate->format('Y-m-d'));
+        
+        while ($lunesActual->lte($lunesFinal)) {
+            $semanaCubierta = true;
+            
+            // Revisar cada día de la semana (0 = Lunes, 1 = Martes, ..., 4 = Viernes)
+            for ($d = 0; $d < 5; $d++) {
+                $diaEvaluar = $lunesActual->copy()->addDays($d)->startOfDay();
+                $diaCubierto = false;
+                
+                foreach ($eventosNoLaborables as $evNL) {
+                    if ($diaEvaluar->between($evNL['inicio'], $evNL['fin'])) {
+                        $diaCubierto = true;
+                        break;
+                    }
+                }
+                
+                // Si encontramos un día de lun-vie que NO está cubierto, la semana no es festiva
+                if (!$diaCubierto) {
+                    $semanaCubierta = false;
+                    break;
+                }
             }
+            
+            if ($semanaCubierta) {
+                $festivas[$lunesActual->format('Y-m-d')] = true;
+            }
+            
+            $lunesActual->addWeek();
         }
 
         return $festivas;

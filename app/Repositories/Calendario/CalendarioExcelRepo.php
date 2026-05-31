@@ -105,32 +105,33 @@ class CalendarioExcelRepo
         // Mejor obtener los detalles completos de los eventos para tener 'especial_evento'
         $eventosCompletos = DB::table('evento')
             ->join('detalle_evento', 'evento.id_evento', '=', 'detalle_evento.id_evento')
-            ->select('evento.id_especial_evento', 'detalle_evento.dia_inicio_detalle_evento', 'detalle_evento.dia_fin_detalle_evento')
+            ->select('evento.id_especial_evento', 'detalle_evento.dia_inicio_detalle_evento', 'detalle_evento.dia_fin_detalle_evento', 'evento.is_laborable_evento')
             ->where('detalle_evento.id_calendario_academico', $calendario->id_calendario_academico)
             ->where('evento.estatus', 1)
             ->get();
 
+        $eventosParaFestivas = [];
+
         foreach ($eventosCompletos as $ev) {
             $esp = (string) $ev->id_especial_evento;
+            
+            $eventosParaFestivas[] = [
+                'especial_evento' => $esp,
+                'is_laborable_evento' => (bool) $ev->is_laborable_evento,
+                'inicio' => $ev->dia_inicio_detalle_evento,
+                'fin' => $ev->dia_fin_detalle_evento,
+            ];
+
             if ($esp === '2') $iniciosLapso[] = $ev->dia_inicio_detalle_evento;
             elseif ($esp === '3') $finesLapso[] = $ev->dia_fin_detalle_evento;
             elseif ($esp === '7') $iniciosIntro[] = $ev->dia_inicio_detalle_evento;
             elseif ($esp === '8') $finesIntro[] = $ev->dia_fin_detalle_evento;
             elseif ($esp === '9') $iniciosIntensivo[] = $ev->dia_inicio_detalle_evento;
             elseif ($esp === '10') $finesIntensivo[] = $ev->dia_fin_detalle_evento;
-            elseif ($esp === '4' || $esp === '5' || $esp === '1') {
-                $d = Carbon::parse($ev->dia_inicio_detalle_evento)->startOfDay();
-                $dFin = Carbon::parse($ev->dia_fin_detalle_evento)->startOfDay();
-                while ($d <= $dFin) {
-                    $monday = $d->copy()->startOfWeek();
-                    $semanasFestivasNormal[$monday->format('Y-m-d')] = true;
-                    if ($esp !== '1') {
-                        $semanasFestivasIntensivo[$monday->format('Y-m-d')] = true;
-                    }
-                    $d->addDay();
-                }
-            }
         }
+
+        $semanasFestivasNormal = \App\Support\CalendarioLapsoSemanas::lunesSemanasFestivas($eventosParaFestivas, true);
+        $semanasFestivasIntensivo = \App\Support\CalendarioLapsoSemanas::lunesSemanasFestivas($eventosParaFestivas, false);
 
         sort($iniciosLapso); sort($finesLapso);
         sort($iniciosIntro); sort($finesIntro);
