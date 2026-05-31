@@ -222,7 +222,7 @@ class CreatePlanificacionForm extends Form
                         }
 
                         if (!$this->cachedLapso) {
-                            $this->cachedLapso = \Illuminate\Support\Facades\DB::connection('emulacion_sogac_2')
+                            $this->cachedLapso = \Illuminate\Support\Facades\DB::connection('external_db')
                                 ->table('seccion_unidad_docente as sud')
                                 ->join('seccion as s', 'sud.sud_cod_seccion', '=', 's.sec_codigo')
                                 ->join('lapso_academico as la', 's.sec_cod_lapso_academico', '=', 'la.lap_codigo')

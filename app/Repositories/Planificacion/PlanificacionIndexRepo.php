@@ -16,7 +16,7 @@ class PlanificacionIndexRepo
      */
     public function listar(array $filters = [], int $perPage = 10, bool $onlyCurrentUserAndRole = false)
     {
-        $dbSogc = config('database.connections.emulacion_sogac_2.database');
+        $dbSogc = DB::connection('external_db')->getDatabaseName();
 
         $query = DB::table('planificacion as p')
             ->leftJoin("$dbSogc.seccion_unidad_docente as sud", 'p.id_profesor_asignado', '=', 'sud.sud_codigo')
@@ -124,7 +124,7 @@ class PlanificacionIndexRepo
 
             // Enviar correo de rechazo
             try {
-                $dbSogc = config('database.connections.emulacion_sogac_2.database');
+                $dbSogc = DB::connection('external_db')->getDatabaseName();
                 $profesor = DB::table("$dbSogc.usuario as u")
                     ->join("$dbSogc.seccion_unidad_docente as sud", 'u.usu_cedula', '=', 'sud.sud_ced_docente')
                     ->join("$dbSogc.persona as p", 'u.usu_cedula', '=', 'p.per_cedula')
@@ -182,7 +182,7 @@ class PlanificacionIndexRepo
 
             // Enviar correo de aprobación final
             try {
-                $dbSogc = config('database.connections.emulacion_sogac_2.database');
+                $dbSogc = DB::connection('external_db')->getDatabaseName();
                 $profesor = DB::table("$dbSogc.usuario as u")
                     ->join("$dbSogc.seccion_unidad_docente as sud", 'u.usu_cedula', '=', 'sud.sud_ced_docente')
                     ->join("$dbSogc.persona as p", 'u.usu_cedula', '=', 'p.per_cedula')
@@ -234,7 +234,7 @@ class PlanificacionIndexRepo
 
             // Enviar correo de rechazo
             try {
-                $dbSogc = config('database.connections.emulacion_sogac_2.database');
+                $dbSogc = DB::connection('external_db')->getDatabaseName();
                 $profesor = DB::table("$dbSogc.usuario as u")
                     ->join("$dbSogc.seccion_unidad_docente as sud", 'u.usu_cedula', '=', 'sud.sud_ced_docente')
                     ->join("$dbSogc.persona as p", 'u.usu_cedula', '=', 'p.per_cedula')
@@ -278,7 +278,7 @@ class PlanificacionIndexRepo
         if (!$user) return false;
 
         // Obtener la sección de la planificación
-        $dbSogc = config('database.connections.emulacion_sogac_2.database');
+        $dbSogc = DB::connection('external_db')->getDatabaseName();
         $planificacion = DB::table('planificacion as p')
             ->join("$dbSogc.seccion_unidad_docente as sud", 'p.id_profesor_asignado', '=', 'sud.sud_codigo')
             ->where('p.id_planificacion', $planificacionId)
@@ -348,7 +348,7 @@ class PlanificacionIndexRepo
 
                         // Enviar correo electrónico al profesor notificando que el coordinador aprobó
                         try {
-                            $dbSogc = config('database.connections.emulacion_sogac_2.database');
+                            $dbSogc = DB::connection('external_db')->getDatabaseName();
                             $profesor = DB::table("$dbSogc.usuario as u")
                                 ->join("$dbSogc.seccion_unidad_docente as sud", 'u.usu_cedula', '=', 'sud.sud_ced_docente')
                                 ->join("$dbSogc.persona as p", 'u.usu_cedula', '=', 'p.per_cedula')

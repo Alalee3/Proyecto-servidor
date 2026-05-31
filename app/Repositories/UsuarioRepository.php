@@ -83,7 +83,7 @@ class UsuarioRepository
      */
     public function getRolesPorCedula(string $cedula)
     {
-        return DB::connection('emulacion_sogac_2')
+        return DB::connection('external_db')
             ->table('usuario as u')
             ->join('rol as r', 'u.usu_cod_rol', '=', 'r.rol_codigo')
             ->where('u.usu_cedula', $cedula)
@@ -111,7 +111,7 @@ class UsuarioRepository
 
             // 2. Estudiante (ID: 4) - Pertenece a Informática si está inscrito en programa 4
             if ($rolId == 4) {
-                $esEstudianteInf = DB::connection('emulacion_sogac_2')
+                $esEstudianteInf = DB::connection('external_db')
                     ->table('estudiante')
                     ->where('est_cedula', $cedula)
                     ->where('est_cod_programa', 4)
@@ -124,7 +124,7 @@ class UsuarioRepository
 
             // 3. Docente (ID: 3) - Pertenece a Informática si tiene carga activa en programa 4
             if ($rolId == 3) {
-                $esDocenteInf = DB::connection('emulacion_sogac_2')
+                $esDocenteInf = DB::connection('external_db')
                     ->table('seccion_unidad_docente as sud')
                     ->join('unidad_curricular as uc', 'sud.sud_cod_unidad', '=', 'uc.ucu_codigo')
                     ->join('malla as m', 'uc.ucu_cod_malla', '=', 'm.mal_codigo')
@@ -153,7 +153,7 @@ class UsuarioRepository
      */
     public function tieneRol3(string $cedula): bool
     {
-        return DB::connection('emulacion_sogac_2')
+        return DB::connection('external_db')
             ->table('usuario')
             ->where('usu_cedula', $cedula)
             ->where('usu_cod_rol', 3)
@@ -166,7 +166,7 @@ class UsuarioRepository
      */
     public function getUsuCodigo(string $cedula, int $rolId)
     {
-        return DB::connection('emulacion_sogac_2')
+        return DB::connection('external_db')
             ->table('usuario')
             ->where('usu_cedula', $cedula)
             ->where('usu_cod_rol', $rolId)

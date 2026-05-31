@@ -282,7 +282,7 @@ class PlanningDataSeeder extends Seeder
         // --- VOCERO: Buscar ID del rol VOCERO en BD externa y asignar permiso ---
         $voceroPermisos = [85];
         try {
-            $voceroRolId = DB::connection('emulacion_sogac_2')
+            $voceroRolId = DB::connection('external_db')
                 ->table('rol')
                 ->where('rol_nombre', 'VOCERO')
                 ->value('rol_codigo');

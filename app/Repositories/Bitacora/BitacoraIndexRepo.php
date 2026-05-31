@@ -42,7 +42,7 @@ class BitacoraIndexRepo
         $userIds = $bitacora->pluck('id_usuario')->filter()->unique();
 
         if ($userIds->isNotEmpty()) {
-            // Consultar nombres en la BD externa (emulacion_sogac_2)
+            // Consultar nombres en la BD externa (external_db)
             $usuariosExternos = DB::connection('external_db')
                 ->table('usuario')
                 ->whereIn(DB::raw('TRIM(usu_cedula)'), $userIds)

@@ -43,7 +43,7 @@ class SeleccionarRol extends Component
         }
 
         // Obtener el nombre del usuario (de cualquier perfil ya que comparten cédula)
-        $userProfile = User::on('emulacion_sogac_2')
+        $userProfile = User::on('external_db')
             ->where('usu_cedula', $cedula)
             ->first();
 
@@ -83,7 +83,7 @@ class SeleccionarRol extends Component
         $usu_codigo = $usuarioRepo->getUsuCodigo($cedula, $rolId);
 
         if ($usu_codigo) {
-            $usuario = User::on('emulacion_sogac_2')->find($usu_codigo);
+            $usuario = User::on('external_db')->find($usu_codigo);
 
             if ($usuario) {
                 session(['active_role' => $rolId]);

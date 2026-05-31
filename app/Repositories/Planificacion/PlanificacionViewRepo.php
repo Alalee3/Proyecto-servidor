@@ -11,7 +11,7 @@ class PlanificacionViewRepo
      */
     public function getDetallesPlanificacion(int $planificacionId): ?array
     {
-        $dbSogc = config('database.connections.emulacion_sogac_2.database');
+        $dbSogc = DB::connection('external_db')->getDatabaseName();
 
         // 1. Obtener datos principales de la planificación + Docente + Sección + Unidad + Lapso
         $planificacion = DB::table('planificacion as p')

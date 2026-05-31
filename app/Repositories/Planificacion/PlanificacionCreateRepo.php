@@ -110,7 +110,7 @@ class PlanificacionCreateRepo
     // Nueva función vital: Obtener las asignaciones del docente logueado
     public function getAsignacionesDocente($userId = null)
     {
-        $query = DB::connection('emulacion_sogac_2')
+        $query = DB::connection('external_db')
             ->table('seccion_unidad_docente as sud')
             ->join('unidad_curricular as uc', 'sud.sud_cod_unidad', '=', 'uc.ucu_codigo')
             ->join('seccion as s', 'sud.sud_cod_seccion', '=', 's.sec_codigo')
@@ -140,7 +140,7 @@ class PlanificacionCreateRepo
 
     public function getLapsoAcademicoByAsignacion($idAsignacion)
     {
-        return DB::connection('emulacion_sogac_2')
+        return DB::connection('external_db')
             ->table('seccion_unidad_docente as sud')
             ->join('seccion as s', 'sud.sud_cod_seccion', '=', 's.sec_codigo')
             ->join('lapso_academico as l', 's.sec_cod_lapso_academico', '=', 'l.lap_codigo')
@@ -151,8 +151,8 @@ class PlanificacionCreateRepo
 
     public function hasDocenteOrCoordinadorRole($userId)
     {
-        // El rol_id para Coordinador puede ser 1, 5 u 11; para Docente es 2 o 3 en emulacion_sogac_2
-        return DB::connection('emulacion_sogac_2')
+        // El rol_id para Coordinador puede ser 1, 5 u 11; para Docente es 2 o 3 en external_db
+        return DB::connection('external_db')
             ->table('usuario')
             ->where('usu_codigo', $userId)
             ->whereIn('usu_cod_rol', [1, 2, 3, 5, 11])
@@ -162,8 +162,8 @@ class PlanificacionCreateRepo
 
     public function isCoordinador($userId)
     {
-        // El rol_id para Coordinador puede ser 1, 5 u 11 en emulacion_sogac_2
-        return DB::connection('emulacion_sogac_2')
+        // El rol_id para Coordinador puede ser 1, 5 u 11 en external_db
+        return DB::connection('external_db')
             ->table('usuario')
             ->where('usu_codigo', $userId)
             ->whereIn('usu_cod_rol', [1, 5, 11])
@@ -173,7 +173,7 @@ class PlanificacionCreateRepo
 
     public function getMallaByAsignacion($idAsignacion)
     {
-        return DB::connection('emulacion_sogac_2')
+        return DB::connection('external_db')
             ->table('seccion_unidad_docente as sud')
             ->join('seccion as s', 'sud.sud_cod_seccion', '=', 's.sec_codigo')
             ->join('malla as m', 's.sec_cod_malla', '=', 'm.mal_codigo')
@@ -184,7 +184,7 @@ class PlanificacionCreateRepo
 
     public function getDetalleProfesorAsignado($id)
     {
-        return DB::connection('emulacion_sogac_2')
+        return DB::connection('external_db')
             ->table('seccion_unidad_docente')
             ->where('sud_codigo', $id)
             ->select('sud_codigo as id_detalle_profesor_asignado', 'sud_cod_unidad as id_unidad_curricular', 'sud_cod_seccion as id_seccion')
@@ -193,7 +193,7 @@ class PlanificacionCreateRepo
 
     public function getUnidadCurricular($id)
     {
-        return DB::connection('emulacion_sogac_2')
+        return DB::connection('external_db')
             ->table('unidad_curricular')
             ->where('ucu_codigo', $id)
             ->select('ucu_codigo as id_unidad_curricular', 'ucu_nombre as nombre_unidad_curricular')

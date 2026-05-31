@@ -11,7 +11,7 @@ class HistoryPlanificacionRepo
      */
     public function listarHistorial(array $filters = [], int $perPage = 10)
     {
-        $dbSogc = config('database.connections.emulacion_sogac_2.database');
+        $dbSogc = DB::connection('external_db')->getDatabaseName();
         $userId = Auth::id();
 
         $query = DB::table('planificacion as p')
