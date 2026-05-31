@@ -124,7 +124,7 @@ class EditarCalendario extends Component
         $this->actualizarMapaEventos();
     }
 
-    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false, $confirmadoIncorporacion = false, $confirmadoDuracion = false, $confirmadoIntroductorio = false)
+    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false, $confirmadoIncorporacion = false, $confirmadoDuracion = false, $confirmadoIntroductorio = false, $confirmadoFeriadoLocal = false)
     {
         $eventoInfo = \App\Models\Evento::find($id_evento);
 
@@ -436,25 +436,44 @@ class EditarCalendario extends Component
 
         $is_no_laborable = !$is_laborable || $is_vacaciones;
 
-        if (!$is_superponible && !$is_no_laborable) {
-            foreach ($this->eventosRegistrados as $evReg) {
-                $evRegNoLaborable = !((bool)($evReg['is_laborable_evento'] ?? true)) || ($evReg['especial_evento'] ?? '') === '1';
-                
-                if ($evRegNoLaborable) {
-                    if ($inicio <= $evReg['fin'] && $fin >= $evReg['inicio']) {
-                        $nombreChoca = $evReg['nombre_evento'] ?? $evReg['nombre'] ?? 'Sin nombre';
-                        $this->showAlert('error', "El evento '{$nombre}' no es superponible y no puede registrarse en la misma fecha que el evento no laborable '{$nombreChoca}'.");
-                        return;
-                    }
+        foreach ($this->eventosRegistrados as $evReg) {
+            $evRegNoSuperponible = isset($evReg['is_superponible_evento']) && !$evReg['is_superponible_evento'];
+            
+            if ($inicio <= $evReg['fin'] && $fin >= $evReg['inicio']) {
+                $nombreChoca = $evReg['nombre_evento'] ?? $evReg['nombre'] ?? 'Sin nombre';
+
+                $esFeriadoLocalOverlap = false;
+                if (!$is_superponible && ($evReg['tipo'] ?? '') === '2') {
+                    $esFeriadoLocalOverlap = true;
                 }
-            }
-        } else if ($is_no_laborable) {
-            foreach ($this->eventosRegistrados as $evReg) {
-                if (isset($evReg['is_superponible_evento']) && !$evReg['is_superponible_evento']) {
-                    if ($inicio <= $evReg['fin'] && $fin >= $evReg['inicio']) {
-                        $nombreChoca = $evReg['nombre_evento'] ?? $evReg['nombre'] ?? 'Sin nombre';
-                        $this->showAlert('error', "No se puede registrar el evento no laborable '{$nombre}' en estas fechas porque choca con el evento '{$nombreChoca}', el cual no es superponible.");
-                        return;
+                if ($evRegNoSuperponible && $tipo === '2') {
+                    $esFeriadoLocalOverlap = true;
+                }
+
+                if (!$is_superponible || $evRegNoSuperponible) {
+                    if ($esFeriadoLocalOverlap) {
+                        if (!$confirmadoFeriadoLocal) {
+                            $this->tempEventoAgregar = func_get_args();
+                            $this->dispatch('show-alert', [
+                                'type' => 'warning',
+                                'message' => "¿Está seguro de asignar el evento '{$nombre}' el mismo día que el feriado local '{$nombreChoca}'?",
+                                'showCancelButton' => true,
+                                'cancelText' => 'Cancelar',
+                                'okText' => 'Continuar',
+                                'onOkEvent' => 'confirmar-agregar-evento-feriado-local'
+                            ]);
+                            return;
+                        }
+                    } else {
+                        if (!$is_superponible) {
+                            $this->showAlert('error', "El evento '{$nombre}' no es superponible y no puede registrarse en la misma fecha que el evento '{$nombreChoca}'.");
+                            return;
+                        }
+        
+                        if ($evRegNoSuperponible) {
+                            $this->showAlert('error', "No se puede registrar el evento '{$nombre}' en estas fechas porque choca con el evento '{$nombreChoca}', el cual no es superponible.");
+                            return;
+                        }
                     }
                 }
             }
@@ -1259,6 +1278,7 @@ class EditarCalendario extends Component
     #[\Livewire\Attributes\On('confirmar-agregar-evento-duracion')]
     public function confirmarAgregarEventoDuracion()
     {
+        \Illuminate\Support\Facades\Log::info("Confirmar duracion (Editar), tempEventoAgregar: " . json_encode($this->tempEventoAgregar));
         if ($this->tempEventoAgregar) {
             $args = $this->tempEventoAgregar;
             while (count($args) < 9) {
@@ -1269,6 +1289,21 @@ class EditarCalendario extends Component
             $this->tempEventoAgregar = null;
         }
     }
+
+    #[\Livewire\Attributes\On('confirmar-agregar-evento-feriado-local')]
+    public function confirmarAgregarEventoFeriadoLocal()
+    {
+        if ($this->tempEventoAgregar) {
+            $args = $this->tempEventoAgregar;
+            while (count($args) < 11) {
+                $args[] = false;
+            }
+            $args[10] = true; // $confirmadoFeriadoLocal
+            $this->agregarEvento(...$args);
+            $this->tempEventoAgregar = null;
+        }
+    }
+
 
     #[\Livewire\Attributes\On('confirmar-agregar-evento-introductorio')]
     public function confirmarAgregarEventoIntroductorio()
