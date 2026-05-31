@@ -624,6 +624,7 @@ class CreateCalendario extends Component
             'cantidad_dias_evento' => $eventoInfo ? $eventoInfo->cantidad_dias_evento : null,
             'especial_evento' => $eventoInfo ? (string) $eventoInfo->especial_evento : null,
             'is_superponible_evento' => $eventoInfo ? (bool) $eventoInfo->is_superponible_evento : false,
+            'is_laborable_evento' => $eventoInfo ? (bool) $eventoInfo->is_laborable_evento : true,
         ];
 
         $this->actualizarMapaEventos();
@@ -654,7 +655,7 @@ class CreateCalendario extends Component
             || $esp === '4'
             || $esp === '5'
             || $esp === '1'
-            || \App\Support\CalendarioLapsoSemanas::eventoModeloEsFestivo($eventoInfo);
+            || !$eventoInfo->is_laborable_evento;
     }
 
     protected function recalcularFinesLapso(): void
@@ -824,8 +825,8 @@ class CreateCalendario extends Component
 
         $removido = $this->eventosRegistrados[$index];
 
-        $idsFestivos = \App\Support\CalendarioLapsoSemanas::idsEventosFestivos($this->eventosRegistrados);
-        $eraFestivo = \App\Support\CalendarioLapsoSemanas::registroEsFestivo($removido, $idsFestivos) || ($removido['especial_evento'] ?? '') === '1';
+        $isLaborable = (bool) ($removido['is_laborable_evento'] ?? true);
+        $eraFestivo = !$isLaborable || ($removido['especial_evento'] ?? '') === '1';
         $eraInicioLapso = in_array($removido['especial_evento'] ?? '', ['2', '7', '9', '13']);
 
         unset($this->eventosRegistrados[$index]);
