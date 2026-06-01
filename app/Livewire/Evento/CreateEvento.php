@@ -14,9 +14,9 @@ class CreateEvento extends Component
     public $eventosExistentes = [];
     protected $eventoRepository;
 
-    public function boot()
+    public function boot(EventoCreateRepo $repo)
     {
-        $this->eventoRepository = new EventoCreateRepo();
+        $this->eventoRepository = $repo;
     }
 
     public function mount()

@@ -13,7 +13,7 @@ class Evento extends Model
     protected $table = 'evento';
     protected $primaryKey = 'id_evento';
     public $timestamps = false;
-    protected $guarded = [];
+    protected $guarded = ['id_evento'];
 
     protected $casts = [
         'is_laborable_evento' => 'boolean',

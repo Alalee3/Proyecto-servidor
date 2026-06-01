@@ -41,8 +41,8 @@ class CreateEventoForm extends Form
                         } else {
                             if (empty($value) && $value !== '0' && $value !== 0) {
                                 $fail('La cantidad de días es obligatoria.');
-                            } elseif (!is_numeric($value) || $value < 1 || $value > 365) {
-                                $fail('La cantidad de días debe ser un número entero entre 1 y 365.');
+                            } elseif (!is_numeric($value) || $value < 1 || $value > 90) {
+                                $fail('La cantidad de días debe ser un número entero entre 1 y 90.');
                             }
                         }
                     } else {

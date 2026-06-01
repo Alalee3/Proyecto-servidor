@@ -16,10 +16,10 @@ class UpdateEvento extends Component
     protected $eventoRepository;
     protected $viewRepository;
 
-    public function boot()
+    public function boot(EventoUpdateRepo $eventoRepo, EventoViewRepo $viewRepo)
     {
-        $this->eventoRepository = new EventoUpdateRepo();
-        $this->viewRepository = new EventoViewRepo();
+        $this->eventoRepository = $eventoRepo;
+        $this->viewRepository = $viewRepo;
     }
 
     public function mount($id)
