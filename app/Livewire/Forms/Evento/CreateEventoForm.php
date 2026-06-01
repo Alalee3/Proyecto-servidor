@@ -57,11 +57,7 @@ class CreateEventoForm extends Form
                 'boolean',
                 function ($attribute, $value, $fail) {
                     if ($this->is_especial) {
-                        if ($this->id_especial_evento == '12') {
-                            if ($value) {
-                                $fail('Para la suspensión, no debe habilitarse la cantidad de días.');
-                            }
-                        } elseif ($this->id_especial_evento == '1') {
+                        if ($this->id_especial_evento == '1') {
                             if (!$value) {
                                 $fail('Para las vacaciones, debe habilitarse la cantidad de días obligatoriamente.');
                             }
@@ -105,7 +101,7 @@ class CreateEventoForm extends Form
                     if ($this->is_especial && in_array($this->id_especial_evento, ['1', '7', '8', '11', '13', '14']) && $value) {
                         $fail('Para este evento especial, no puede ser superponible.');
                     }
-                    if ($this->is_especial && in_array($this->id_especial_evento, ['9', '10', '12']) && !$value) {
+                    if ($this->is_especial && in_array($this->id_especial_evento, ['9', '10']) && !$value) {
                         $fail('Para este evento especial, el evento debe ser obligatoriamente superponible.');
                     }
                 }
@@ -141,7 +137,7 @@ class CreateEventoForm extends Form
                     if ($this->is_especial) {
                         if (in_array($this->id_especial_evento, ['2', '3', '7', '8', '9', '10', '13', '14']) && $value != '4') {
                             $fail('Para este evento especial, el tipo de evento debe ser obligatoriamente Académico.');
-                        } elseif (in_array($this->id_especial_evento, ['1', '11', '12']) && $value != '5') {
+                        } elseif (in_array($this->id_especial_evento, ['1', '11']) && $value != '5') {
                             $fail('Para este evento especial, el tipo de evento debe ser obligatoriamente Administrativo/Académico.');
                         } elseif (in_array($this->id_especial_evento, ['4', '5']) && !in_array($value, ['6'])) {
                             $fail('Para Semana Santa y Carnaval, el tipo de evento debe ser Feriado Mundial.');
@@ -175,7 +171,7 @@ class CreateEventoForm extends Form
                     if ($this->is_especial) {
                         if (in_array($this->id_especial_evento, ['2', '3', '7', '8', '9', '10', '11', '13', '14']) && !$value) {
                             $fail('Para este evento especial, debe ser obligatoriamente Laborable.');
-                        } elseif (in_array($this->id_especial_evento, ['1', '4', '5', '12']) && $value) {
+                        } elseif (in_array($this->id_especial_evento, ['1', '4', '5']) && $value) {
                             $fail('Para este evento especial, no debe ser Laborable.');
                         }
                     }
@@ -191,7 +187,7 @@ class CreateEventoForm extends Form
                         }
                     }
                     if ($this->is_especial) {
-                        if (in_array($this->id_especial_evento, ['1', '2', '3', '7', '8', '11', '12', '13', '14']) && !$value) {
+                        if (in_array($this->id_especial_evento, ['1', '2', '3', '7', '8', '11', '13', '14']) && !$value) {
                              $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');
                         } elseif (in_array($this->id_especial_evento, ['4', '5', '9', '10']) && $value) {
                              $fail('Para este tipo de evento, debe ser obligatoriamente No Repetible.');
