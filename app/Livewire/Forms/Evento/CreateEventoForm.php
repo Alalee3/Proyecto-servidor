@@ -26,6 +26,7 @@ class CreateEventoForm extends Form
     {
         return [
             'cantidad_dias_evento' => [
+                'exclude_unless:is_cantidad_dias_evento,true',
                 'nullable',
                 function ($attribute, $value, $fail) {
                     if ($this->is_cantidad_dias_evento) {
@@ -113,6 +114,9 @@ class CreateEventoForm extends Form
                 'required',
                 'boolean',
                 function ($attribute, $value, $fail) {
+                    if ($value && $this->is_independiente) {
+                        $fail('Un evento que ocurre en semanas específicas no puede registrarse fuera de un semestre (debe depender de un lapso).');
+                    }
                     if (in_array($this->tipo_evento, ['1', '2', '6']) && $value) {
                         $fail('Para los feriados, el evento no puede ocurrir en semanas específicas.');
                     }
@@ -218,6 +222,7 @@ class CreateEventoForm extends Form
                 }
             ],
             'dia_evento' => [
+                'exclude_unless:is_dia_evento,true',
                 'required_if:is_dia_evento,true',
                 'nullable',
                 'date'

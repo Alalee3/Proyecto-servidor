@@ -114,6 +114,9 @@ class UpdateEventoForm extends Form
                 'required',
                 'boolean',
                 function ($attribute, $value, $fail) {
+                    if ($value && $this->is_independiente) {
+                        $fail('Un evento que ocurre en semanas específicas no puede registrarse fuera de un semestre (debe depender de un lapso).');
+                    }
                     if (in_array($this->tipo_evento, ['1', '2', '6']) && $value) {
                         $fail('Para los feriados, el evento no puede ocurrir en semanas específicas.');
                     }
@@ -225,6 +228,7 @@ class UpdateEventoForm extends Form
                 }
             ],
             'rango_dias' => [
+                'exclude_unless:is_rango_dias,true',
                 'required_if:is_rango_dias,true',
                 'nullable',
                 'integer',
@@ -252,6 +256,7 @@ class UpdateEventoForm extends Form
                 }
             ],
             'dia_evento' => [
+                'exclude_unless:is_dia_evento,true',
                 'required_if:is_dia_evento,true',
                 'nullable',
                 'date'

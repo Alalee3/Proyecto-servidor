@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Traits\Auditable;
 
 class Evento extends Model
 {
-    use Auditable;
+    use Auditable, HasFactory;
 
     protected $table = 'evento';
     protected $primaryKey = 'id_evento';
@@ -25,6 +26,7 @@ class Evento extends Model
         'is_dia_evento' => 'boolean',
         'dia_evento' => 'date',
         'semana_evento' => 'array',
+        'id_especial_evento' => 'integer',
         'cantidad_dias_evento' => 'integer',
     ];
 
