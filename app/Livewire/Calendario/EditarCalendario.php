@@ -832,8 +832,9 @@ class EditarCalendario extends Component
                         if ($dateCarbon->between($sReg, $eReg)) {
                             $evRegLaborable = isset($evReg['is_laborable_evento']) ? (bool) $evReg['is_laborable_evento'] : true;
                             $evRegTipo = $evReg['tipo'] ?? '';
+                            $ignorarFL = $ev['ignorar_feriados_locales'] ?? false;
 
-                            if (!$evRegLaborable && $evRegTipo !== '2') {
+                            if (!$evRegLaborable && ($evRegTipo !== '2' || $ignorarFL)) {
                                 $esDiaNoLaborable = true;
                                 break;
                             }
@@ -1346,6 +1347,21 @@ class EditarCalendario extends Component
                 $args[] = false;
             }
             $args[10] = true; // $confirmadoFeriadoLocal
+            $this->agregarEvento(...$args);
+            $this->tempEventoAgregar = null;
+        }
+    }
+
+    #[\Livewire\Attributes\On('cancelar-agregar-evento-feriado-local')]
+    public function cancelarAgregarEventoFeriadoLocal()
+    {
+        if ($this->tempEventoAgregar) {
+            $args = $this->tempEventoAgregar;
+            while (count($args) < 12) {
+                $args[] = false;
+            }
+            $args[10] = true; // $confirmadoFeriadoLocal
+            $args[11] = true; // $ignorarFeriadosLocales
             $this->agregarEvento(...$args);
             $this->tempEventoAgregar = null;
         }
