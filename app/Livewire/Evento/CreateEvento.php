@@ -148,6 +148,10 @@ class CreateEvento extends Component
             }
         }
 
+        if ($propertyName === 'form.is_independiente' && $this->form->is_independiente) {
+            $this->form->is_semana_evento = false;
+        }
+
         // Si no es repetible, recortar a máximo 1 semana por lapso
         if (!$this->form->is_repetible && is_array($this->form->semanas)) {
             $nuevoSemanas = [];
