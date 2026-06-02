@@ -59,6 +59,7 @@ class UpdateEvento extends Component
                 $this->form->is_rango_dias = true;
                 $this->form->rango_dias = '1';
                 $this->form->is_independiente = true;
+                $this->form->is_superponible = false;
                 $this->form->cantidad_dias_evento = 0;
             } elseif (in_array($this->form->id_especial_evento, ['7', '8', '13', '14'])) {
                 $this->form->is_laborable = true;
@@ -83,10 +84,10 @@ class UpdateEvento extends Component
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = true;
                 $this->form->tipo_evento = '5';
-                $this->form->is_rango_dias = false;
-                $this->form->rango_dias = '';
+                $this->form->is_rango_dias = true;
+                $this->form->rango_dias = '60';
                 $this->form->is_independiente = true;
-                $this->form->is_superponible = false;
+                $this->form->is_superponible = true;
                 $this->form->cantidad_dias_evento = 60;
             } elseif ($this->form->id_especial_evento == '4') { // Semana Santa
                 $this->form->is_laborable = false;
@@ -96,6 +97,7 @@ class UpdateEvento extends Component
                 $this->form->rango_dias = '2';
                 $this->form->is_independiente = true;
                 $this->form->is_superponible = true;
+                $this->form->is_dia_evento = false;
                 $this->form->cantidad_dias_evento = 2;
             } elseif ($this->form->id_especial_evento == '5') { // Carnaval
                 $this->form->is_laborable = false;
@@ -105,6 +107,7 @@ class UpdateEvento extends Component
                 $this->form->rango_dias = '2';
                 $this->form->is_independiente = true;
                 $this->form->is_superponible = true;
+                $this->form->is_dia_evento = false;
                 $this->form->cantidad_dias_evento = 2;
             } elseif ($this->form->id_especial_evento == '11') { // Incorporación
                 $this->form->is_laborable = true;

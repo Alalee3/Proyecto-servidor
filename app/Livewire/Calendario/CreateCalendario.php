@@ -1077,6 +1077,24 @@ class CreateCalendario extends Component
             $mensajes[] = "¿Está seguro de registrar las Semanas del curso Intensivo con una cantidad superior a 6 semanas?";
         }
 
+        $perUno = (int) $this->form->semana_per_uno_calendario_academico;
+        if ($perUno > 0) {
+            if ($perUno < 12) {
+                $mensajes[] = "¿Está seguro de registrar el P.E.R 1 con una cantidad inferior a 12 semanas?";
+            } elseif ($perUno > 12) {
+                $mensajes[] = "¿Está seguro de registrar el P.E.R 1 con una cantidad superior a 12 semanas?";
+            }
+        }
+
+        $perDos = (int) $this->form->semana_per_dos_calendario_academico;
+        if ($perDos > 0) {
+            if ($perDos < 12) {
+                $mensajes[] = "¿Está seguro de registrar el P.E.R 2 con una cantidad inferior a 12 semanas?";
+            } elseif ($perDos > 12) {
+                $mensajes[] = "¿Está seguro de registrar el P.E.R 2 con una cantidad superior a 12 semanas?";
+            }
+        }
+
         if (!empty($mensajes)) {
             $mensajeFinal = "";
             if (count($mensajes) > 1) {

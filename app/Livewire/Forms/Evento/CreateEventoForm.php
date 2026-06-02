@@ -38,6 +38,10 @@ class CreateEventoForm extends Form
                             if ($value != 2) {
                                 $fail('Para Semana Santa y Carnaval, la cantidad de días debe ser obligatoriamente 2.');
                             }
+                        } elseif ($this->is_especial && $this->id_especial_evento == '1') {
+                            if ($value != 60) {
+                                $fail('Para Vacaciones Colectivas, la cantidad de días debe ser obligatoriamente 60.');
+                            }
                         } else {
                             if (empty($value) && $value !== '0' && $value !== 0) {
                                 $fail('La cantidad de días es obligatoria.');
@@ -98,10 +102,10 @@ class CreateEventoForm extends Form
                             $fail('Para los feriados, el evento debe ser obligatoriamente superponible.');
                         }
                     }
-                    if ($this->is_especial && in_array($this->id_especial_evento, ['1', '7', '8', '11', '13', '14']) && $value) {
+                    if ($this->is_especial && in_array($this->id_especial_evento, ['2', '3', '7', '8', '11', '13', '14']) && $value) {
                         $fail('Para este evento especial, no puede ser superponible.');
                     }
-                    if ($this->is_especial && in_array($this->id_especial_evento, ['9', '10']) && !$value) {
+                    if ($this->is_especial && in_array($this->id_especial_evento, ['1', '9', '10']) && !$value) {
                         $fail('Para este evento especial, el evento debe ser obligatoriamente superponible.');
                     }
                 }
@@ -214,6 +218,9 @@ class CreateEventoForm extends Form
                 function ($attribute, $value, $fail) {
                     if ($value && !in_array($this->tipo_evento, ['1', '2', '6'])) {
                         $fail('Solo los feriados pueden ocurrir en un día específico.');
+                    }
+                    if ($value && in_array($this->id_especial_evento, ['4', '5'])) {
+                        $fail('Para Carnaval y Semana Santa, esta opción debe ser obligatoriamente falsa.');
                     }
                 }
             ],

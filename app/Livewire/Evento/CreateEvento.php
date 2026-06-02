@@ -49,6 +49,7 @@ class CreateEvento extends Component
                 $this->form->tipo_evento = '4';
                 $this->form->is_cantidad_dias_evento = true;
                 $this->form->is_independiente = true;
+                $this->form->is_superponible = false;
                 $this->form->cantidad_dias_evento = 1;
             } elseif (in_array($this->form->id_especial_evento, ['7', '8', '13', '14'])) {
                 $this->form->is_laborable = true;
@@ -73,7 +74,7 @@ class CreateEvento extends Component
                 $this->form->tipo_evento = '5';
                 $this->form->is_cantidad_dias_evento = true;
                 $this->form->is_independiente = true;
-                $this->form->is_superponible = false;
+                $this->form->is_superponible = true;
                 $this->form->cantidad_dias_evento = 60;
             } elseif ($this->form->id_especial_evento == '4') { // Semana Santa
                 $this->form->is_laborable = false;
@@ -82,6 +83,7 @@ class CreateEvento extends Component
                 $this->form->is_cantidad_dias_evento = true;
                 $this->form->is_independiente = true;
                 $this->form->is_superponible = true;
+                $this->form->is_dia_evento = false;
                 $this->form->cantidad_dias_evento = 2;
             } elseif ($this->form->id_especial_evento == '5') { // Carnaval
                 $this->form->is_laborable = false;
@@ -90,6 +92,7 @@ class CreateEvento extends Component
                 $this->form->is_cantidad_dias_evento = true;
                 $this->form->is_independiente = true;
                 $this->form->is_superponible = true;
+                $this->form->is_dia_evento = false;
                 $this->form->cantidad_dias_evento = 2;
             } elseif ($this->form->id_especial_evento == '11') { // Incorporación
                 $this->form->tipo_evento = '5';

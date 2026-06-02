@@ -145,7 +145,7 @@
                         $per1 = (int) $form->semana_per_uno_calendario_academico;
 
                         $errLapso1 = $errors->has('form.semana_lapso_uno_calendario_academico') || $errors->has('form.semana_lapso_uno_introductorio_calendario_academico') || $errors->has('form.semana_per_uno_calendario_academico');
-                        $warnLapso1 = ($lapso1 > 0 && ($lapso1 < 16 || $lapso1 > 18)) || ($intro1 > 0 && $intro1 != 12);
+                        $warnLapso1 = ($lapso1 > 0 && ($lapso1 < 16 || $lapso1 > 18)) || ($intro1 > 0 && $intro1 != 12) || ($per1 > 0 && $per1 != 12);
                         $valLapso1 = $lapso1 > 0;
                         $colorLapso1 = $errLapso1 ? 'border-red-500 shadow-[0_0_10px_rgba(160,0,0,0.1)]' : ($warnLapso1 ? 'border-yellow-500 shadow-[0_0_10px_rgba(160,160,0,0.1)]' : ($valLapso1 ? 'border-green-500' : 'border-gray-200 dark:border-gray-700'));
 
@@ -162,7 +162,7 @@
                         $per2 = (int) $form->semana_per_dos_calendario_academico;
 
                         $errLapso2 = $errors->has('form.semana_lapso_dos_calendario_academico') || $errors->has('form.semana_lapso_dos_introductorio_calendario_academico') || $errors->has('form.semana_per_dos_calendario_academico');
-                        $warnLapso2 = ($lapso2 > 0 && ($lapso2 < 16 || $lapso2 > 18)) || ($intro2 > 0 && $intro2 != 12);
+                        $warnLapso2 = ($lapso2 > 0 && ($lapso2 < 16 || $lapso2 > 18)) || ($intro2 > 0 && $intro2 != 12) || ($per2 > 0 && $per2 != 12);
                         $valLapso2 = $lapso2 > 0;
                         $colorLapso2 = $errLapso2 ? 'border-red-500 shadow-[0_0_10px_rgba(160,0,0,0.1)]' : ($warnLapso2 ? 'border-yellow-500 shadow-[0_0_10px_rgba(160,160,0,0.1)]' : ($valLapso2 ? 'border-green-500' : 'border-gray-200 dark:border-gray-700'));
                     @endphp
