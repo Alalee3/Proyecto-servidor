@@ -331,5 +331,27 @@ class PlanningDataSeeder extends Seeder
                 ]);
             }
         }
+
+        // --- 11. MODIFICACIONES DE ESTRUCTURA A LA BASE DE DATOS PARA VOCEROS ---
+        // Se agregaron los campos de control de flujo para la aprobación jerárquica de planificación
+        try {
+            DB::statement("ALTER TABLE planificacion MODIFY estatus ENUM('1','2','3','4','5') NOT NULL DEFAULT '1'");
+        } catch (\Exception $e) { /* Ignorar si ya existe */ }
+
+        try {
+            DB::statement("ALTER TABLE planificacion ADD COLUMN motivo_rechazo_vocero TEXT NULL AFTER estatus");
+        } catch (\Exception $e) { /* Ignorar si ya existe */ }
+
+        try {
+            DB::statement("ALTER TABLE planificacion ADD COLUMN id_firma_coordinador INT NULL");
+        } catch (\Exception $e) { /* Ignorar si ya existe */ }
+
+        try {
+            DB::statement("ALTER TABLE planificacion ADD COLUMN id_firma_vocero INT NULL");
+        } catch (\Exception $e) { /* Ignorar si ya existe */ }
+
+        try {
+            DB::statement("ALTER TABLE vocero ADD COLUMN notificado TINYINT(1) DEFAULT 0 NULL");
+        } catch (\Exception $e) { /* Ignorar si ya existe */ }
     }
 }

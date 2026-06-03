@@ -17,6 +17,7 @@ return new class extends Migration
         DB::statement("ALTER TABLE planificacion ADD COLUMN id_firma_coordinador INT NULL");
         DB::statement("ALTER TABLE planificacion ADD COLUMN id_firma_vocero INT NULL");
 
+        DB::statement("ALTER TABLE vocero ADD COLUMN notificado TINYINT(1) DEFAULT 0 NULL");
     }
 
     /**
@@ -24,6 +25,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        DB::statement("ALTER TABLE vocero DROP COLUMN notificado");
         DB::statement("ALTER TABLE planificacion DROP COLUMN id_firma_vocero");
         DB::statement("ALTER TABLE planificacion DROP COLUMN id_firma_coordinador");
         DB::statement("ALTER TABLE planificacion DROP COLUMN motivo_rechazo_vocero");
