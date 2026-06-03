@@ -19,9 +19,9 @@
         $vacacionesList = [];
         $otrosEventosAgrupados = [];
 
-        // Helper function to check if it's a vacation event
+        // Helper function to check if it's a vacation event (id_especial_evento == 1)
         $isVacacion = function($e) {
-            return stripos($e->descripcion_evento ?? '', 'vacacion') !== false || stripos($e->descripcion_evento ?? '', 'vacación') !== false;
+            return (isset($e->id_especial_evento) && $e->id_especial_evento == 1);
         };
 
         // Helper function to format vacation ranges and count weekdays

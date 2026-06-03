@@ -49,6 +49,7 @@ class CalendarioExcelRepo
                 'evento.codigo_color_evento as codigo_color',
                 'evento.is_laborable_evento',
                 'evento.is_superponible_evento',
+                'evento.id_especial_evento',
                 'evento.tipo_evento'
             )
             ->where('detalle_evento.id_calendario_academico', $calendario->id_calendario_academico)
