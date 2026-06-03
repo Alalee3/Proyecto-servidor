@@ -34,9 +34,9 @@ class CreateEventoForm extends Form
                             if ($value != 1) {
                                 $fail('La cantidad de días debe ser obligatoriamente 1 para este evento especial.');
                             }
-                        } elseif ($this->is_especial && in_array($this->id_especial_evento, ['4', '5'])) {
-                            if ($value != 2) {
-                                $fail('Para Semana Santa y Carnaval, la cantidad de días debe ser obligatoriamente 2.');
+                        } elseif ($this->is_especial && $this->id_especial_evento == '1') {
+                            if ($value != 60) {
+                                $fail('Para Vacaciones Colectivas, la cantidad de días debe ser obligatoriamente 60.');
                             }
                         } else {
                             if (empty($value) && $value !== '0' && $value !== 0) {
@@ -65,10 +65,6 @@ class CreateEventoForm extends Form
                             if (!$value) {
                                 $fail('Este evento especial requiere cantidad de días obligatoriamente (1 día).');
                             }
-                        } elseif (in_array($this->id_especial_evento, ['4', '5'])) {
-                            if (!$value) {
-                                $fail('Para Semana Santa y Carnaval, debe habilitarse la cantidad de días obligatoriamente.');
-                            }
                         }
                     }
                 }
@@ -94,14 +90,12 @@ class CreateEventoForm extends Form
                 'boolean',
                 function ($attribute, $value, $fail) {
                     if (in_array($this->tipo_evento, ['1', '2', '6']) && !$value) {
-                        if (!($this->is_especial && in_array($this->id_especial_evento, ['4', '5']))) {
-                            $fail('Para los feriados, el evento debe ser obligatoriamente superponible.');
-                        }
+                        $fail('Para los feriados, el evento debe ser obligatoriamente superponible.');
                     }
-                    if ($this->is_especial && in_array($this->id_especial_evento, ['1', '7', '8', '11', '13', '14']) && $value) {
+                    if ($this->is_especial && in_array($this->id_especial_evento, ['2', '3', '7', '8', '11', '13', '14']) && $value) {
                         $fail('Para este evento especial, no puede ser superponible.');
                     }
-                    if ($this->is_especial && in_array($this->id_especial_evento, ['9', '10']) && !$value) {
+                    if ($this->is_especial && in_array($this->id_especial_evento, ['1', '9', '10']) && !$value) {
                         $fail('Para este evento especial, el evento debe ser obligatoriamente superponible.');
                     }
                 }
@@ -110,6 +104,9 @@ class CreateEventoForm extends Form
                 'required',
                 'boolean',
                 function ($attribute, $value, $fail) {
+                    if ($value && !$this->is_repetible) {
+                        $fail('Si el evento no es repetible, no puede ocurrir en semanas específicas.');
+                    }
                     if ($value && $this->is_independiente) {
                         $fail('Un evento que ocurre en semanas específicas no puede registrarse fuera de un semestre (debe depender de un lapso).');
                     }
@@ -139,8 +136,6 @@ class CreateEventoForm extends Form
                             $fail('Para este evento especial, el tipo de evento debe ser obligatoriamente Académico.');
                         } elseif (in_array($this->id_especial_evento, ['1', '11']) && $value != '5') {
                             $fail('Para este evento especial, el tipo de evento debe ser obligatoriamente Administrativo/Académico.');
-                        } elseif (in_array($this->id_especial_evento, ['4', '5']) && !in_array($value, ['6'])) {
-                            $fail('Para Semana Santa y Carnaval, el tipo de evento debe ser Feriado Mundial.');
                         }
                     }
                 }
@@ -171,7 +166,7 @@ class CreateEventoForm extends Form
                     if ($this->is_especial) {
                         if (in_array($this->id_especial_evento, ['2', '3', '7', '8', '9', '10', '11', '13', '14']) && !$value) {
                             $fail('Para este evento especial, debe ser obligatoriamente Laborable.');
-                        } elseif (in_array($this->id_especial_evento, ['1', '4', '5']) && $value) {
+                        } elseif (in_array($this->id_especial_evento, ['1']) && $value) {
                             $fail('Para este evento especial, no debe ser Laborable.');
                         }
                     }
@@ -181,15 +176,11 @@ class CreateEventoForm extends Form
                 'required',
                 'boolean',
                 function ($attribute, $value, $fail) {
-                    if (in_array($this->tipo_evento, ['3', '4', '5']) && !$value) {
-                        if (!($this->is_especial && in_array($this->id_especial_evento, ['9', '10']))) {
-                            $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');
-                        }
-                    }
+
                     if ($this->is_especial) {
                         if (in_array($this->id_especial_evento, ['1', '2', '3', '7', '8', '11', '13', '14']) && !$value) {
                              $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');
-                        } elseif (in_array($this->id_especial_evento, ['4', '5', '9', '10']) && $value) {
+                        } elseif (in_array($this->id_especial_evento, ['9', '10']) && $value) {
                              $fail('Para este tipo de evento, debe ser obligatoriamente No Repetible.');
                         }
                     }
