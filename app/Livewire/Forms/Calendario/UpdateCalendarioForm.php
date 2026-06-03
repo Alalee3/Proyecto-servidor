@@ -53,8 +53,8 @@ class UpdateCalendarioForm extends Form
                     $query = \App\Models\CalendarioAcademico::where('estatus', '!=', '4')
                         ->orderBy('id_calendario_academico', 'desc');
                         
-                    if (!empty($this->id_calendario)) {
-                        $query->where('id_calendario_academico', '!=', $this->id_calendario);
+                    if (!empty($this->id_calendario_academico)) {
+                        $query->where('id_calendario_academico', '!=', $this->id_calendario_academico);
                     }
                     
                     $ultimoCalendario = $query->first();
