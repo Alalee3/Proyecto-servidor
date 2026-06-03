@@ -14,11 +14,12 @@
                 @php
                     $deshabilitarIndependienteLaborable = $form->is_especial
                         || in_array($form->tipo_evento, ['1', '2', '6'], true);
-                    $deshabilitarSuperponible = (in_array($form->tipo_evento, ['1', '2', '6'], true) && !($form->is_especial && in_array($form->id_especial_evento, ['4', '5'])))
-                        || ($form->is_especial && in_array($form->id_especial_evento, ['1', '7', '8', '9', '10', '11', '13', '14']));
+                    $deshabilitarSuperponible = (in_array($form->tipo_evento, ['1', '2', '6'], true))
+                        || ($form->is_especial && in_array($form->id_especial_evento, ['1', '2', '3', '7', '8', '9', '10', '11', '13', '14']));
                     $deshabilitarRangoDias = $form->is_especial;
-                    $deshabilitarCantidadRango = $form->is_especial || !$form->is_rango_dias;
-                    $deshabilitarSemanaEvento = in_array($form->tipo_evento, ['1', '2', '6'], true) || $form->is_especial;
+                    $deshabilitarCantidadRango = ($form->is_especial && in_array($form->id_especial_evento, ['1', '2', '3', '7', '8', '9', '10', '11', '13', '14'])) || !$form->is_rango_dias;
+                    $deshabilitarSemanaEvento = in_array($form->tipo_evento, ['1', '2', '6'], true) || $form->is_especial || $form->is_independiente || !$form->is_repetible;
+                    $deshabilitarRepetible = in_array($form->tipo_evento, ['1', '2', '6'], true) || $form->is_especial;
                     $deshabilitarDiaEvento = !in_array($form->tipo_evento, ['1', '2', '6'], true);
                 @endphp
 
@@ -65,7 +66,7 @@
                     :disabled="$deshabilitarIndependienteLaborable" required />
 
                 <x-toggle-switch id="is_repetible_edit" :label="__('¿Se puede repetir?')" model="form.is_repetible"
-                    :disabled="true" required />
+                    :disabled="$deshabilitarRepetible" required />
 
                 <x-toggle-switch id="is_independiente_edit" :label="__('¿Puede registrarse fuera de un semestre?')"
                     model="form.is_independiente" :disabled="$deshabilitarIndependienteLaborable" required />
@@ -127,14 +128,6 @@
                     </div>
                 @endif
 
-                @if($form->is_especial && $form->id_especial_evento == '1')
-                    <div class="w-full">
-                        <x-input-label for="cantidad_dias_evento" :value="__('Cantidad de Días de Vacaciones')" />
-                        <x-text-input id="cantidad_dias_evento" type="number" min="1" max="365" class="w-full"
-                            wire:model.live="form.cantidad_dias_evento" placeholder="Ej: 15" :disabled="!$form->is_especial || $form->id_especial_evento != '1'" required />
-                        <x-input-error :messages="$errors->first('form.cantidad_dias_evento')" class="mt-2" />
-                    </div>
-                @endif
 
                 @if($form->is_semana_evento)
                     @php

@@ -456,10 +456,16 @@ class CreateCalendarioForm extends Form
                     }
                 }
 
-                if ($todoEsWeekend && !in_array($tipo, ['1', '2', '6'])) {
-                    $msg = "El evento \"{$evento->nombre_evento}\" está asignado en fin de semana, lo cual solo se permite para Feriados Nacionales, Locales o Mundiales.";
-                    $this->addError('eventosRegistrados', $msg);
-                    $errores[] = [$msg];
+                if (!in_array($tipo, ['1', '2', '6'])) {
+                    if ((int) $start->format('N') >= 6 || (int) $end->format('N') >= 6) {
+                        $msg = "El evento \"{$evento->nombre_evento}\" no puede iniciar ni terminar en un fin de semana. Esto solo se permite para Feriados Nacionales, Locales o Mundiales.";
+                        $this->addError('eventosRegistrados', $msg);
+                        $errores[] = [$msg];
+                    } else if ($todoEsWeekend) {
+                        $msg = "El evento \"{$evento->nombre_evento}\" está asignado completamente en un fin de semana, lo cual solo se permite para Feriados Nacionales, Locales o Mundiales.";
+                        $this->addError('eventosRegistrados', $msg);
+                        $errores[] = [$msg];
+                    }
                 }
 
                 // Los contadores se validan al final usando los arrays ordenados
@@ -785,10 +791,16 @@ class CreateCalendarioForm extends Form
             }
         }
 
-        if ($todoEsWeekend && !in_array($tipo, ['1', '2', '6'])) {
-            $msg = "Los fines de semana (sábados y domingos) solo admiten eventos de tipo Feriado Nacional, Local o Mundial.";
-            $this->addError('eventosRegistrados', $msg);
-            throw \Illuminate\Validation\ValidationException::withMessages(['eventosRegistrados' => [$msg]]);
+        if (!in_array($tipo, ['1', '2', '6'])) {
+            if ((int) $start->format('N') >= 6 || (int) $end->format('N') >= 6) {
+                $msg = "Los eventos no feriados no pueden iniciar ni terminar en fin de semana (sábado o domingo).";
+                $this->addError('eventosRegistrados', $msg);
+                throw \Illuminate\Validation\ValidationException::withMessages(['eventosRegistrados' => [$msg]]);
+            } else if ($todoEsWeekend) {
+                $msg = "Los fines de semana (sábados y domingos) solo admiten eventos de tipo Feriado Nacional, Local o Mundial.";
+                $this->addError('eventosRegistrados', $msg);
+                throw \Illuminate\Validation\ValidationException::withMessages(['eventosRegistrados' => [$msg]]);
+            }
         }
     }
 }

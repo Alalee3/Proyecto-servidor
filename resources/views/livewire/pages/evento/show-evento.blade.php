@@ -144,7 +144,7 @@
                             <x-input-label value="Semanas Configuradas:" />
                             <p class="text-gray-700 dark:text-gray-300 text-sm font-medium">
                                 @php
-                                    $semanas = json_decode($evento->semana_evento, true) ?? [];
+                                    $semanas = is_array($evento->semana_evento) ? $evento->semana_evento : (json_decode($evento->semana_evento, true) ?? []);
                                 @endphp
                                 @foreach($semanas as $s)
                                     Lapso {{ $s['lapso'] ?? '?' }} - Semana {{ $s['semana'] ?? '?' }}<br>
