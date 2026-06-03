@@ -712,6 +712,10 @@ class EditarCalendario extends Component
                 'is_cantidad_dias_evento' => (bool) $template->is_cantidad_dias_evento,
                 'cantidad_dias_evento' => $template->cantidad_dias_evento,
                 'especial_evento' => $templateKey,
+                'is_superponible_evento' => (bool) $template->is_superponible_evento,
+                'is_laborable_evento' => (bool) $template->is_laborable_evento,
+                'is_repetible_evento' => (bool) $template->is_repetible_evento,
+                'is_dia_evento' => (bool) $template->is_dia_evento,
             ];
         };
 
