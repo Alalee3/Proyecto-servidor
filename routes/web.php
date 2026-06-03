@@ -164,6 +164,7 @@ Route::middleware(['auth', /*'role:1'*/])->group(function () {
     Route::get('calendario/create/{id?}', CreateCalendario::class)->middleware('can:crear-calendario')->name('calendario.create');
     Route::get('calendario/show/{id}', ShowCalendario::class)->middleware('can:ver-calendario')->name('calendario.show');
     Route::get('calendario/editar/{id}', EditarCalendario::class)->middleware('can:cambiar-estatus-calendario')->name('calendario.editar');
+    Route::get('calendario/notas/{id}', \App\Livewire\Calendario\NotasCalendario::class)->middleware('can:cambiar-estatus-calendario')->name('calendario.notas');
 
     // Módulo de Permisos (DAECE)
     Route::get('permiso/list', \App\Livewire\Permiso\ListPermiso::class)->middleware('can:listar-permiso')->name('permiso/listar');

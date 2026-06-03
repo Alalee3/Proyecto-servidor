@@ -13,6 +13,10 @@ class CalendarioAcademico extends Model
     public $timestamps = false;
     protected $guarded = [];
 
+    protected $casts = [
+        'nota_calendario_academico' => 'array',
+    ];
+
     public static function inactivarVencidos()
     {
         $cantidadModificada = 0;

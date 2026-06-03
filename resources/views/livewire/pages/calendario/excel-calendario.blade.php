@@ -19,9 +19,9 @@
         $vacacionesList = [];
         $otrosEventosAgrupados = [];
 
-        // Helper function to check if it's a vacation event
+        // Helper function to check if it's a vacation event (id_especial_evento == 1)
         $isVacacion = function($e) {
-            return stripos($e->descripcion_evento ?? '', 'vacacion') !== false || stripos($e->descripcion_evento ?? '', 'vacación') !== false;
+            return (isset($e->id_especial_evento) && $e->id_especial_evento == 1);
         };
 
         // Helper function to format vacation ranges and count weekdays
@@ -487,45 +487,70 @@
             @endfor
         @endforeach
 
-        {{-- Eventos restantes --}}
-        @while($eventoIndex < $totalEventos)
+        {{-- Eventos y Notas restantes --}}
+        @php
+            $notasRaw = $calendario->nota_calendario_academico ?? [];
+            if (is_string($notasRaw)) {
+                $notasArray = json_decode($notasRaw, true);
+            } else {
+                $notasArray = $notasRaw;
+            }
+            if (!is_array($notasArray)) $notasArray = [];
+            // Inicializar en -4 si hay notas para dejar 3 filas en blanco antes del título (-4, -3, -2) y el título en -1
+            $notaIndex = count($notasArray) > 0 ? -4 : 0; 
+        @endphp
+
+        @while($eventoIndex < $totalEventos || $notaIndex < count($notasArray))
             <tr>
-                <td colspan="30"></td>
-                @php $evento = $eventosSorted[$eventoIndex]; @endphp
-                @if(isset($evento->isVacationYearHeader))
-                    <td colspan="9" style="text-align: center; font-weight: bold; color: red; border: 1px solid #000; font-size: 11pt;">{{ $evento->label }}</td>
-                @elseif(isset($evento->isVacationRow))
-                    <td colspan="6" style="text-align: center; border: 1px solid #000; font-size: 11pt;">{{ $evento->texto }}</td>
-                    <td colspan="1" style="text-align: center; border: 1px solid #000; font-size: 11pt;">{{ $evento->dias }}</td>
-                    <td colspan="2" style="text-align: center; border: 1px solid #000; font-size: 11pt;">DIAS</td>
-                @elseif(isset($evento->isVacationTotal))
-                    <td colspan="6" style="text-align: center; font-weight: bold; border: 1px solid #000; font-size: 11pt;">TOTAL</td>
-                    <td colspan="1" style="text-align: center; font-weight: bold; border: 1px solid #000; font-size: 11pt;">{{ $evento->total }}</td>
-                    <td colspan="2" style="text-align: center; font-weight: bold; border: 1px solid #000; font-size: 11pt;">DIAS</td>
-                @elseif(isset($evento->isMainHeader))
-                    <td colspan="9" style="text-align: center; background-color: #f2f2f2; border: 1px solid #000; font-size: 11pt; font-weight: bold;">{{ $evento->label }}</td>
-                @elseif(isset($evento->isSubHeader))
-                    <td colspan="4" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Evento</td>
-                    <td colspan="3" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Fecha</td>
-                    <td colspan="2" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">¿Laborable?</td>
-                @elseif(isset($evento->isSpacer))
-                    <td colspan="9"></td>
-                @elseif(isset($evento->isHeader))
-                    <td colspan="9" style="background-color: #f2f2f2; border: 1px solid #000; font-weight: bold; font-size: 11pt; text-align: center;">{{ $evento->label }}</td>
+                {{-- Columna Izquierda: Notas (Ocupando los 30 espacios de los meses) --}}
+                @if(count($notasArray) > 0 && $notaIndex < -1)
+                    <td colspan="30"></td>
+                    @php $notaIndex++; @endphp
+                @elseif(count($notasArray) > 0 && $notaIndex == -1)
+                    <td colspan="30" style="font-weight: bold; font-size: 11pt; text-align: left;">NOTAS Y CONSIDERACIONES:</td>
+                    @php $notaIndex++; @endphp
+                @elseif(count($notasArray) > 0 && $notaIndex >= 0 && $notaIndex < count($notasArray))
+                    <td colspan="30" style="font-size: 11pt; text-align: left;">- {{ $notasArray[$notaIndex] }}</td>
+                    @php $notaIndex++; @endphp
                 @else
-                    <td
-                        style="border: 0.5px solid #000; background-color: {{ $eventColors[$evento->id_evento] ?? '#ffffff' }}; width: 10px;">
-                    </td>
-                    <td colspan="3" style="border: 0.5px solid #000; font-size: 11pt; text-align: left; padding-left: 5px;">{{ $evento->descripcion_evento }}</td>
-                    <td colspan="3" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
-                        {{ \Carbon\Carbon::parse($evento->dia_inicio_evento)->format('d/m/Y') }} -
-                        {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}
-                    </td>
-                    <td colspan="2" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
-                        {{ $evento->is_laborable_evento ? 'Sí' : 'No' }}
-                    </td>
+                    <td colspan="30"></td>
                 @endif
-                @php $eventoIndex++; @endphp
+
+                {{-- Columna Derecha: Leyenda de Eventos --}}
+                @if($eventoIndex < $totalEventos)
+                    @php $evento = $eventosSorted[$eventoIndex]; @endphp
+                    @if(isset($evento->isVacationYearHeader))
+                        <td colspan="9" style="text-align: center; font-weight: bold; color: red; border: 1px solid #000; font-size: 11pt;">{{ $evento->label }}</td>
+                    @elseif(isset($evento->isVacationRow))
+                        <td colspan="6" style="text-align: center; border: 1px solid #000; font-size: 11pt;">{{ $evento->texto }}</td>
+                        <td colspan="1" style="text-align: center; border: 1px solid #000; font-size: 11pt;">{{ $evento->dias }}</td>
+                        <td colspan="2" style="text-align: center; border: 1px solid #000; font-size: 11pt;">DIAS</td>
+                    @elseif(isset($evento->isVacationTotal))
+                        <td colspan="6" style="text-align: center; font-weight: bold; border: 1px solid #000; font-size: 11pt;">TOTAL</td>
+                        <td colspan="1" style="text-align: center; font-weight: bold; border: 1px solid #000; font-size: 11pt;">{{ $evento->total }}</td>
+                        <td colspan="2" style="text-align: center; font-weight: bold; border: 1px solid #000; font-size: 11pt;">DIAS</td>
+                    @elseif(isset($evento->isMainHeader))
+                        <td colspan="9" style="text-align: center; background-color: #f2f2f2; border: 1px solid #000; font-size: 11pt; font-weight: bold;">{{ $evento->label }}</td>
+                    @elseif(isset($evento->isSubHeader))
+                        <td colspan="4" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Evento</td>
+                        <td colspan="3" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">Fecha</td>
+                        <td colspan="2" style="border: 1px solid #000; background-color: #f2f2f2; font-size: 11pt; font-weight: bold; text-align: center;">¿Laborable?</td>
+                    @elseif(isset($evento->isSpacer))
+                        <td colspan="9"></td>
+                    @elseif(isset($evento->isHeader))
+                        <td colspan="9" style="background-color: #f2f2f2; border: 1px solid #000; font-weight: bold; font-size: 11pt; text-align: center;">{{ $evento->label }}</td>
+                    @else
+                        <td style="border: 0.5px solid #000; background-color: {{ $eventColors[$evento->id_evento] ?? '#ffffff' }}; width: 10px;"></td>
+                        <td colspan="3" style="border: 0.5px solid #000; font-size: 11pt; text-align: left; padding-left: 5px;">{{ $evento->descripcion_evento }}</td>
+                        <td colspan="3" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
+                            {{ \Carbon\Carbon::parse($evento->dia_inicio_evento)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($evento->dia_fin_evento)->format('d/m/Y') }}
+                        </td>
+                        <td colspan="2" style="border: 0.5px solid #000; font-size: 11pt; text-align: center;">
+                            {{ $evento->is_laborable_evento ? 'Sí' : 'No' }}
+                        </td>
+                    @endif
+                    @php $eventoIndex++; @endphp
+                @endif
             </tr>
         @endwhile
     </tbody>

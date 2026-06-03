@@ -1003,8 +1003,13 @@ class CreateCalendario extends Component
 
     protected function guardarBorrador()
     {
-        // Solo guardamos si tenemos al menos una fecha
-        if (!$this->form->dia_inicio_calendario_academico && !$this->form->dia_fin_calendario_academico) {
+        // Solo guardamos si ambas fechas existen para evitar registros corruptos (0000-00-00)
+        if (empty($this->form->dia_inicio_calendario_academico) || empty($this->form->dia_fin_calendario_academico)) {
+            return;
+        }
+
+        // Tampoco guardamos si la fecha de inicio es mayor a la de fin (fechas invertidas)
+        if (strtotime($this->form->dia_inicio_calendario_academico) > strtotime($this->form->dia_fin_calendario_academico)) {
             return;
         }
 

@@ -48,6 +48,8 @@ class CalendarioExcelRepo
                 'detalle_evento.dia_fin_detalle_evento as dia_fin_evento',
                 'evento.codigo_color_evento as codigo_color',
                 'evento.is_laborable_evento',
+                'evento.is_superponible_evento',
+                'evento.id_especial_evento',
                 'evento.tipo_evento'
             )
             ->where('detalle_evento.id_calendario_academico', $calendario->id_calendario_academico)
@@ -68,19 +70,46 @@ class CalendarioExcelRepo
             $eventDaysByYear[$y] = [];
         }
 
+        // Construir mapa de días no laborables
+        $holidayMap = [];
+        foreach ($eventosRaw as $ev) {
+            if (!$ev->is_laborable_evento) {
+                $hs = Carbon::parse($ev->dia_inicio_evento);
+                $he = Carbon::parse($ev->dia_fin_evento);
+                while ($hs <= $he) {
+                    $holidayMap[$hs->format('Y-m-d')] = true;
+                    $hs->addDay();
+                }
+            }
+        }
+
         foreach ($eventosRaw as $eventoItem) {
             $start = Carbon::parse($eventoItem->dia_inicio_evento);
             $end   = Carbon::parse($eventoItem->dia_fin_evento);
 
             while ($start <= $end) {
                 $y = $start->year;
-                if (isset($eventDaysByYear[$y])) {
-                    $dateStr = $start->format('Y-m-d');
-                    if (!isset($eventDaysByYear[$y][$dateStr])) {
-                        $eventDaysByYear[$y][$dateStr] = ['ids' => [], 'nombres' => []];
+                
+                // Determinar si es fin de semana
+                $isWeekend = $start->dayOfWeek === Carbon::SATURDAY || $start->dayOfWeek === Carbon::SUNDAY;
+                // Permitir en fines de semana solo a feriados/vacaciones (tipos 1, 2, 6)
+                $allowedOnWeekend = in_array((string)$eventoItem->tipo_evento, ['1', '2', '6']);
+
+                $dateStr = $start->format('Y-m-d');
+                $isHoliday = isset($holidayMap[$dateStr]);
+                
+                // Si el evento NO es superponible, SI es laborable, y el día actual es feriado/vacación, NO lo pintamos
+                $isSuperponible = (bool)$eventoItem->is_superponible_evento;
+                $skipDueToHoliday = !$isSuperponible && $isHoliday && $eventoItem->is_laborable_evento;
+
+                if ((!$isWeekend || $allowedOnWeekend) && !$skipDueToHoliday) {
+                    if (isset($eventDaysByYear[$y])) {
+                        if (!isset($eventDaysByYear[$y][$dateStr])) {
+                            $eventDaysByYear[$y][$dateStr] = ['ids' => [], 'nombres' => []];
+                        }
+                        $eventDaysByYear[$y][$dateStr]['ids'][]     = $eventoItem->id_evento;
+                        $eventDaysByYear[$y][$dateStr]['nombres'][] = $eventoItem->descripcion_evento;
                     }
-                    $eventDaysByYear[$y][$dateStr]['ids'][]     = $eventoItem->id_evento;
-                    $eventDaysByYear[$y][$dateStr]['nombres'][] = $eventoItem->descripcion_evento;
                 }
                 $start->addDay();
             }
