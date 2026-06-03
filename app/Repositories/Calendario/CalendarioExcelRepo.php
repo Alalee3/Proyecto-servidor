@@ -74,13 +74,21 @@ class CalendarioExcelRepo
 
             while ($start <= $end) {
                 $y = $start->year;
-                if (isset($eventDaysByYear[$y])) {
-                    $dateStr = $start->format('Y-m-d');
-                    if (!isset($eventDaysByYear[$y][$dateStr])) {
-                        $eventDaysByYear[$y][$dateStr] = ['ids' => [], 'nombres' => []];
+                
+                // Determinar si es fin de semana
+                $isWeekend = $start->dayOfWeek === Carbon::SATURDAY || $start->dayOfWeek === Carbon::SUNDAY;
+                // Permitir en fines de semana solo a feriados/vacaciones (tipos 1, 2, 6)
+                $allowedOnWeekend = in_array((string)$eventoItem->tipo_evento, ['1', '2', '6']);
+
+                if (!$isWeekend || $allowedOnWeekend) {
+                    if (isset($eventDaysByYear[$y])) {
+                        $dateStr = $start->format('Y-m-d');
+                        if (!isset($eventDaysByYear[$y][$dateStr])) {
+                            $eventDaysByYear[$y][$dateStr] = ['ids' => [], 'nombres' => []];
+                        }
+                        $eventDaysByYear[$y][$dateStr]['ids'][]     = $eventoItem->id_evento;
+                        $eventDaysByYear[$y][$dateStr]['nombres'][] = $eventoItem->descripcion_evento;
                     }
-                    $eventDaysByYear[$y][$dateStr]['ids'][]     = $eventoItem->id_evento;
-                    $eventDaysByYear[$y][$dateStr]['nombres'][] = $eventoItem->descripcion_evento;
                 }
                 $start->addDay();
             }
