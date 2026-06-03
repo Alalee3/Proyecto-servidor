@@ -177,12 +177,12 @@ class EditarCalendario extends Component
         if (!$confirmadoIncorporacion && $especial === '11') {
             $esDespuesVacaciones = false;
             $fechaInicioEvento = \Carbon\Carbon::parse($inicio);
-            
+
             foreach ($this->eventosRegistrados as $evReg) {
                 if (($evReg['especial_evento'] ?? '') === '1') {
                     $fechaFinVacaciones = \Carbon\Carbon::parse($evReg['fin']);
                     $diffDays = $fechaFinVacaciones->diffInDays($fechaInicioEvento, false);
-                    
+
                     // Si el inicio es de 1 a 3 días después de las vacaciones (para cubrir fines de semana)
                     if ($diffDays >= 1 && $diffDays <= 3 && $fechaInicioEvento->gt($fechaFinVacaciones)) {
                         $esDespuesVacaciones = true;
@@ -278,7 +278,7 @@ class EditarCalendario extends Component
 
         // VALIDAR QUE LOS EVENTOS DEPENDIENTES CAIGAN DENTRO DE UN LAPSO REGULAR
         $isIndependiente = $eventoInfo ? (bool) ($eventoInfo->is_independiente ?? $eventoInfo->is_independiente_evento ?? false) : false;
-        
+
         if (!$isIndependiente) {
             $iniciosLapsoReg = collect($this->eventosRegistrados)
                 ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
@@ -339,7 +339,7 @@ class EditarCalendario extends Component
             $lapsosAsc = collect($this->eventosRegistrados)
                 ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
                 ->sortBy('inicio')->values();
-            
+
             $numeroLapsoActual = 1;
             foreach ($lapsosAsc as $index => $lapso) {
                 // Identificamos el lapso actual por su inicio (ya que los IDs pueden variar si aún no están guardados)
@@ -364,7 +364,7 @@ class EditarCalendario extends Component
         if ($eventoInfo && $eventoInfo->is_dia_evento && !empty($eventoInfo->dia_evento)) {
             $diaEspecifico = \Carbon\Carbon::parse($eventoInfo->dia_evento);
             $diaInicioAsignado = \Carbon\Carbon::parse($inicio);
-            
+
             // Comparamos el mes y día (ignorando el año para permitir recursividad anual)
             if ($diaEspecifico->format('m-d') !== $diaInicioAsignado->format('m-d')) {
                 $this->showAlert('error', "El evento \"{$nombre}\" tiene una fecha fija configurada. Solo puede registrarse en los días " . $diaEspecifico->format('d/m') . " de cualquier año.");
@@ -405,7 +405,7 @@ class EditarCalendario extends Component
                 $vacaciones = collect($this->eventosRegistrados)
                     ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '1')
                     ->values();
-                
+
                 foreach ($vacaciones as $vac) {
                     if ($inicio >= $vac['inicio'] && $inicio <= $vac['fin']) {
                         $dentroDeVacaciones = true;
@@ -427,7 +427,7 @@ class EditarCalendario extends Component
 
         foreach ($this->eventosRegistrados as $evReg) {
             $evRegNoSuperponible = isset($evReg['is_superponible_evento']) && !$evReg['is_superponible_evento'];
-            
+
             if ($inicio <= $evReg['fin'] && $fin >= $evReg['inicio']) {
                 $evRegLaborable = isset($evReg['is_laborable_evento']) ? (bool) $evReg['is_laborable_evento'] : true;
                 $evRegTipo = $evReg['tipo'] ?? '';
@@ -712,6 +712,10 @@ class EditarCalendario extends Component
                 'is_cantidad_dias_evento' => (bool) $template->is_cantidad_dias_evento,
                 'cantidad_dias_evento' => $template->cantidad_dias_evento,
                 'especial_evento' => $templateKey,
+                'is_superponible_evento' => (bool) $template->is_superponible_evento,
+                'is_laborable_evento' => (bool) $template->is_laborable_evento,
+                'is_repetible_evento' => (bool) $template->is_repetible_evento,
+                'is_dia_evento' => (bool) $template->is_dia_evento,
             ];
         };
 
@@ -775,7 +779,7 @@ class EditarCalendario extends Component
             $start = \Carbon\Carbon::parse($ev['inicio']);
             $end = \Carbon\Carbon::parse($ev['fin']);
             $tipo = $ev['tipo'] ?? '1';
-            $es_especial_vacaciones = (string)($ev['especial_evento'] ?? '') === '1';
+            $es_especial_vacaciones = (string) ($ev['especial_evento'] ?? '') === '1';
 
             // Determinar si el evento fue asignado exclusivamente en un fin de semana
             $isTodoWeekend = true;
@@ -802,7 +806,7 @@ class EditarCalendario extends Component
                 }
 
                 $is_superponible = isset($ev['is_superponible_evento']) ? (bool) $ev['is_superponible_evento'] : false;
-                $es_especial_vacaciones = (string)($ev['especial_evento'] ?? '') === '1';
+                $es_especial_vacaciones = (string) ($ev['especial_evento'] ?? '') === '1';
 
                 $esDiaNoLaborable = false;
                 // Feriados y Vacaciones (1, 2, 6) o Vacaciones Colectivas (especial_evento 1) NUNCA saltan días visualmente
@@ -810,7 +814,8 @@ class EditarCalendario extends Component
                     $dateCarbon = \Carbon\Carbon::instance($actual)->startOfDay();
                     foreach ($this->eventosRegistrados as $evReg) {
                         // Evitar compararse consigo mismo si coinciden exactamente
-                        if ($evReg === $ev) continue;
+                        if ($evReg === $ev)
+                            continue;
 
                         $sReg = \Carbon\Carbon::parse($evReg['inicio'] ?? $evReg['dia_inicio_detalle_evento'])->startOfDay();
                         $eReg = \Carbon\Carbon::parse($evReg['fin'] ?? $evReg['dia_fin_detalle_evento'])->startOfDay();
@@ -1098,10 +1103,10 @@ class EditarCalendario extends Component
             $tieneVacacionesEnAgosto = false;
 
             foreach ($this->eventosRegistrados as $ev) {
-                $fechaInicio = \Carbon\Carbon::parse($ev['dia_inicio_detalle_evento']);
-                $fechaFin = \Carbon\Carbon::parse($ev['dia_fin_detalle_evento']);
+                $fechaInicio = \Carbon\Carbon::parse($ev['inicio']);
+                $fechaFin = \Carbon\Carbon::parse($ev['fin']);
                 $cruzaAgosto = false;
-                
+
                 for ($d = $fechaInicio->copy(); $d->lte($fechaFin); $d->addDay()) {
                     if ($d->month === 8) {
                         $cruzaAgosto = true;
@@ -1149,7 +1154,7 @@ class EditarCalendario extends Component
         if (!$confirmadoIrreversible) {
             $this->dispatch('show-alert', [
                 'type' => 'warning',
-                'message' => '¿Está seguro de Aprobar este calendario? Esta es una acción irreversible que afectará la planificación activa.',
+                'message' => '¿Está seguro de Aprobar este calendario? Esta es una acción irreversible.',
                 'showCancelButton' => true,
                 'cancelText' => 'Cancelar',
                 'okText' => 'Aprobar',
@@ -1209,10 +1214,10 @@ class EditarCalendario extends Component
             $tieneVacacionesEnAgosto = false;
 
             foreach ($this->eventosRegistrados as $ev) {
-                $fechaInicio = \Carbon\Carbon::parse($ev['dia_inicio_detalle_evento']);
-                $fechaFin = \Carbon\Carbon::parse($ev['dia_fin_detalle_evento']);
+                $fechaInicio = \Carbon\Carbon::parse($ev['inicio']);
+                $fechaFin = \Carbon\Carbon::parse($ev['fin']);
                 $cruzaAgosto = false;
-                
+
                 for ($d = $fechaInicio->copy(); $d->lte($fechaFin); $d->addDay()) {
                     if ($d->month === 8) {
                         $cruzaAgosto = true;

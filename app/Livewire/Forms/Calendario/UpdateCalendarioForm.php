@@ -53,8 +53,8 @@ class UpdateCalendarioForm extends Form
                     $query = \App\Models\CalendarioAcademico::where('estatus', '!=', '4')
                         ->orderBy('id_calendario_academico', 'desc');
                         
-                    if (!empty($this->id_calendario)) {
-                        $query->where('id_calendario_academico', '!=', $this->id_calendario);
+                    if (!empty($this->id_calendario_academico)) {
+                        $query->where('id_calendario_academico', '!=', $this->id_calendario_academico);
                     }
                     
                     $ultimoCalendario = $query->first();
@@ -651,10 +651,6 @@ class UpdateCalendarioForm extends Form
             ['Período 1', 'Período 2'],
             ['Período 1', 'Curso Intensivo'],
             ['Período 2', 'Curso Intensivo'],
-            ['Lapso 1 Académico Trayecto Inicial', 'Período 1'],
-            ['Lapso 1 Académico Trayecto Inicial', 'Período 2'],
-            ['Lapso 2 Académico Trayecto Inicial', 'Período 1'],
-            ['Lapso 2 Académico Trayecto Inicial', 'Período 2'],
         ];
 
         foreach ($paresNoSolapables as $par) {
