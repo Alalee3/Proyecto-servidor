@@ -76,24 +76,6 @@ class CreateEvento extends Component
                 $this->form->is_independiente = true;
                 $this->form->is_superponible = true;
                 $this->form->cantidad_dias_evento = 60;
-            } elseif ($this->form->id_especial_evento == '4') { // Semana Santa
-                $this->form->is_laborable = false;
-                $this->form->is_repetible = false;
-                $this->form->tipo_evento = '6';
-                $this->form->is_cantidad_dias_evento = true;
-                $this->form->is_independiente = true;
-                $this->form->is_superponible = true;
-                $this->form->is_dia_evento = false;
-                $this->form->cantidad_dias_evento = 2;
-            } elseif ($this->form->id_especial_evento == '5') { // Carnaval
-                $this->form->is_laborable = false;
-                $this->form->is_repetible = false;
-                $this->form->tipo_evento = '6';
-                $this->form->is_cantidad_dias_evento = true;
-                $this->form->is_independiente = true;
-                $this->form->is_superponible = true;
-                $this->form->is_dia_evento = false;
-                $this->form->cantidad_dias_evento = 2;
             } elseif ($this->form->id_especial_evento == '11') { // Incorporación
                 $this->form->tipo_evento = '5';
                 $this->form->is_laborable = true;
@@ -112,6 +94,11 @@ class CreateEvento extends Component
                 $this->form->descripcion_evento = $nombresEspeciales[$this->form->id_especial_evento];
             } else {
                 $this->form->descripcion_evento = '';
+            }
+            
+            if (!in_array($this->form->tipo_evento, ['1', '2', '6'])) {
+                $this->form->is_dia_evento = false;
+                $this->form->dia_evento = null;
             }
         }
 
@@ -132,7 +119,7 @@ class CreateEvento extends Component
                 $this->form->dia_evento = null;
             }
 
-            if (!in_array($this->form->id_especial_evento, ['1', '2', '3', '4', '5', '7', '8', '9', '10', '11', '13', '14'])) {
+            if (!in_array($this->form->id_especial_evento, ['1', '2', '3', '7', '8', '9', '10', '11', '13', '14'])) {
                 if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                     $this->form->is_laborable = false;
                     $this->form->is_repetible = false;
@@ -239,7 +226,7 @@ class CreateEvento extends Component
             $this->form->validate();
             $id_repo = $this->eventoRepository->crear($this->form->all());
 
-            $this->reset('form.descripcion_evento', 'form.tipo_evento', 'form.codigo_color_evento', 'form.id_especial_evento', 'form.is_especial', 'form.cantidad_dias_evento');
+            $this->form->reset();
             $this->form->semanas = [
                 ['lapso' => 1, 'semana' => ''],
                 ['lapso' => 2, 'semana' => ''],

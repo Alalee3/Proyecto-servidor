@@ -14,13 +14,13 @@
                 @php
                     $deshabilitarIndependienteLaborable = $form->is_especial
                         || in_array($form->tipo_evento, ['1', '2', '6'], true);
-                    $deshabilitarSuperponible = (in_array($form->tipo_evento, ['1', '2', '6'], true) && !($form->is_especial && in_array($form->id_especial_evento, ['4', '5'])))
+                    $deshabilitarSuperponible = (in_array($form->tipo_evento, ['1', '2', '6'], true))
                         || ($form->is_especial && in_array($form->id_especial_evento, ['1', '2', '3', '7', '8', '9', '10', '11', '13', '14']));
                     $deshabilitarIsCantidadDias = $form->is_especial;
                     $deshabilitarSemanaEvento = in_array($form->tipo_evento, ['1', '2', '6'], true) || $form->is_especial || $form->is_independiente || !$form->is_repetible;
                     $deshabilitarRepetible = in_array($form->tipo_evento, ['1', '2', '6'], true) || $form->is_especial;
-                    $deshabilitarInputDias = $form->is_especial && in_array($form->id_especial_evento, ['1', '2', '3', '4', '5', '7', '8', '9', '10', '11', '13', '14']);
-                    $deshabilitarDiaEvento = !in_array($form->tipo_evento, ['1', '2', '6'], true) || in_array($form->id_especial_evento, ['4', '5'], true);
+                    $deshabilitarInputDias = $form->is_especial && in_array($form->id_especial_evento, ['1', '2', '3', '7', '8', '9', '10', '11', '13', '14']);
+                    $deshabilitarDiaEvento = !in_array($form->tipo_evento, ['1', '2', '6'], true);
                 @endphp
 
                 <div class="w-full">

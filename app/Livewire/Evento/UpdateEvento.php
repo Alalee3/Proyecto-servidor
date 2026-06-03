@@ -89,26 +89,6 @@ class UpdateEvento extends Component
                 $this->form->is_independiente = true;
                 $this->form->is_superponible = true;
                 $this->form->cantidad_dias_evento = 60;
-            } elseif ($this->form->id_especial_evento == '4') { // Semana Santa
-                $this->form->is_laborable = false;
-                $this->form->is_repetible = false;
-                $this->form->tipo_evento = '6';
-                $this->form->is_rango_dias = true;
-                $this->form->rango_dias = '2';
-                $this->form->is_independiente = true;
-                $this->form->is_superponible = true;
-                $this->form->is_dia_evento = false;
-                $this->form->cantidad_dias_evento = 2;
-            } elseif ($this->form->id_especial_evento == '5') { // Carnaval
-                $this->form->is_laborable = false;
-                $this->form->is_repetible = false;
-                $this->form->tipo_evento = '6';
-                $this->form->is_rango_dias = true;
-                $this->form->rango_dias = '2';
-                $this->form->is_independiente = true;
-                $this->form->is_superponible = true;
-                $this->form->is_dia_evento = false;
-                $this->form->cantidad_dias_evento = 2;
             } elseif ($this->form->id_especial_evento == '11') { // Incorporación
                 $this->form->is_laborable = true;
                 $this->form->is_repetible = true;
@@ -130,6 +110,11 @@ class UpdateEvento extends Component
             } else {
                 $this->form->descripcion_evento = '';
             }
+            
+            if (!in_array($this->form->tipo_evento, ['1', '2', '6'])) {
+                $this->form->is_dia_evento = false;
+                $this->form->dia_evento = null;
+            }
         }
 
         // Si cambia is_especial
@@ -150,7 +135,7 @@ class UpdateEvento extends Component
                 $this->form->dia_evento = null;
             }
 
-            if (!in_array($this->form->id_especial_evento, ['1', '2', '3', '4', '5', '7', '8', '9', '10', '11', '13', '14'])) {
+            if (!in_array($this->form->id_especial_evento, ['1', '2', '3', '7', '8', '9', '10', '11', '13', '14'])) {
                 if (in_array($this->form->tipo_evento, ['1', '2', '6'])) {
                     $this->form->is_laborable = false;
                     $this->form->is_repetible = false;
