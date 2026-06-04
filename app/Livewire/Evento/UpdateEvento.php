@@ -55,6 +55,7 @@ class UpdateEvento extends Component
             if ($this->form->id_especial_evento == '2' || $this->form->id_especial_evento == '3') {
                 $this->form->is_laborable = true;
                 $this->form->is_repetible = true;
+                $this->form->cantidad_repetible_evento = '1';
                 $this->form->tipo_evento = '4';
                 $this->form->is_rango_dias = true;
                 $this->form->rango_dias = '1';
@@ -64,6 +65,7 @@ class UpdateEvento extends Component
             } elseif (in_array($this->form->id_especial_evento, ['7', '8', '13', '14'])) {
                 $this->form->is_laborable = true;
                 $this->form->is_repetible = true;
+                $this->form->cantidad_repetible_evento = '1';
                 $this->form->tipo_evento = '4';
                 $this->form->codigo_color_evento = '#007bff';
                 $this->form->is_rango_dias = true;
@@ -73,7 +75,8 @@ class UpdateEvento extends Component
                 $this->form->cantidad_dias_evento = 0;
             } elseif (in_array($this->form->id_especial_evento, ['9', '10'])) {
                 $this->form->is_laborable = true;
-                $this->form->is_repetible = false;
+                $this->form->is_repetible = true;
+                $this->form->cantidad_repetible_evento = '1';
                 $this->form->tipo_evento = '4';
                 $this->form->is_rango_dias = true;
                 $this->form->rango_dias = '1';
@@ -174,7 +177,7 @@ class UpdateEvento extends Component
 
         if ($propertyName === 'form.is_repetible' && !$this->form->is_repetible) {
             $this->form->is_semana_evento = false;
-            $this->form->cantidad_repetible_evento = '';
+            $this->form->cantidad_repetible_evento = '1';
         }
 
         // Si no es repetible, recortar a máximo 1 semana por lapso

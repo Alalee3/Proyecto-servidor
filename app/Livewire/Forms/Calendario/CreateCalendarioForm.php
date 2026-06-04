@@ -534,6 +534,58 @@ class CreateCalendarioForm extends Form
                     }
                 }
 
+                // Validar límite de repeticiones según cantidad_repetible_evento
+                $cantidadRepetible = $evento->cantidad_repetible_evento ?? null;
+                if (!empty($cantidadRepetible)) {
+                    $limite = (int) $cantidadRepetible;
+                    $isIndependiente = (bool) ($evento->is_independiente ?? $evento->is_independiente_evento ?? false);
+                    $regInicio = $reg['inicio'] ?? null;
+                    
+                    if ($isIndependiente && $regInicio) {
+                        // Validar límite ANUAL
+                        $anio = date('Y', strtotime($regInicio));
+                        $conteoAnual = 0;
+                        foreach ($eventosParaValidar as $ev2) {
+                            if (($ev2['id'] ?? null) == $id && date('Y', strtotime($ev2['inicio'])) == $anio) {
+                                $conteoAnual++;
+                            }
+                        }
+                        if ($conteoAnual > $limite) {
+                            $msg = "El evento \"{$evento->nombre_evento}\" excede el límite de {$limite} repetición(es) en el año {$anio}.";
+                            $this->addError('eventosRegistrados', $msg);
+                            $errores[] = [$msg];
+                        }
+                    } elseif (count($inicios) >= 2 && count($fines) >= 2 && $regInicio) {
+                        // Validar límite POR LAPSO
+                        $numLapso = 0;
+                        foreach ($inicios as $idx => $lapsoInicio) {
+                            $lapsoFin = $fines[$idx] ?? null;
+                            if ($lapsoFin && $regInicio >= $lapsoInicio && $regInicio <= $lapsoFin) {
+                                $numLapso = $idx + 1;
+                                break;
+                            }
+                        }
+                        
+                        if ($numLapso > 0) {
+                            $conteoLapso = 0;
+                            $lapsoInicio = $inicios[$numLapso - 1];
+                            $lapsoFin = $fines[$numLapso - 1];
+                            
+                            foreach ($eventosParaValidar as $ev2) {
+                                if (($ev2['id'] ?? null) == $id && $ev2['inicio'] >= $lapsoInicio && $ev2['inicio'] <= $lapsoFin) {
+                                    $conteoLapso++;
+                                }
+                            }
+                            
+                            if ($conteoLapso > $limite) {
+                                $msg = "El evento \"{$evento->nombre_evento}\" excede el límite de {$limite} repetición(es) en el Lapso {$numLapso}.";
+                                $this->addError('eventosRegistrados', $msg);
+                                $errores[] = [$msg];
+                            }
+                        }
+                    }
+                }
+
                 // Validar que los eventos no repetibles (como feriados de tipo 1 y 2) solo ocurran 1 vez por año en toda la base de datos
                 if (!$evento->is_repetible_evento && in_array($evento->tipo_evento, ['1', '2'])) {
                     $year = date('Y', strtotime($reg['inicio']));

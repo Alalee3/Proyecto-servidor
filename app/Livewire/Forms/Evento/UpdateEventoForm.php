@@ -46,9 +46,18 @@ class UpdateEventoForm extends Form
             $this->is_repetible = (bool) $evento->is_repetible_evento;
         }
 
-        // Forzar cantidad_repetible_evento a vacío para Vacaciones e Incorporación (repeticiones indeterminadas)
-        if (in_array($this->id_especial_evento, ['1', '11'])) {
+        // Inicio/Fin de Lapso Académico, Trayecto Inicial y Período deben tener exactamente 1 repetición
+        if (in_array($this->id_especial_evento, ['2', '3', '7', '8', '13', '14'])) {
+            $this->cantidad_repetible_evento = '1';
+        } elseif (in_array($this->id_especial_evento, ['9', '10'])) {
+            // Curso Intensivo (Inicio/Fin) solo 1 vez
+            $this->cantidad_repetible_evento = '1';
+        } elseif (in_array($this->id_especial_evento, ['1', '11'])) {
+            // Vacaciones e Incorporación tienen repeticiones indeterminadas
             $this->cantidad_repetible_evento = '';
+        } elseif (!$this->is_repetible) {
+            // Si no es repetible, forzar a 1
+            $this->cantidad_repetible_evento = '1';
         } else {
             $this->cantidad_repetible_evento = $evento->cantidad_repetible_evento ?? '';
         }
@@ -195,8 +204,6 @@ class UpdateEventoForm extends Form
                     if ($this->is_especial) {
                         if (in_array($this->id_especial_evento, ['1', '2', '3', '7', '8', '11', '13', '14']) && !$value) {
                              $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');
-                        } elseif (in_array($this->id_especial_evento, ['9', '10']) && $value) {
-                             $fail('Para este tipo de evento, debe ser obligatoriamente No Repetible.');
                         }
                     }
                 }
@@ -205,9 +212,23 @@ class UpdateEventoForm extends Form
                 'exclude_unless:is_repetible,true',
                 'nullable',
                 'integer',
-                'min:2',
+                'min:1',
                 'max:8',
                 function ($attribute, $value, $fail) {
+                    // Inicio/Fin de Lapso, Período y Trayecto Inicial deben tener exactamente 1 repetición
+                    if (in_array($this->id_especial_evento, ['2', '3', '7', '8', '13', '14'])) {
+                        if ($value !== '1' && $value !== 1) {
+                            $fail('Para este evento especial, la cantidad de repeticiones debe ser obligatoriamente 1.');
+                        }
+                        return;
+                    }
+                    // Curso Intensivo (Inicio/Fin) solo 1 vez
+                    if (in_array($this->id_especial_evento, ['9', '10'])) {
+                        if ($value !== '1' && $value !== 1) {
+                            $fail('Para Curso Intensivo, la cantidad de repeticiones debe ser obligatoriamente 1.');
+                        }
+                        return;
+                    }
                     // Vacaciones e Incorporación tienen repeticiones indeterminadas
                     if (in_array($this->id_especial_evento, ['1', '11'])) {
                         return;
@@ -219,8 +240,9 @@ class UpdateEventoForm extends Form
                             $fail('La cantidad de repeticiones debe ser entre 2 y 8.');
                         }
                     } else {
-                        if ($value !== null && $value !== '' && $value !== 0 && $value !== '0') {
-                            $fail('No se permite asignar una cantidad si la opción repetible no está habilitada.');
+                        // Si no es repetible, se fuerza automáticamente a 1
+                        if ($value !== '1' && $value !== 1) {
+                            $fail('Los eventos no repetibles deben tener cantidad de repeticiones igual a 1.');
                         }
                     }
                 }

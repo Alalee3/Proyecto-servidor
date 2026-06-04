@@ -18,6 +18,7 @@
                         || ($form->is_especial && in_array($form->id_especial_evento, ['1', '2', '3', '7', '8', '9', '10', '11', '13', '14']));
                     $deshabilitarRangoDias = $form->is_especial;
                     $deshabilitarCantidadRango = ($form->is_especial && in_array($form->id_especial_evento, ['1', '2', '3', '7', '8', '9', '10', '11', '13', '14'])) || !$form->is_rango_dias;
+                    $deshabilitarCantidadRepetible = $form->is_especial && in_array($form->id_especial_evento, ['2', '3', '7', '8', '9', '10', '13', '14']);
                     $deshabilitarSemanaEvento = in_array($form->tipo_evento, ['1', '2', '6'], true) || $form->is_especial || $form->is_independiente || !$form->is_repetible;
                     $deshabilitarRepetible = in_array($form->tipo_evento, ['1', '2', '6'], true) || $form->is_especial;
                     $deshabilitarDiaEvento = !in_array($form->tipo_evento, ['1', '2', '6'], true);
@@ -76,7 +77,8 @@
                     <p class="text-xs text-gray-400 dark:text-gray-500 mb-1">Si se deja vacío, se repetirá un número indeterminado de veces.</p>
                     <x-text-input id="cantidad_repetible_evento_edit" type="number" min="2" max="8" class="w-full"
                         wire:model.live="form.cantidad_repetible_evento" placeholder="Ej: 3"
-                        oninput="if(this.value!==''){if(Number(this.value)>8) this.value=8; if(Number(this.value)<2) this.value=2;}" />
+                        oninput="if(this.value!==''){if(Number(this.value)>8) this.value=8; if(Number(this.value)<2) this.value=2;}"
+                        :disabled="$deshabilitarCantidadRepetible" />
                     <x-input-error :messages="$errors->first('form.cantidad_repetible_evento')" class="mt-2" />
                 </div>
                 @endif

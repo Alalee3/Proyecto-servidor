@@ -143,6 +143,9 @@ class CreateCalendario extends Component
                         'especial_evento' => isset($ev->especial_evento) ? (string) $ev->especial_evento : null,
                         'is_superponible_evento' => (bool) ($ev->is_superponible_evento ?? false),
                         'is_laborable_evento' => (bool) ($ev->is_laborable_evento ?? true),
+                        'is_repetible_evento' => (bool) ($ev->is_repetible_evento ?? false),
+                        'cantidad_repetible_evento' => $ev->cantidad_repetible_evento ?? null,
+                        'is_independiente_evento' => (bool) ($ev->is_independiente_evento ?? $ev->is_independiente ?? false),
                         'ignorar_fines_semana' => !$isFinSemana,
                     ];
                 }
@@ -173,6 +176,9 @@ class CreateCalendario extends Component
                         'especial_evento' => isset($ev->especial_evento) ? (string) $ev->especial_evento : null,
                         'is_superponible_evento' => (bool) ($ev->is_superponible_evento ?? false),
                         'is_laborable_evento' => (bool) ($ev->is_laborable_evento ?? true),
+                        'is_repetible_evento' => (bool) ($ev->is_repetible_evento ?? false),
+                        'cantidad_repetible_evento' => $ev->cantidad_repetible_evento ?? null,
+                        'is_independiente_evento' => (bool) ($ev->is_independiente_evento ?? $ev->is_independiente ?? false),
                         'is_heredado' => true,
                         'ignorar_fines_semana' => !$isFinSemana,
                     ];
@@ -230,6 +236,84 @@ class CreateCalendario extends Component
             $tipo = (string) ($eventoInfo->tipo_evento ?? $tipo ?? '');
         }
 
+        // VALIDAR LÍMITE DE REPETICIONES
+        $especialEvento = $eventoInfo ? (string) ($eventoInfo->especial_evento ?? '') : '';
+        
+        // VALIDACIÓN ESPECIAL POR CALENDARIO: Inicio/Fin de Lapso e Introductorios (2, 3, 7, 8)
+        // Estos eventos usan su propio límite de 2 por calendario, independiente de cantidad_repetible_evento
+        if (in_array($especialEvento, ['2', '3', '7', '8'])) {
+            $conteoEnCalendario = 0;
+            foreach ($this->eventosRegistrados as $ev) {
+                if (($ev['id'] ?? null) == $id_evento) {
+                    $conteoEnCalendario++;
+                }
+            }
+            if ($conteoEnCalendario >= 2) {
+                $this->showAlert('error', "El evento '{$nombre}' ya alcanzó el límite de 2 repeticiones por calendario.");
+                return;
+            }
+        } else {
+            $cantidadRepetible = $eventoInfo ? ($eventoInfo->cantidad_repetible_evento ?? null) : null;
+            if (!empty($cantidadRepetible)) {
+                $limite = (int) $cantidadRepetible;
+                $isIndependiente = $eventoInfo ? (bool) ($eventoInfo->is_independiente ?? $eventoInfo->is_independiente_evento ?? false) : false;
+                
+                if ($isIndependiente) {
+                    // Validar límite ANUAL
+                    $anio = date('Y', strtotime($inicio));
+                    $conteoAnual = 0;
+                    foreach ($this->eventosRegistrados as $ev) {
+                        if (($ev['id'] ?? null) == $id_evento && date('Y', strtotime($ev['inicio'])) == $anio) {
+                            $conteoAnual++;
+                        }
+                    }
+                    if ($conteoAnual >= $limite) {
+                        $this->showAlert('error', "El evento '{$nombre}' ya alcanzó el límite de {$limite} repetición(es) en el año {$anio}.");
+                        return;
+                    }
+                } else {
+                    // Validar límite POR LAPSO
+                    $lapsosInicios = collect($this->eventosRegistrados)
+                        ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
+                        ->sortBy('inicio')
+                        ->values();
+                    $lapsosFines = collect($this->eventosRegistrados)
+                        ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '3')
+                        ->sortBy('inicio')
+                        ->values();
+                    
+                    // Identificar a qué lapso pertenece $inicio
+                    $numLapso = 0;
+                    foreach ($lapsosInicios as $idx => $lapsoInicio) {
+                        $lapsoFin = isset($lapsosFines[$idx]) ? $lapsosFines[$idx]['inicio'] : null;
+                        if ($lapsoFin && $inicio >= $lapsoInicio['inicio'] && $inicio <= $lapsoFin) {
+                            $numLapso = $idx + 1;
+                            break;
+                        }
+                    }
+                    
+                    if ($numLapso > 0) {
+                        $conteoLapso = 0;
+                        $lapsoInicio = $lapsosInicios[$numLapso - 1]['inicio'];
+                        $lapsoFin = isset($lapsosFines[$numLapso - 1]) ? $lapsosFines[$numLapso - 1]['inicio'] : null;
+                        
+                        foreach ($this->eventosRegistrados as $ev) {
+                            if (($ev['id'] ?? null) == $id_evento && $lapsoFin) {
+                                if ($ev['inicio'] >= $lapsoInicio && $ev['inicio'] <= $lapsoFin) {
+                                    $conteoLapso++;
+                                }
+                            }
+                        }
+                        
+                        if ($conteoLapso >= $limite) {
+                            $this->showAlert('error', "El evento '{$nombre}' ya alcanzó el límite de {$limite} repetición(es) en el Lapso {$numLapso}.");
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
         // VALIDAR SI SE ASIGNA EN FIN DE SEMANA
         $isFinSemanaEvento = $eventoInfo ? (bool) ($eventoInfo->is_fin_semana_evento ?? false) : false;
         
@@ -250,8 +334,7 @@ class CreateCalendario extends Component
         }
 
         // Si el evento no permite fines de semana, no puede ser asignado estrictamente durante un fin de semana
-        // ni puede iniciar/terminar exactamente en un fin de semana (para evitar que visualmente parezca asignado el sábado/domingo).
-        if (($isTodoWeekend || $hasWeekendStartOrEnd) && !$isFinSemanaEvento) {
+        if ($isTodoWeekend && !$isFinSemanaEvento) {
             $this->showAlert('error', "El evento '{$nombre}' no está configurado para asignarse en fines de semana. Por favor asigne el evento en días laborables.");
             return;
         }
@@ -260,6 +343,11 @@ class CreateCalendario extends Component
 
         // ALERTA AMARILLA: Si SÍ permite fines de semana, pero cruza un fin de semana
         if ($isFinSemanaEvento && $spansWeekend && !$isTodoWeekend) {
+            if ($hasWeekendStartOrEnd) {
+                $this->showAlert('error', "El evento '{$nombre}' no puede iniciar ni terminar durante un fin de semana. Por favor ajuste las fechas a días laborables.");
+                return;
+            }
+
             if ($confirmadoFinSemana === null) {
                 $args = func_get_args();
                 $args = array_pad($args, 13, false); // Asegurar que tenga 13 parámetros
@@ -716,13 +804,14 @@ class CreateCalendario extends Component
                 }
             } else {
                 if ($duracionReal != $cantidadRequerida) {
-                    // Si el evento requiere exactamente 1 día, error bloqueante (rojo)
-                    if ($cantidadRequerida == 1) {
+                    // Si selecciona MÁS días de los estipulados (o si requiere exactamente 1 día), error bloqueante (rojo)
+                    if ($duracionReal > $cantidadRequerida || $cantidadRequerida == 1) {
                         $this->showAlert('error', "El evento '{$nombre}' debe durar exactamente {$cantidadRequerida} día(s) por cada selección. Has seleccionado {$duracionReal} día(s).");
                         return;
                     }
-                    // Para eventos de más de 1 día, alerta amarilla con confirmación
-                    if (!$confirmadoDuracion) {
+                    
+                    // Si selecciona MENOS días de los estipulados, alerta amarilla con confirmación
+                    if ($duracionReal < $cantidadRequerida && !$confirmadoDuracion) {
                         $this->tempEventoAgregar = func_get_args();
                         $this->dispatch('show-alert', [
                             'type' => 'warning',
@@ -753,6 +842,9 @@ class CreateCalendario extends Component
             'especial_evento' => $eventoInfo ? (string) $eventoInfo->especial_evento : null,
             'is_superponible_evento' => $eventoInfo ? (bool) $eventoInfo->is_superponible_evento : false,
             'is_laborable_evento' => $eventoInfo ? (bool) $eventoInfo->is_laborable_evento : true,
+            'is_repetible_evento' => $eventoInfo ? (bool) $eventoInfo->is_repetible_evento : false,
+            'cantidad_repetible_evento' => $eventoInfo ? ($eventoInfo->cantidad_repetible_evento ?? null) : null,
+            'is_independiente_evento' => $eventoInfo ? (bool) ($eventoInfo->is_independiente ?? $eventoInfo->is_independiente_evento ?? false) : false,
             'ignorar_feriados_locales' => $ignorarFeriadosLocales,
             'ignorar_fines_semana' => $ignorarFinesDeSemanaEvent,
         ];
@@ -1485,9 +1577,60 @@ class CreateCalendario extends Component
                 return ($conteosAsignadosTotal[$id] ?? 0) < 1;
             }
 
-            // Si el evento es repetible, siempre aparece.
-            // Si NO es repetible, solo aparece si NO ha sido asignado aún en este año.
-            return $evento->is_repetible_evento || !in_array($id, $idsAsignadosEsteAnio);
+            // Aplicar límite de repeticiones según cantidad_repetible_evento
+            $cantidadRepetible = $evento->cantidad_repetible_evento ?? null;
+            
+            if (empty($cantidadRepetible) && $evento->is_repetible_evento) {
+                // Repetible sin límite definido -> siempre disponible
+                return true;
+            }
+            
+            if (empty($cantidadRepetible) && !$evento->is_repetible_evento) {
+                // No repetible -> solo una vez por año
+                return !in_array($id, $idsAsignadosEsteAnio);
+            }
+            
+            $limite = (int) $cantidadRepetible;
+            $isIndependiente = (bool) ($evento->is_independiente ?? $evento->is_independiente_evento ?? false);
+            
+            if ($isIndependiente) {
+                // INDEPENDIENTE -> límite ANUAL
+                $conteoAnual = 0;
+                foreach ($this->eventosRegistrados as $ev) {
+                    if (($ev['id'] ?? null) == $id && date('Y', strtotime($ev['inicio'])) == $targetYear) {
+                        $conteoAnual++;
+                    }
+                }
+                return $conteoAnual < $limite;
+            } else {
+                // NO INDEPENDIENTE -> límite POR LAPSO
+                $lapsosInicios = collect($this->eventosRegistrados)
+                    ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
+                    ->sortBy('inicio')
+                    ->values();
+                $lapsosFines = collect($this->eventosRegistrados)
+                    ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '3')
+                    ->sortBy('inicio')
+                    ->values();
+                
+                $disponible = false;
+                foreach ($lapsosInicios as $idx => $lapsoInicio) {
+                    $lapsoFin = isset($lapsosFines[$idx]) ? $lapsosFines[$idx]['inicio'] : null;
+                    if (!$lapsoFin) continue;
+                    
+                    $conteoLapso = 0;
+                    foreach ($this->eventosRegistrados as $ev) {
+                        if (($ev['id'] ?? null) == $id && $ev['inicio'] >= $lapsoInicio['inicio'] && $ev['inicio'] <= $lapsoFin) {
+                            $conteoLapso++;
+                        }
+                    }
+                    if ($conteoLapso < $limite) {
+                        $disponible = true;
+                        break;
+                    }
+                }
+                return $disponible;
+            }
         })->values();
     }
 
