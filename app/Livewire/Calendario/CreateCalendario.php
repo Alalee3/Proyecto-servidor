@@ -1340,13 +1340,30 @@ class CreateCalendario extends Component
             }
         }
 
+        $viejasGuardadas = $this->justificacionesGuardadas;
+
         // Store them to save later
-        $this->justificacionesGuardadas = array_map(function($req) {
+        $this->justificacionesGuardadas = array_map(function($req) use ($viejasGuardadas) {
+            $nuevoTexto = trim($req['texto']);
+            $idUsuario = auth()->id() ?? 1;
+
+            foreach ($viejasGuardadas as $vieja) {
+                if (isset($vieja['periodo']) && isset($vieja['lapso'])) {
+                    if ($vieja['periodo'] === $req['titulo'] && $vieja['lapso'] === $req['lapso']) {
+                        // Si el texto no cambió, conservamos el usuario original
+                        if (trim($vieja['texto'] ?? '') === $nuevoTexto) {
+                            $idUsuario = $vieja['id_usuario'] ?? $idUsuario;
+                        }
+                        break;
+                    }
+                }
+            }
+
             return [
-                'texto' => $req['texto'],
+                'texto' => $nuevoTexto,
                 'periodo' => $req['titulo'],
                 'lapso' => $req['lapso'],
-                'id_usuario' => auth()->id() ?? 1,
+                'id_usuario' => $idUsuario,
             ];
         }, $this->justificacionesRequeridas);
         
