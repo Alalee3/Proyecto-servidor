@@ -71,6 +71,7 @@ class CreateEvento extends Component
             } elseif ($this->form->id_especial_evento == '1') {
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = true;
+                $this->form->cantidad_repetible_evento = '';
                 $this->form->tipo_evento = '5';
                 $this->form->is_cantidad_dias_evento = true;
                 $this->form->is_independiente = true;
@@ -80,6 +81,7 @@ class CreateEvento extends Component
                 $this->form->tipo_evento = '5';
                 $this->form->is_laborable = true;
                 $this->form->is_repetible = true;
+                $this->form->cantidad_repetible_evento = '';
                 $this->form->is_superponible = false;
                 $this->form->is_cantidad_dias_evento = true;
                 $this->form->cantidad_dias_evento = 1;

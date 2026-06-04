@@ -46,7 +46,12 @@ class UpdateEventoForm extends Form
             $this->is_repetible = (bool) $evento->is_repetible_evento;
         }
 
-        $this->cantidad_repetible_evento = $evento->cantidad_repetible_evento ?? '';
+        // Forzar cantidad_repetible_evento a vacío para Vacaciones e Incorporación (repeticiones indeterminadas)
+        if (in_array($this->id_especial_evento, ['1', '11'])) {
+            $this->cantidad_repetible_evento = '';
+        } else {
+            $this->cantidad_repetible_evento = $evento->cantidad_repetible_evento ?? '';
+        }
         $this->is_rango_dias = (bool) ($evento->is_cantidad_dias_evento ?? false);
         $this->rango_dias = $evento->cantidad_dias_evento;
         $this->is_independiente = (bool) ($evento->is_independiente ?? $evento->is_independiente_evento ?? false);
@@ -203,6 +208,10 @@ class UpdateEventoForm extends Form
                 'min:2',
                 'max:8',
                 function ($attribute, $value, $fail) {
+                    // Vacaciones e Incorporación tienen repeticiones indeterminadas
+                    if (in_array($this->id_especial_evento, ['1', '11'])) {
+                        return;
+                    }
                     if ($this->is_repetible) {
                         if (empty($value) && $value !== '0' && $value !== 0) {
                             $fail('La cantidad de repeticiones es obligatoria.');

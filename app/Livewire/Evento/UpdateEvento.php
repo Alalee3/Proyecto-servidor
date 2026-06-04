@@ -83,6 +83,7 @@ class UpdateEvento extends Component
             } elseif ($this->form->id_especial_evento == '1') {
                 $this->form->is_laborable = false;
                 $this->form->is_repetible = true;
+                $this->form->cantidad_repetible_evento = '';
                 $this->form->tipo_evento = '5';
                 $this->form->is_rango_dias = true;
                 $this->form->rango_dias = '60';
@@ -92,6 +93,7 @@ class UpdateEvento extends Component
             } elseif ($this->form->id_especial_evento == '11') { // Incorporación
                 $this->form->is_laborable = true;
                 $this->form->is_repetible = true;
+                $this->form->cantidad_repetible_evento = '';
                 $this->form->tipo_evento = '5';
                 $this->form->is_rango_dias = true;
                 $this->form->rango_dias = '1';

@@ -201,6 +201,10 @@ class CreateEventoForm extends Form
                 'min:2',
                 'max:8',
                 function ($attribute, $value, $fail) {
+                    // Vacaciones e Incorporación tienen repeticiones indeterminadas
+                    if (in_array($this->id_especial_evento, ['1', '11'])) {
+                        return;
+                    }
                     if ($this->is_repetible) {
                         if (empty($value) && $value !== '0' && $value !== 0) {
                             $fail('La cantidad de repeticiones es obligatoria.');

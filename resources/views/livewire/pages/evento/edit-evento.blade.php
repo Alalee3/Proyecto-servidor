@@ -68,7 +68,7 @@
                 <x-toggle-switch id="is_repetible_edit" :label="__('¿Se puede repetir?')" model="form.is_repetible"
                     :disabled="$deshabilitarRepetible" required />
 
-                @if($form->is_repetible)
+                @if($form->is_repetible && !($form->is_especial && in_array($form->id_especial_evento, ['1', '11'])))
                 <div class="w-full">
                     <label class="block uppercase font-bold text-[10px] text-gray-500 dark:text-gray-400 mb-1">
                         {{ __('Límite de repeticiones (2 a 8)') }}
