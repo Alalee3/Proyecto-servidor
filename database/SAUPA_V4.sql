@@ -42,7 +42,7 @@ CREATE TABLE `evento` (
   `id_evento` integer PRIMARY KEY,
   `codigo_color_evento` varchar(255),
   `nombre_evento` varchar(100),
-  `tipo_evento` enum(1,2,3,4,5),
+  `tipo_evento` enum('1','2','3','4','5','6'),
   `id_especial_evento` integer,
   `is_laborable_evento` boolean,
   `is_repetible_evento` boolean,

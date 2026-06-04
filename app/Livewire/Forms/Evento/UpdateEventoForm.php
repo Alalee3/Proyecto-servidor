@@ -18,7 +18,7 @@ class UpdateEventoForm extends Form
     public $is_laborable = false;
     public $is_repetible = false;
     public $cantidad_repetible_evento = '';
-    public $is_cantidad_dias_evento = false;
+    public $is_rango_dias = false;
     public $rango_dias = '';
     public $is_independiente = true;
     public $is_superponible = true;
@@ -33,14 +33,21 @@ class UpdateEventoForm extends Form
     {
         $this->id_evento = $evento->id_evento;
         $this->descripcion_evento = $evento->nombre_evento;
-        $this->tipo_evento = $evento->tipo_evento;
+        $this->tipo_evento = (string) $evento->tipo_evento;
         $this->id_especial_evento = $evento->especial_evento ?? '';
         $this->is_especial = !empty($evento->especial_evento);
         $this->codigo_color_evento = $evento->codigo_color_evento ?? '';
         $this->is_laborable = (bool) $evento->is_laborable_evento;
-        $this->is_repetible = (bool) $evento->is_repetible_evento;
+        
+        // Forzar no repetible para Feriados por seguridad de datos heredados
+        if (in_array($this->tipo_evento, ['1', '2', '6'])) {
+            $this->is_repetible = false;
+        } else {
+            $this->is_repetible = (bool) $evento->is_repetible_evento;
+        }
+
         $this->cantidad_repetible_evento = $evento->cantidad_repetible_evento ?? '';
-        $this->is_cantidad_dias_evento = (bool) ($evento->is_cantidad_dias_evento ?? false);
+        $this->is_rango_dias = (bool) ($evento->is_cantidad_dias_evento ?? false);
         $this->rango_dias = $evento->cantidad_dias_evento;
         $this->is_independiente = (bool) ($evento->is_independiente ?? $evento->is_independiente_evento ?? false);
         $this->is_superponible = (bool) ($evento->is_superponible_evento ?? false);
@@ -65,22 +72,6 @@ class UpdateEventoForm extends Form
     protected function rules()
     {
         return [
-            'cantidad_dias_evento' => [
-                'nullable',
-                function ($attribute, $value, $fail) {
-                    if ($this->is_especial && $this->id_especial_evento == '1') {
-                        if (empty($value) && $value !== '0' && $value !== 0) {
-                            $fail('La cantidad de días de vacaciones es obligatoria.');
-                        } elseif (!is_numeric($value) || $value < 1 || $value > 365) {
-                            $fail('La cantidad de días de vacaciones debe ser un número entero entre 1 y 365.');
-                        }
-                    } else {
-                        if ($value !== null && $value !== '' && $value !== 0 && $value !== '0') {
-                            $fail('No se permite asignar una cantidad de días de vacaciones para este tipo de evento.');
-                        }
-                    }
-                }
-            ],
             'is_independiente' => [
                 'required',
                 'boolean',
@@ -158,15 +149,7 @@ class UpdateEventoForm extends Form
             ],
             'is_fin_semana_evento' => [
                 'required',
-                'boolean',
-                function ($attribute, $value, $fail) {
-                    if (in_array($this->tipo_evento, ['1', '2', '6']) && !$value) {
-                        $fail('Los eventos feriados deben poder asignarse en fines de semana de forma obligatoria.');
-                    }
-                    if ($this->is_especial && $value) {
-                        $fail('Los eventos especiales no pueden ser asignados a fines de semana explícitamente.');
-                    }
-                }
+                'boolean'
             ],
             'id_especial_evento' => [
                 'required_if:is_especial,true',
@@ -201,7 +184,9 @@ class UpdateEventoForm extends Form
                 'required',
                 'boolean',
                 function ($attribute, $value, $fail) {
-
+                    if (in_array($this->tipo_evento, ['1', '2', '6']) && $value) {
+                        $fail('Para los feriados, el evento no puede ser repetible.');
+                    }
                     if ($this->is_especial) {
                         if (in_array($this->id_especial_evento, ['1', '2', '3', '7', '8', '11', '13', '14']) && !$value) {
                              $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');

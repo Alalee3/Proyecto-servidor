@@ -71,9 +71,12 @@
 
                 @if($form->is_repetible)
                 <div class="w-full">
-                    <x-input-label for="cantidad_repetible_evento" :value="__('Límite de veces a repetir (2 a 5)')" />
+                    <label class="block uppercase font-bold text-[10px] text-gray-500 dark:text-gray-400 mb-1">
+                        {{ __('Límite de repeticiones (2 a 5)') }}
+                    </label>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mb-1">Si se deja vacío, se repetirá un número indeterminado de veces.</p>
                     <x-text-input id="cantidad_repetible_evento" type="number" min="2" max="5" class="w-full"
-                        wire:model.live="form.cantidad_repetible_evento" placeholder="Ej: 3" required />
+                        wire:model.live="form.cantidad_repetible_evento" placeholder="Ej: 3" />
                     <x-input-error :messages="$errors->first('form.cantidad_repetible_evento')" class="mt-2" />
                 </div>
                 @endif
@@ -85,7 +88,7 @@
                     model="form.is_superponible" :disabled="$deshabilitarSuperponible" required />
 
                 <x-toggle-switch id="is_fin_semana_evento" :label="__('¿Puede asignarse en fines de semana?')"
-                    model="form.is_fin_semana_evento" :disabled="$form->is_especial || in_array($form->tipo_evento, ['1', '2', '6'])" required />
+                    model="form.is_fin_semana_evento" required />
 
                 <x-toggle-switch id="is_dia_evento" :label="__('¿Ocurre en un día específico?')"
                     model="form.is_dia_evento" :disabled="$deshabilitarDiaEvento" required />

@@ -182,12 +182,7 @@ class CreateCalendarioForm extends Form
                 ],
                 'nuevoIsFinSemana' => [
                     'required', 
-                    'boolean',
-                    function ($attribute, $value, $fail) {
-                        if (in_array($this->nuevoTipo, ['1', '2', '6']) && !$value) {
-                            $fail('Los eventos feriados deben poder asignarse en fines de semana de forma obligatoria.');
-                        }
-                    }
+                    'boolean'
                 ],
                 'nuevoIsDiaEvento' => [
                     'required', 

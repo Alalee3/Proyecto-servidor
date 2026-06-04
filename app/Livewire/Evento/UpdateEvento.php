@@ -121,7 +121,6 @@ class UpdateEvento extends Component
         if ($propertyName === 'form.is_especial' && $this->form->is_especial) {
             $this->form->is_independiente = true;
             $this->form->is_semana_evento = false;
-            $this->form->is_fin_semana_evento = false;
         }
 
         // Si cambia el tipo de evento
@@ -130,7 +129,6 @@ class UpdateEvento extends Component
                 $this->form->is_independiente = true;
                 $this->form->is_superponible = true;
                 $this->form->is_semana_evento = false;
-                $this->form->is_fin_semana_evento = true;
             } else {
                 $this->form->is_independiente = false;
                 $this->form->is_dia_evento = false;

@@ -81,6 +81,17 @@ class EditarCalendario extends Component
         // Cargar la biblioteca de eventos (templates)
         $eventoRepo = new EventoIndexRepo();
         $this->bibliotecaEventos = $eventoRepo->obtenerBiblioteca();
+
+        // Calcular ignorar_fines_semana para eventos cargados desde BD
+        foreach ($this->eventosRegistrados as &$ev) {
+            if (!isset($ev['ignorar_fines_semana'])) {
+                $template = collect($this->bibliotecaEventos)->firstWhere('id_evento', $ev['id']);
+                $isFinSemanaEvento = $template ? (bool) ($template->is_fin_semana_evento ?? false) : false;
+                $ev['ignorar_fines_semana'] = !$isFinSemanaEvento;
+            }
+        }
+        unset($ev);
+
         $this->actualizarMapaEventos();
     }
 
@@ -124,7 +135,7 @@ class EditarCalendario extends Component
         $this->actualizarMapaEventos();
     }
 
-    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false, $confirmadoIncorporacion = false, $confirmadoDuracion = false, $confirmadoIntroductorio = false, $confirmadoFeriadoLocal = false)
+    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false, $confirmadoIncorporacion = false, $confirmadoDuracion = false, $confirmadoIntroductorio = false, $confirmadoFeriadoLocal = false, $confirmadoFinSemana = null)
     {
         $eventoInfo = \App\Models\Evento::find($id_evento);
 
@@ -144,6 +155,57 @@ class EditarCalendario extends Component
             // Obtener el color desde codigo_color_evento o fallback
             $color = (string) ($eventoInfo->codigo_color_evento ?: $color);
             $tipo = (string) ($eventoInfo->tipo_evento ?? $tipo ?? '');
+        }
+
+        // VALIDAR SI SE ASIGNA EN FIN DE SEMANA
+        $isFinSemanaEvento = $eventoInfo ? (bool) ($eventoInfo->is_fin_semana_evento ?? false) : false;
+        
+        $start_date = \Carbon\Carbon::parse($inicio);
+        $end_date = \Carbon\Carbon::parse($fin);
+        
+        $isTodoWeekend = true;
+        $hasWeekendStartOrEnd = ($start_date->dayOfWeek === \Carbon\Carbon::SATURDAY || $start_date->dayOfWeek === \Carbon\Carbon::SUNDAY || 
+                                 $end_date->dayOfWeek === \Carbon\Carbon::SATURDAY || $end_date->dayOfWeek === \Carbon\Carbon::SUNDAY);
+
+        $spansWeekend = false;
+        for ($d = $start_date->copy(); $d->lte($end_date); $d->addDay()) {
+            if ($d->dayOfWeek === \Carbon\Carbon::SATURDAY || $d->dayOfWeek === \Carbon\Carbon::SUNDAY) {
+                $spansWeekend = true;
+            } else {
+                $isTodoWeekend = false;
+            }
+        }
+
+        // Si el evento no permite fines de semana, no puede ser asignado estrictamente durante un fin de semana
+        // ni puede iniciar/terminar exactamente en un fin de semana (para evitar que visualmente parezca asignado el sábado/domingo).
+        if (($isTodoWeekend || $hasWeekendStartOrEnd) && !$isFinSemanaEvento) {
+            $this->showAlert('error', "El evento '{$nombre}' no está configurado para asignarse en fines de semana. Por favor asigne el evento en días laborables.");
+            return;
+        }
+
+        $ignorarFinesDeSemanaEvent = !$isFinSemanaEvento;
+
+        // ALERTA AMARILLA: Si SÍ permite fines de semana, pero cruza un fin de semana
+        if ($isFinSemanaEvento && $spansWeekend && !$isTodoWeekend) {
+            if ($confirmadoFinSemana === null) {
+                $args = func_get_args();
+                $args = array_pad($args, 12, false); // Asegurar que tenga 12 parámetros
+                $args[11] = null; // $confirmadoFinSemana
+                $this->tempEventoAgregar = $args;
+                
+                $this->dispatch('show-alert', [
+                    'type' => 'warning',
+                    'message' => "¿Desea asignar el evento '{$nombre}' también durante el sábado y domingo que se encuentra en el rango?",
+                    'showCancelButton' => true,
+                    'cancelText' => 'No (Saltar)',
+                    'okText' => 'Sí (Incluir)',
+                    'onOkEvent' => 'confirmar-agregar-evento-fin-semana',
+                    'onCancelEvent' => 'rechazar-agregar-evento-fin-semana'
+                ]);
+                return;
+            } else {
+                $ignorarFinesDeSemanaEvent = !$confirmadoFinSemana;
+            }
         }
 
         // VALIDAR SI ES INTENSIVO FUERA DE AGOSTO
@@ -502,21 +564,11 @@ class EditarCalendario extends Component
         $start = new \DateTime($inicio);
         $end = new \DateTime($fin);
 
-        $isTodoWeekend = true;
         $tempInterval = new \DateInterval('P1D');
-        $tempPeriod = new \DatePeriod($start, $tempInterval, (clone $end)->modify('+1 day'));
-        foreach ($tempPeriod as $date) {
-            if ((int) $date->format('N') < 6) {
-                $isTodoWeekend = false;
-                break;
-            }
-        }
-
-        $ignorarFinesDeSemana = !in_array($tipo, ['1', '2', '6']) && !$isTodoWeekend;
         $period = new \DatePeriod($start, $tempInterval, (clone $end)->modify('+1 day'));
 
         foreach ($period as $date) {
-            if ($ignorarFinesDeSemana && (int) $date->format('N') >= 6) {
+            if ($ignorarFinesDeSemanaEvent && (int) $date->format('N') >= 6) {
                 continue;
             }
 
@@ -626,6 +678,7 @@ class EditarCalendario extends Component
             'especial_evento' => $eventoInfo ? (string) $eventoInfo->especial_evento : null,
             'is_superponible_evento' => $eventoInfo ? (bool) $eventoInfo->is_superponible_evento : false,
             'is_laborable_evento' => $eventoInfo ? (bool) $eventoInfo->is_laborable_evento : true,
+            'ignorar_fines_semana' => $ignorarFinesDeSemanaEvent,
         ];
 
         $this->actualizarMapaEventos();
@@ -792,7 +845,13 @@ class EditarCalendario extends Component
                 $temp->addDay();
             }
 
-            $ignorarFinesDeSemana = !in_array($tipo, ['1', '2', '6']) && !$es_especial_vacaciones && !$isTodoWeekend;
+            // Si el evento tiene guardada la configuración de saltar fines de semana, lo usamos.
+            // Si no (eventos viejos), evaluamos is_fin_semana_evento, o si es un feriado/vacación.
+            if (isset($ev['ignorar_fines_semana'])) {
+                $ignorarFinesDeSemana = $ev['ignorar_fines_semana'];
+            } else {
+                $ignorarFinesDeSemana = !in_array($tipo, ['1', '2', '6']) && !$es_especial_vacaciones && !$isTodoWeekend;
+            }
 
             $actual = clone $start;
             while ($actual->lte($end)) {
@@ -980,6 +1039,26 @@ class EditarCalendario extends Component
             ], $this->eventosRegistrados, $this->id_calendario);
         } catch (Exception $e) {
             \Illuminate\Support\Facades\Log::error('Error guardando borrador en edición: ' . $e->getMessage());
+        }
+    }
+
+    #[\Livewire\Attributes\On('confirmar-agregar-evento-fin-semana')]
+    public function confirmarAgregarEventoFinSemana()
+    {
+        if ($this->tempEventoAgregar) {
+            $args = $this->tempEventoAgregar;
+            $args[11] = true; // $confirmadoFinSemanaRespuesta = true
+            call_user_func_array([$this, 'agregarEvento'], $args);
+        }
+    }
+
+    #[\Livewire\Attributes\On('rechazar-agregar-evento-fin-semana')]
+    public function rechazarAgregarEventoFinSemana()
+    {
+        if ($this->tempEventoAgregar) {
+            $args = $this->tempEventoAgregar;
+            $args[11] = false; // $confirmadoFinSemanaRespuesta = false
+            call_user_func_array([$this, 'agregarEvento'], $args);
         }
     }
 

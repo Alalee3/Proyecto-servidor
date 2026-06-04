@@ -148,15 +148,7 @@ class CreateEventoForm extends Form
             ],
             'is_fin_semana_evento' => [
                 'required',
-                'boolean',
-                function ($attribute, $value, $fail) {
-                    if (in_array($this->tipo_evento, ['1', '2', '6']) && !$value) {
-                        $fail('Los eventos feriados deben poder asignarse en fines de semana de forma obligatoria.');
-                    }
-                    if ($this->is_especial && $value) {
-                        $fail('Los eventos especiales no pueden ser asignados a fines de semana explícitamente.');
-                    }
-                }
+                'boolean'
             ],
             'id_especial_evento' => [
                 'required_if:is_especial,true',
@@ -190,7 +182,9 @@ class CreateEventoForm extends Form
                 'required',
                 'boolean',
                 function ($attribute, $value, $fail) {
-
+                    if (in_array($this->tipo_evento, ['1', '2', '6']) && $value) {
+                        $fail('Para los feriados, el evento no puede ser repetible.');
+                    }
                     if ($this->is_especial) {
                         if (in_array($this->id_especial_evento, ['1', '2', '3', '7', '8', '11', '13', '14']) && !$value) {
                              $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');
