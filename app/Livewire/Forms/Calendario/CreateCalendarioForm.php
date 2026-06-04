@@ -31,7 +31,7 @@ class CreateCalendarioForm extends Form
 
     public $nuevoIsIndependiente = true;
     public $nuevoIsSuperponible = true;
-    public $nuevoIsFinSemana = false;
+    public $nuevoIsFinSemana = true;
     public $tipo_calendario = '1'; // Nuevo: 1 (Semestral), 2 (Anual)
     public $idEventoTemporal = null; // Para cuando se edite un evento existente
     public $isCreatingEvento = false; // Controlar si se están aplicando las validaciones de creación rápida

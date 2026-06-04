@@ -15,7 +15,7 @@ class CreateEventoForm extends Form
     public $is_repetible = false;
     public $cantidad_repetible_evento = '';
     public $is_cantidad_dias_evento = false;
-    public $is_fin_semana_evento = false;
+    public $is_fin_semana_evento = true;
     public $is_independiente = true;
     public $is_superponible = true;
     public $is_semana_evento = false;
