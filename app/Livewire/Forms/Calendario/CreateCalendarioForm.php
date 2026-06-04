@@ -23,6 +23,7 @@ class CreateCalendarioForm extends Form
     public $nuevoTipo = '1';
     public $nuevoLaborable = false;
     public $nuevoRepetible = false;
+    public $nuevoCantidadRepetible = '';
     public $nuevoIsRangoDias = false;
     public $nuevoRangoDias = '';
     public $nuevoIsDiaEvento = false;
@@ -30,6 +31,7 @@ class CreateCalendarioForm extends Form
 
     public $nuevoIsIndependiente = true;
     public $nuevoIsSuperponible = true;
+    public $nuevoIsFinSemana = false;
     public $tipo_calendario = '1'; // Nuevo: 1 (Semestral), 2 (Anual)
     public $idEventoTemporal = null; // Para cuando se edite un evento existente
     public $isCreatingEvento = false; // Controlar si se están aplicando las validaciones de creación rápida
@@ -130,13 +132,60 @@ class CreateCalendarioForm extends Form
                         if ($this->nuevoIsRangoDias) {
                             if (empty($value) && $value !== '0' && $value !== 0) {
                                 $fail('La cantidad de días es obligatoria.');
-                            } elseif (!is_numeric($value) || $value < 1 || $value > 365) {
-                                $fail('La cantidad de días debe ser un número entero entre 1 y 365.');
+                            } elseif (!is_numeric($value) || $value < 1 || $value > 90) {
+                                $fail('La cantidad de días debe ser un número entero entre 1 y 90.');
                             }
                         } else {
                             if ($value !== null && $value !== '' && $value !== 0 && $value !== '0') {
                                 $fail('No se permite asignar una cantidad de días si la opción no está habilitada.');
                             }
+                        }
+                    }
+                ],
+                'nuevoIsIndependiente' => [
+                    'required',
+                    'boolean',
+                    function ($attribute, $value, $fail) {
+                        if (in_array($this->nuevoTipo, ['1', '2', '6']) && !$value) {
+                            $fail('Para los feriados, el evento debe ser obligatoriamente Independiente.');
+                        }
+                    }
+                ],
+                'nuevoRepetible' => [
+                    'required',
+                    'boolean',
+                    function ($attribute, $value, $fail) {
+                        if (in_array($this->nuevoTipo, ['1', '2', '6']) && $value) {
+                            $fail('Para los feriados, el evento debe ser obligatoriamente No Repetible.');
+                        }
+                    }
+                ],
+                'nuevoCantidadRepetible' => [
+                    'exclude_unless:nuevoRepetible,true',
+                    'nullable',
+                    'integer',
+                    'min:2',
+                    'max:5',
+                    function ($attribute, $value, $fail) {
+                        if ($this->nuevoRepetible) {
+                            if (empty($value) && $value !== '0' && $value !== 0) {
+                                $fail('La cantidad de repeticiones es obligatoria.');
+                            } elseif (!is_numeric($value) || $value < 2 || $value > 5) {
+                                $fail('La cantidad de repeticiones debe ser entre 2 y 5.');
+                            }
+                        } else {
+                            if ($value !== null && $value !== '' && $value !== 0 && $value !== '0') {
+                                $fail('No se permite asignar una cantidad de repeticiones si la opción no está habilitada.');
+                            }
+                        }
+                    }
+                ],
+                'nuevoIsFinSemana' => [
+                    'required', 
+                    'boolean',
+                    function ($attribute, $value, $fail) {
+                        if (in_array($this->nuevoTipo, ['1', '2', '6']) && !$value) {
+                            $fail('Los eventos feriados deben poder asignarse en fines de semana de forma obligatoria.');
                         }
                     }
                 ],
@@ -158,24 +207,6 @@ class CreateCalendarioForm extends Form
                             } elseif (!strtotime($value)) {
                                 $fail('El día específico debe ser una fecha válida.');
                             }
-                        }
-                    }
-                ],
-                'nuevoIsIndependiente' => [
-                    'required',
-                    'boolean',
-                    function ($attribute, $value, $fail) {
-                        if (in_array($this->nuevoTipo, ['1', '2', '6']) && !$value) {
-                            $fail('Para los feriados, el evento debe ser obligatoriamente Independiente.');
-                        }
-                    }
-                ],
-                'nuevoIsSuperponible' => [
-                    'required',
-                    'boolean',
-                    function ($attribute, $value, $fail) {
-                        if (in_array($this->nuevoTipo, ['1', '2', '6']) && !$value) {
-                            $fail('Para los feriados, el evento debe ser obligatoriamente Superponible.');
                         }
                     }
                 ],
@@ -247,11 +278,16 @@ class CreateCalendarioForm extends Form
             'nuevoLaborable.boolean' => 'El campo laborable debe ser un valor booleano.',
             'nuevoRepetible.required' => 'El campo repetible es obligatorio.',
             'nuevoRepetible.boolean' => 'El campo repetible debe ser un valor booleano.',
+            'nuevoCantidadRepetible.integer' => 'La cantidad de repeticiones debe ser un número entero.',
+            'nuevoCantidadRepetible.min' => 'La cantidad de repeticiones debe ser superior o igual a 2.',
+            'nuevoCantidadRepetible.max' => 'La cantidad de repeticiones debe ser inferior o igual a 5.',
             'nuevoIsRangoDias.required' => 'El campo rango de días es obligatorio.',
             'nuevoIsRangoDias.boolean' => 'El campo rango de días debe ser un valor booleano.',
             'nuevoIsIndependiente.required' => 'El campo independiente es obligatorio.',
-            'nuevoIsIndependiente.boolean' => 'El campo independiente debe ser un valor booleano.',
+            'nuevoIsIndependiente.boolean' => 'El campo independiente debe ser booleano.',
             'nuevoIsSuperponible.required' => 'El campo superponible es obligatorio.',
+            'nuevoIsFinSemana.required' => 'El campo fin de semana es obligatorio.',
+            'nuevoIsFinSemana.boolean' => 'El campo fin de semana debe ser un valor booleano.',
             'nuevoIsSuperponible.boolean' => 'El campo superponible debe ser un valor booleano.',
         ];
     }

@@ -395,7 +395,8 @@
                                     nuevoColorHex: @entangle('form.nuevoColorHex'),
                                     nuevoTipo: @entangle('form.nuevoTipo'),
                                     nuevoLaborable: @entangle('form.nuevoLaborable'),
-                                     nuevoRepetible: @entangle('form.nuevoRepetible'),
+                                      nuevoRepetible: @entangle('form.nuevoRepetible'),
+                                      nuevoCantidadRepetible: @entangle('form.nuevoCantidadRepetible'),
                                       nuevoIsRangoDias: @entangle('form.nuevoIsRangoDias'),
                                       nuevoRangoDias: @entangle('form.nuevoRangoDias'),
                                       nuevoIsIndependiente: @entangle('form.nuevoIsIndependiente'),
@@ -993,7 +994,8 @@
                                             this.nuevoRepetible,
                                             this.nuevoIsRangoDias,
                                             this.nuevoRangoDias,
-                                            this.nuevoIsSuperponible
+                                            this.nuevoIsSuperponible,
+                                            this.nuevoIsFinSemana
                                         ).then(success => {
                                             this._clickLock = false;
                                             if (success) {
@@ -1013,12 +1015,8 @@
                                              this.picker3.selectedDates = []; this.picker3.update();
                                              this.picker4.selectedDates = []; this.picker4.update();
                                              this.$nextTick(() => this.refrescarEventosVisuales());
-                                         }
                                          this.selectedEventStart = ''; this.selectedEventEnd = ''; this.eventoNombre = '';
-                                         this.eventoSeleccionado = ''; this.clickCount = 0;
-                                                                                   this.nuevoColorHex = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false; this.nuevoIsRangoDias = false; this.nuevoRangoDias = ''; this.nuevoIsIndependiente = true; this.nuevoIsSuperponible = true; this.isCreatingEvento = false;
-
-                                     },
+                                                                         this.nuevoColorHex = ''; this.nuevoTipo = '1'; this.nuevoLaborable = false; this.nuevoRepetible = false; this.nuevoCantidadRepetible = ''; this.nuevoIsRangoDias = false; this.nuevoRangoDias = ''; this.nuevoIsIndependiente = true; this.nuevoIsSuperponible = true; this.nuevoIsFinSemana = true; this.isCreatingEvento = false;
                                     eliminarEventoDesdeTooltip(ev) {
                                         let index = this.eventosAlpine.findIndex(e => e.id === ev.id && e.inicio === ev.inicio && e.fin === ev.fin);
                                         if (index !== -1) {

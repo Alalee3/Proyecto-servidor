@@ -127,12 +127,30 @@ $wireKey = $wireKey ?? 'datalist-calendario';
                     <x-toggle-switch id="{{ $wireKey }}_repetible_switch" :label="__('¿Se puede repetir?')"
                         model="form.nuevoRepetible" :disabled="true" required />
                 </div>
+                
+                <div class="w-full" x-show="$wire.form.nuevoRepetible" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+                    <label class="block uppercase font-bold text-sm text-gray-900 dark:text-white mb-1">{{ __('Límite de veces a repetir (2 a 5)') }}</label>
+                    <div class="flex items-center gap-1 mt-1">
+                        <x-text-input id="{{ $wireKey }}_cantidad_repetible_input" type="number" min="2" max="5"
+                            class="flex-1 min-w-0 block" wire:model.live="form.nuevoCantidadRepetible"
+                            placeholder="{{ __('EJ: 3') }}" />
+                        <span class="text-red-500 font-bold">*</span>
+                    </div>
+                    <x-input-error :messages="$errors->get('form.nuevoCantidadRepetible')" class="mt-2" />
+                </div>
 
                 {{-- Columna 3: ¿Puede registrarse fuera de un semestre? --}}
                 <div>
                     <x-toggle-switch id="{{ $wireKey }}_is_independiente_switch" :label="__('¿Puede registrarse fuera de un semestre?')"
                         model="form.nuevoIsIndependiente" :disabled="$deshabilitarIndependienteLaborable" required />
                     <x-input-error :messages="$errors->get('form.nuevoIsIndependiente')" class="mt-2" />
+                </div>
+
+                {{-- Columna 4: ¿Puede asignarse en fines de semana? --}}
+                <div>
+                    <x-toggle-switch id="{{ $wireKey }}_is_fin_semana_evento_switch" :label="__('¿Puede asignarse en fines de semana?')"
+                        model="form.nuevoIsFinSemana" :disabled="in_array($form->nuevoTipo, ['1', '2', '6'])" required />
+                    <x-input-error :messages="$errors->get('form.nuevoIsFinSemana')" class="mt-2" />
                 </div>
 
                 {{-- FILA 3 --}}

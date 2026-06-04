@@ -22,12 +22,14 @@ class Evento extends Model
         'is_independiente' => 'boolean',
         'is_independiente_evento' => 'boolean',
         'is_superponible_evento' => 'boolean',
+        'is_fin_semana_evento' => 'boolean',
         'is_semana_evento' => 'boolean',
         'is_dia_evento' => 'boolean',
         'dia_evento' => 'date',
         'semana_evento' => 'array',
         'id_especial_evento' => 'integer',
         'cantidad_dias_evento' => 'integer',
+        'cantidad_repetible_evento' => 'integer',
     ];
 
     public function detalles()

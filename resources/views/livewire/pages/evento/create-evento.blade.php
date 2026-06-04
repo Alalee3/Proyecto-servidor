@@ -69,11 +69,23 @@
                 <x-toggle-switch id="is_repetible" :label="__('¿Se puede repetir?')" model="form.is_repetible"
                     :disabled="$deshabilitarRepetible" required />
 
+                @if($form->is_repetible)
+                <div class="w-full">
+                    <x-input-label for="cantidad_repetible_evento" :value="__('Límite de veces a repetir (2 a 5)')" />
+                    <x-text-input id="cantidad_repetible_evento" type="number" min="2" max="5" class="w-full"
+                        wire:model.live="form.cantidad_repetible_evento" placeholder="Ej: 3" required />
+                    <x-input-error :messages="$errors->first('form.cantidad_repetible_evento')" class="mt-2" />
+                </div>
+                @endif
+
                 <x-toggle-switch id="is_independiente" :label="__('¿Puede registrarse fuera de un semestre?')"
                     model="form.is_independiente" :disabled="$deshabilitarIndependienteLaborable" required />
 
                 <x-toggle-switch id="is_superponible" :label="__('¿Se puede asignar en fechas no laborables?')"
                     model="form.is_superponible" :disabled="$deshabilitarSuperponible" required />
+
+                <x-toggle-switch id="is_fin_semana_evento" :label="__('¿Puede asignarse en fines de semana?')"
+                    model="form.is_fin_semana_evento" :disabled="$form->is_especial || in_array($form->tipo_evento, ['1', '2', '6'])" required />
 
                 <x-toggle-switch id="is_dia_evento" :label="__('¿Ocurre en un día específico?')"
                     model="form.is_dia_evento" :disabled="$deshabilitarDiaEvento" required />

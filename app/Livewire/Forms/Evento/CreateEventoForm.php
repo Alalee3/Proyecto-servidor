@@ -13,7 +13,9 @@ class CreateEventoForm extends Form
     public $is_especial = false;
     public $is_laborable = false;
     public $is_repetible = false;
+    public $cantidad_repetible_evento = '';
     public $is_cantidad_dias_evento = false;
+    public $is_fin_semana_evento = false;
     public $is_independiente = true;
     public $is_superponible = true;
     public $is_semana_evento = false;
@@ -144,6 +146,18 @@ class CreateEventoForm extends Form
                 'required',
                 'boolean'
             ],
+            'is_fin_semana_evento' => [
+                'required',
+                'boolean',
+                function ($attribute, $value, $fail) {
+                    if (in_array($this->tipo_evento, ['1', '2', '6']) && !$value) {
+                        $fail('Los eventos feriados deben poder asignarse en fines de semana de forma obligatoria.');
+                    }
+                    if ($this->is_especial && $value) {
+                        $fail('Los eventos especiales no pueden ser asignados a fines de semana explícitamente.');
+                    }
+                }
+            ],
             'id_especial_evento' => [
                 'required_if:is_especial,true',
                 'nullable',
@@ -182,6 +196,26 @@ class CreateEventoForm extends Form
                              $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');
                         } elseif (in_array($this->id_especial_evento, ['9', '10']) && $value) {
                              $fail('Para este tipo de evento, debe ser obligatoriamente No Repetible.');
+                        }
+                    }
+                }
+            ],
+            'cantidad_repetible_evento' => [
+                'exclude_unless:is_repetible,true',
+                'nullable',
+                'integer',
+                'min:2',
+                'max:5',
+                function ($attribute, $value, $fail) {
+                    if ($this->is_repetible) {
+                        if (empty($value) && $value !== '0' && $value !== 0) {
+                            $fail('La cantidad de repeticiones es obligatoria.');
+                        } elseif (!is_numeric($value) || $value < 2 || $value > 5) {
+                            $fail('La cantidad de repeticiones debe ser entre 2 y 5.');
+                        }
+                    } else {
+                        if ($value !== null && $value !== '' && $value !== 0 && $value !== '0') {
+                            $fail('No se permite asignar una cantidad si la opción repetible no está habilitada.');
                         }
                     }
                 }
@@ -323,8 +357,13 @@ class CreateEventoForm extends Form
             'is_semana_evento.boolean' => 'El campo semana debe ser un valor booleano.',
             'is_especial.required' => 'El campo especial es obligatorio.',
             'is_especial.boolean' => 'El campo especial debe ser un valor booleano.',
+            'is_fin_semana_evento.required' => 'El campo fin de semana es obligatorio.',
+            'is_fin_semana_evento.boolean' => 'El campo fin de semana debe ser un valor booleano.',
             'is_laborable.required' => 'El campo laborable es obligatorio.',
             'is_repetible.required' => 'El campo repetible es obligatorio.',
+            'cantidad_repetible_evento.integer' => 'La cantidad de repeticiones debe ser un número entero.',
+            'cantidad_repetible_evento.min' => 'La cantidad de repeticiones debe ser superior o igual a 2.',
+            'cantidad_repetible_evento.max' => 'La cantidad de repeticiones debe ser inferior o igual a 5.',
         ];
     }
 }

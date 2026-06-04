@@ -49,6 +49,7 @@ class CreateCalendario extends Component
                 $this->form->nuevoLaborable = false;
                 $this->form->nuevoRepetible = false;
                 $this->form->nuevoIsIndependiente = true;
+                $this->form->nuevoIsFinSemana = true;
             } else {
                 $this->form->nuevoLaborable = false;
                 $this->form->nuevoRepetible = true;
@@ -949,6 +950,7 @@ class CreateCalendario extends Component
         if (in_array($tipo, ['1', '2', '6'])) {
             $is_laborable = false;
             $is_repetible = false;
+            $this->form->nuevoIsFinSemana = true;
         }
 
 
@@ -977,10 +979,12 @@ class CreateCalendario extends Component
                 'tipo' => $tipo,
                 'is_laborable' => $is_laborable,
                 'is_repetible' => $is_repetible,
+                'cantidad_repetible_evento' => $this->form->nuevoCantidadRepetible,
                 'is_rango_dias' => $is_rango_dias,
                 'rango_dias' => $rango_dias,
                 'is_independiente' => $this->form->nuevoIsIndependiente,
                 'is_superponible' => $is_superponible,
+                'is_fin_semana_evento' => $this->form->nuevoIsFinSemana,
                 'is_dia_evento' => $this->form->nuevoIsDiaEvento,
                 'dia_evento' => $this->form->nuevoDiaEvento,
             ]);

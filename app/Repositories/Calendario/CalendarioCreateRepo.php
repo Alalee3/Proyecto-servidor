@@ -227,6 +227,7 @@ class CalendarioCreateRepo
             'tipo_evento' => $data['tipo'],
             'is_laborable_evento' => $data['is_laborable'],
             'is_repetible_evento' => $data['is_repetible'],
+            'cantidad_repetible_evento' => ($data['is_repetible'] ?? false) ? ($data['cantidad_repetible_evento'] ?? null) : null,
             'is_cantidad_dias_evento' => $data['is_rango_dias'],
             'cantidad_dias_evento' => $data['rango_dias'],
             'estatus' => '1',
@@ -248,9 +249,14 @@ class CalendarioCreateRepo
 
         if (in_array('is_dia_evento', $columns)) {
             $insert['is_dia_evento'] = $data['is_dia_evento'] ?? false;
+            $insert['dia_evento'] = $data['is_dia_evento'] ? $data['dia_evento'] : null;
         }
 
-        if (in_array('dia_evento', $columns)) {
+        if (in_array('is_fin_semana_evento', $columns)) {
+            $insert['is_fin_semana_evento'] = $data['is_fin_semana_evento'] ?? false;
+        }
+
+        if (in_array('dia_evento', $columns) && !isset($insert['dia_evento'])) {
             $insert['dia_evento'] = $data['dia_evento'] ?? null;
         }
 
