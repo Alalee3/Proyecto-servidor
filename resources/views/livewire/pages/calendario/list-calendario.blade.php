@@ -100,18 +100,19 @@
                                                 @endcan
                                             @endif
 
+                                            @if(!empty(json_decode($calendario->justificativo_calendario_academico, true)))
+                                                <a href="{{ route('calendario.justificaciones', $calendario->id_calendario_academico) }}"
+                                                    class="flex items-center gap-1 bg-orange-500 text-white text-xs font-medium px-2.5 py-1 rounded-md hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600 shadow-sm transition-colors">
+                                                    <span class="material-icons text-sm">assignment_late</span>
+                                                    Atenuantes
+                                                </a>
+                                            @endif
+
                                             @if ($calendario->estatus == 4)
                                                 <a href="{{ route('calendario.create', $calendario->id_calendario_academico) }}"
                                                     class="flex items-center gap-1 bg-orange-500 text-white text-xs font-medium px-2.5 py-1 rounded-md hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600 shadow-sm transition-colors">
                                                     <span class="material-icons text-sm">play_arrow</span>
                                                     Continuar
-                                                </a>
-                                            @endif
-
-                                            @if(!empty($calendario->justificativo_calendario_academico))
-                                                <a href="{{ route('calendario.justificaciones', $calendario->id_calendario_academico) }}"
-                                                    class="flex items-center gap-1 bg-orange-500 text-white text-xs font-medium px-2.5 py-1 rounded-md hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600 shadow-sm transition-colors">
-                                                    Atenuantes
                                                 </a>
                                             @endif
                                         </div>
