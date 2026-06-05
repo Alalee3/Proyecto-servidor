@@ -13,7 +13,9 @@ class CreateEventoForm extends Form
     public $is_especial = false;
     public $is_laborable = false;
     public $is_repetible = false;
+    public $cantidad_repetible_evento = '';
     public $is_cantidad_dias_evento = false;
+    public $is_fin_semana_evento = true;
     public $is_independiente = true;
     public $is_superponible = true;
     public $is_semana_evento = false;
@@ -21,6 +23,7 @@ class CreateEventoForm extends Form
     public $dia_evento = null;
     public $cantidad_dias_evento = 0;
     public $semanas = [];
+    public $justificativo_evento = null;
 
     protected function rules()
     {
@@ -144,6 +147,10 @@ class CreateEventoForm extends Form
                 'required',
                 'boolean'
             ],
+            'is_fin_semana_evento' => [
+                'required',
+                'boolean'
+            ],
             'id_especial_evento' => [
                 'required_if:is_especial,true',
                 'nullable',
@@ -176,12 +183,51 @@ class CreateEventoForm extends Form
                 'required',
                 'boolean',
                 function ($attribute, $value, $fail) {
-
+                    if (in_array($this->tipo_evento, ['1', '2', '6']) && $value) {
+                        $fail('Para los feriados, el evento no puede ser repetible.');
+                    }
                     if ($this->is_especial) {
                         if (in_array($this->id_especial_evento, ['1', '2', '3', '7', '8', '11', '13', '14']) && !$value) {
                              $fail('Para este tipo de evento, debe ser obligatoriamente Repetible.');
-                        } elseif (in_array($this->id_especial_evento, ['9', '10']) && $value) {
-                             $fail('Para este tipo de evento, debe ser obligatoriamente No Repetible.');
+                        }
+                    }
+                }
+            ],
+            'cantidad_repetible_evento' => [
+                'exclude_unless:is_repetible,true',
+                'nullable',
+                'integer',
+                'min:1',
+                'max:8',
+                function ($attribute, $value, $fail) {
+                    // Inicio/Fin de Lapso, Período y Trayecto Inicial deben tener exactamente 1 repetición
+                    if (in_array($this->id_especial_evento, ['2', '3', '7', '8', '13', '14'])) {
+                        if ($value !== '1' && $value !== 1) {
+                            $fail('Para este evento especial, la cantidad de repeticiones debe ser obligatoriamente 1.');
+                        }
+                        return;
+                    }
+                    // Curso Intensivo (Inicio/Fin) solo 1 vez
+                    if (in_array($this->id_especial_evento, ['9', '10'])) {
+                        if ($value !== '1' && $value !== 1) {
+                            $fail('Para Curso Intensivo, la cantidad de repeticiones debe ser obligatoriamente 1.');
+                        }
+                        return;
+                    }
+                    // Vacaciones e Incorporación tienen repeticiones indeterminadas
+                    if (in_array($this->id_especial_evento, ['1', '11'])) {
+                        return;
+                    }
+                    if ($this->is_repetible) {
+                        if (empty($value) && $value !== '0' && $value !== 0) {
+                            $fail('La cantidad de repeticiones es obligatoria.');
+                        } elseif (!is_numeric($value) || $value < 2 || $value > 8) {
+                            $fail('La cantidad de repeticiones debe ser entre 2 y 8.');
+                        }
+                    } else {
+                        // Si no es repetible, se fuerza automáticamente a 1
+                        if ($value !== '1' && $value !== 1) {
+                            $fail('Los eventos no repetibles deben tener cantidad de repeticiones igual a 1.');
                         }
                     }
                 }
@@ -228,15 +274,16 @@ class CreateEventoForm extends Form
                         $fail('Si el evento no es repetible, solo puede seleccionar una (1) semana.');
                     }
                     
-                    // Validar que no haya más de 4 semanas por lapso
+                    // Validar que la cantidad de semanas coincida con el límite de repeticiones
                     $semanasLapso1 = array_filter($value, fn($s) => (is_array($s) ? ($s['lapso'] ?? 1) : 1) == 1);
                     $semanasLapso2 = array_filter($value, fn($s) => (is_array($s) ? ($s['lapso'] ?? 1) : 1) == 2);
                     
-                    if (count($semanasLapso1) > 4) {
-                        $fail('Un evento puede tener máximo 4 semanas en el Lapso 1.');
+                    $cuantas = max(1, (int) $this->cantidad_repetible_evento);
+                    if (count($semanasLapso1) !== $cuantas) {
+                        $fail("El Lapso 1 debe tener exactamente {$cuantas} semana(s) según el límite de repeticiones.");
                     }
-                    if (count($semanasLapso2) > 4) {
-                        $fail('Un evento puede tener máximo 4 semanas en el Lapso 2.');
+                    if (count($semanasLapso2) !== $cuantas) {
+                        $fail("El Lapso 2 debe tener exactamente {$cuantas} semana(s) según el límite de repeticiones.");
                     }
                     
                     // Validar semanas únicas dentro de cada lapso
@@ -323,8 +370,13 @@ class CreateEventoForm extends Form
             'is_semana_evento.boolean' => 'El campo semana debe ser un valor booleano.',
             'is_especial.required' => 'El campo especial es obligatorio.',
             'is_especial.boolean' => 'El campo especial debe ser un valor booleano.',
+            'is_fin_semana_evento.required' => 'El campo fin de semana es obligatorio.',
+            'is_fin_semana_evento.boolean' => 'El campo fin de semana debe ser un valor booleano.',
             'is_laborable.required' => 'El campo laborable es obligatorio.',
             'is_repetible.required' => 'El campo repetible es obligatorio.',
+            'cantidad_repetible_evento.integer' => 'La cantidad de repeticiones debe ser un número entero.',
+            'cantidad_repetible_evento.min' => 'La cantidad de repeticiones debe ser superior o igual a 2.',
+            'cantidad_repetible_evento.max' => 'La cantidad de repeticiones debe ser inferior o igual a 8.',
         ];
     }
 }

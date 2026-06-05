@@ -34,10 +34,311 @@ class EditarCalendario extends Component
     public $tempEventoAgregar = null;
     public $tempEventoCrear = null;
 
+    public $justificacionesRequeridas = [];
+    public $justificacionesGuardadas = [];
+
     public function boot()
     {
         $this->calendarioRepository = new CalendarioUpdateRepo();
         $this->viewRepository = new CalendarioViewRepo();
+    }
+
+    public function autocompletarFeriadosFijos()
+    {
+        $calInicio = $this->form->dia_inicio_calendario_academico;
+        $calFin = $this->form->dia_fin_calendario_academico;
+
+        if (!$calInicio || !$calFin) {
+            $this->showAlert('error', 'Debe seleccionar una fecha de inicio y fin para el calendario antes de autocompletar los feriados.');
+            return;
+        }
+
+        $feriadosFijos = \App\Models\Evento::where('estatus', '1')
+            ->where('is_dia_evento', true)
+            ->whereNotNull('dia_evento')
+            ->get();
+
+        if ($feriadosFijos->isEmpty()) {
+            $this->showAlert('info', 'No se encontraron feriados fijos registrados en el sistema.');
+            return;
+        }
+
+        $startYear = (int) date('Y', strtotime($calInicio));
+        $endYear = (int) date('Y', strtotime($calFin));
+        $agregados = 0;
+
+        foreach ($feriadosFijos as $feriado) {
+            $diaMes = date('m-d', strtotime($feriado->dia_evento));
+
+            for ($year = $startYear; $year <= $endYear; $year++) {
+                $fechaCandidata = "$year-$diaMes";
+
+                if ($fechaCandidata >= $calInicio && $fechaCandidata <= $calFin) {
+                    // Check if already added
+                    $yaExiste = collect($this->eventosRegistrados)->contains(function ($ev) use ($feriado, $fechaCandidata) {
+                        return ($ev['id'] ?? null) == $feriado->id_evento && ($ev['inicio'] ?? null) == $fechaCandidata;
+                    });
+
+                    if (!$yaExiste) {
+                        $this->eventosRegistrados[] = [
+                            'identificador' => uniqid(),
+                            'id' => (int) $feriado->id_evento,
+                            'inicio' => (string) $fechaCandidata,
+                            'fin' => (string) $fechaCandidata,
+                            'nombre' => (string) $feriado->nombre_evento,
+                            'nombre_evento' => (string) $feriado->nombre_evento,
+                            'tipo' => (string) $feriado->tipo_evento,
+                            'color' => (string) $feriado->color,
+                            'is_cantidad_dias_evento' => (bool) $feriado->is_cantidad_dias_evento,
+                            'cantidad_dias_evento' => $feriado->cantidad_dias_evento,
+                            'especial_evento' => (string) $feriado->especial_evento,
+                            'is_superponible_evento' => (bool) $feriado->is_superponible_evento,
+                            'is_laborable_evento' => (bool) $feriado->is_laborable_evento,
+                            'is_repetible_evento' => (bool) $feriado->is_repetible_evento,
+                            'cantidad_repetible_evento' => $feriado->cantidad_repetible_evento ?? null,
+                            'is_independiente_evento' => (bool) ($feriado->is_independiente ?? $feriado->is_independiente_evento ?? false),
+                            'ignorar_feriados_locales' => false,
+                            'ignorar_fines_semana' => false,
+                            'semanas' => null
+                        ];
+                        $agregados++;
+                    }
+                }
+            }
+        }
+
+        if ($agregados > 0) {
+            $this->actualizarMapaEventos();
+            $this->evaluarJustificacionesRequeridas();
+            $this->showAlert('success', "Se han añadido $agregados feriados fijos automáticamente al calendario.");
+        } else {
+            $this->showAlert('info', 'No se encontraron feriados fijos nuevos para añadir en el rango seleccionado.');
+        }
+    }
+
+    #[Computed]
+    public function progresoEventos()
+    {
+        $progreso = [];
+
+        // Precalcular todos los lapsos asignados en el calendario actual
+        $lapsosAsignados = [];
+        $tiposLapsos = [
+            ['inicio' => '2', 'fin' => '3', 'prefijo' => 'Lapso'],
+            ['inicio' => '7', 'fin' => '8', 'prefijo' => 'Intensivo']
+        ];
+        
+        foreach ($tiposLapsos as $tipo) {
+            $inicios = [];
+            $fines = [];
+            foreach ($this->eventosRegistrados as $ev) {
+                $idEsp = null;
+                foreach ($this->bibliotecaEventos as $bEv) {
+                    $bEvArr = (array) $bEv;
+                    if (($bEvArr['id_evento'] ?? null) == ($ev['id'] ?? null)) {
+                        $idEsp = (string) ($bEvArr['especial_evento'] ?? '');
+                        break;
+                    }
+                }
+                if ($idEsp === $tipo['inicio']) {
+                    $inicios[] = $ev;
+                } elseif ($idEsp === $tipo['fin']) {
+                    $fines[] = $ev;
+                }
+            }
+            
+            usort($inicios, fn($a, $b) => strtotime($a['inicio']) <=> strtotime($b['inicio']));
+            usort($fines, fn($a, $b) => strtotime($a['inicio']) <=> strtotime($b['inicio']));
+            
+            foreach ($inicios as $idx => $inicioEv) {
+                $finEv = $fines[$idx] ?? null;
+                $timestampInicio = strtotime($inicioEv['inicio']);
+                $timestampFin = $finEv ? strtotime($finEv['inicio']) : $timestampInicio; 
+                
+                $lapsosAsignados[] = [
+                    'nombre' => $tipo['prefijo'] . ' ' . ($idx + 1),
+                    'timestamp_inicio' => $timestampInicio,
+                    'timestamp_fin' => $timestampFin,
+                    'agregados' => 0,
+                    'fechas_asignadas' => []
+                ];
+            }
+        }
+        
+        // Ordenar lapsos cronológicamente
+        usort($lapsosAsignados, function($a, $b) {
+            return $a['timestamp_inicio'] <=> $b['timestamp_inicio'];
+        });
+
+
+        foreach ($this->bibliotecaEventos as $evento) {
+            $eventoArr = (array) $evento;
+            $especial = (string) ($eventoArr['especial_evento'] ?? '');
+            $isCantidadDias = (bool) ($eventoArr['is_cantidad_dias_evento'] ?? false);
+
+            // Solo contar por días para Vacaciones Colectivas (especial_evento == '1')
+            if ($isCantidadDias && $especial === '1') {
+                $limiteDias = (int) ($eventoArr['cantidad_dias_evento'] ?? 0);
+                if ($limiteDias > 0) {
+                    $startYear = date('Y');
+                    $endYear = date('Y');
+                    if ($this->form->dia_inicio_calendario_academico && $this->form->dia_fin_calendario_academico) {
+                        $startYear = (int) date('Y', strtotime($this->form->dia_inicio_calendario_academico));
+                        $endYear = (int) date('Y', strtotime($this->form->dia_fin_calendario_academico));
+                    }
+
+                    for ($y = $startYear; $y <= $endYear; $y++) {
+                        $diasAgregados = 0;
+                        $fechasAsignadas = [];
+                        foreach ($this->eventosRegistrados as $ev) {
+                            if (($ev['id'] ?? null) == $eventoArr['id_evento'] && date('Y', strtotime($ev['inicio'])) == $y) {
+                                $start = strtotime($ev['inicio']);
+                                $end = strtotime($ev['fin']);
+                                $days = round(($end - $start) / (60 * 60 * 24)) + 1;
+                                $diasAgregados += max(1, $days);
+                                $fechasAsignadas[] = [
+                                    'inicio' => $ev['inicio'],
+                                    'fin' => $ev['fin'],
+                                    'dias' => max(1, $days)
+                                ];
+                            }
+                        }
+
+                        if ($limiteDias == 0 && $diasAgregados == 0) continue;
+
+                        $progreso[] = [
+                            'id_evento' => $eventoArr['id_evento'] . '_' . $y,
+                            'nombre' => trim($eventoArr['nombre_evento']) . ' ' . $y,
+                            'color' => $eventoArr['codigo_color_evento'] ?? '#3b82f6',
+                            'limite' => $limiteDias > 0 ? $limiteDias : null,
+                            'agregados' => $diasAgregados,
+                            'restantes' => $limiteDias > 0 ? max(0, $limiteDias - $diasAgregados) : null,
+                            'completado' => $limiteDias > 0 ? ($diasAgregados >= $limiteDias) : true,
+                            'is_dias' => true,
+                            'fechas_asignadas' => $fechasAsignadas
+                        ];
+                    }
+                }
+                continue;
+            }
+            
+            // Determinar el límite teórico
+            $limite = 0;
+            
+            $isPorLapso = false;
+
+            // Reglas especiales para Lapsos Académicos
+            if (in_array($especial, ['2', '3', '7', '8'])) {
+                $limite = 2; // Por calendario
+            } else {
+                $esRepetible = (bool) ($eventoArr['is_repetible_evento'] ?? false);
+                $cantidadRepetible = (int) ($eventoArr['cantidad_repetible_evento'] ?? 0);
+                
+                if (!$esRepetible) {
+                    $limite = 1;
+                } elseif ($cantidadRepetible > 0) {
+                    $esIndependiente = (bool) ($eventoArr['is_independiente'] ?? $eventoArr['is_independiente_evento'] ?? false);
+                    if ($esIndependiente) {
+                        // Límite anual. Calculamos basado en los años del calendario
+                        if ($this->form->dia_inicio_calendario_academico && $this->form->dia_fin_calendario_academico) {
+                            $startYear = (int) date('Y', strtotime($this->form->dia_inicio_calendario_academico));
+                            $endYear = (int) date('Y', strtotime($this->form->dia_fin_calendario_academico));
+                            $years = max(1, $endYear - $startYear + 1);
+                            $limite = $cantidadRepetible * $years;
+                        } else {
+                            $limite = $cantidadRepetible; // Default
+                        }
+                    } else {
+                        // Límite por lapso. Contamos cuántos lapsos hay.
+                        $totalLapsos = max(1, count($lapsosAsignados));
+                        $limite = $cantidadRepetible * $totalLapsos;
+                        $isPorLapso = true;
+                    }
+                }
+            }
+
+            // Calcular cuántos hemos agregado al calendario
+            $agregados = 0;
+            $fechasAsignadas = []; // Almacena fechas fuera de lapso o fechas de eventos independientes
+            $progresoPorLapso = $lapsosAsignados; // Copiamos la estructura vacía precalculada
+            
+            foreach ($this->eventosRegistrados as $ev) {
+                if (($ev['id'] ?? null) == $eventoArr['id_evento']) {
+                    $agregados++;
+                    $timestampEv = strtotime($ev['inicio']);
+                    $asignadoALapso = false;
+
+                    if ($isPorLapso) {
+                        // Buscar a qué lapso pertenece según la fecha de inicio
+                        foreach ($progresoPorLapso as &$lapso) {
+                            if ($timestampEv >= $lapso['timestamp_inicio'] && $timestampEv <= $lapso['timestamp_fin']) {
+                                $lapso['agregados']++;
+                                $lapso['fechas_asignadas'][] = [
+                                    'inicio' => $ev['inicio'],
+                                    'fin' => $ev['fin']
+                                ];
+                                $asignadoALapso = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Si no es por lapso o si cayó fuera de todos los lapsos
+                    if (!$asignadoALapso) {
+                        $fechasAsignadas[] = [
+                            'inicio' => $ev['inicio'],
+                            'fin' => $ev['fin']
+                        ];
+                    }
+                }
+            }
+
+            if ($isPorLapso) {
+                // Agregar el evento original pero con la estructura anidada de lapsos
+                $progreso[] = [
+                    'id_evento' => $eventoArr['id_evento'],
+                    'nombre' => $eventoArr['nombre_evento'],
+                    'color' => $eventoArr['codigo_color_evento'] ?? '#3b82f6',
+                    'limite' => $limite > 0 ? $limite : null,
+                    'agregados' => $agregados,
+                    'restantes' => $limite > 0 ? max(0, $limite - $agregados) : null,
+                    'completado' => $limite > 0 ? ($agregados >= $limite) : true,
+                    'is_dias' => false,
+                    'fechas_asignadas' => $fechasAsignadas, // Fechas fuera de lapso
+                    'is_por_lapso' => true,
+                    'limite_por_lapso' => $cantidadRepetible,
+                    'progreso_por_lapso' => $progresoPorLapso
+                ];
+            } else {
+                // Omitir si no tiene un límite definido y no se ha agregado
+                if ($limite == 0 && $agregados == 0) continue;
+
+                $progreso[] = [
+                    'id_evento' => $eventoArr['id_evento'],
+                    'nombre' => $eventoArr['nombre_evento'],
+                    'color' => $eventoArr['codigo_color_evento'] ?? '#3b82f6',
+                    'limite' => $limite > 0 ? $limite : null,
+                    'agregados' => $agregados,
+                    'restantes' => $limite > 0 ? max(0, $limite - $agregados) : null,
+                    'completado' => $limite > 0 ? ($agregados >= $limite) : true,
+                    'is_dias' => false,
+                    'fechas_asignadas' => $fechasAsignadas,
+                    'is_por_lapso' => false,
+                    'limite_por_lapso' => 0,
+                    'progreso_por_lapso' => []
+                ];
+            }
+        }
+
+        // Ordenar: primero los no completados, luego alfabéticamente
+        usort($progreso, function($a, $b) {
+            if ($a['completado'] !== $b['completado']) {
+                return $a['completado'] ? 1 : -1;
+            }
+            return strcmp($a['nombre'], $b['nombre']);
+        });
+
+        return $progreso;
     }
 
     public function mount($id)
@@ -58,6 +359,12 @@ class EditarCalendario extends Component
 
         $this->currentYear = date('Y', strtotime($calendario->dia_inicio_calendario_academico));
 
+        if (!empty($calendario->justificativo_calendario_academico)) {
+            $this->justificacionesGuardadas = is_string($calendario->justificativo_calendario_academico) 
+                ? json_decode($calendario->justificativo_calendario_academico, true) 
+                : $calendario->justificativo_calendario_academico;
+        }
+
         // Cargar eventos registrados
         $eventos = $this->calendarioRepository->obtenerEventosDetalle($id);
 
@@ -75,13 +382,29 @@ class EditarCalendario extends Component
                 'especial_evento' => isset($ev->especial_evento) ? (string) $ev->especial_evento : null,
                 'is_superponible_evento' => (bool) ($ev->is_superponible_evento ?? false),
                 'is_laborable_evento' => (bool) ($ev->is_laborable_evento ?? true),
+                'is_repetible_evento' => (bool) ($ev->is_repetible_evento ?? false),
+                'cantidad_repetible_evento' => $ev->cantidad_repetible_evento ?? null,
+                'is_independiente_evento' => (bool) ($ev->is_independiente_evento ?? $ev->is_independiente ?? false),
             ];
         }
 
         // Cargar la biblioteca de eventos (templates)
         $eventoRepo = new EventoIndexRepo();
         $this->bibliotecaEventos = $eventoRepo->obtenerBiblioteca();
+
+        // Calcular ignorar_fines_semana para eventos cargados desde BD
+        foreach ($this->eventosRegistrados as &$ev) {
+            if (!isset($ev['ignorar_fines_semana'])) {
+                $template = collect($this->bibliotecaEventos)->firstWhere('id_evento', $ev['id']);
+                $isFinSemanaEvento = $template ? (bool) ($template->is_fin_semana_evento ?? false) : false;
+                $ev['ignorar_fines_semana'] = !$isFinSemanaEvento;
+            }
+        }
+        unset($ev);
+
         $this->actualizarMapaEventos();
+
+        $this->evaluarJustificacionesRequeridas();
     }
 
     public function updated($propertyName)
@@ -105,6 +428,11 @@ class EditarCalendario extends Component
                 $this->form->nuevoDiaEvento = null;
             }
         }
+        
+        // No recalcular si el cambio proviene de un textarea de justificación
+        if (!str_starts_with($propertyName, 'justificacionesRequeridas')) {
+            $this->evaluarJustificacionesRequeridas();
+        }
     }
 
     protected function filtrarEventosFueraDeRango()
@@ -124,7 +452,7 @@ class EditarCalendario extends Component
         $this->actualizarMapaEventos();
     }
 
-    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false, $confirmadoIncorporacion = false, $confirmadoDuracion = false, $confirmadoIntroductorio = false, $confirmadoFeriadoLocal = false)
+    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false, $confirmadoIncorporacion = false, $confirmadoDuracion = false, $confirmadoIntroductorio = false, $confirmadoFeriadoLocal = false, $confirmadoFinSemana = null)
     {
         $eventoInfo = \App\Models\Evento::find($id_evento);
 
@@ -144,6 +472,139 @@ class EditarCalendario extends Component
             // Obtener el color desde codigo_color_evento o fallback
             $color = (string) ($eventoInfo->codigo_color_evento ?: $color);
             $tipo = (string) ($eventoInfo->tipo_evento ?? $tipo ?? '');
+        }
+
+        // VALIDAR LÍMITE DE REPETICIONES
+        $especialEvento = $eventoInfo ? (string) ($eventoInfo->especial_evento ?? '') : '';
+        
+        // VALIDACIÓN ESPECIAL POR CALENDARIO: Inicio/Fin de Lapso e Introductorios (2, 3, 7, 8)
+        // Estos eventos usan su propio límite de 2 por calendario, independiente de cantidad_repetible_evento
+        if (in_array($especialEvento, ['2', '3', '7', '8'])) {
+            $conteoEnCalendario = 0;
+            foreach ($this->eventosRegistrados as $ev) {
+                if (($ev['id'] ?? null) == $id_evento) {
+                    $conteoEnCalendario++;
+                }
+            }
+            if ($conteoEnCalendario >= 2) {
+                $this->showAlert('error', "El evento '{$nombre}' ya alcanzó el límite de 2 repeticiones por calendario.");
+                return;
+            }
+        } else {
+            $cantidadRepetible = $eventoInfo ? ($eventoInfo->cantidad_repetible_evento ?? null) : null;
+            if (!empty($cantidadRepetible)) {
+                $limite = (int) $cantidadRepetible;
+                $isIndependiente = $eventoInfo ? (bool) ($eventoInfo->is_independiente ?? $eventoInfo->is_independiente_evento ?? false) : false;
+                
+                if ($isIndependiente) {
+                    // Validar límite ANUAL
+                    $anio = date('Y', strtotime($inicio));
+                    $conteoAnual = 0;
+                    foreach ($this->eventosRegistrados as $ev) {
+                        if (($ev['id'] ?? null) == $id_evento && date('Y', strtotime($ev['inicio'])) == $anio) {
+                            $conteoAnual++;
+                        }
+                    }
+                    if ($conteoAnual >= $limite) {
+                        $this->showAlert('error', "El evento '{$nombre}' ya alcanzó el límite de {$limite} repetición(es) en el año {$anio}.");
+                        return;
+                    }
+                } else {
+                    // Validar límite POR LAPSO
+                    $lapsosInicios = collect($this->eventosRegistrados)
+                        ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
+                        ->sortBy('inicio')
+                        ->values();
+                    $lapsosFines = collect($this->eventosRegistrados)
+                        ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '3')
+                        ->sortBy('inicio')
+                        ->values();
+                    
+                    // Identificar a qué lapso pertenece $inicio
+                    $numLapso = 0;
+                    foreach ($lapsosInicios as $idx => $lapsoInicio) {
+                        $lapsoFin = isset($lapsosFines[$idx]) ? $lapsosFines[$idx]['inicio'] : null;
+                        if ($lapsoFin && $inicio >= $lapsoInicio['inicio'] && $inicio <= $lapsoFin) {
+                            $numLapso = $idx + 1;
+                            break;
+                        }
+                    }
+                    
+                    if ($numLapso > 0) {
+                        $conteoLapso = 0;
+                        $lapsoInicio = $lapsosInicios[$numLapso - 1]['inicio'];
+                        $lapsoFin = isset($lapsosFines[$numLapso - 1]) ? $lapsosFines[$numLapso - 1]['inicio'] : null;
+                        
+                        foreach ($this->eventosRegistrados as $ev) {
+                            if (($ev['id'] ?? null) == $id_evento && $lapsoFin) {
+                                if ($ev['inicio'] >= $lapsoInicio && $ev['inicio'] <= $lapsoFin) {
+                                    $conteoLapso++;
+                                }
+                            }
+                        }
+                        
+                        if ($conteoLapso >= $limite) {
+                            $this->showAlert('error', "El evento '{$nombre}' ya alcanzó el límite de {$limite} repetición(es) en el Lapso {$numLapso}.");
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        // VALIDAR SI SE ASIGNA EN FIN DE SEMANA
+        $isFinSemanaEvento = $eventoInfo ? (bool) ($eventoInfo->is_fin_semana_evento ?? false) : false;
+        
+        $start_date = \Carbon\Carbon::parse($inicio);
+        $end_date = \Carbon\Carbon::parse($fin);
+        
+        $isTodoWeekend = true;
+        $hasWeekendStartOrEnd = ($start_date->dayOfWeek === \Carbon\Carbon::SATURDAY || $start_date->dayOfWeek === \Carbon\Carbon::SUNDAY || 
+                                 $end_date->dayOfWeek === \Carbon\Carbon::SATURDAY || $end_date->dayOfWeek === \Carbon\Carbon::SUNDAY);
+
+        $spansWeekend = false;
+        for ($d = $start_date->copy(); $d->lte($end_date); $d->addDay()) {
+            if ($d->dayOfWeek === \Carbon\Carbon::SATURDAY || $d->dayOfWeek === \Carbon\Carbon::SUNDAY) {
+                $spansWeekend = true;
+            } else {
+                $isTodoWeekend = false;
+            }
+        }
+
+        // Si el evento no permite fines de semana, no puede ser asignado estrictamente durante un fin de semana
+        if ($isTodoWeekend && !$isFinSemanaEvento) {
+            $this->showAlert('error', "El evento '{$nombre}' no está configurado para asignarse en fines de semana. Por favor asigne el evento en días laborables.");
+            return;
+        }
+
+        $ignorarFinesDeSemanaEvent = !$isFinSemanaEvento;
+
+        // ALERTA AMARILLA: Si SÍ permite fines de semana, pero cruza un fin de semana
+        if ($isFinSemanaEvento && $spansWeekend && !$isTodoWeekend) {
+            if ($hasWeekendStartOrEnd) {
+                $this->showAlert('error', "El evento '{$nombre}' no puede iniciar ni terminar durante un fin de semana. Por favor ajuste las fechas a días laborables.");
+                return;
+            }
+
+            if ($confirmadoFinSemana === null) {
+                $args = func_get_args();
+                $args = array_pad($args, 12, false); // Asegurar que tenga 12 parámetros
+                $args[11] = null; // $confirmadoFinSemana
+                $this->tempEventoAgregar = $args;
+                
+                $this->dispatch('show-alert', [
+                    'type' => 'warning',
+                    'message' => "¿Desea asignar el evento '{$nombre}' también durante el sábado y domingo que se encuentra en el rango?",
+                    'showCancelButton' => true,
+                    'cancelText' => 'No (Saltar)',
+                    'okText' => 'Sí (Incluir)',
+                    'onOkEvent' => 'confirmar-agregar-evento-fin-semana',
+                    'onCancelEvent' => 'rechazar-agregar-evento-fin-semana'
+                ]);
+                return;
+            } else {
+                $ignorarFinesDeSemanaEvent = !$confirmadoFinSemana;
+            }
         }
 
         // VALIDAR SI ES INTENSIVO FUERA DE AGOSTO
@@ -502,21 +963,11 @@ class EditarCalendario extends Component
         $start = new \DateTime($inicio);
         $end = new \DateTime($fin);
 
-        $isTodoWeekend = true;
         $tempInterval = new \DateInterval('P1D');
-        $tempPeriod = new \DatePeriod($start, $tempInterval, (clone $end)->modify('+1 day'));
-        foreach ($tempPeriod as $date) {
-            if ((int) $date->format('N') < 6) {
-                $isTodoWeekend = false;
-                break;
-            }
-        }
-
-        $ignorarFinesDeSemana = !in_array($tipo, ['1', '2', '6']) && !$isTodoWeekend;
         $period = new \DatePeriod($start, $tempInterval, (clone $end)->modify('+1 day'));
 
         foreach ($period as $date) {
-            if ($ignorarFinesDeSemana && (int) $date->format('N') >= 6) {
+            if ($ignorarFinesDeSemanaEvent && (int) $date->format('N') >= 6) {
                 continue;
             }
 
@@ -592,13 +1043,14 @@ class EditarCalendario extends Component
                 }
             } else {
                 if ($duracionReal != $cantidadRequerida) {
-                    // Si el evento requiere exactamente 1 día, error bloqueante (rojo)
-                    if ($cantidadRequerida == 1) {
+                    // Si selecciona MÁS días de los estipulados (o si requiere exactamente 1 día), error bloqueante (rojo)
+                    if ($duracionReal > $cantidadRequerida || $cantidadRequerida == 1) {
                         $this->showAlert('error', "El evento '{$nombre}' debe durar exactamente {$cantidadRequerida} día(s) por cada selección. Has seleccionado {$duracionReal} día(s).");
                         return;
                     }
-                    // Para eventos de más de 1 día, alerta amarilla con confirmación
-                    if (!$confirmadoDuracion) {
+                    
+                    // Si selecciona MENOS días de los estipulados, alerta amarilla con confirmación
+                    if ($duracionReal < $cantidadRequerida && !$confirmadoDuracion) {
                         $this->tempEventoAgregar = func_get_args();
                         $this->dispatch('show-alert', [
                             'type' => 'warning',
@@ -626,6 +1078,10 @@ class EditarCalendario extends Component
             'especial_evento' => $eventoInfo ? (string) $eventoInfo->especial_evento : null,
             'is_superponible_evento' => $eventoInfo ? (bool) $eventoInfo->is_superponible_evento : false,
             'is_laborable_evento' => $eventoInfo ? (bool) $eventoInfo->is_laborable_evento : true,
+            'is_repetible_evento' => $eventoInfo ? (bool) $eventoInfo->is_repetible_evento : false,
+            'cantidad_repetible_evento' => $eventoInfo ? ($eventoInfo->cantidad_repetible_evento ?? null) : null,
+            'is_independiente_evento' => $eventoInfo ? (bool) ($eventoInfo->is_independiente ?? $eventoInfo->is_independiente_evento ?? false) : false,
+            'ignorar_fines_semana' => $ignorarFinesDeSemanaEvent,
         ];
 
         $this->actualizarMapaEventos();
@@ -792,7 +1248,13 @@ class EditarCalendario extends Component
                 $temp->addDay();
             }
 
-            $ignorarFinesDeSemana = !in_array($tipo, ['1', '2', '6']) && !$es_especial_vacaciones && !$isTodoWeekend;
+            // Si el evento tiene guardada la configuración de saltar fines de semana, lo usamos.
+            // Si no (eventos viejos), evaluamos is_fin_semana_evento, o si es un feriado/vacación.
+            if (isset($ev['ignorar_fines_semana'])) {
+                $ignorarFinesDeSemana = $ev['ignorar_fines_semana'];
+            } else {
+                $ignorarFinesDeSemana = !in_array($tipo, ['1', '2', '6']) && !$es_especial_vacaciones && !$isTodoWeekend;
+            }
 
             $actual = clone $start;
             while ($actual->lte($end)) {
@@ -974,8 +1436,8 @@ class EditarCalendario extends Component
                 'semana_lapso_uno_introductorio_calendario_academico' => $this->form->semana_lapso_uno_introductorio_calendario_academico,
                 'semana_lapso_dos_introductorio_calendario_academico' => $this->form->semana_lapso_dos_introductorio_calendario_academico,
                 'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
-                'semana_per_uno_calendario_academico' => $this->form->semana_per_uno_calendario_academico,
                 'semana_per_dos_calendario_academico' => $this->form->semana_per_dos_calendario_academico,
+                'justificativo_calendario_academico' => $this->justificacionesGuardadas,
                 'estatus' => '2' // Sigue en revisión
             ], $this->eventosRegistrados, $this->id_calendario);
         } catch (Exception $e) {
@@ -983,90 +1445,193 @@ class EditarCalendario extends Component
         }
     }
 
+    #[\Livewire\Attributes\On('confirmar-agregar-evento-fin-semana')]
+    public function confirmarAgregarEventoFinSemana()
+    {
+        if ($this->tempEventoAgregar) {
+            $args = $this->tempEventoAgregar;
+            $args[11] = true; // $confirmadoFinSemanaRespuesta = true
+            call_user_func_array([$this, 'agregarEvento'], $args);
+        }
+    }
+
+    #[\Livewire\Attributes\On('rechazar-agregar-evento-fin-semana')]
+    public function rechazarAgregarEventoFinSemana()
+    {
+        if ($this->tempEventoAgregar) {
+            $args = $this->tempEventoAgregar;
+            $args[11] = false; // $confirmadoFinSemanaRespuesta = false
+            call_user_func_array([$this, 'agregarEvento'], $args);
+        }
+    }
+
+    public function evaluarJustificacionesRequeridas()
+    {
+        $viejas = $this->justificacionesRequeridas; 
+        $this->justificacionesRequeridas = [];
+
+        $lapsoUno = (int) $this->form->semana_lapso_uno_calendario_academico;
+        if ($lapsoUno > 0 && ($lapsoUno < 16 || $lapsoUno > 18)) {
+            $this->justificacionesRequeridas[] = [
+                'periodo' => '1',
+                'titulo' => 'Lapso Académico 1',
+                'nombre_campo' => 'Lapso Académico',
+                'mensaje' => "El Lapso Académico 1 tiene $lapsoUno semanas. Justifique por qué está fuera del rango (16-18 semanas).",
+                'texto' => '',
+                'lapso' => '1',
+                'dato_colocado' => $lapsoUno,
+                'dato_esperado' => '16-18'
+            ];
+        }
+
+        $lapsoDos = (int) $this->form->semana_lapso_dos_calendario_academico;
+        if ($lapsoDos > 0 && ($lapsoDos < 16 || $lapsoDos > 18)) {
+            $this->justificacionesRequeridas[] = [
+                'periodo' => '1',
+                'titulo' => 'Lapso Académico 2',
+                'nombre_campo' => 'Lapso Académico',
+                'mensaje' => "El Lapso Académico 2 tiene $lapsoDos semanas. Justifique por qué está fuera del rango (16-18 semanas).",
+                'texto' => '',
+                'lapso' => '2',
+                'dato_colocado' => $lapsoDos,
+                'dato_esperado' => '16-18'
+            ];
+        }
+
+        $inicialUno = (int) $this->form->semana_lapso_uno_introductorio_calendario_academico;
+        if ($inicialUno > 0 && $inicialUno != 12) {
+            $this->justificacionesRequeridas[] = [
+                'periodo' => '2',
+                'titulo' => 'Trayecto Inicial 1',
+                'nombre_campo' => 'Trayecto Inicial',
+                'mensaje' => "El Trayecto Inicial 1 tiene $inicialUno semanas. Justifique por qué es diferente a 12 semanas.",
+                'texto' => '',
+                'lapso' => '1',
+                'dato_colocado' => $inicialUno,
+                'dato_esperado' => '12'
+            ];
+        }
+
+        $inicialDos = (int) $this->form->semana_lapso_dos_introductorio_calendario_academico;
+        if ($inicialDos > 0 && $inicialDos != 12) {
+            $this->justificacionesRequeridas[] = [
+                'periodo' => '2',
+                'titulo' => 'Trayecto Inicial 2',
+                'nombre_campo' => 'Trayecto Inicial',
+                'mensaje' => "El Trayecto Inicial 2 tiene $inicialDos semanas. Justifique por qué es diferente a 12 semanas.",
+                'texto' => '',
+                'lapso' => '2',
+                'dato_colocado' => $inicialDos,
+                'dato_esperado' => '12'
+            ];
+        }
+
+        $intensivo = (int) $this->form->semana_intensibo_introductorio_calendario_academico;
+        if ($intensivo > 0 && $intensivo < 5) {
+            $this->justificacionesRequeridas[] = [
+                'periodo' => '3',
+                'titulo' => 'Intensivo',
+                'nombre_campo' => 'Curso Intensivo',
+                'mensaje' => "El curso Intensivo tiene $intensivo semanas. Justifique por qué es menor a 5 semanas.",
+                'texto' => '',
+                'lapso' => '',
+                'dato_colocado' => $intensivo,
+                'dato_esperado' => '5+'
+            ];
+        }
+
+        $perUno = (int) $this->form->semana_per_uno_calendario_academico;
+        if ($perUno > 0 && $perUno != 12) {
+            $this->justificacionesRequeridas[] = [
+                'periodo' => '4',
+                'titulo' => 'P.E.R 1',
+                'nombre_campo' => 'P.E.R.',
+                'mensaje' => "El P.E.R 1 tiene configuradas {$perUno} semanas. Justifique por qué está fuera del límite de 12 semanas.",
+                'texto' => '',
+                'lapso' => '1',
+                'dato_colocado' => $perUno,
+                'dato_esperado' => '12'
+            ];
+        }
+
+        $perDos = (int) $this->form->semana_per_dos_calendario_academico;
+        if ($perDos > 0 && $perDos != 12) {
+            $this->justificacionesRequeridas[] = [
+                'periodo' => '4',
+                'titulo' => 'P.E.R 2',
+                'nombre_campo' => 'P.E.R.',
+                'mensaje' => "El P.E.R 2 tiene configuradas {$perDos} semanas. Justifique por qué está fuera del límite de 12 semanas.",
+                'texto' => '',
+                'lapso' => '2',
+                'dato_colocado' => $perDos,
+                'dato_esperado' => '12'
+            ];
+        }
+
+        foreach ($this->justificacionesRequeridas as &$req) {
+            $encontrado = false;
+            foreach ($viejas as $vieja) {
+                if (($vieja['titulo'] ?? '') === $req['titulo'] && ($vieja['lapso'] ?? '') === $req['lapso']) {
+                    $req['texto'] = $vieja['texto'] ?? '';
+                    $encontrado = true;
+                    break;
+                }
+            }
+            if (!$encontrado) {
+                foreach ($this->justificacionesGuardadas as $guardada) {
+                    if (($guardada['periodo'] ?? '') === $req['titulo'] && ($guardada['lapso'] ?? '') === $req['lapso']) {
+                        $req['texto'] = $guardada['texto'] ?? '';
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     public function validarSeccionFechas()
     {
         $this->form->validarSeccionFechas();
 
-        $mensajes = [];
-
-        $lapsoUno = (int) $this->form->semana_lapso_uno_calendario_academico;
-        if ($lapsoUno < 16) {
-            $mensajes[] = "¿Está seguro de registrar el Lapso Académico 1 con una cantidad inferior a 16 semanas?";
-        } elseif ($lapsoUno > 18) {
-            $mensajes[] = "¿Está seguro de registrar el Lapso Académico 1 con una cantidad superior a 18 semanas?";
+        // Preservar los textos que el usuario ya escribió ANTES de reconstruir
+        $textosPrevios = [];
+        foreach ($this->justificacionesRequeridas as $req) {
+            $key = ($req['titulo'] ?? '') . '|' . ($req['lapso'] ?? '');
+            $textosPrevios[$key] = $req['texto'] ?? '';
         }
 
-        $lapsoDos = (int) $this->form->semana_lapso_dos_calendario_academico;
-        if ($lapsoDos < 16) {
-            $mensajes[] = "¿Está seguro de registrar el Lapso Académico 2 con una cantidad inferior a 16 semanas?";
-        } elseif ($lapsoDos > 18) {
-            $mensajes[] = "¿Está seguro de registrar el Lapso Académico 2 con una cantidad superior a 18 semanas?";
-        }
+        $this->evaluarJustificacionesRequeridas();
 
-        $inicialUno = (int) $this->form->semana_lapso_uno_introductorio_calendario_academico;
-        if ($inicialUno < 12) {
-            $mensajes[] = "¿Está seguro de registrar el Lapso Académico Trayecto Inicial 1 con una cantidad inferior a 12 semanas?";
-        } elseif ($inicialUno > 12) {
-            $mensajes[] = "¿Está seguro de registrar el Lapso Académico Trayecto Inicial 1 con una cantidad superior a 12 semanas?";
+        // Restaurar los textos que el usuario escribió
+        foreach ($this->justificacionesRequeridas as &$req) {
+            $key = ($req['titulo'] ?? '') . '|' . ($req['lapso'] ?? '');
+            if (isset($textosPrevios[$key]) && trim($textosPrevios[$key]) !== '') {
+                $req['texto'] = $textosPrevios[$key];
+            }
         }
+        unset($req);
 
-        $inicialDos = (int) $this->form->semana_lapso_dos_introductorio_calendario_academico;
-        if ($inicialDos < 12) {
-            $mensajes[] = "¿Está seguro de registrar el Lapso Académico Trayecto Inicial 2 con una cantidad inferior a 12 semanas?";
-        } elseif ($inicialDos > 12) {
-            $mensajes[] = "¿Está seguro de registrar el Lapso Académico Trayecto Inicial 2 con una cantidad superior a 12 semanas?";
-        }
-
-        $intensivo = (int) $this->form->semana_intensibo_introductorio_calendario_academico;
-        if ($intensivo < 6) {
-            $mensajes[] = "¿Está seguro de registrar las Semanas del curso Intensivo con una cantidad inferior a 6 semanas?";
-        } elseif ($intensivo > 6) {
-            $mensajes[] = "¿Está seguro de registrar las Semanas del curso Intensivo con una cantidad superior a 6 semanas?";
-        }
-
-        $perUno = (int) $this->form->semana_per_uno_calendario_academico;
-        if ($perUno > 0) {
-            if ($perUno < 12) {
-                $mensajes[] = "¿Está seguro de registrar el P.E.R 1 con una cantidad inferior a 12 semanas?";
-            } elseif ($perUno > 12) {
-                $mensajes[] = "¿Está seguro de registrar el P.E.R 1 con una cantidad superior a 12 semanas?";
+        foreach ($this->justificacionesRequeridas as $req) {
+            $texto = trim($req['texto']);
+            if (empty($texto)) {
+                $this->showAlert('error', 'Debe escribir una justificación para todas las reglas incumplidas mostradas al final de la página antes de continuar.');
+                return;
+            }
+            if (mb_strlen($texto) < 5) {
+                $this->showAlert('error', "La justificación para '{$req['titulo']}' debe tener al menos 5 caracteres.");
+                return;
             }
         }
 
-        $perDos = (int) $this->form->semana_per_dos_calendario_academico;
-        if ($perDos > 0) {
-            if ($perDos < 12) {
-                $mensajes[] = "¿Está seguro de registrar el P.E.R 2 con una cantidad inferior a 12 semanas?";
-            } elseif ($perDos > 12) {
-                $mensajes[] = "¿Está seguro de registrar el P.E.R 2 con una cantidad superior a 12 semanas?";
-            }
-        }
-
-        if (!empty($mensajes)) {
-            $mensajeFinal = "";
-            if (count($mensajes) > 1) {
-                foreach ($mensajes as $i => $msg) {
-                    $mensajeFinal .= "• " . $msg;
-                    if ($i < count($mensajes) - 1) {
-                        $mensajeFinal .= "\n\n";
-                    }
-                }
-            } else {
-                $mensajeFinal = $mensajes[0];
-            }
-
-            $this->guardarBorrador();
-
-            $this->dispatch('show-alert', [
-                'type' => 'warning',
-                'message' => $mensajeFinal,
-                'showCancelButton' => true,
-                'cancelText' => 'Cancelar',
-                'okText' => 'Continuar',
-                'onOkEvent' => 'seccion-fechas-validada'
-            ]);
-            return;
-        }
+        $this->justificacionesGuardadas = array_map(function($req) {
+            return [
+                'texto' => trim($req['texto']),
+                'periodo' => $req['titulo'],
+                'nombre_campo' => $req['nombre_campo'] ?? '',
+                'lapso' => $req['lapso'],
+                'dato_colocado' => $req['dato_colocado'] ?? '',
+                'dato_esperado' => $req['dato_esperado'] ?? '',
+            ];
+        }, $this->justificacionesRequeridas);
 
         $this->guardarBorrador();
         $this->dispatch('seccion-fechas-validada');
@@ -1178,6 +1743,7 @@ class EditarCalendario extends Component
                     'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
                     'semana_per_uno_calendario_academico' => $this->form->semana_per_uno_calendario_academico,
                     'semana_per_dos_calendario_academico' => $this->form->semana_per_dos_calendario_academico,
+                    'justificativo_calendario_academico' => $this->justificacionesGuardadas,
                 ]);
 
                 $this->calendarioRepository->sincronizarEventos($this->id_calendario, $this->eventosRegistrados);
@@ -1274,6 +1840,7 @@ class EditarCalendario extends Component
                     'semana_intensibo_introductorio_calendario_academico' => $this->form->semana_intensibo_introductorio_calendario_academico,
                     'semana_per_uno_calendario_academico' => $this->form->semana_per_uno_calendario_academico,
                     'semana_per_dos_calendario_academico' => $this->form->semana_per_dos_calendario_academico,
+                    'justificativo_calendario_academico' => $this->justificacionesGuardadas,
                 ]);
 
                 $this->calendarioRepository->sincronizarEventos($this->id_calendario, $this->eventosRegistrados);
@@ -1452,9 +2019,60 @@ class EditarCalendario extends Component
                 return ($conteosAsignadosTotal[$id] ?? 0) < 1;
             }
 
-            // Si el evento es repetible, siempre aparece.
-            // Si NO es repetible, solo aparece si NO ha sido asignado aún en este año.
-            return $evento->is_repetible_evento || !in_array($id, $idsAsignadosEsteAnio);
+            // Aplicar límite de repeticiones según cantidad_repetible_evento
+            $cantidadRepetible = $evento->cantidad_repetible_evento ?? null;
+            
+            if (empty($cantidadRepetible) && $evento->is_repetible_evento) {
+                // Repetible sin límite definido -> siempre disponible
+                return true;
+            }
+            
+            if (empty($cantidadRepetible) && !$evento->is_repetible_evento) {
+                // No repetible -> solo una vez por año
+                return !in_array($id, $idsAsignadosEsteAnio);
+            }
+            
+            $limite = (int) $cantidadRepetible;
+            $isIndependiente = (bool) ($evento->is_independiente ?? $evento->is_independiente_evento ?? false);
+            
+            if ($isIndependiente) {
+                // INDEPENDIENTE -> límite ANUAL
+                $conteoAnual = 0;
+                foreach ($this->eventosRegistrados as $ev) {
+                    if (($ev['id'] ?? null) == $id && date('Y', strtotime($ev['inicio'])) == $targetYear) {
+                        $conteoAnual++;
+                    }
+                }
+                return $conteoAnual < $limite;
+            } else {
+                // NO INDEPENDIENTE -> límite POR LAPSO
+                $lapsosInicios = collect($this->eventosRegistrados)
+                    ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
+                    ->sortBy('inicio')
+                    ->values();
+                $lapsosFines = collect($this->eventosRegistrados)
+                    ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '3')
+                    ->sortBy('inicio')
+                    ->values();
+                
+                $disponible = false;
+                foreach ($lapsosInicios as $idx => $lapsoInicio) {
+                    $lapsoFin = isset($lapsosFines[$idx]) ? $lapsosFines[$idx]['inicio'] : null;
+                    if (!$lapsoFin) continue;
+                    
+                    $conteoLapso = 0;
+                    foreach ($this->eventosRegistrados as $ev) {
+                        if (($ev['id'] ?? null) == $id && $ev['inicio'] >= $lapsoInicio['inicio'] && $ev['inicio'] <= $lapsoFin) {
+                            $conteoLapso++;
+                        }
+                    }
+                    if ($conteoLapso < $limite) {
+                        $disponible = true;
+                        break;
+                    }
+                }
+                return $disponible;
+            }
         })->values();
     }
 

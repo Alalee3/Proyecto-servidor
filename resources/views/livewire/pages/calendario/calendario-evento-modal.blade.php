@@ -127,12 +127,31 @@ $wireKey = $wireKey ?? 'datalist-calendario';
                     <x-toggle-switch id="{{ $wireKey }}_repetible_switch" :label="__('¿Se puede repetir?')"
                         model="form.nuevoRepetible" :disabled="true" required />
                 </div>
+                
+                <div class="w-full" x-show="$wire.form.nuevoRepetible" x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+                    <label class="block uppercase font-bold text-sm text-gray-900 dark:text-white mb-1">{{ __('Límite de repeticiones (2 a 8)') }}</label>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400 mb-1 leading-tight">Si se deja vacío, se repetirá un número indeterminado de veces.</p>
+                    <div class="flex items-center gap-1 mt-1">
+                        <x-text-input id="{{ $wireKey }}_cantidad_repetible_input" type="number" min="2" max="8"
+                            class="flex-1 min-w-0 block" wire:model.live="form.nuevoCantidadRepetible"
+                            placeholder="{{ __('EJ: 3') }}"
+                            oninput="if(this.value!==''){if(Number(this.value)>8) this.value=8; if(Number(this.value)<2) this.value=2;}" />
+                    </div>
+                    <x-input-error :messages="$errors->get('form.nuevoCantidadRepetible')" class="mt-2" />
+                </div>
 
                 {{-- Columna 3: ¿Puede registrarse fuera de un semestre? --}}
                 <div>
                     <x-toggle-switch id="{{ $wireKey }}_is_independiente_switch" :label="__('¿Puede registrarse fuera de un semestre?')"
                         model="form.nuevoIsIndependiente" :disabled="$deshabilitarIndependienteLaborable" required />
                     <x-input-error :messages="$errors->get('form.nuevoIsIndependiente')" class="mt-2" />
+                </div>
+
+                {{-- Columna 4: ¿Puede asignarse en fines de semana? --}}
+                <div>
+                    <x-toggle-switch id="{{ $wireKey }}_is_fin_semana_evento_switch" :label="__('¿Puede asignarse en fines de semana?')"
+                        model="form.nuevoIsFinSemana" required />
+                    <x-input-error :messages="$errors->get('form.nuevoIsFinSemana')" class="mt-2" />
                 </div>
 
                 {{-- FILA 3 --}}

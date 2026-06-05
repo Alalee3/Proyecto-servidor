@@ -19,6 +19,7 @@ class CalendarioCreateRepo
             'semana_per_dos_calendario_academico' => $data['semana_per_dos_calendario_academico'] ?? null,
             'dia_inicio_calendario_academico' => $data['dia_inicio_calendario_academico'],
             'dia_fin_calendario_academico' => $data['dia_fin_calendario_academico'],
+            'justificativo_calendario_academico' => $data['justificativo_calendario_academico'] ?? null,
             'estatus' => '2', // En revisión
         ]);
 
@@ -77,6 +78,7 @@ class CalendarioCreateRepo
                         'semana_per_dos_calendario_academico' => $data['semana_per_dos_calendario_academico'] ?? null,
                         'dia_inicio_calendario_academico' => $data['dia_inicio_calendario_academico'],
                         'dia_fin_calendario_academico' => $data['dia_fin_calendario_academico'],
+                        'justificativo_calendario_academico' => isset($data['justificativo_calendario_academico']) ? json_encode($data['justificativo_calendario_academico']) : null,
                         'estatus' => '2', // Al confirmar, pasa a En revisión
                     ]);
                 $finalId = $id;
@@ -143,6 +145,7 @@ class CalendarioCreateRepo
                 'semana_intensibo_introductorio_calendario_academico' => $data['semana_intensibo_introductorio_calendario_academico'] ?? null,
                 'semana_per_uno_calendario_academico' => $data['semana_per_uno_calendario_academico'] ?? null,
                 'semana_per_dos_calendario_academico' => $data['semana_per_dos_calendario_academico'] ?? null,
+                'justificativo_calendario_academico' => isset($data['justificativo_calendario_academico']) ? json_encode($data['justificativo_calendario_academico']) : null,
                 'estatus' => $data['estatus'] ?? '4' // Por defecto incompleto
             ];
 
@@ -227,6 +230,7 @@ class CalendarioCreateRepo
             'tipo_evento' => $data['tipo'],
             'is_laborable_evento' => $data['is_laborable'],
             'is_repetible_evento' => $data['is_repetible'],
+            'cantidad_repetible_evento' => ($data['is_repetible'] ?? false) ? ($data['cantidad_repetible_evento'] ?? null) : null,
             'is_cantidad_dias_evento' => $data['is_rango_dias'],
             'cantidad_dias_evento' => $data['rango_dias'],
             'estatus' => '1',
@@ -248,9 +252,14 @@ class CalendarioCreateRepo
 
         if (in_array('is_dia_evento', $columns)) {
             $insert['is_dia_evento'] = $data['is_dia_evento'] ?? false;
+            $insert['dia_evento'] = $data['is_dia_evento'] ? $data['dia_evento'] : null;
         }
 
-        if (in_array('dia_evento', $columns)) {
+        if (in_array('is_fin_semana_evento', $columns)) {
+            $insert['is_fin_semana_evento'] = $data['is_fin_semana_evento'] ?? false;
+        }
+
+        if (in_array('dia_evento', $columns) && !isset($insert['dia_evento'])) {
             $insert['dia_evento'] = $data['dia_evento'] ?? null;
         }
 

@@ -241,6 +241,34 @@
                                             class="mt-2" />
                                     </div>
                                 </div>
+
+                                {{-- Justificaciones del Primer Lapso --}}
+                                @php
+                                    $justifsLapso1 = array_filter($justificacionesRequeridas, fn($j) => ($j['lapso'] ?? '') === '1');
+                                @endphp
+                                @if(count($justifsLapso1) > 0)
+                                    <div class="mt-4 space-y-4 border-t-2 border-orange-200 dark:border-orange-800 pt-4">
+                                        <h6 class="text-sm font-bold text-orange-700 dark:text-orange-400 flex items-center gap-2">
+                                            Justificaciones Requeridas
+                                        </h6>
+                                        @foreach($justifsLapso1 as $realIdx => $req)
+                                            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-orange-100 dark:border-orange-900 shadow-sm relative overflow-hidden">
+                                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-orange-400 dark:bg-orange-500"></div>
+                                                <div class="flex items-start justify-between mb-2 pl-2">
+                                                    <div>
+                                                        <h6 class="font-bold text-sm text-gray-800 dark:text-gray-200">{{ $req['titulo'] }}</h6>
+                                                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{{ $req['mensaje'] }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="pl-2">
+                                                    <textarea wire:model="justificacionesRequeridas.{{ $realIdx }}.texto"
+                                                        class="mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm min-h-[80px] resize-y text-sm"
+                                                        placeholder="Explique el motivo..." required></textarea>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
@@ -266,6 +294,34 @@
                                             class="mt-2" />
                                     </div>
                                 </div>
+
+                                {{-- Justificaciones del Intensivo --}}
+                                @php
+                                    $justifsIntensivo = array_filter($justificacionesRequeridas, fn($j) => ($j['titulo'] ?? '') === 'Intensivo');
+                                @endphp
+                                @if(count($justifsIntensivo) > 0)
+                                    <div class="mt-4 space-y-4 border-t-2 border-orange-200 dark:border-orange-800 pt-4">
+                                        <h6 class="text-sm font-bold text-orange-700 dark:text-orange-400 flex items-center gap-2">
+                                            Justificaciones Requeridas
+                                        </h6>
+                                        @foreach($justifsIntensivo as $realIdx => $req)
+                                            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-orange-100 dark:border-orange-900 shadow-sm relative overflow-hidden">
+                                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-orange-400 dark:bg-orange-500"></div>
+                                                <div class="flex items-start justify-between mb-2 pl-2">
+                                                    <div>
+                                                        <h6 class="font-bold text-sm text-gray-800 dark:text-gray-200">{{ $req['titulo'] }}</h6>
+                                                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{{ $req['mensaje'] }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="pl-2">
+                                                    <textarea wire:model="justificacionesRequeridas.{{ $realIdx }}.texto"
+                                                        class="mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm min-h-[80px] resize-y text-sm"
+                                                        placeholder="Explique el motivo..." required></textarea>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
                         </div>
 
@@ -310,9 +366,38 @@
                                             class="mt-2" />
                                     </div>
                                 </div>
+
+                                {{-- Justificaciones del Segundo Lapso --}}
+                                @php
+                                    $justifsLapso2 = array_filter($justificacionesRequeridas, fn($j) => ($j['lapso'] ?? '') === '2');
+                                @endphp
+                                @if(count($justifsLapso2) > 0)
+                                    <div class="mt-4 space-y-4 border-t-2 border-orange-200 dark:border-orange-800 pt-4">
+                                        <h6 class="text-sm font-bold text-orange-700 dark:text-orange-400 flex items-center gap-2">
+                                            Justificaciones Requeridas
+                                        </h6>
+                                        @foreach($justifsLapso2 as $realIdx => $req)
+                                            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-orange-100 dark:border-orange-900 shadow-sm relative overflow-hidden">
+                                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-orange-400 dark:bg-orange-500"></div>
+                                                <div class="flex items-start justify-between mb-2 pl-2">
+                                                    <div>
+                                                        <h6 class="font-bold text-sm text-gray-800 dark:text-gray-200">{{ $req['titulo'] }}</h6>
+                                                        <p class="text-xs text-gray-600 dark:text-gray-400 mt-1">{{ $req['mensaje'] }}</p>
+                                                    </div>
+                                                </div>
+                                                <div class="pl-2">
+                                                    <textarea wire:model="justificacionesRequeridas.{{ $realIdx }}.texto"
+                                                        class="mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-md shadow-sm min-h-[80px] resize-y text-sm"
+                                                        placeholder="Explique el motivo..." required></textarea>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
+
                     <div
                         class="flex justify-end pt-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-4 -mx-4 -mb-4 p-4">
                         <x-primary-button type="button" wire:click="validarSeccionFechas"
@@ -339,13 +424,19 @@
                 </div>
                 <div x-show="openSection === 'eventos'" x-collapse class="p-4 space-y-6 relative">
 
-                    {{-- Botón de búsqueda de eventos (ubicado en el contenido) --}}
-                    <div class="absolute top-4 right-4 z-10" x-show="inicio && fin">
-                        <button type="button" @click="showListModal = true"
-                            class="flex items-center justify-center gap-2 px-4 h-10 bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-600 dark:hover:text-white rounded-full transition-colors shadow-sm text-sm font-medium"
-                            title="Ver Eventos Asignados">
-                            <span class="material-icons text-[18px]">search</span>
-                            <span>Buscar un evento asignado a este calendario</span>
+                    {{-- Botones de acciones de eventos (ubicados en el contenido) --}}
+                    <div class="absolute top-4 right-4 z-10 flex gap-2" x-show="inicio && fin">
+                        <button type="button" @click="$dispatch('open-progreso-modal')"
+                            class="flex items-center justify-center gap-2 px-4 h-10 bg-green-50 text-green-600 hover:bg-green-500 hover:text-white dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-600 dark:hover:text-white rounded-full transition-colors shadow-sm text-sm font-medium"
+                            title="Ver eventos asignados y cuántas instancias faltan por registrar">
+                            <span class="material-icons text-[18px]">analytics</span>
+                            <span>Eventos Asignados y Progreso</span>
+                        </button>
+                        <button type="button" wire:click="autocompletarFeriadosFijos"
+                            class="flex items-center justify-center gap-2 px-4 h-10 bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white dark:bg-orange-900/30 dark:text-orange-400 dark:hover:bg-orange-600 dark:hover:text-white rounded-full transition-colors shadow-sm text-sm font-medium"
+                            title="Añadir automáticamente los feriados fijos (ej. Feriados Nacionales)">
+                            <span class="material-icons text-[18px]">auto_awesome</span>
+                            <span>Autocompletar Feriados Fijos</span>
                         </button>
                     </div>
 
@@ -1134,53 +1225,7 @@
                                 </div>
                             </template>
 
-                            @if ($this->vacacionesContador)
-                                <div class="flex justify-center mb-6 -mt-4">
-                                    @if ($this->vacacionesContador['faltantes'] > 0)
-                                        <div
-                                            class="px-4 py-1.5 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-full text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center">
-                                            <span>
-                                                Vacaciones Colectivas {{ $this->vacacionesContador['anio'] }}: Asignados
-                                                {{ $this->vacacionesContador['total_assignados'] }} de
-                                                {{ $this->vacacionesContador['requeridos'] }} días
-                                                @if ($this->vacacionesContador['asignados_otros'] > 0)
-                                                    <span
-                                                        class="text-[10px] opacity-80">({{ $this->vacacionesContador['asignados_otros'] }}
-                                                        días en otros períodos)</span>
-                                                @endif
-                                            </span>
-                                        </div>
-                                    @elseif ($this->vacacionesContador['excedidos'] > 0)
-                                        <div
-                                            class="px-4 py-1.5 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-full text-red-600 dark:text-red-400 text-xs font-bold flex items-center">
-                                            <span>
-                                                Vacaciones Colectivas {{ $this->vacacionesContador['anio'] }}: Asignados
-                                                {{ $this->vacacionesContador['total_assignados'] }} de
-                                                {{ $this->vacacionesContador['requeridos'] }} días
-                                                @if ($this->vacacionesContador['asignados_otros'] > 0)
-                                                    <span
-                                                        class="text-[10px] opacity-80">({{ $this->vacacionesContador['asignados_otros'] }}
-                                                        días en otros períodos)</span>
-                                                @endif
-                                            </span>
-                                        </div>
-                                    @else
-                                        <div
-                                            class="px-4 py-1.5 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-full text-blue-600 dark:text-blue-400 text-xs font-bold flex items-center">
-                                            <span>
-                                                Vacaciones Colectivas {{ $this->vacacionesContador['anio'] }}: Asignados
-                                                {{ $this->vacacionesContador['total_assignados'] }} de
-                                                {{ $this->vacacionesContador['requeridos'] }} días
-                                                @if ($this->vacacionesContador['asignados_otros'] > 0)
-                                                    <span
-                                                        class="text-[10px] opacity-80">({{ $this->vacacionesContador['asignados_otros'] }}
-                                                        días en otros períodos)</span>
-                                                @endif
-                                            </span>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
+
 
 
                             {{-- Indicador de fecha seleccionada (siempre visible) --}}
@@ -1303,8 +1348,10 @@
                             {{-- Modal Registro --}}
                             @include('livewire.pages.calendario.calendario-evento-modal', ['wireKey' => 'datalist-edit'])
 
-                            {{-- Modal Listado de Eventos --}}
-                            @include('livewire.pages.calendario.calendario-list-modal')
+
+
+                            {{-- Modal Progreso de Eventos --}}
+                            @include('livewire.pages.calendario.calendario-progreso-modal')
                             {{-- Botón para regresar a la sección anterior --}}
                             <div class="flex justify-start mt-8 pt-4 border-t border-gray-100 dark:border-gray-700">
                                 <x-secondary-button type="button" @click="openSection = 'fechas'">
