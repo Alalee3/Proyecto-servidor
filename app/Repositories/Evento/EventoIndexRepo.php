@@ -49,7 +49,9 @@ class EventoIndexRepo
                      'is_laborable_evento', 'is_repetible_evento', 
                      'is_cantidad_dias_evento', 'cantidad_dias_evento', 
                      'codigo_color_evento', 'id_especial_evento as especial_evento',
-                     'is_independiente_evento', 'cantidad_repetible_evento')
+                     'is_independiente_evento', 'cantidad_repetible_evento',
+                     'is_semana_evento', 'semana_evento', 'is_dia_evento', 'dia_evento',
+                     'is_fin_semana_evento', 'is_superponible_evento')
             ->get();
     }
 

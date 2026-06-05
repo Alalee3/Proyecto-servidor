@@ -32,6 +32,7 @@ class EditarCalendario extends Component
     public $minFechaInicio = null;
 
     public $tempEventoAgregar = null;
+    public $lapsoAAutocompletar = null;
     public $tempEventoCrear = null;
 
     public $justificacionesRequeridas = [];
@@ -249,8 +250,11 @@ class EditarCalendario extends Component
                             $limite = $cantidadRepetible; // Default
                         }
                     } else {
-                        // Límite por lapso. Contamos cuántos lapsos hay.
-                        $totalLapsos = max(1, count($lapsosAsignados));
+                        // Límite por lapso. Contamos cuántos lapsos REGULARES hay.
+                        $lapsosRegulares = array_filter($lapsosAsignados, function($lapso) {
+                            return str_starts_with($lapso['nombre'], 'Lapso');
+                        });
+                        $totalLapsos = max(1, count($lapsosRegulares));
                         $limite = $cantidadRepetible * $totalLapsos;
                         $isPorLapso = true;
                     }
@@ -260,7 +264,10 @@ class EditarCalendario extends Component
             // Calcular cuántos hemos agregado al calendario
             $agregados = 0;
             $fechasAsignadas = []; // Almacena fechas fuera de lapso o fechas de eventos independientes
-            $progresoPorLapso = $lapsosAsignados; // Copiamos la estructura vacía precalculada
+            // Copiamos la estructura vacía precalculada, pero solo Lapsos regulares para evitar mostrar Intensivos en eventos repetibles
+            $progresoPorLapso = array_values(array_filter($lapsosAsignados, function($lapso) {
+                return str_starts_with($lapso['nombre'], 'Lapso');
+            }));
             
             foreach ($this->eventosRegistrados as $ev) {
                 if (($ev['id'] ?? null) == $eventoArr['id_evento']) {
@@ -452,7 +459,7 @@ class EditarCalendario extends Component
         $this->actualizarMapaEventos();
     }
 
-    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false, $confirmadoIncorporacion = false, $confirmadoDuracion = false, $confirmadoIntroductorio = false, $confirmadoFeriadoLocal = false, $confirmadoFinSemana = null)
+    public function agregarEvento($inicio, $fin, $id_evento, $nombre = null, $tipo = null, $color = null, $confirmadoIntensivo = false, $confirmadoIncorporacion = false, $confirmadoDuracion = false, $confirmadoIntroductorio = false, $confirmadoFeriadoLocal = false, $confirmadoFinSemana = null, $confirmadoReemplazarNoSuperponible = false)
     {
         $eventoInfo = \App\Models\Evento::find($id_evento);
 
@@ -1065,6 +1072,46 @@ class EditarCalendario extends Component
                 }
             }
         }
+        $esFeriadoNuevo = !($eventoInfo->is_laborable_evento ?? true) || ($eventoInfo->especial_evento ?? '') === '1';
+        $indicesARemover = [];
+        if ($esFeriadoNuevo) {
+            $inicioNuevo = \Carbon\Carbon::parse($inicio)->startOfDay();
+            $finNuevo = \Carbon\Carbon::parse($fin)->endOfDay();
+            
+            foreach ($this->eventosRegistrados as $idx => $evReg) {
+                $esSupReg = (bool) ($evReg['is_superponible_evento'] ?? true);
+                $esFeriadoReg = !($evReg['is_laborable_evento'] ?? true) || ($evReg['especial_evento'] ?? '') === '1';
+                
+                if (!$esSupReg && !$esFeriadoReg) {
+                    $iReg = \Carbon\Carbon::parse($evReg['inicio'])->startOfDay();
+                    $fReg = \Carbon\Carbon::parse($evReg['fin'] ?? $evReg['inicio'])->endOfDay();
+                    
+                    if ($inicioNuevo->lte($fReg) && $finNuevo->gte($iReg)) {
+                        $indicesARemover[] = $idx;
+                    }
+                }
+            }
+            
+            if (count($indicesARemover) > 0 && !$confirmadoReemplazarNoSuperponible) {
+                $this->tempEventoAgregar = func_get_args();
+                $this->dispatch('show-alert', [
+                    'type' => 'warning',
+                    'message' => "El evento '{$nombre}' se sobrepone a uno o más eventos no superponibles. Si procedes, estos eventos serán eliminados de esas fechas. ¿Deseas continuar?",
+                    'showCancelButton' => true,
+                    'cancelText' => 'Cancelar',
+                    'okText' => 'Continuar',
+                    'onOkEvent' => 'confirmar-agregar-evento-reemplazar'
+                ]);
+                return;
+            }
+        }
+        
+        if (count($indicesARemover) > 0) {
+            foreach (array_reverse($indicesARemover) as $idx) {
+                unset($this->eventosRegistrados[$idx]);
+            }
+            $this->eventosRegistrados = array_values($this->eventosRegistrados);
+        }
 
         $this->eventosRegistrados[] = [
             'id' => (int) $id_evento,
@@ -1087,7 +1134,8 @@ class EditarCalendario extends Component
         $this->actualizarMapaEventos();
 
         if ($this->debeRecalcularFinesLapso($eventoInfo)) {
-            $this->recalcularFinesLapso();
+            $esInicioLapso = ($eventoInfo->especial_evento ?? '') === '2';
+            $this->recalcularFinesLapso(true, $esInicioLapso ? $inicio : null);
         }
 
         $this->guardarBorrador();
@@ -1115,7 +1163,7 @@ class EditarCalendario extends Component
             || !$eventoInfo->is_laborable_evento;
     }
 
-    protected function recalcularFinesLapso(): void
+    protected function recalcularFinesLapso(bool $preguntarAutocompletado = true, ?string $inicioLapsoTrigered = null): void
     {
         $calFin = $this->form->dia_fin_calendario_academico;
         if (!$calFin) {
@@ -1225,7 +1273,60 @@ class EditarCalendario extends Component
             $generarFin($inicioEv, $semanas, '14');
         }
 
+        if ($preguntarAutocompletado && $inicioLapsoTrigered) {
+            $this->lapsoAAutocompletar = $inicioLapsoTrigered;
+            // Preguntar al usuario si desea autocompletar
+            $this->dispatch('show-alert', [
+                'type' => 'warning',
+                'message' => '¿Desea colocar de forma automática los eventos que tienen semanas fijas y cantidad de días de duración asignados a este lapso?',
+                'showCancelButton' => true,
+                'cancelText' => 'No',
+                'okText' => 'Sí',
+                'onOkEvent' => 'confirmar-autocompletar-lapsos'
+            ]);
+        }
+
         $this->actualizarMapaEventos();
+    }
+
+    #[\Livewire\Attributes\On('confirmar-autocompletar-lapsos')]
+    public function confirmarAutocompletarLapsos()
+    {
+        if (!$this->lapsoAAutocompletar) return;
+
+        $lapsosReales = [];
+        $contadorLapso = 1;
+        $iniciosLapsoAutocompletar = collect($this->eventosRegistrados)
+            ->filter(fn($ev) => ($ev['especial_evento'] ?? '') === '2')
+            ->sortBy('inicio')
+            ->values();
+        foreach ($iniciosLapsoAutocompletar as $inicioEv) {
+            if ($inicioEv['inicio'] === $this->lapsoAAutocompletar) {
+                $lapsosReales[] = [
+                    'inicio' => $inicioEv['inicio'],
+                    'numero_lapso' => $contadorLapso
+                ];
+                break;
+            }
+            $contadorLapso++;
+        }
+
+        $eventosAgregados = \App\Support\AutocompletadoEventos::autocompletarEventosDeLapso(
+            $this->eventosRegistrados, 
+            $this->bibliotecaEventos->toArray(), 
+            $lapsosReales, 
+            $this->form->incluir_vacaciones_calendario_academico ?? false
+        );
+
+        if ($eventosAgregados > 0) {
+            $this->showAlert('success', "Se autocompletaron {$eventosAgregados} eventos asociados al Lapso exitosamente.");
+        } else {
+            $this->showAlert('info', "No se encontraron eventos configurados para autocompletar en el lapso actual.");
+        }
+
+        $this->lapsoAAutocompletar = null;
+        $this->actualizarMapaEventos();
+        $this->guardarBorrador();
     }
 
     public function actualizarMapaEventos()
@@ -1340,7 +1441,7 @@ class EditarCalendario extends Component
         );
 
         if ($hayInicios && ($eraFestivo || $eraInicioLapso)) {
-            $this->recalcularFinesLapso();
+            $this->recalcularFinesLapso(false);
         }
 
         $this->guardarBorrador();
@@ -1933,16 +2034,29 @@ class EditarCalendario extends Component
     {
         if ($this->tempEventoAgregar) {
             $args = $this->tempEventoAgregar;
-            while (count($args) < 12) {
+            while (count($args) < 11) {
                 $args[] = false;
             }
             $args[10] = true; // $confirmadoFeriadoLocal
-            $args[11] = true; // $ignorarFeriadosLocales
             $this->agregarEvento(...$args);
             $this->tempEventoAgregar = null;
         }
     }
 
+    #[\Livewire\Attributes\On('confirmar-agregar-evento-reemplazar')]
+    public function confirmarAgregarEventoReemplazar()
+    {
+        if ($this->tempEventoAgregar) {
+            $args = $this->tempEventoAgregar;
+            while (count($args) <= 12) {
+                $args[] = false;
+            }
+            $args[12] = true; // En EditarCalendario no hay $ignorarFeriadosLocales (índice 11), así que $confirmadoReemplazarNoSuperponible es índice 12.
+            
+            $this->tempEventoAgregar = null;
+            $this->agregarEvento(...$args);
+        }
+    }
 
     #[\Livewire\Attributes\On('confirmar-agregar-evento-introductorio')]
     public function confirmarAgregarEventoIntroductorio()
