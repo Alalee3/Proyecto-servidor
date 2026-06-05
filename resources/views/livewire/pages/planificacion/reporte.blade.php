@@ -64,7 +64,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
                         
                         <!-- Filtro Buscar Docente -->
-                        <div class="md:col-span-3">
+                        <div class="md:col-span-4">
                             <x-input 
                                 label="Buscar Docente" 
                                 name="docente" 
@@ -73,8 +73,16 @@
                             />
                         </div>
 
+                        <!-- Botones -->
+                        <div class="md:col-span-2 flex mb-4">
+                            <button type="submit" class="w-full inline-flex font-bold items-center justify-center px-2 py-2 bg-sogat-blue text-white rounded-md text-xs uppercase tracking-widest hover:bg-blue-700 focus:outline-none transition ease-in-out duration-150 shadow-sm gap-1">
+                                <span class="material-icons text-sm">search</span>
+                                Filtrar
+                            </button>
+                        </div>
+
                         <!-- Filtro Periodo Académico -->
-                        <div class="md:col-span-5">
+                        <div class="md:col-span-6">
                             <div class="mb-4">
                                 <label for="periodo" class="block font-bold text-sm text-gray-900 dark:text-white uppercase mb-1">
                                     Calendario Académico (Límite)
@@ -96,18 +104,6 @@
                                     </select>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Botones -->
-                        <div class="md:col-span-4 flex gap-2 mb-4">
-                            <button type="submit" class="flex-1 inline-flex font-bold items-center justify-center px-2 py-2 bg-sogat-blue text-white rounded-md text-xs uppercase tracking-widest hover:bg-blue-700 focus:outline-none transition ease-in-out duration-150 shadow-sm gap-1">
-                                <span class="material-icons text-sm">search</span>
-                                Filtrar
-                            </button>
-                            <a href="{{ route('planificacion.reporte.cumplimiento') }}" class="flex-1 inline-flex font-bold items-center justify-center px-2 py-2 bg-[#f0f0f0] border border-[#767676] rounded-md text-xs text-black uppercase tracking-widest hover:bg-gray-200 focus:outline-none transition ease-in-out duration-150 shadow-sm gap-1">
-                                <span class="material-icons text-sm">clear</span>
-                                Limpiar
-                            </a>
                         </div>
                     </div>
                 </form>

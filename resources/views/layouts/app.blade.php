@@ -39,6 +39,18 @@
     <script src="https://cdn.jsdelivr.net/npm/vanilla-calendar-pro/build/vanilla-calendar.min.js"></script>
 
     @livewireStyles
+
+    <script>
+        // Asegurar que al entrar a cualquier página el scroll vaya hacia arriba
+        document.addEventListener('DOMContentLoaded', () => {
+            window.scrollTo(0, 0);
+        });
+
+        // Para navegación SPA de Livewire (wire:navigate)
+        document.addEventListener('livewire:navigated', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
 </head>
 
 <body class="font-sogat antialiased">

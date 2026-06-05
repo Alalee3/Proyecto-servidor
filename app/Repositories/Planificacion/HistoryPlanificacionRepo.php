@@ -162,4 +162,97 @@ class HistoryPlanificacionRepo
             throw $e;
         }
     }
+
+    public function duplicarPlanificacionSinFechas(int $sourcePlanificacionId, int $newProfesorAsignadoId, string $proposito, array $tiposSeccion): int
+    {
+        DB::beginTransaction();
+
+        try {
+            // Guardamos como '4' (Borrador) para que el docente pueda terminar de editarla (poner fechas)
+            $newPlanificacionId = DB::table('planificacion')->insertGetId([
+                'id_profesor_asignado' => $newProfesorAsignadoId,
+                'estatus' => '4', 
+                'tipo_planificacion' => json_encode($tiposSeccion),
+                'proposito_unidad' => $proposito,
+            ]);
+
+            $unidadesOrigen = DB::table('unidad_corte')
+                ->where('id_planificacion', $sourcePlanificacionId)
+                ->get();
+
+            foreach ($unidadesOrigen as $unidad) {
+                $oldUnidadId = $unidad->id_unidad_corte;
+
+                $newUnidadId = DB::table('unidad_corte')->insertGetId([
+                    'id_planificacion' => $newPlanificacionId,
+                    'numero_unidad_corte' => $unidad->numero_unidad_corte,
+                    'indicador_logro_unidad_corte' => $unidad->indicador_logro_unidad_corte,
+                    'id_tecnica_actividad' => $unidad->id_tecnica_actividad,
+                    'descripcion_actividad_unidad_corte' => $unidad->descripcion_actividad_unidad_corte,
+                    'estatus' => '2',
+                ]);
+
+                $recursos = DB::table('detalle_recurso')
+                    ->where('id_unidad_corte', $oldUnidadId)
+                    ->where('estatus', '1')
+                    ->get();
+                foreach ($recursos as $recurso) {
+                    DB::table('detalle_recurso')->insert([
+                        'id_unidad_corte' => $newUnidadId,
+                        'id_recurso' => $recurso->id_recurso,
+                        'estatus' => '1',
+                    ]);
+                }
+
+                $contenidos = DB::table('detalle_contenido')
+                    ->where('id_unidad_corte', $oldUnidadId)
+                    ->where('estatus', '1')
+                    ->get();
+                foreach ($contenidos as $contenido) {
+                    DB::table('detalle_contenido')->insert([
+                        'id_unidad_corte' => $newUnidadId,
+                        'id_contenido' => $contenido->id_contenido,
+                        'estatus' => '1',
+                    ]);
+                }
+
+                $bibliografias = DB::table('detalle_bibliografia')
+                    ->where('id_unidad_corte', $oldUnidadId)
+                    ->where('estatus', '1')
+                    ->get();
+                foreach ($bibliografias as $bib) {
+                    DB::table('detalle_bibliografia')->insert([
+                        'id_unidad_corte' => $newUnidadId,
+                        'id_bibliografia' => $bib->id_bibliografia,
+                        'estatus' => '1',
+                    ]);
+                }
+
+                $evaluaciones = DB::table('detalle_evaluacion')
+                    ->where('id_unidad_corte', $oldUnidadId)
+                    ->where('estatus', '!=', '3')
+                    ->get();
+                foreach ($evaluaciones as $eval) {
+                    DB::table('detalle_evaluacion')->insert([
+                        'id_unidad_corte' => $newUnidadId,
+                        'id_tipo_evaluacion' => $eval->id_tipo_evaluacion,
+                        'id_tecnica_evaluacion' => $eval->id_tecnica_evaluacion,
+                        'id_instrumento' => $eval->id_instrumento,
+                        'ponderacion_detalle_evaluacion' => $eval->ponderacion_detalle_evaluacion,
+                        'integrantes_detalle_evaluacion' => $eval->integrantes_detalle_evaluacion,
+                        'fecha_evaluacion_detalle_evaluacion' => '', // FECHAS VACÍAS!
+                        'forma_participacion_detalle_evaluacion' => $eval->forma_participacion_detalle_evaluacion,
+                        'estatus' => '2',
+                    ]);
+                }
+            }
+
+            DB::commit();
+            return $newPlanificacionId;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error al duplicar planificación sin fechas: " . $e->getMessage());
+            throw $e;
+        }
+    }
 }

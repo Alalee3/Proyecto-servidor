@@ -94,7 +94,7 @@
                                             </svg>
                                             Ver
                                         </a>
-                                        @if($planificacion->estatus != 1 && !in_array(session('active_role'), [1, 5, 11]))
+                                        @if($planificacion->estatus != 1 && !in_array(session('active_role'), [1, 3, 5, 11]))
                                         <a href="{{ route('planificaciones.update', $planificacion->planificacion_id) }}"
                                             class="flex items-center gap-1 {{ $planificacion->estatus == 4 ? 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600' : 'bg-amber-500 hover:bg-amber-600 dark:bg-amber-500 dark:hover:bg-amber-600' }} text-white text-xs font-medium px-2.5 py-1 rounded-md shadow-sm transition-colors">
                                             @if($planificacion->estatus == 4)
@@ -178,7 +178,7 @@
                                 </svg>
                                 Ver
                             </a>
-                            @if($planificacion->estatus != 1 && !in_array(session('active_role'), [1, 5, 11]))
+                            @if($planificacion->estatus != 1 && !in_array(session('active_role'), [1, 3, 5, 11]))
                             <a href="{{ route('planificaciones.update', $planificacion->planificacion_id) }}"
                                 class="flex items-center gap-1 {{ $planificacion->estatus == 4 ? 'bg-orange-500 hover:bg-orange-600 dark:bg-orange-500 dark:hover:bg-orange-600' : 'bg-amber-500 hover:bg-amber-600 dark:bg-amber-500 dark:hover:bg-amber-600' }} text-white text-xs font-medium px-2.5 py-1 rounded-md shadow-sm transition-colors">
                                 @if($planificacion->estatus == 4)

@@ -46,9 +46,9 @@ class AccesoRepository
 
         $rolesToCheck = [$user->usu_cod_rol];
 
-        // Si el usuario es un estudiante (rol 4) y además es un vocero activo,
+        // Si el usuario es un estudiante (rol 3) y además es un vocero activo,
         // le otorgamos permisos implícitos para listar, ver y aprobar planificaciones.
-        if ($user->usu_cod_rol == 4) {
+        if ($user->usu_cod_rol == 3) {
             $isVocero = DB::table('vocero')
                 ->where('id_estudiante', $user->usu_cedula)
                 ->where('estatus', 1)

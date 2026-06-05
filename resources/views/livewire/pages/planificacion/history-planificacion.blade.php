@@ -71,7 +71,7 @@
                                         <button wire:click="selectPlanificacionParaDuplicar({{ $planificacion->planificacion_id }})"
                                             class="flex items-center gap-1 bg-blue-600 text-white text-xs font-medium px-2.5 py-1 rounded-md hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 shadow-sm transition-colors">
                                             <span class="material-icons" style="font-size: 16px;">content_copy</span>
-                                            {{ __('Duplicar') }}
+                                            {{ __('Importar') }}
                                         </button>
                                     </div>
                                 </td>
@@ -126,7 +126,7 @@
                             <button wire:click="selectPlanificacionParaDuplicar({{ $planificacion->planificacion_id }})"
                                 class="flex items-center gap-1 bg-blue-600 text-white text-xs font-medium px-2.5 py-1 rounded-md hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 shadow-sm transition-colors">
                                 <span class="material-icons" style="font-size: 16px;">content_copy</span>
-                                {{ __('Duplicar') }}
+                                {{ __('Importar') }}
                             </button>
                         </div>
                     </div>
@@ -151,7 +151,6 @@
             <div>{{ $planificaciones->links() }}</div>
         </div>
     </div>
-
     <!-- Modal Premium para Duplicación -->
     @if($showDuplicarModal)
         <div class="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center p-4">
@@ -162,7 +161,7 @@
                 <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 flex justify-between items-center">
                     <h3 class="text-lg font-bold text-gray-900 dark:text-white uppercase flex items-center gap-2">
                         <span class="material-icons text-sogat-blue dark:text-blue-400">content_copy</span>
-                        {{ __('Duplicar Planificación') }}
+                        {{ __('Importar Planificación') }}
                     </h3>
                     <button type="button" wire:click="closeDuplicarModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                         <span class="material-icons">close</span>
@@ -204,14 +203,6 @@
                         </div>
                     </div>
 
-                    <!-- Alerta de lapso destino -->
-                    @if($lapsoNombre)
-                        <div class="p-4 bg-blue-50 dark:bg-blue-900/30 border-l-4 border-blue-500 rounded-lg text-sm text-blue-800 dark:text-blue-200">
-                            <div class="font-bold uppercase tracking-wide text-xs mb-1">Periodo Destino: {{ $lapsoNombre }}</div>
-                            Las fechas de evaluación deben estar programadas entre el **{{ \Carbon\Carbon::parse($lapsoFechaInicio)->format('d/m/Y') }}** y el **{{ \Carbon\Carbon::parse($lapsoFechaFin)->format('d/m/Y') }}** (solo días laborables de lunes a viernes).
-                        </div>
-                    @endif
-
                     <!-- Propósito de la unidad -->
                     <div class="w-full">
                         <label for="proposito" class="block font-bold text-sm text-gray-900 dark:text-white uppercase mb-1">
@@ -223,29 +214,9 @@
                         <x-input-error :messages="$errors->first('proposito')" />
                     </div>
 
-                    <!-- Listado dinámico de Evaluaciones para Fijar Fecha -->
-                    <div class="space-y-4 pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <h4 class="text-sm font-extrabold text-gray-800 dark:text-gray-200 uppercase tracking-tight">
-                            {{ __('PROGRAMAR NUEVAS FECHAS DE EVALUACIÓN') }}
-                        </h4>
-                        
-                        <div class="space-y-4 max-h-[30vh] overflow-y-auto pr-2">
-                            @foreach($evaluacionesSource as $ev)
-                                <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                    <div class="flex-grow">
-                                        <div class="text-xs font-bold text-sogat-blue dark:text-blue-400 uppercase">Corte {{ $ev->numero_unidad_corte }}</div>
-                                        <div class="font-bold text-sm text-gray-900 dark:text-white">{{ $ev->evaluacion }}</div>
-                                        <div class="text-xs text-gray-500">Técnica: {{ $ev->tecnica }} | Ponderación: {{ $ev->ponderacion }}%</div>
-                                    </div>
-                                    <div class="w-full md:w-48">
-                                        <label class="block font-bold text-[10px] text-gray-500 uppercase mb-1">Nueva Fecha</label>
-                                        <input type="date" wire:model.live="evaluacionesFechas.{{ $ev->id_detalle_evaluacion }}"
-                                            class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 cursor-pointer">
-                                        <x-input-error :messages="$errors->first('evaluacionesFechas.'.$ev->id_detalle_evaluacion)" />
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
+                    <div class="p-4 bg-yellow-50 dark:bg-yellow-900/30 border-l-4 border-yellow-500 rounded-lg text-sm text-yellow-800 dark:text-yellow-200 mt-4">
+                        <div class="font-bold uppercase tracking-wide text-xs mb-1">ATENCIÓN: Carga de Fechas</div>
+                        Al importar, esta planificación se duplicará manteniendo absolutamente todos los objetivos, estrategias y evaluaciones (excepto las fechas). Automáticamente será redirigido al editor donde podrá colocar las fechas actualizadas al lapso vigente.
                     </div>
 
                     <!-- Footer Buttons -->
@@ -255,7 +226,7 @@
                         </x-danger-button>
 
                         <x-primary-button type="submit" class="px-5 py-2" wire:loading.attr="disabled">
-                            {{ __('Duplicar Planificación') }}
+                            {{ __('Importar Planificación') }}
                         </x-primary-button>
                     </div>
                 </form>

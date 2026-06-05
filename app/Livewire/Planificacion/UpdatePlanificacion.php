@@ -59,6 +59,8 @@ class UpdatePlanificacion extends Component
     public $showBiblioModal = false;
     public $newBiblioNombre = '';
 
+    public $isImported = false;
+
     public function __construct()
     {
         $this->planificacionCreateRepo = new PlanificacionCreateRepo();
@@ -68,6 +70,8 @@ class UpdatePlanificacion extends Component
 
     public function mount($planificacionId)
     {
+        $this->isImported = request()->has('imported');
+        
         $this->recursosMaestros = collect();
         $this->estrategiasDisponibles = collect();
         $this->evaluaciones = collect();
@@ -117,13 +121,10 @@ class UpdatePlanificacion extends Component
         $contenidosData = $this->loadContenidosUnidad();
 
         $unidades = [];
-        $firstPendiente = 0;
+        $firstPendiente = null;
         foreach ($planificacion['unidades'] as $index => $corte) {
-            if ($corte['estatus'] == 2 && $firstPendiente === 0 && $index > 0) {
-                // Keep 0 as default if the first one is pending
+            if ($corte['estatus'] == 2 && $firstPendiente === null) {
                 $firstPendiente = $index;
-            } elseif ($corte['estatus'] == 2 && $index == 0) {
-                $firstPendiente = 0;
             }
 
             $objetivosDict = [];
@@ -220,7 +221,7 @@ class UpdatePlanificacion extends Component
         }
 
         $this->form->unidades = $unidades;
-        $this->openUnidad = $firstPendiente;
+        $this->openUnidad = $firstPendiente ?? 0;
 
         // Calcular progreso inicial para maxUnidadAlcanzada
         $this->maxUnidadAlcanzada = 0;

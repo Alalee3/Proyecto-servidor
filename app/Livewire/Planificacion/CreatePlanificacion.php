@@ -11,8 +11,6 @@ class CreatePlanificacion extends Component
 {
     public $docente_id, $docenteNombre, $docenteRol, $proposito, $mallaNombre, $lapsoNombre;
     public $isCoordinador = false;
-    public $openUnidad = 0;
-    public $maxUnidadAlcanzada = 0;
     public $planificacionDraftId = null;
     public Collection $tecnica, $recursosMaestros, $evaluaciones, $bibliografiasMaestras, $asignaciones, $tecnicasActividad;
     public \App\Livewire\Forms\Planificacion\CreatePlanificacionForm $form;
@@ -41,8 +39,8 @@ class CreatePlanificacion extends Component
     {
         $this->docente_id = Auth::id();
         // Inicializar colecciones vacías para evitar errores de null
-        $this->asignaciones = collect();
-        $this->contenidosPorTema = collect();
+        $this->tecnica = collect();
+        $this->recursosMaestros = collect();
 
         $this->loadInitialData();
         $this->verifyDocenteRole();
@@ -94,6 +92,8 @@ class CreatePlanificacion extends Component
         // Reiniciar los contenidos seleccionados en las unidades porque cambiaron las opciones disponibles
         $this->inicializarUnidades();
     }
+
+
 
     protected function loadInitialData()
     {

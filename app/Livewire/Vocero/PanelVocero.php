@@ -250,7 +250,6 @@ class PanelVocero extends Component
             'type' => 'success',
             'title' => '¡ASIGNACIÓN EXITOSA!',
             'message' => 'El rol de vocero ha sido asignado correctamente.',
-            'countdown' => 3
         ]);
     }
 
@@ -288,7 +287,6 @@ class PanelVocero extends Component
                 'type' => 'success',
                 'title' => '¡REVOCACIÓN EXITOSA!',
                 'message' => 'El rol de vocero ha sido revocado y desactivado exitosamente.',
-                'countdown' => 3
             ]);
         }
     }
