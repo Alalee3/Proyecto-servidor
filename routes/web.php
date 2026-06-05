@@ -70,7 +70,7 @@ use App\Livewire\Vocero\PanelVocero;
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('login', [\App\Http\Controllers\Auth\ExternalLoginController::class, 'login'])->name('login');
+Route::get('login', \App\Livewire\Auth\Login::class)->name('login');
 
 Route::get('/', function () {
     abort(404);
